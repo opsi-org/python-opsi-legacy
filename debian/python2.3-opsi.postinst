@@ -1,0 +1,66 @@
+#! /bin/sh -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+    configure)
+	
+	if [ -z "`getent group pcpatch`" ]; then
+		groupadd -g 992 pcpatch
+	fi
+	
+	if [ -z "`getent passwd pcpatch`" ]; then
+		useradd -u 992 -g 992 -d /var/lib/opsi -s /bin/bash pcpatch
+	fi
+	
+	if [ -z "`getent group opsiadmin`" ]; then
+		groupadd opsiadmin
+	fi
+	
+	adduser pcpatch shadow  1>/dev/null 2>/dev/null || true
+	
+	chown -R pcpatch:pcpatch /etc/opsi/backendManager.d
+	chmod 660 /etc/opsi/backendManager.d/*
+	
+	test -e /etc/opsi/pckeys || touch /etc/opsi/pckeys
+	chown pcpatch:pcpatch /etc/opsi/pckeys
+	chmod 660 /etc/opsi/pckeys
+	
+	test -e /etc/opsi/passwd || touch /etc/opsi/passwd
+	chown pcpatch:pcpatch /etc/opsi/passwd
+	chmod 660 /etc/opsi/passwd
+	
+	chown pcpatch:pcpatch /etc/opsi/opsi.conf
+	chmod 660 /etc/opsi/opsi.conf
+	
+	if [ -d /var/lib/opsi ]; then
+		chown pcpatch:pcpatch /var/lib/opsi
+		chmod 2750 /var/lib/opsi
+	fi
+	
+	for i in 4 5; do
+		test -e /usr/lib/python2.$i/site-packages/OPSI && rm -Rf /usr/lib/python2.$i/site-packages/OPSI
+	done
+	
+	if [ -n "$2" ] && dpkg --compare-versions "$2" lt "0.9.4.3-1"; then
+		db_fset python-opsi/conflocnote seen false || true
+		db_input critical python-opsi/conflocnote || true
+		db_go || true
+		db_stop || true
+	fi
+    ;;
+    
+    abort-upgrade|abort-remove|abort-deconfigure)
+
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+if [ "$1" = "configure" ] && which update-python-modules >/dev/null 2>&1; then
+	update-python-modules -i /usr/share/python-support/python-opsi
+fi
+

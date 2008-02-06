@@ -1,0 +1,110 @@
+#!/usr/bin/make -f
+
+v23 := 2.3
+v24 := 2.4
+
+OPSI_VERSION := $(shell head -n 1 debian/changelog | cut -d" " -f2 | cut -d"-" -f1 | sed 's/.//')
+
+build: build-arch build-indep
+
+build-arch: build23-stamp build24-stamp build-stamp
+
+build23-stamp:
+	
+build24-stamp:
+
+build-stamp:
+
+build-indep: build-indep-stamp
+
+build-indep-stamp:
+	# Make sure we are in the correct directory
+	dh_testdir
+	# Ensure that package is built as root
+	dh_testroot
+	# Clean up package build directories
+	dh_clean -k
+	# Create subdirectories in package build directories
+	dh_installdirs
+	rm -f build-indep-stamp
+	msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
+	msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
+	touch build-indep-stamp
+
+clean:
+	rm -f *-stamp
+
+binary: binary-arch binary-indep
+
+binary-arch: build-arch binary23-stamp binary24-stamp binary-stamp
+
+binary23-stamp:
+	mkdir -p debian/python${v23}-opsi/usr/lib/python${v23}/site-packages/OPSI/Backend
+	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python${v23}-opsi/usr/lib/python${v23}/site-packages/$$i; done
+	mkdir -p debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES
+	install -m 0644 gettext/opsi_system.mo debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
+	install -m 0644 gettext/opsi_ui.mo     debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+	mkdir -p debian/python${v23}-opsi/etc/opsi/backendManager.d
+	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python${v23}-opsi/etc/opsi/backendManager.d/$$i; done
+	install -m 0644 files/opsi.conf debian/python${v23}-opsi/etc/opsi/opsi.conf
+	mkdir -p debian/python${v23}-opsi/etc/opsi/hwaudit/locales
+	chmod -R 755 debian/python${v23}-opsi/etc/opsi/hwaudit
+	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python${v23}-opsi/etc/opsi/hwaudit/opsihwaudit.conf
+	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python${v23}-opsi/etc/opsi/hwaudit/locales/; done
+	mkdir -p debian/python${v23}-opsi/etc/ldap/schema
+	install -m 0644 files/opsi.schema debian/python${v23}-opsi/etc/ldap/schema/opsi.schema
+	echo $(OPSI_VERSION) > debian/python${v23}-opsi/etc/opsi/version
+	
+binary24-stamp:
+	mkdir -p debian/python${v24}-opsi/usr/lib/python${v24}/site-packages/OPSI/Backend
+	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python${v24}-opsi/usr/lib/python${v24}/site-packages/$$i; done
+	mkdir -p debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES
+	install -m 0644 gettext/opsi_system.mo debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
+	install -m 0644 gettext/opsi_ui.mo     debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+	mkdir -p debian/python${v24}-opsi/etc/opsi/backendManager.d
+	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python${v24}-opsi/etc/opsi/backendManager.d/$$i; done
+	install -m 0644 files/opsi.conf debian/python${v24}-opsi/etc/opsi/opsi.conf
+	mkdir -p debian/python${v24}-opsi/etc/opsi/hwaudit/locales
+	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python${v24}-opsi/etc/opsi/hwaudit/opsihwaudit.conf
+	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python${v24}-opsi/etc/opsi/hwaudit/locales/; done
+	mkdir -p debian/python${v24}-opsi/etc/ldap/schema
+	install -m 0644 files/opsi.schema debian/python${v24}-opsi/etc/ldap/schema/opsi.schema
+	echo $(OPSI_VERSION) > debian/python${v24}-opsi/etc/opsi/version
+	
+binary-stamp:
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
+	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python-opsi/usr/share/python-support/python-opsi/$$i; done
+	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
+	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
+	install -m 0644 gettext/opsi_ui.mo     debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+	mkdir -p debian/python-opsi/etc/opsi/backendManager.d
+	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python-opsi/etc/opsi/backendManager.d/; done
+	install -m 0644 files/opsi.conf debian/python-opsi/etc/opsi/opsi.conf
+	mkdir -p debian/python-opsi/etc/opsi/hwaudit/locales
+	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python-opsi/etc/opsi/hwaudit/opsihwaudit.conf
+	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python-opsi/etc/opsi/hwaudit/locales/; done
+	mkdir -p debian/python-opsi/etc/ldap/schema
+	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi.schema
+	echo $(OPSI_VERSION) > debian/python-opsi/etc/opsi/version
+	
+binary-indep: build-indep binary-indep-stamp
+
+binary-indep-stamp:
+	# Install changelogs into package build directories
+	dh_installchangelogs
+	# Fix permissions of files in package build directories
+	dh_fixperms
+	## Use the python-support framework to handle Python modules
+	#dh_pysupport
+	# Install files into the DEBIAN directory
+	dh_installdeb
+	# Generate and install control file
+	dh_gencontrol -i
+	# Install files used by debconf in package build directories
+	dh_installdebconf
+	# Generate DEBIAN/md5sums file
+	dh_md5sums
+	# Build debian packages
+	dh_builddeb
+
+.PHONY: clean build build-arch build-indep binary binary-arch binary-indep
