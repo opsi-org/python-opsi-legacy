@@ -1,0 +1,35 @@
+Source: python-opsi
+Section: opsi
+Priority: optional
+Maintainer: uib GmbH <info@uib.de>
+Build-Depends: debhelper (>= 5.0.37.1), python-support
+Standards-Version: 3.7.2
+
+Package: python-opsi
+Section: opsi
+Architecture: all
+Depends: python-crypto, python-json, python-ldap, python-newt, python-pam, python-pyopenssl, python-support
+Suggests: slapd
+Provides: python2.3-opsi, python2.4-opsi, python2.5-opsi
+Suggests: slapd
+Description: OPSI python library
+ This package contains the OPSI python library..
+
+Package: python2.3-opsi
+Section: opsi
+Architecture: all
+Depends: python2.3-crypto, python2.3-json, python2.3-ldap, python-newt, python2.3-pam, python2.3-pyopenssl
+Suggests: slapd
+Provides: python-opsi
+Description: OPSI python library
+ This package contains the OPSI python library..
+
+Package: python2.4-opsi
+Section: opsi
+Architecture: all
+Depends: python2.4-crypto, python2.4-json, python2.4-ldap, python2.4-newt, python2.4-pam, python2.4-pyopenssl
+Suggests: slapd
+Provides: python-opsi
+Description: OPSI python library
+ This package contains the OPSI python library..
+

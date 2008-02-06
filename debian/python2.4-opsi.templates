@@ -1,0 +1,5 @@
+Template: python-opsi/conflocnote
+Type: note
+Description: Configuration for BackendManager is now done in /etc/opsi/backendManager.d/* by default.
+ The old configuration file /etc/opsi/backendManager.conf will not be use by default anymore!
+ 

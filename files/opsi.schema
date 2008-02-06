@@ -1,0 +1,1004 @@
+# Private Enterprise Number - UIB Umwelt Informatik Buero GmbH: 23807
+
+# $OID: 1.3.6.1.4.1.23807.1 (Hosts) $
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.1
+	NAME 'opsiHostKey'
+	DESC 'Opsi host-key'
+	EQUALITY caseExactMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.1.1.2
+	NAME 'opsiHostReference'
+	SUP distinguishedName
+	DESC 'referenced opsi host objects' )
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.3
+	NAME 'opsiServerReference'
+	SUP opsiHostReference
+	DESC 'referenced opsi server objects' )
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.4
+	NAME 'opsiNotes'
+	SUP description
+	DESC 'Notes'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.5
+	NAME 'opsiTimestamp'
+	DESC 'timestamp (YYYYMMDDhhmmss)'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{14} )
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.6
+	NAME 'opsiLastSeenTimestamp'
+	SUP opsiTimestamp
+	DESC 'timestamp of last host connection to service'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1.1.7
+	NAME 'opsiPcpatchPassword'
+	DESC 'encrypted pcpatch password'
+	EQUALITY caseExactMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.1.2.1 
+	NAME 'opsiHost'
+	SUP top 
+	ABSTRACT
+	DESC 'Opsi host'
+	MUST ( cn )
+	MAY ( description $ opsiNotes $ opsiHostKey $ opsiPcpatchPassword $ opsiLastSeenTimestamp ) )
+
+objectclass ( 1.3.6.1.4.1.23807.1.2.2
+	NAME 'opsiServer'
+	SUP opsiHost 
+	STRUCTURAL
+	DESC 'Opsi server' )
+
+objectclass ( 1.3.6.1.4.1.23807.1.2.3
+	NAME 'opsiClient'
+	SUP opsiHost 
+	STRUCTURAL
+	DESC 'Opsi client' )
+
+
+# $OID: 1.3.6.1.4.1.23807.2 (HardwareConfigs) $
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.1	
+	NAME 'deviceName'
+	DESC 'Name of hardware device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.2
+	NAME 'deviceVendor'
+	DESC 'Vendor of hardware device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.3
+	NAME 'deviceVersion'
+	DESC 'Version of hardware device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.4
+	NAME 'deviceInfo'
+	DESC 'Hardware device info'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.5
+	NAME 'deviceSerialNumber'
+	DESC 'Hardware serial number'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.6
+	NAME 'deviceBusAddress'
+	DESC 'Bus Address of device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.7	
+	NAME 'deviceSubsystemName'
+	DESC 'Subsystem name of device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.8
+	NAME 'deviceSubsystemVendor'
+	DESC 'Subsystem Vendor of device'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.9
+	NAME 'deviceBus'
+	DESC 'Bus the device is connected to'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.2.1.10
+	NAME 'deviceType'
+	DESC 'Device type'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.11
+	NAME 'deviceLength'
+	DESC 'Device length'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.12
+	NAME 'deviceId'
+	DESC 'Device ID'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.13
+	NAME 'deviceFlag'
+	DESC 'Device Flag'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.14
+	NAME 'deviceLocator'
+	DESC 'Device Locator'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.15
+	NAME 'deviceUsed'
+	DESC 'Is the device in use?'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.31
+	NAME 'deviceSocket'
+	DESC 'Device socket'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.32
+	NAME 'memoryTotalWidth'
+	DESC 'Memory Total Width (bits)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.2.1.33
+	NAME 'memoryDataWidth'
+	DESC 'Memory Data Width (bits)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.34
+	NAME 'memorySize'
+	DESC 'Memory Size (MB)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.35
+	NAME 'memoryBankLocator'
+	DESC 'Memory Bank Locator'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.36
+	NAME 'memoryFormFactor'
+	DESC 'Memory Form Factor'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.42
+	NAME 'processorFamily'
+	DESC 'Processor family'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.43
+	NAME 'processorSignature'
+	DESC 'Processor signature'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.44
+	NAME 'processorVoltage'
+	DESC 'Processor voltage'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.45
+	NAME 'processorExternalClock'
+	DESC 'Processor external clock (MHz)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.2.1.46
+	NAME 'processorMaxSpeed'
+	DESC 'Processor max speed (MHz)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.47
+	NAME 'processorCurrentSpeed'
+	DESC 'Processor current speed (MHz)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.51
+	NAME 'internalConnectorName'
+	DESC 'Internal Reference Designator'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.52
+	NAME 'internalConnectorType'
+	DESC 'Internal Connector Type'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.2.1.53
+	NAME 'externalConnectorName'
+	DESC 'External Reference Designator'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.54
+	NAME 'externalConnectorType'
+	DESC 'External Connector Type'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.61
+	NAME 'harddiskPartition'
+	DESC 'Partition on harddisk'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.62
+	NAME 'harddiskSize'
+	DESC 'Harddisk Size (Byte)'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.63
+	NAME 'harddiskCylinders'
+	DESC 'Harddisk Cylinders'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.64
+	NAME 'harddiskHeads'
+	DESC 'Harddisk Heads'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.65
+	NAME 'harddiskSectors'
+	DESC 'Harddisk Sectors'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.2.1.71
+	NAME 'ethernetMacAddress'
+	DESC 'Ethernet hardware address'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.1
+	NAME 'opsiDevice'
+	SUP top
+	STRUCTURAL
+	DESC 'Device'
+	MUST ( cn )
+	MAY ( deviceType $ deviceLocator $ deviceBus $ deviceName $ deviceVendor $ deviceVersion $ deviceSerialNumber $ deviceInfo $ deviceSubsystemName $ deviceSubsystemVendor $ deviceBusAddress $ deviceId $ deviceLength $ deviceFlag $ deviceUsed) )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.3
+	NAME 'opsiDeviceHostBridge'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Host Bridge' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.4
+	NAME 'opsiDeviceISABridge'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'ISA Bridge' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.5
+	NAME 'opsiDeviceSMBus'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'SMBus' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.6
+	NAME 'opsiDeviceUSBController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'USB Controller' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.7
+	NAME 'opsiDeviceBridge'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Bridge' )
+	
+objectclass ( 1.3.6.1.4.1.23807.2.2.8
+	NAME 'opsiDeviceAudioController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Multimedia audio controller' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.9
+	NAME 'opsiDeviceIDEInterface'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'IDE interface' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.10
+	NAME 'opsiDevicePCIBridge'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'PCI bridge' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.11
+	NAME 'opsiDeviceVGAController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'VGA compatible controller' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.12
+	NAME 'opsiDeviceFireWireController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'FireWire (IEEE 1394) Controller' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.13
+	NAME 'opsiDeviceEthernetController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Ethernet Controller'
+	MAY ( ethernetMacAddress ) )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.14
+	NAME 'opsiDeviceSCSIController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'SCSI Controller' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.20
+	NAME 'opsiDeviceSystemBIOS'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'System BIOS' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.21
+	NAME 'opsiDeviceSystem'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'System' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.22
+	NAME 'opsiDeviceBaseBoard'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Base Board' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.23
+	NAME 'opsiDeviceChassis'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Chassis Information' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.24
+	NAME 'opsiDeviceMemoryController'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Memory controller information' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.25
+	NAME 'opsiDeviceCache'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Cache Information'
+	MAY ( deviceSocket ) )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.29
+	NAME 'opsiDeviceSystemSlot'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'System slot' )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.30
+	NAME 'opsiDeviceMemoryModule'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Memory Module Information'
+	MAY ( deviceSocket $ memoryTotalWidth $ memoryDataWidth $ memorySize $ memoryFormFactor $ memoryBankLocator ) )
+	
+objectclass ( 1.3.6.1.4.1.23807.2.2.40
+	NAME 'opsiDeviceProcessor'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Processor Information'
+	MAY ( deviceSocket $ processorFamily $ processorSignature $ processorVoltage $ processorExternalClock $ processorMaxSpeed $ processorCurrentSpeed ) )
+
+objectclass ( 1.3.6.1.4.1.23807.2.2.50
+	NAME 'opsiDevicePortConnector'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Port Connector Information'
+	MAY ( internalConnectorName $ internalConnectorType $ externalConnectorName $ externalConnectorType ) )
+	
+objectclass ( 1.3.6.1.4.1.23807.2.2.60
+	NAME 'opsiDeviceHarddisk'
+	SUP opsiDevice
+	STRUCTURAL
+	DESC 'Harddisk Drive'
+	MAY ( harddiskPartition $ harddiskSize $ harddiskCylinders $ harddiskHeads $ harddiskSectors ) )
+
+# $OID: 1.3.6.1.4.1.23807.3 (Products) $
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.1
+	NAME 'opsiProductReference'
+	SUP distinguishedName
+	DESC 'referenced product objects'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.4 
+	NAME 'opsiProductLicenseRequired'
+	DESC 'is a license required to install the product?'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.5
+	NAME 'opsiProductAdvice'
+	SUP description
+	DESC 'product advice text'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.6
+	NAME 'opsiProductName'
+	SUP description
+	DESC 'product name'
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.3.1.7	
+	NAME 'opsiProductClassProvided'
+	SUP distinguishedName
+	DESC 'product-class provided' )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.9
+	NAME 'opsiProductCreationTimestamp'
+	SUP opsiTimestamp
+	DESC 'timestamp of product creation'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.10
+	NAME 'opsiProductPriority'
+	DESC 'product priority'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.11
+	NAME 'opsiActionScript'
+	DESC 'Product setup script'
+	EQUALITY caseExactIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+	
+attributetype ( 1.3.6.1.4.1.23807.3.1.12
+	NAME 'opsiSetupScript'
+	SUP opsiActionScript
+	DESC 'Product setup script'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.13
+	NAME 'opsiUninstallScript'
+	SUP opsiActionScript
+	DESC 'Product uninstall script'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.14
+	NAME 'opsiOnceScript'
+	SUP opsiActionScript
+	DESC 'Product update script'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.15
+	NAME 'opsiUpdateScript'
+	SUP opsiActionScript
+	DESC 'Product once script'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.16
+	NAME 'opsiAlwaysScript'
+	SUP opsiActionScript
+	DESC 'Product always script'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.17
+	NAME 'opsiProductVersion'
+	SUP description
+	DESC 'Opsi-Product version'
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.3.1.18
+	NAME 'opsiPackageVersion'
+	SUP description
+	DESC 'Opsi-Paket version'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.3.1.19
+	NAME 'opsiPxeConfigTemplate'
+	DESC 'Config template for pxelinux'
+	EQUALITY caseExactIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.3.2.1
+	NAME 'opsiProduct'
+	SUP top
+	ABSTRACT
+	DESC 'Opsi product'
+	MUST ( cn $ opsiProductLicenseRequired $ opsiProductName $ opsiProductCreationTimestamp $ opsiProductPriority $ opsiProductVersion $ opsiPackageVersion )
+	MAY ( description $ opsiProductAdvice $ opsiProductClassProvided $ opsiSetupScript $ opsiUninstallScript $ opsiUpdateScript $ opsiOnceScript $ opsiAlwaysScript ) )
+
+objectclass ( 1.3.6.1.4.1.23807.3.2.2
+	NAME 'opsiServerProduct'
+	SUP opsiProduct
+	STRUCTURAL
+	DESC 'Opsi Server product' )
+
+objectclass ( 1.3.6.1.4.1.23807.3.2.3
+	NAME 'opsiLocalBootProduct'
+	SUP opsiProduct
+	STRUCTURAL
+	DESC 'Opsi local-boot product' )
+
+objectclass ( 1.3.6.1.4.1.23807.3.2.4
+	NAME 'opsiNetBootProduct'
+	SUP opsiProduct
+	STRUCTURAL
+	DESC 'Opsi net-boot product'
+	MAY ( opsiPxeConfigTemplate ) )
+
+# $OID: 1.3.6.1.4.1.23807.4 (ProductClasses) $
+
+attributetype ( 1.3.6.1.4.1.23807.4.1.1	
+	NAME 'opsiProductClassReference'
+	SUP distinguishedName
+	DESC 'referenced product class objects'
+	SINGLE-VALUE )
+	
+objectclass ( 1.3.6.1.4.1.23807.4.2.1
+	NAME 'opsiProductClass'
+	SUP top
+	STRUCTURAL
+	DESC 'Opsi product class'
+	MUST ( cn ) 
+	MAY ( description ) )
+
+# $OID: 1.3.6.1.4.1.23807.5 (ProductDependencies) $
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.1
+	NAME 'opsiProductAction'
+	DESC 'product requires this product action on an other product'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.2
+	NAME 'opsiActionRequired'
+	DESC 'product requires this product action on an other product'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.3
+	NAME 'opsiInstallationStatusRequired'
+	DESC 'product requires this state of an other product'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.4
+	NAME 'opsiRequirementType'
+	DESC 'requirement type (after / before)'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.5
+	NAME 'opsiRequiredProductReference'
+	SUP opsiProductReference
+	DESC 'reference to required product objects'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.5.1.6
+	NAME 'opsiRequiredProductClassReference'
+	SUP opsiProductClassReference
+	DESC 'reference to required product class objects'
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.5.2.1
+	NAME 'opsiDependency'
+	SUP top
+	ABSTRACT
+	DESC 'Opsi dependency'
+	MUST ( cn $ opsiProductAction $ opsiProductReference )
+	MAY ( opsiActionRequired $ opsiInstallationStatusRequired $ opsiRequirementType ) )
+
+objectclass ( 1.3.6.1.4.1.23807.5.2.2
+	NAME 'opsiProductDependency'
+	SUP opsiDependency
+	STRUCTURAL
+	DESC 'Opsi product dependency'
+	MUST (opsiRequiredProductReference) )
+
+# $OID: 1.3.6.1.4.1.23807.6 (ProductClassDependencies) $
+objectclass ( 1.3.6.1.4.1.23807.6.2.1
+	NAME 'opsiProductClassDependency'
+	SUP opsiDependency
+	STRUCTURAL
+	DESC 'Opsi product class dependency'
+	MUST (opsiRequiredProductClassReference) )
+
+
+# $OID: 1.3.6.1.4.1.23807.7 (ProductLicenses) $
+
+attributetype ( 1.3.6.1.4.1.23807.7.1.1
+	NAME 'licenseKey'
+	DESC 'product license Key'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.7.1.2
+	NAME 'licenseReference'
+	SUP distinguishedName
+	DESC 'referenced license object' )
+
+objectclass ( 1.3.6.1.4.1.23807.7.2.1
+	NAME 'opsiProductLicense'
+	SUP top
+	STRUCTURAL
+	DESC 'Opsi product license'
+	MUST ( cn $ opsiProductReference $ licenseKey ) )
+
+# $OID: 1.3.6.1.4.1.23807.8 (Groups) $
+
+objectclass ( 1.3.6.1.4.1.23807.8.2.1
+	NAME 'opsiGroup'
+	SUP top 
+	STRUCTURAL
+	DESC 'Opsi Group'
+	MUST ( cn )
+	MAY ( description $ uniqueMember ) )
+
+
+# $OID: 1.3.6.1.4.1.23807.9 (productStates) $
+
+attributetype ( 1.3.6.1.4.1.23807.9.1.1	
+	NAME 'opsiProductInstallationStatus'
+	DESC 'product state'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.9.1.2	
+	NAME 'lastStateChange'
+	DESC 'last change of product state'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.9.1.3
+	NAME 'opsiProductDeploymentTimestamp'
+	SUP opsiTimestamp
+	DESC 'time of deployment policy creation'
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.9.1.4
+	NAME 'opsiProductActionRequestForced'
+	DESC 'a product action request to force'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.5.1.1
+	NAME 'opsiProductDeploymentPolicyReference'
+	SUP distinguishedName
+	DESC 'referenced deployment policy object'
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.9.2.1 
+	NAME 'opsiProductState'
+	SUP top 
+	STRUCTURAL
+	DESC 'product state'
+	MUST ( cn $ opsiHostReference $ opsiProductReference $ opsiProductInstallationStatus )
+	MAY ( opsiProductVersion $ opsiPackageVersion $ opsiProductDeploymentTimestamp $ opsiProductDeploymentPolicyReference $ licenseReference $ lastStateChange $ opsiProductActionRequestForced ) )
+
+# $OID: 1.3.6.1.4.1.23807.10 (ProductPropertyDefinitions) $
+
+attributetype ( 1.3.6.1.4.1.23807.10.1.1
+	NAME 'opsiProductPropertyName'
+	DESC 'product property name'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.10.1.2
+	NAME 'opsiProductPropertyValue'
+	DESC 'product property value'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.10.1.3
+	NAME 'opsiProductPropertyDefaultValue'
+	DESC 'product property default value'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.10.1.4
+	NAME 'opsiProductPropertyPossibleValue'
+	DESC 'product property possible value'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+objectclass ( 1.3.6.1.4.1.23807.10.2.1
+	NAME 'opsiProductPropertyDefinition'
+	SUP top
+	STRUCTURAL
+	DESC 'Opsi product property'
+	MUST ( cn $ opsiProductReference $ opsiProductPropertyName ) 
+	MAY  ( description $ opsiProductPropertyDefaultValue $ opsiProductPropertyPossibleValue ) )
+
+
+# $OID: 1.3.6.1.4.1.23807.1000 (Policies) $
+
+# $OID: 1.3.6.1.4.1.23807.1000 (References) $
+attributetype ( 1.3.6.1.4.1.23807.1000
+	NAME 'opsiPolicyReference'
+	SUP distinguishedName
+	DESC 'referenced policy objects' )
+	
+objectclass ( 1.3.6.1.4.1.23807.1002
+	NAME 'opsiPolicyReference'
+	AUXILIARY
+	DESC 'reference to policy object'
+	MAY ( opsiPolicyReference ) )
+
+# $OID: 1.3.6.1.4.1.23807.1000.2 (Policy objects) $
+attributetype ( 1.3.6.1.4.1.23807.1000.2.1.1 
+	NAME 'requiredObjectClasses'
+	DESC 'required objectClasses'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.2.1.2 
+	NAME 'prohibitedObjectClasses'
+	DESC 'prohibited objectClasses'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.2.1.3 
+	NAME 'fixedAttributes'
+	DESC 'fixed attributes'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.2.1.4 
+	NAME 'emptyAttributes'
+	DESC 'empty attributes'
+	EQUALITY caseIgnoreIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.2.1.5
+	NAME 'overwritePolicies'
+	DESC 'overwrite policies of same type and higher priority?'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.1002.2
+	NAME 'opsiPolicy'
+	SUP 'top' 
+	STRUCTURAL
+	DESC 'policy object'
+	MUST ( cn )
+	MAY ( requiredObjectClasses $ prohibitedObjectClasses $ fixedAttributes $ emptyAttributes $ overwritePolicies) )
+
+# $OID: 1.3.6.1.4.1.23807.1000.5 (productDeployment) $
+objectclass ( 1.3.6.1.4.1.23807.1000.5.2.1 
+	NAME 'opsiPolicyProductDeployment'
+	SUP 'opsiPolicy'
+	STRUCTURAL
+	DESC 'product deployment policy'
+	MUST ( opsiProductReference $ opsiProductInstallationStatus $ opsiProductDeploymentTimestamp)
+	MAY  ( opsiProductVersion $ opsiPackageVersion) )
+
+# $OID: 1.3.6.1.4.1.23807.1000.6 (ProductProperty) $
+attributetype ( 1.3.6.1.4.1.23807.1000.6.1.1
+	NAME 'opsiKeyValuePair'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Key value pair separated by equal sign (=)'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+objectclass ( 1.3.6.1.4.1.23807.1000.6.2.1 
+	NAME 'opsiPolicyProductProperty'
+	SUP opsiPolicy 
+	STRUCTURAL
+	DESC 'policy for product property'
+	MUST ( opsiProductReference )
+	MAY ( opsiKeyValuePair ) )
+
+# $OID: 1.3.6.1.4.1.23807.1000.8 (NetworkConfigs) $
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.1
+	NAME 'opsiConfigDrive'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Drive letter of opsi utils directory mapping'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{4}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.2
+	NAME 'opsiUtilsDrive'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Drive letter of opsi utils directory mapping'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{4}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.3
+	NAME 'opsiDepotDrive'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Drive letter of opsi depot directory mapping'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26{4}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.4
+	NAME 'opsiConfigUrl'
+	EQUALITY caseIgnoreMatch
+	DESC 'Config URL'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.5
+	NAME 'opsiUtilsUrl'
+	EQUALITY caseIgnoreMatch
+	DESC 'Utils URL'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+	
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.6
+	NAME 'opsiDepotUrl'
+	EQUALITY caseIgnoreMatch
+	DESC 'Depot URL'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.7
+	NAME 'opsiWinDomain'
+	EQUALITY caseIgnoreMatch
+	DESC 'Windows Domain'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.8
+	NAME 'opsiNextBootServiceURL'
+	EQUALITY caseIgnoreMatch
+	DESC 'Service URL for next client boot'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.7.1.9
+	NAME 'opsiNextBootServerType'
+	EQUALITY caseIgnoreMatch
+	DESC 'Server Type for next client boot'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{255}
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.1000.7.2.1 
+	NAME 'opsiPolicyNetworkConfig'
+	SUP opsiPolicy
+	STRUCTURAL
+	DESC 'Opsi network configuration policy'
+	MAY ( opsiServerReference $ opsiConfigDrive $ opsiUtilsDrive $ opsiDepotDrive $
+	       opsiConfigUrl $ opsiUtilsUrl $ opsiDepotUrl $ description $ opsiWinDomain $
+	       opsiNextBootServiceURL $ opsiNextBootServerType ) )
+
+# $OID: 1.3.6.1.4.1.23807.1000.8 (GeneralConfigs) $
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.1
+	NAME 'opsiPcptchBitmap1'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Bitmap 1 for pcpatch'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.2
+	NAME 'opsiPcptchBitmap2'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Bitmap 1 for pcpatch'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.3
+	NAME 'opsiPcptchLabel1'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Label 1 for pcpatch'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.4
+	NAME 'opsiPcptchLabel2'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'Label 2 for pcpatch'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.5
+	NAME 'opsiClientSideConfigCaching'
+	EQUALITY booleanMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.6
+	NAME 'opsiButtonStopNetworking'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'stop networking button'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.23807.1000.8.1.7
+	NAME 'opsiSecsUntilConnectionTimeOut'
+	EQUALITY caseIgnoreIA5Match
+	DESC 'connection timeout in secs'
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.23807.1000.8.2.1 
+	NAME 'opsiPolicyGeneralConfig'
+	SUP opsiPolicy
+	STRUCTURAL
+	DESC 'Opsi general configuration policy'
+	MAY ( opsiPcptchBitmap1 $ opsiPcptchBitmap2 $ opsiPcptchLabel1 $ opsiPcptchLabel2 $ opsiClientSideConfigCaching $ opsiButtonStopNetworking $ opsiSecsUntilConnectionTimeOut $ opsiKeyValuePair ) )
+
+
+

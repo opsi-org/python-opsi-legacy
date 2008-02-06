@@ -1,0 +1,52 @@
+# German translations for OPSI UI package.
+# Copyright (C) 2006 uib GmbH
+# Jan Schneider <j.schneider@uib.de>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"POT-Creation-Date: 2006-09-05 10:39+CEST\n"
+"PO-Revision-Date: 2006-09-05 10:39+0200\n"
+"Last-Translator: Jan Schneider <j.schneider@uib.de>\n"
+"Language-Team: Support <support@uib.de>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../OPSI/UI.py:57
+msgid "An error occured"
+msgstr "Ein Fehler ist aufgetreten"
+
+#: ../OPSI/UI.py:57 ../OPSI/UI.py:78 ../OPSI/UI.py:112 ../OPSI/UI.py:161
+msgid "OK"
+msgstr "OK"
+
+#: ../OPSI/UI.py:78
+msgid "Message"
+msgstr "Nachricht"
+
+#: ../OPSI/UI.py:99
+msgid "Progress"
+msgstr "Fortschritt"
+
+#: ../OPSI/UI.py:103
+msgid "Text"
+msgstr "Text"
+
+#: ../OPSI/UI.py:112
+msgid "Please fill in"
+msgstr "Bitte ausfuellen"
+
+#: ../OPSI/UI.py:112 ../OPSI/UI.py:161
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: ../OPSI/UI.py:161
+msgid "Question"
+msgstr "Frage"
+
+#: ../OPSI/UI.py:185 ../OPSI/UI.py:231
+msgid "Title"
+msgstr "Titel"
