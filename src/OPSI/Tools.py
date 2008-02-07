@@ -10,7 +10,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.8.2'
+__version__ = '0.9.8.3'
 
 # Imports
 import time, json, gettext, os, re, random, md5
@@ -44,7 +44,7 @@ except Exception, e:
 		return string
 
 def removeUnit(x):
-	match = re.search('^([\d\.]+)\s*([\w]{0,4})$', x)
+	match = re.search('^(\d+\.*\d*)\s*([\w]{0,4})$', x)
 	if not match:
 		return x
 	

@@ -177,7 +177,7 @@ class BackendManager(DataBackend):
 			
 			self.backends[key]['instance'] = b
 			backendsUsed.append(key)
-			logger.notice("Using backend %s." % b.__class__)
+			logger.info("Using backend %s." % b.__class__)
 			
 			if self.forcedBackend:
 				for (n, t) in b.__class__.__dict__.items():
