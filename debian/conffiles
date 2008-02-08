@@ -1,0 +1,15 @@
+etc/opsi/opsi.conf
+etc/opsi/hwaudit/opsihwaudit.conf
+etc/opsi/backendManager.d/10_file.conf
+etc/opsi/backendManager.d/11_ldap.conf
+etc/opsi/backendManager.d/12_univention.conf
+etc/opsi/backendManager.d/13_dhcpd.conf
+etc/opsi/backendManager.d/14_reinstmgr.conf
+etc/opsi/backendManager.d/15_jsonrpc.conf
+etc/opsi/backendManager.d/16_etherwake.conf
+etc/opsi/backendManager.d/17_wakeonlan.conf
+etc/opsi/backendManager.d/18_opsipxeconfd.conf
+etc/opsi/backendManager.d/20_file31.conf
+etc/opsi/backendManager.d/21_mysql.conf
+etc/opsi/backendManager.d/30_vars.conf
+etc/opsi/backendManager.d/50_interface.conf

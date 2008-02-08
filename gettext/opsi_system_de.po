@@ -1,0 +1,157 @@
+# German translations for System.py package.
+# Copyright (C) 2007 uib
+# Jan Schneider <j.schneider@uib.de>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 3.1\n"
+"POT-Creation-Date: 2007-08-15 10:52+CEST\n"
+"PO-Revision-Date: 2007-08-15 10:52+0200\n"
+"Last-Translator: Jan Schneider <j.schneider@uib.de>\n"
+"Language-Team: German\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../src/OPSI/System.py:283
+msgid "System is going down for reboot now.\n"
+msgstr "Das System wird nun neu gestartet.\n"
+
+#: ../src/OPSI/System.py:289
+msgid "System is going down for halt now.\n"
+msgstr "Das System wird jetzt heruntergefahren.\n"
+
+#: ../src/OPSI/System.py:315
+msgid "Copying from %s to %s\n"
+msgstr "Kopiere von %s nach %s\n"
+
+#: ../src/OPSI/System.py:321
+msgid "Copying from %s to %s"
+msgstr "Kopiere von %s nach %s"
+
+#: ../src/OPSI/System.py:400
+msgid "Creating directory '%s'.\n"
+msgstr "Erstelle Verzeichnis '%s'.\n"
+
+#: ../src/OPSI/System.py:434
+msgid "Mounting '%s' to '%s'.\n"
+msgstr "Binde Dateisystem '%s' unter '%s' ein.\n"
+
+#: ../src/OPSI/System.py:483
+msgid "Umounting '%s'.\n"
+msgstr "Loese Einbindung von '%s'.\n"
+
+#: ../src/OPSI/System.py:496
+msgid "Looking for harddisks.\n"
+msgstr "Suche nach Festplatten.\n"
+
+#: ../src/OPSI/System.py:509
+msgid "Hardisk '%s' found (%s MB).\n"
+msgstr "Festplatte '%s' gefunden (%s MB).\n"
+
+#: ../src/OPSI/System.py:522
+msgid "Collecting hardware information.\n"
+msgstr "Sammle Hardware-Informationen.\n"
+
+#: ../src/OPSI/System.py:1234
+msgid "Deleting partition table on disk '%s'.\n"
+msgstr "Loesche Partitionstabelle auf Festplatte '%s'.\n"
+
+#: ../src/OPSI/System.py:1261
+msgid "Shredding %s%s"
+msgstr "Schreddere %s%s"
+
+#: ../src/OPSI/System.py:1290
+msgid "Pass %d/%d (%s)\n"
+msgstr "Durchgang %d/%d (%s)\n"
+
+#: ../src/OPSI/System.py:1291
+msgid "Position: %s\n"
+msgstr "Position: %s\n"
+
+#: ../src/OPSI/System.py:1327
+msgid "Writing from %s to '%s%s'"
+msgstr "Schreibe von %s nach '%s%s'"
+
+#: ../src/OPSI/System.py:1351
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#: ../src/OPSI/System.py:1377
+msgid "Average transfer rate: %s kB/s\n"
+msgstr "Durchschnittliche Uebertragungsrate: %s kB/s\n"
+
+#: ../src/OPSI/System.py:1378
+msgid "Pos: %s MB\n"
+msgstr "Pos: %s MB\n"
+
+#: ../src/OPSI/System.py:1396
+msgid "Writing master boot record (system: %s) to '%s'.\n"
+msgstr "Schreibe Master Boot Record (System: %s) auf '%s'.\n"
+
+#: ../src/OPSI/System.py:1412
+msgid "Writing partition boot record (fs: %s) to '%s%s'.\n"
+msgstr "Schreibe Partition Boot Record (Dateisystem: %s) auf '%s%s'.\n"
+
+#: ../src/OPSI/System.py:1443
+msgid "Modifying NTFS boot record of partition '%s%s' (sector: %s).\n"
+msgstr "Modifiziere NTFS Boot Record von Parition '%s%s' (Sektor: %s).\n"
+
+#: ../src/OPSI/System.py:1571
+msgid ""
+"Creating partition on '%s': number: %s, type '%s', filesystem '%s', start: %"
+"s cyl, end: %s cyl.\n"
+msgstr ""
+"Erstelle Partition auf '%s': Nummer: %s, Typ '%s', Dateisystem '%s', Anfang: %"
+"s cyl, Ende: %s cyl.\n"
+
+#: ../src/OPSI/System.py:1599
+msgid "Deleting partition '%s' on '%s'.\n"
+msgstr "Loesche partition '%s' auf '%s'.\n"
+
+#: ../src/OPSI/System.py:1637
+msgid "Creating filesystem '%s' on '%s%s'.\n"
+msgstr "Erstelle Dateisystem '%s' auf '%s%s'.\n"
+
+#: ../src/OPSI/System.py:1663
+msgid "Resizing filesystem on partition '%s%s' (%s) to %s MB.\n"
+msgstr "Aendere die Groesse des Dateisystems von Partition '%s%s' (%s) auf %s MB.\n"
+
+#: ../src/OPSI/System.py:1680
+msgid "Writing filesystem image of '%s%s' to '%s'.\n"
+msgstr "Schreibe Dateisystem-Abbild von '%s%s' nach '%s'.\n"
+
+#: ../src/OPSI/System.py:1698
+msgid "Writing filesystem image of partition '%s%s' to ntfsclone-image '%s'"
+msgstr "Schreibe Dateisystem-Abbild von Partition '%s%s' als ntfsclone-image '%s'"
+
+#: ../src/OPSI/System.py:1724 ../src/OPSI/System.py:1820
+msgid "Syncing ...\n"
+msgstr "Synchronisiere ...\n"
+
+#: ../src/OPSI/System.py:1727
+msgid "Scanning filesystem ...\n"
+msgstr "Untersuche Dateisystem ...\n"
+
+#: ../src/OPSI/System.py:1729
+msgid "Writing image ...\n"
+msgstr "Schreibe Abbild ...\n"
+
+#: ../src/OPSI/System.py:1732
+msgid "Filesystem usage is %s MB (%s)\n"
+msgstr "%s MB (%s) des Dateisystems sind belegt.\n"
+
+#: ../src/OPSI/System.py:1748 ../src/OPSI/System.py:1836
+msgid "Failed: %s"
+msgstr "Fehlgeschlagen: %s"
+
+#: ../src/OPSI/System.py:1767
+msgid "Restoring filesystem image '%s' to '%s%s'.\n"
+msgstr "Schreibe Dateisystem-Abbild '%s' auf '%s%s'.\n"
+
+#: ../src/OPSI/System.py:1795
+msgid "Restoring ntfsclone image '%s' to '%s%s'"
+msgstr "Schreibe ntfsclone-Abbild '%s' auf '%s%s'"
+
