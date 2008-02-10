@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.2.6'
+__version__ = '0.2.6.1'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -1920,7 +1920,7 @@ class File31Backend(File, FileBackend):
 		
 		try:
 			for (key, value) in ini.items(productId + "-install"):
-				if propertiesdict.has_key(key.lower()):
+				if properties.has_key(key.lower()):
 					properties[key.lower()] = value
 				else:
 					logger.warning("Property '%s' in file '%s' not available for product '%s'" % (key, iniFile, productId))
