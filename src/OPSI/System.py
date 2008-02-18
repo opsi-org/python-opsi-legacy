@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.9.7'
+__version__ = '0.9.9.8'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -1506,7 +1506,7 @@ class Harddisk:
 		if (partition != 0):
 			dev = self.getPartition(partition)['device']
 		
-		cmd = "%s -v -n %d %s%s 2>&1" % (which('shred'), iterations, dev)
+		cmd = "%s -v -n %d %s 2>&1" % (which('shred'), iterations, dev)
 		
 		progress = None
 		if ui:

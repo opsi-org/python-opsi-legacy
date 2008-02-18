@@ -1,3 +1,13 @@
+python-opsi (3.2.0.13-1) stable; urgency=low
+
+  * Product.py 0.9.8.0
+     - fixes
+     - faster unpacking
+     - custom only packages
+  * System.py: fixed bug in shred()
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 18 Feb 2008 11:17:57 +0100
+
 python-opsi (3.2.0.12-1) stable; urgency=low
 
   * File31.py 0.2.6.1: fixed bug in getProductProperties_hash

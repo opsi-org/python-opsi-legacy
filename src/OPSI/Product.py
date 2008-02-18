@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.7.0'
+__version__ = '0.9.8.0'
 
 # Imports
 import os
@@ -621,12 +621,12 @@ class ProductPackage:
 		cf.close()
 	
 class ProductPackageSource(ProductPackage):
-	def __init__(self, sourceDir, tempDir = None, customName = None, packageFileDestDir = None):
+	def __init__(self, sourceDir, tempDir = None, customName = None, customOnly = False, packageFileDestDir = None):
 		self.product = None
 		self.dependencies = []
-		
+		self.customOnly = customOnly
 		if not tempDir:
-			if os.name == 'posix':
+			if (os.name == 'posix'):
 				tempDir = '/tmp'
 			else:
 				tempDir = 'C:\tmp'
@@ -635,6 +635,9 @@ class ProductPackageSource(ProductPackage):
 		self.tempDir = os.path.abspath(tempDir)
 		
 		controlFile = os.path.join(self.sourceDir, 'OPSI', 'control')
+		if customName and os.path.exists( os.path.join(self.sourceDir, 'OPSI.' + customName, 'control') ):
+			controlFile = os.path.join(self.sourceDir, 'OPSI.' + customName, 'control')
+		
 		# Read control file
 		f = open(controlFile, "r")
 		content = f.read()
@@ -686,7 +689,10 @@ class ProductPackageSource(ProductPackage):
 					customDir = dirs[i] + '.' + self.customName
 					if os.path.exists( os.path.join(self.sourceDir, customDir) ):
 						found = True
-					dirs.append(customDir)
+						if self.customOnly:
+							dirs[i] = customDir
+						else:
+							dirs.append(customDir)
 				if not found:
 					raise Exception("No custom dirs found for '%s'" % self.customName)
 			
@@ -815,34 +821,34 @@ class ProductPackageFile(ProductPackage):
 		self.runPostinst()
 		self.cleanup()
 	
-	def runPostinst(self):
+	def runPostinst(self, getHandle = False):
 		postinst = os.path.join(self.tmpUnpackDir, 'postinst')
 		if not os.path.exists(postinst):
 			logger.warning("Postinst script '%s' does not exist" % postinst)
-			return []
+			return None
 		os.chmod(postinst, 0700)
 		
 		os.putenv('PRODUCT_ID', self.product.productId)
 		os.putenv('CLIENT_DATA_DIR', self.clientDataDir)
 		
 		try:
-			return execute(postinst)
+			return execute(postinst, getHandle=getHandle)
 		except Exception, e:
 			self.cleanup()
 			raise Exception("Failed to execute '%s': %s" % (postinst, e))
 	
-	def runPreinst(self):
+	def runPreinst(self, getHandle = False):
 		preinst = os.path.join(self.tmpUnpackDir, 'preinst')
 		if not os.path.exists(preinst):
 			logger.warning("Preinst script '%s' does not exist" % preinst)
-			return []
+			return None
 		os.chmod(preinst, 0700)
 		
 		os.putenv('PRODUCT_ID', self.product.productId)
 		os.putenv('CLIENT_DATA_DIR', self.clientDataDir)
 		
 		try:
-			return execute(preinst)
+			return execute(preinst, getHandle=getHandle)
 		except Exception, e:
 			self.cleanup()
 			raise Exception("Failed to execute '%s': %s" % (preinst, e))
@@ -916,17 +922,19 @@ class ProductPackageFile(ProductPackage):
 		
 		prevUmask = os.umask(0077)
 		# Create temporary directory
-		if os.path.exists(self.tmpUnpackDir):
-			rmdir(self.tmpUnpackDir, recursive=True)
-		os.mkdir(self.tmpUnpackDir)
-		os.umask(prevUmask)
-		
-		try:
-			logger.notice("Extracting archive content to: '%s'" % self.tmpUnpackDir)
-			Tools.extractArchive(self.packageFile, chdir=self.tmpUnpackDir)
-		except Exception, e:
-			self.cleanup()
-			raise Exception("Failed to extract '%s': %s" % (self.packageFile, e))
+		#if os.path.exists(self.tmpUnpackDir):
+		#	rmdir(self.tmpUnpackDir, recursive=True)
+		#os.mkdir(self.tmpUnpackDir)
+		if not os.path.exists(self.tmpUnpackDir):
+			os.mkdir(self.tmpUnpackDir)
+			os.umask(prevUmask)
+			
+			try:
+				logger.notice("Extracting archive content to: '%s'" % self.tmpUnpackDir)
+				Tools.extractArchive(self.packageFile, chdir=self.tmpUnpackDir)
+			except Exception, e:
+				self.cleanup()
+				raise Exception("Failed to extract '%s': %s" % (self.packageFile, e))
 		
 		self.customName = None
 		
@@ -995,7 +1003,7 @@ class ProductPackageFile(ProductPackage):
 					self.cleanup()
 					raise Exception("Failed to extract '%s': %s" % (self.packageFile, e))
 					
-				os.unlink(archive)
+				#os.unlink(archive)
 			
 			if (name == 'OPSI'):
 				self.controlFile = os.path.join(self.tmpUnpackDir, 'control')

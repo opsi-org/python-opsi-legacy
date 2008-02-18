@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.2.6.2'
+__version__ = '0.2.6.3'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -1923,7 +1923,7 @@ class File31Backend(File, FileBackend):
 			
 		except ConfigParser.NoSectionError, e:
 			# Section <productId>-install does not exist => try the next ini-file
-			logger.info("No section '%s-install' in ini-file '%s'" % (productId, iniFile))
+			logger.info("No section '%s-install' in ini-file '%s'" % (productId, self.getClientIniFile(objectId)))
 		
 		return properties
 		
