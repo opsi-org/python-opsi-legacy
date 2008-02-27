@@ -1,14 +1,14 @@
-# Beispiel fuer Modul System.py
+# Example for System.py
 
-# .pot Datei erstellen
-pygettext -a System.py
+# Create .pot file
+pygettext -a path/to/System.py
 
-# template .po Datei erstellen
+# Create .po template
 msginit -l de_DE
 
-# .po Datei bearbeiten
+# Edit .po file
 edit de.po
 
-# .mo Datei erstellen
+# Compile .mo file
 msgfmt -o locale/de/LC_MESSAGES/opsi_system.mo opsi_system_de.po
 
