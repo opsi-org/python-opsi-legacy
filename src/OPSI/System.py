@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.9.7'
+__version__ = '0.9.9.9'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -542,7 +542,9 @@ def hardwareInventory(ui='default', filename=None, config=None):
 			return elements
 		
 		# Read output from lshw
-		dom = xml.dom.minidom.parseString( '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False)).encode("utf-8") )
+		xmlOut = '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False))
+		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08), '.', xmlOut)
+		dom = xml.dom.minidom.parseString( xmlOut.encode("utf-8") )
 		
 		# Read output from lspci
 		lspci = {}
@@ -1506,7 +1508,7 @@ class Harddisk:
 		if (partition != 0):
 			dev = self.getPartition(partition)['device']
 		
-		cmd = "%s -v -n %d %s%s 2>&1" % (which('shred'), iterations, dev)
+		cmd = "%s -v -n %d %s 2>&1" % (which('shred'), iterations, dev)
 		
 		progress = None
 		if ui:

@@ -10,7 +10,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.4.7'
+__version__ = '0.4.8'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -51,8 +51,11 @@ try:
 	# Univention imports
 	import univention.debug
 	import univention.admin.filter
-	import univention.admin.handlers
-	import univention.admin.syntax
+	try:
+		import univention.admin.handlers
+		import univention.admin.syntax
+	except:
+		pass
 	
 	# Mappings
 	def boolToString(value):

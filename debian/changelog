@@ -1,3 +1,27 @@
+python-opsi (3.2.0.15-1) stable; urgency=low
+
+  * Added backend methods userIsHost() and userIsAdmin()
+  * Univention.py fixed some warnings
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 10 Mar 2008 13:03:15 +0100
+
+python-opsi (3.2.0.14-1) stable; urgency=low
+
+  * System.py 0.9.9.9
+     - hardwareInventory() replacing invalid tokens from lshw output
+
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 27 Feb 2008 12:43:13 +0100
+
+python-opsi (3.2.0.13-1) stable; urgency=low
+
+  * Product.py 0.9.8.0
+     - fixes
+     - faster unpacking
+     - custom only packages
+  * System.py: fixed bug in shred()
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 18 Feb 2008 11:17:57 +0100
+
 python-opsi (3.2.0.12-1) stable; urgency=low
 
   * File31.py 0.2.6.1: fixed bug in getProductProperties_hash

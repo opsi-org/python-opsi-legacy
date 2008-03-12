@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.3.8'
+__version__ = '0.9.4.0'
 
 # Imports
 import os, stat, types, re, socket, new
@@ -30,6 +30,7 @@ from OPSI.Tools import *
 # Get logger instance
 logger = Logger()
 
+HOST_GROUP = '|HOST_GROUP|'
 
 '''= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 =                                  CLASS BACKENDMANAGER                                              =
@@ -124,7 +125,7 @@ class BackendManager(DataBackend):
 				raise BackendAuthenticationError("opsiHostKey authentication failed for host '%s': wrong key" \
 									% self.__username)
 			
-			self.__userGroups = ['host']
+			self.__userGroups = [ HOST_GROUP ]
 			logger.info("opsiHostKey authentication successful for host '%s'" % self.__username)
 		else:
 			# System user trying to log in with username and password
@@ -453,7 +454,7 @@ class BackendManager(DataBackend):
 	
 	def getHostRSAPublicKey(self):
 		
-		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP, 'host')
+		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP, HOST_GROUP)
 		
 		f = open(self._sshRSAPublicKeyFile, 'r')
 		data = f.read()
@@ -462,7 +463,7 @@ class BackendManager(DataBackend):
 	
 	def getPcpatchRSAPrivateKey(self):
 		
-		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP, 'host')
+		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP, HOST_GROUP)
 		
 		if (os.name != 'posix'):
 			raise NotImplementedError("Not implemented for non-posix os")
@@ -526,6 +527,16 @@ class BackendManager(DataBackend):
 		''' Checks if a user has been successfuly authenticated.
 		    Raises an exception if not. '''
 		return True
+	
+	def userIsAdmin(self):
+		if SYSTEM_ADMIN_GROUP in self.__userGroups:
+			return True
+		return False
+	
+	def userIsHost(self):
+		if HOST_GROUP in self.__userGroups:
+			return True
+		return False
 	
 	def getPossibleMethods_listOfHashes(self):
 		''' This function returns a list of available interface methods.
