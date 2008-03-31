@@ -1,3 +1,9 @@
+python-opsi (3.2.0.16-1) stable; urgency=low
+
+  * JSONRPC - fixed bug in retry request
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 31 Mar 2008 10:44:44 +0200
+
 python-opsi (3.2.0.15-1) stable; urgency=low
 
   * Added backend methods userIsHost() and userIsAdmin()

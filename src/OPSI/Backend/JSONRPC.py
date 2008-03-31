@@ -10,10 +10,10 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 # Imports
-import json, base64, urllib, httplib, new
+import json, base64, urllib, httplib, new, stat
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -31,7 +31,7 @@ METHOD_GET = 2
 class JSONRPCBackend(DataBackend):
 	''' This class implements parts of the abstract class Backend '''
 	
-	def __init__(self, username = '', password = '', address = 'http://localhost:4447/rpc', backendManager=None, args={}):
+	def __init__(self, username = '', password = '', address = '', backendManager=None, args={}):
 		''' JSONRPCBackend constructor. '''
 		
 		self.__backendManager = backendManager
@@ -49,8 +49,12 @@ class JSONRPCBackend(DataBackend):
 		
 		# Parse arguments
 		for (option, value) in args.items():
-			if   (option.lower() == 'defaulthttpport'):	self.__defaultHttpPort = value
-			elif (option.lower() == 'defaulthttpsport'):	self.__defaultHttpsPort = value
+			if (option.lower() == 'address'):
+				if not self.__address:			self.__address = value
+			elif (option.lower() == 'username'):
+				if not self.__username:			self.__username = value
+			elif (option.lower() == 'password'):
+				if not self.__password:			self.__password = value
 			elif (option.lower() == 'defaultdomain'): 	self.__defaultDomain = value
 			elif (option.lower() == 'sessionid'): 		self.__sessionId = value
 			elif (option.lower() == 'method'):
@@ -65,9 +69,9 @@ class JSONRPCBackend(DataBackend):
 		
 		if ( self.__address.find('/') == -1 and self.__address.find('=') == -1 ):
 			if (self.__protocol == 'https'):
-				self.__address = '%s://%s:%s/rpc' % (self.__protocol, self.__address, self.__defaultHttpsPort)
+				self.__address = '%s://%s:4447/rpc' % (self.__protocol, self.__address)
 			else:
-				self.__address = '%s://%s:%s/rpc' % (self.__protocol, self.__address, self.__defaultHttpPort)
+				self.__address = '%s://%s:4444/rpc' % (self.__protocol, self.__address)
 		
 		self._connect()
 	
@@ -121,7 +125,7 @@ class JSONRPCBackend(DataBackend):
 					params[i] = params[i][1:]
 					paramsWithDefaults[i] = params[i] + '="__UNDEF__"'
 			
-			logger.debug("Creating instance method '%s'" % method['name'])
+			logger.debug2("Creating instance method '%s'" % method['name'])
 			
 			
 			if (len(params) == 2):
@@ -144,6 +148,7 @@ class JSONRPCBackend(DataBackend):
 		
 		# Get params
 		params = []
+		filehandle = None
 		logger.debug("Options: %s" % options)
 		if options.has_key('params'):
 			ps = options['params']
@@ -153,28 +158,49 @@ class JSONRPCBackend(DataBackend):
 			for p in ps:
 				if (p == '__UNDEF__'):
 					p = None
+				if (type(p) == file):
+					if filehandle:
+						raise BackendBadValueError("Only one filehandle param allowed")
+					filehandle = p
+					p = '__BINARY_DATA__'
 				logger.debug2("Appending param: %s, type: %s" % (p, type(p)))
 				params.append(p)
 		
 		# Create json-rpc object
 		jsonrpc = json.write( {"id": 1, "method": method, "params": params } )
-		logger.debug("jsonrpc string: %s" % jsonrpc)
+		logger.info("jsonrpc string: %s" % jsonrpc)
 		
-		logger.debug("requesting: base-url '%s', query '%s'" % (self.__baseUrl, jsonrpc))
-		response = self.__request(self.__baseUrl, jsonrpc, retry=retry )
+		logger.info("requesting: base-url '%s', query '%s', filehandle: %s" % (self.__baseUrl, jsonrpc, filehandle))
+		response = self.__request(self.__baseUrl, jsonrpc, retry=retry, filehandle=filehandle)
+		
+		logger.debug2("Got response: %s" % response)
 		
 		# Read response
 		if json.read(response).get('error'):
-			# Error occurred => raise BackendIOError
-			raise Exception( json.read(response).get('error') )
-		
+			error = json.read(response).get('error')
+			# Trying to raise the same Exception type/class
+			exception = None
+			try:
+				logger.debug2('eval %s("%s")' % (error['class'], error['message'].replace('"', '\\"')) )
+				exception = eval('%s("%s")' % (error['class'], error['message'].replace('"', '\\"')) )
+			except Exception, e:
+				logger.debug2("Eval failed: %s" % e)
+				raise Exception(error)
+			raise exception
+			
 		# Return result as json object
 		return json.read(response).get('result', None)
 	
-	def __request(self, baseUrl, query='', retry=True):
+	def __request(self, baseUrl, query='', retry=True, filehandle = None):
 		''' Do a http request '''
+		contentLength = 0
+		if filehandle:
+			if (self.__method == METHOD_GET):
+				raise BackendIOError("Cannot use http method get to send binary data")
+			fs = os.stat(filehandle.name)
+			logger.debug("Length of binary data to send: %d" % fs[stat.ST_SIZE])
+			contentLength += fs[stat.ST_SIZE]
 		
-		#logger.debug("__request(%s)" % request)
 		response = None
 		try:
 			if (self.__method == METHOD_GET):
@@ -186,8 +212,11 @@ class JSONRPCBackend(DataBackend):
 			else:
 				logger.debug("Using method POST")
 				self.__connection.putrequest('POST', baseUrl)
-				self.__connection.putheader('content-type', 'application/json-rpc')
-				self.__connection.putheader('content-length', str(len(query)))
+				if filehandle:
+					self.__connection.putheader('content-type', 'multipart/opsi; data-offset=%s' % len(query))
+				else:
+					self.__connection.putheader('content-type', 'application/json-rpc')
+				self.__connection.putheader('content-length', str( contentLength + len(query) ))
 			
 			# Add some http headers
 			self.__connection.putheader('Accept', 'application/json-rpc')
@@ -203,6 +232,8 @@ class JSONRPCBackend(DataBackend):
 			self.__connection.endheaders()
 			if (self.__method == METHOD_POST):
 				self.__connection.send(query)
+				if filehandle:
+					self.__connection.send(filehandle.read())
 			
 			# Get response
 			response = self.__connection.getresponse()
@@ -218,7 +249,7 @@ class JSONRPCBackend(DataBackend):
 				logger.warning("Requesting base-url '%s', query '%s' failed: %s" % (baseUrl, query, e))
 				logger.notice("Trying to reconnect...")
 				self._connect()
-				return self.__request(baseUrl, query='', retry=False)
+				return self.__request(baseUrl, query=query, retry=False)
 			
 			# Error occurred => raise BackendIOError
 			raise BackendIOError("Requesting base-url '%s', query '%s' failed: %s" % (baseUrl, query, e))
@@ -228,7 +259,10 @@ class JSONRPCBackend(DataBackend):
 			return response.read()
 		except Exception, e:
 			raise BackendIOError("Cannot read '%s'" % e)
-
+	
+	#def installPackage(self, filename, data):
+	#	print type(data)
+	
 	def getPossibleMethods_listOfHashes(self):
 		return self.possibleMethods
 		

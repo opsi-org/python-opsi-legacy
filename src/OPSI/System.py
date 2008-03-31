@@ -9,7 +9,7 @@
    @license: GNU GPL, see COPYING for details.
 """
 
-__version__ = '0.9.9.9'
+__version__ = '1.0.0.0'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -160,7 +160,7 @@ def execute(cmd, nowait=False, wait=1, getHandle=False, logLevel=LOG_DEBUG, exit
 			cmd = '***********************'
 		raise Exception("Command '%s' failed: %s" % (cmd, e) )
 	
-	logger.info("Exit code: %s" % exitCode)
+	logger.debug("Exit code: %s" % exitCode)
 	if exitCode:
 		if (logLevel == LOG_CONFIDENTIAL):
 			cmd = '***********************'
@@ -567,6 +567,8 @@ def hardwareInventory(ui='default', filename=None, config=None):
 			if match:
 				lspci[busId]['subsystemVendorId'] = match.group(1)
 				lspci[busId]['subsystemDeviceId'] = match.group(2)
+		logger.debug("Parsed lspci info:")
+		logger.debug(Tools.objectToBeautifiedText(lspci))
 		
 		# Read output from dmidecode
 		dmidecode = {}
@@ -607,6 +609,8 @@ def hardwareInventory(ui='default', filename=None, config=None):
 						dmidecode[dmiType][-1][option].append(Tools.removeUnit(line.strip()))
 			except Exception, e:
 				logger.error("Error while parsing dmidecode output '%s': %s" % (line.strip(), e))
+		logger.debug("Parsed dmidecode info:")
+		logger.debug(Tools.objectToBeautifiedText(dmidecode))
 		
 		# Get hw info from lshw
 		for hwClass in config:
@@ -639,7 +643,11 @@ def hardwareInventory(ui='default', filename=None, config=None):
 								if (child.nodeName == "businfo"):
 									busInfo = child.firstChild.data.strip()
 									if busInfo.startswith('pci@'):
-										pciInfo = lspci.get(busInfo.split('@')[1])
+										logger.debug("Getting pci bus info for '%s'" % busInfo)
+										pciBusId = busInfo.split('@')[1]
+										if pciBusId.startswith('0000:'):
+											pciBusId = pciBusId[5:]
+										pciInfo = lspci.get(pciBusId, {})
 										for (key, value) in pciInfo.items():
 											elem = dom.createElement(key)
 											elem.childNodes.append( dom.createTextNode(value) )
