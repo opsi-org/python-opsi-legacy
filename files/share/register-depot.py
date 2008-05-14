@@ -58,6 +58,7 @@ repositoryLocalUrl = 'file:///var/lib/opsi/products'
 repositoryRemoteUrl = 'webdavs://%s:4447/products' % fqdn
 network = '0.0.0.0/0'
 description = 'Depotserver %s' % depotName
+maxBandwidth = 0
 notes = ''         
 
 try:
@@ -93,6 +94,7 @@ try:
 		network = depot.get('network', network)
 		description = depot.get('description', description)
 		notes = depot.get('notes', notes)
+		maxBandwidth = depot.get('repositoryMaxBandwidth', maxBandwidth)
 	except:
 		pass
 	
@@ -108,6 +110,10 @@ try:
 	uin = sys.stdin.readline().strip()
 	if uin: notes = uin
 	
+	print "Maximum upload bandwith in kilobyte per second (0=unlimited) [%s]: " % maxBandwidth,
+	uin = sys.stdin.readline().strip()
+	if uin: maxBandwidth = uin
+	
 	print ""
 	
 	# Create depot server
@@ -121,7 +127,8 @@ try:
 			repositoryRemoteUrl = repositoryRemoteUrl,
 			network = network,
 			description = description,
-			notes = notes )
+			notes = notes,
+			maxBandwidth = maxBandwidth)
 	
 	hostKey = be.getOpsiHostKey(depotId)
 	be.exit()

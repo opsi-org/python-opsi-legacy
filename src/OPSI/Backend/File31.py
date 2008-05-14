@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.4'
+__version__ = '0.2.7.5'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -983,7 +983,7 @@ class File31Backend(File, FileBackend):
 			serverId = parts[0] + '.' + self._defaultDomain
 		return serverId.lower()
 	
-	def createDepot(self, depotName, domain, depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl, network, description=None, notes=None):
+	def createDepot(self, depotName, domain, depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl, network, description=None, notes=None, maxBandwidth=0):
 		depotId = depotName + '.' + domain
 		depotId = self._preProcessHostId(depotId)
 		for i in (depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl):
@@ -1022,6 +1022,7 @@ class File31Backend(File, FileBackend):
 			ini.add_section('repository')
 		ini.set('repository', 'localurl', repositoryLocalUrl)
 		ini.set('repository', 'remoteurl', repositoryRemoteUrl)
+		ini.set('repository', 'maxbandwidth', str(maxBandwidth))
 		
 		if not ini.has_section('depotserver'):
 			ini.add_section('depotserver')
@@ -1072,6 +1073,10 @@ class File31Backend(File, FileBackend):
 			info['network'] 		= ini.get('depotserver', 'network')
 			info['description'] 		= ini.get('depotserver', 'description')
 			info['notes'] 			= ini.get('depotserver', 'notes')
+			if ini.has_option('repository', 'maxbandwidth'):
+				info['repositoryMaxBandwidth'] = int(ini.get('repository', 'maxbandwidth'))
+			else:
+				info['repositoryMaxBandwidth'] = 0
 		except Exception, e:
 			raise BackendIOError("Failed to get info for depot-id '%s': %s" % (depotId, e))
 		return info
