@@ -23,8 +23,6 @@ case "$1" in
 		groupadd opsiadmin
 	fi
 	
-	adduser pcpatch shadow  1>/dev/null 2>/dev/null || true
-	
 	chown -R pcpatch:pcpatch /etc/opsi/backendManager.d
 	chmod 660 /etc/opsi/backendManager.d/*
 	

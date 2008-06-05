@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.0.5'
+__version__ = '1.0.1'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -477,7 +477,7 @@ def mount(dev, mountpoint, ui='default', **options):
 	logLevel = LOG_DEBUG
 	
 	if dev.lower().startswith('smb://'):
-		# Do not log confidential (smb password)
+		# Do not log smb password
 		logLevel = LOG_CONFIDENTIAL
 		
 		match = re.search('^smb:(//[^/]+\/.+)$', dev, re.IGNORECASE)
@@ -492,12 +492,63 @@ def mount(dev, mountpoint, ui='default', **options):
 			options['username'] = 'guest'
 		if not 'password' in options:
 			options['password'] = ''
-		
-	if dev.lower().startswith('file://'):
-		dev = dev[7:]
 	
+	elif dev.lower().startswith('webdav://') or dev.lower().startswith('webdavs://') or \
+	     dev.lower().startswith('http://') or dev.lower().startswith('https://'):
+		# Do not log webdav password
+		#logLevel = LOG_CONFIDENTIAL
+		
+		match = re.search('^(http|webdav)(s*)(://[^/]+\/.+)$', dev, re.IGNORECASE)
+		if match:
+			fs = '-t davfs'
+			dev = 'http' + match.group(2) + match.group(3)
+		else:
+			raise Exception("Bad webdav url '%s'" % dev)
+		
+		if not 'username' in options:
+			options['username'] = ''
+		if not 'password' in options:
+			options['password'] = ''
+		if not 'servercert' in options:
+			options['servercert'] = ''
+		
+		f = open("/etc/davfs2/certs/trusted.pem", "w")
+		f.write(options['servercert'])
+		f.close()
+		os.chmod("/etc/davfs2/certs/trusted.pem", 0644)
+		
+		f = open("/etc/davfs2/secrets", "r")
+		lines = f.readlines()
+		f.close()
+		f = open("/etc/davfs2/secrets", "w")
+		for line in lines:
+			if re.search("^%s\s+" % dev, line):
+				f.write("#")
+			f.write(line)
+		f.write('%s "%s" "%s"\n' % (dev, options['username'], options['password']))
+		f.close()
+		os.chmod("/etc/davfs2/secrets", 0600)
+		
+		f = open("/etc/davfs2/davfs2.conf", "r")
+		lines = f.readlines()
+		f.close()
+		f = open("/etc/davfs2/davfs2.conf", "w")
+		for line in lines:
+			if re.search("^servercert\s+", line):
+				f.write("#")
+			f.write(line)
+		f.write("servercert /etc/davfs2/certs/trusted.pem\n")
+		f.close()
+		
+		del options['username']
+		del options['password']
+		del options['servercert']
+		
 	elif dev.lower().startswith('/'):
 		pass
+	
+	elif dev.lower().startswith('file://'):
+		dev = dev[7:]
 	
 	else:
 		raise Exception("Cannot mount unknown fs type '%s'" % dev)
@@ -554,7 +605,32 @@ def getHarddisks(ui='default'):
 		raise Exception('No harddisks found!')
 	
 	return disks
-	
+
+def getDiskSpaceUsage(path, ui='default'):
+	disk = os.statvfs(path)
+	info = {}
+	info['capacity'] = disk.f_bsize * disk.f_blocks
+	info['available'] = disk.f_bsize * disk.f_bavail
+	info['used'] = disk.f_bsize * (disk.f_blocks - disk.f_bavail)
+	info['usage'] = float(disk.f_blocks - disk.f_bavail) / float(disk.f_blocks)
+	logger.info("Disk space usage for path '%s': %s" % (path, info))
+	return info
+
+def getDevice(path, ui='default'):
+	(mountPoint, device) = ('', '')
+	f = open('/etc/mtab')
+	for line in f.readlines():
+		line = line.strip()
+		if not line or line.startswith("#"):
+			continue
+		(dev, mp, foo) = line.split(None, 2)
+		if path.startswith(mp) and (len(mp) > len(mountPoint)):
+			mountPoint = mp
+			device = dev
+	f.close()
+	logger.info("Filesystem for path '%s' is on device '%s'" % (path, device))
+	return device
+
 def hardwareInventory(ui='default', filename=None, config=None):
 	if ui == 'default': ui=userInterface
 	
@@ -582,7 +658,7 @@ def hardwareInventory(ui='default', filename=None, config=None):
 		
 		# Read output from lshw
 		xmlOut = '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False))
-		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08), '.', xmlOut)
+		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xbd, 0xbf, 0xef), '.', xmlOut)
 		dom = xml.dom.minidom.parseString( xmlOut.encode("utf-8") )
 		
 		# Read output from lspci

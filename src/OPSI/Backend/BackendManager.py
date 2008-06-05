@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.4.6'
+__version__ = '0.9.4.9'
 
 # Imports
 import os, stat, types, re, socket, new
@@ -49,6 +49,7 @@ from OPSI.Product import *
 from OPSI.Backend.Backend import *
 from OPSI.Logger import *
 from OPSI.Tools import *
+from OPSI import System
 
 # Get logger instance
 logger = Logger()
@@ -503,7 +504,15 @@ class BackendManager(DataBackend):
 			return res
 		except Exception, e:
 			raise BackendIOError("Failed to get md5sum: %s" % e)
+	
+	def getDiskSpaceUsage(self, path):
+		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP)
 		
+		try:
+			return System.getDiskSpaceUsage(path)
+		except Exception, e:
+			raise BackendIOError("Failed to get disk space usage: %s" % e)
+	
 	def getHostRSAPublicKey(self):
 		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP, HOST_GROUP)
 		
@@ -588,7 +597,7 @@ class BackendManager(DataBackend):
 			return True
 		return False
 	
-	def installPackage(self, filename, force=False, defaultProperties={}):
+	def installPackage(self, filename, force=False, defaultProperties={}, tempDir=None):
 		self._verifyGroupMembership(SYSTEM_ADMIN_GROUP)
 		
 		if not os.path.isfile(filename):
@@ -599,7 +608,7 @@ class BackendManager(DataBackend):
 		
 		logger.info("Installing package file '%s'" % filename)
 		
-		ppf = Product.ProductPackageFile(filename)
+		ppf = Product.ProductPackageFile(filename, tempDir=tempDir)
 		
 		depotId = socket.getfqdn()
 		depot = self.getDepot_hash(depotId)
@@ -615,6 +624,8 @@ class BackendManager(DataBackend):
 		lockedOnDepots = self.getProductLocks_hash(depotIds = [ depotId ]).get(ppf.product.productId, [])
 		logger.info("Product currently locked on : %s" % lockedOnDepots)
 		if depotId in lockedOnDepots and not force:
+			logger.info("Cleaning up")
+			ppf.cleanup()
 			raise BackendTemporaryError("Product '%s' currently locked on depot '%s'" % (ppf.product.productId, depotId))
 		
 		logger.info("Locking product '%s' on depot '%s'" % (ppf.product.productId, depotId))
