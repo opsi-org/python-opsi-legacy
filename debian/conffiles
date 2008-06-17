@@ -1,4 +1,6 @@
 etc/opsi/hwaudit/opsihwaudit.conf
+etc/opsi/hwaudit/locales/de_DE
+etc/opsi/hwaudit/locales/en_US
 etc/opsi/backendManager.d/10_file.conf
 etc/opsi/backendManager.d/11_ldap.conf
 etc/opsi/backendManager.d/12_univention.conf

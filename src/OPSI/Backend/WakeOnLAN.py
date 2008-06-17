@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.1'
+__version__ = '0.9.2'
 
 # Imports
 import socket, struct, re
@@ -80,7 +80,7 @@ class WakeOnLANBackend(Backend):
 		logger.notice("Trying to switch on host with mac '%s'" % mac)
 		
 		# Pad the synchronization stream.
-		data = ''.join(['FFFFFFFFFFFF', mac * 20])
+		data = ''.join(['FFFFFFFFFFFF', mac * 16])
 		send_data = '' 
 		
 		# Split up the hex values and pack.
@@ -93,7 +93,5 @@ class WakeOnLANBackend(Backend):
 		# Broadcast it to the LAN.
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-		sock.sendto(send_data, ('<broadcast>', 7))
-		
-		
+		sock.sendto(send_data, ('<broadcast>', 12287))
 	

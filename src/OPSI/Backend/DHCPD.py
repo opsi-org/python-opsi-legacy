@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.4.4'
+__version__ = '0.5.4.5'
 
 # Imports
 import re, socket, time
@@ -421,7 +421,7 @@ class Config(File):
 			# Parse dhcpd.conf
 			self._parseConfig()
 		
-		logger.notice("Creating host '%s', hardwareAddress '%s', ipAddress '%s', fixedAddress '%s', parameters '%s'" % \
+		logger.info("Creating host '%s', hardwareAddress '%s', ipAddress '%s', fixedAddress '%s', parameters '%s'" % \
 					(hostname, hardwareAddress, ipAddress, fixedAddress, parameters) )
 		
 		existingHost = None

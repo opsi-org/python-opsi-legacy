@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 # Imports
 import socket
@@ -90,10 +90,13 @@ class OpsiPXEConfdBackend(Backend):
 					isRetry = True
 					time.sleep(2)
 					logger.error("Request on depot '%s' timed out, retrying" % depotId)
-				
+			except Exception, e:
+				logger.error("Request failed on depot '%s': %s" % (depotId, e))
+				raise BackendIOError("Request failed on depot '%s': %s" % (depotId, e))
+			
 			if res.get('error'):
 				logger.error("Request failed on depot '%s': %s" % (depotId, res['error']))
-				raise BackendIOError(res['error'])
+				raise BackendIOError("Request failed on depot '%s': %s" % (depotId, res['error']))
 			return res.get('result')
 			
 		cmd = 'set %s' % hostId
@@ -133,10 +136,13 @@ class OpsiPXEConfdBackend(Backend):
 					isRetry = True
 					time.sleep(2)
 					logger.error("Request on depot '%s' timed out, retrying" % depotId)
-				
+			except Exception, e:
+				logger.error("Request failed on depot '%s': %s" % (depotId, e))
+				raise BackendIOError("Request failed on depot '%s': %s" % (depotId, e))
+			
 			if res.get('error'):
 				logger.error("Request failed on depot '%s': %s" % (depotId, res['error']))
-				raise BackendIOError(res['error'])
+				raise BackendIOError("Request failed on depot '%s': %s" % (depotId, res['error']))
 			return res.get('result')
 		
 		cmd = 'unset %s' % hostId

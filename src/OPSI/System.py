@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.0.5'
+__version__ = '1.1.0'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -477,7 +477,7 @@ def mount(dev, mountpoint, ui='default', **options):
 	logLevel = LOG_DEBUG
 	
 	if dev.lower().startswith('smb://'):
-		# Do not log confidential (smb password)
+		# Do not log smb password
 		logLevel = LOG_CONFIDENTIAL
 		
 		match = re.search('^smb:(//[^/]+\/.+)$', dev, re.IGNORECASE)
@@ -492,12 +492,63 @@ def mount(dev, mountpoint, ui='default', **options):
 			options['username'] = 'guest'
 		if not 'password' in options:
 			options['password'] = ''
-		
-	if dev.lower().startswith('file://'):
-		dev = dev[7:]
 	
+	elif dev.lower().startswith('webdav://') or dev.lower().startswith('webdavs://') or \
+	     dev.lower().startswith('http://') or dev.lower().startswith('https://'):
+		# Do not log webdav password
+		#logLevel = LOG_CONFIDENTIAL
+		
+		match = re.search('^(http|webdav)(s*)(://[^/]+\/.+)$', dev, re.IGNORECASE)
+		if match:
+			fs = '-t davfs'
+			dev = 'http' + match.group(2) + match.group(3)
+		else:
+			raise Exception("Bad webdav url '%s'" % dev)
+		
+		if not 'username' in options:
+			options['username'] = ''
+		if not 'password' in options:
+			options['password'] = ''
+		if not 'servercert' in options:
+			options['servercert'] = ''
+		
+		f = open("/etc/davfs2/certs/trusted.pem", "w")
+		f.write(options['servercert'])
+		f.close()
+		os.chmod("/etc/davfs2/certs/trusted.pem", 0644)
+		
+		f = open("/etc/davfs2/secrets", "r")
+		lines = f.readlines()
+		f.close()
+		f = open("/etc/davfs2/secrets", "w")
+		for line in lines:
+			if re.search("^%s\s+" % dev, line):
+				f.write("#")
+			f.write(line)
+		f.write('%s "%s" "%s"\n' % (dev, options['username'], options['password']))
+		f.close()
+		os.chmod("/etc/davfs2/secrets", 0600)
+		
+		f = open("/etc/davfs2/davfs2.conf", "r")
+		lines = f.readlines()
+		f.close()
+		f = open("/etc/davfs2/davfs2.conf", "w")
+		for line in lines:
+			if re.search("^servercert\s+", line):
+				f.write("#")
+			f.write(line)
+		f.write("servercert /etc/davfs2/certs/trusted.pem\n")
+		f.close()
+		
+		del options['username']
+		del options['password']
+		del options['servercert']
+		
 	elif dev.lower().startswith('/'):
 		pass
+	
+	elif dev.lower().startswith('file://'):
+		dev = dev[7:]
 	
 	else:
 		raise Exception("Cannot mount unknown fs type '%s'" % dev)
@@ -554,7 +605,32 @@ def getHarddisks(ui='default'):
 		raise Exception('No harddisks found!')
 	
 	return disks
-	
+
+def getDiskSpaceUsage(path, ui='default'):
+	disk = os.statvfs(path)
+	info = {}
+	info['capacity'] = disk.f_bsize * disk.f_blocks
+	info['available'] = disk.f_bsize * disk.f_bavail
+	info['used'] = disk.f_bsize * (disk.f_blocks - disk.f_bavail)
+	info['usage'] = float(disk.f_blocks - disk.f_bavail) / float(disk.f_blocks)
+	logger.info("Disk space usage for path '%s': %s" % (path, info))
+	return info
+
+def getDevice(path, ui='default'):
+	(mountPoint, device) = ('', '')
+	f = open('/etc/mtab')
+	for line in f.readlines():
+		line = line.strip()
+		if not line or line.startswith("#"):
+			continue
+		(dev, mp, foo) = line.split(None, 2)
+		if path.startswith(mp) and (len(mp) > len(mountPoint)):
+			mountPoint = mp
+			device = dev
+	f.close()
+	logger.info("Filesystem for path '%s' is on device '%s'" % (path, device))
+	return device
+
 def hardwareInventory(ui='default', filename=None, config=None):
 	if ui == 'default': ui=userInterface
 	
@@ -582,7 +658,7 @@ def hardwareInventory(ui='default', filename=None, config=None):
 		
 		# Read output from lshw
 		xmlOut = '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False))
-		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08), '.', xmlOut)
+		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xbd, 0xbf, 0xef), '.', xmlOut)
 		dom = xml.dom.minidom.parseString( xmlOut.encode("utf-8") )
 		
 		# Read output from lspci
@@ -1340,7 +1416,29 @@ def runDosemu(harddisk = None, todo = ()):
 	#execute('%s -F %s rows %s cols %s' % (which('stty'), tty, rows, cols))
 	
 	logger.debug("runDosemu(): end")
-	
+
+def getBlockDeviceBusType(device):
+	# Returns either 'IDE', 'SCSI', 'SATA', 'RAID' or None (not found)
+	(devs, type) = ([], None)
+	for line in execute('%s --disk --cdrom' % which('hwinfo')):
+		if not re.search('^\s+', line):
+			(devs, type) = ([], None)
+			continue
+		
+		match = re.search('^\s+Device Files:(.*)$', line)
+		if match:
+			devs = match.group(1).split(',')
+			for i in range(len(devs)):
+				devs[i] = devs[i].strip()
+		
+		match = re.search('^\s+Attached to:\s+[^\(]+\((\S+)\s*', line)
+		if match:
+			type = match.group(1)
+		
+		if devs and device in devs and type:
+			logger.info("Bus type of device '%s' is '%s'" % (device, type))
+			return type
+
 # ======================================================================================================
 # =                                       CLASS HARDDISK                                               =
 # ======================================================================================================
@@ -1361,9 +1459,13 @@ class Harddisk:
 		self.label = None
 		self.size = -1		# unit MB
 		self.partitions = []
+		self.ldPreload = None
 		
 		self.useBIOSGeometry()
 		self.readPartitionTable()
+	
+	def getBusType(self):
+		return getBlockDeviceBusType(self.device)
 		
 	def useBIOSGeometry(self):
 		# Make sure your kernel supports edd (CONFIG_EDD=y/m) and module is loaded if not compiled in
@@ -1373,25 +1475,9 @@ class Harddisk:
 		except Exception, e:
 			logger.error(e)
 			return
-		
-		#for d in os.listdir('/sys/firmware/edd'):
-		#	try:
-		#		f = open('/sys/firmware/edd/%s/interface' % d)
-		#		interface = f.read()
-		#		f.close()
-		#		if (interface == 'SCSI'):
-		#			# ms-sys -p --fat32 /dev/sdxn will fail with current version of geo_override.so
-		#			# ( Failed writing number of heads to /dev/sdxn )
-		#			logger.warning("Found SCSI device '%s', will not preload geo_override!" % d)
-		#			return
-		#		
-		#	except Exception, e:
-		#		logger.error("Failed to get bus info for device '%s': %s" % (d, e) )
-		
 		# geo_override.so will affect all devices !
 		logger.info("Using geo_override.so for all disks.")
-		os.putenv("LD_PRELOAD", GEO_OVERWRITE_SO)
-		
+		self.ldPreload = GEO_OVERWRITE_SO
 		
 	def getSignature(self):
 		hd = posix.open('%s' % self.device, posix.O_RDONLY)
@@ -1418,6 +1504,8 @@ class Harddisk:
 	
 	def readPartitionTable(self):
 		self.partitions = []
+		if self.ldPreload:
+			os.putenv("LD_PRELOAD", self.ldPreload)
 		
 		result = execute(which('sfdisk') + ' -l ' + self.device)
 		for line in result:
@@ -1502,6 +1590,8 @@ class Harddisk:
 									    self.partitions[p]['secEnd'], self.partitions[p]['secSize']) )
 							break
 		
+		if self.ldPreload:
+			os.unsetenv("LD_PRELOAD")
 		
 	def writePartitionTable(self):
 		logger.debug("Partition table to write to disk")
@@ -1529,7 +1619,11 @@ class Harddisk:
 			
 		cmd +=  '" | %s -D %s' % (which('sfdisk'), self.device)
 		
+		if self.ldPreload:
+			os.putenv("LD_PRELOAD", self.ldPreload)
 		execute(cmd)
+		if self.ldPreload:
+			os.unsetenv("LD_PRELOAD")
 	
 	
 	def deletePartitionTable(self, ui='default'):
@@ -1539,11 +1633,14 @@ class Harddisk:
 										% self.device)
 		logger.info("Deleting partition table on '%s'." % self.device)
 		cmd = which('dd') + ' if=/dev/zero of=' + self.device +' bs=512 count=1'
+		if self.ldPreload:
+			os.putenv("LD_PRELOAD", self.ldPreload)
 		execute(cmd)
 		
 		logger.info("Forcing kernel to reread partition table of '%s'." % self.device)
 		execute(which('sfdisk') + ' --re-read %s' % self.device)
-		
+		if self.ldPreload:
+			os.unsetenv("LD_PRELOAD")
 		self.label = None
 		self.partitions = []
 	
@@ -1708,7 +1805,12 @@ class Harddisk:
 		
 		cmd = "%s %s %s" % (which('ms-sys'), mbrType, self.device)
 		try:
+			
+			if self.ldPreload:
+				os.putenv("LD_PRELOAD", self.ldPreload)
 			result = execute(cmd)
+			if self.ldPreload:
+				os.unsetenv("LD_PRELOAD")
 		except Exception, e:
 			logger.error("Cannot write mbr: %s" % e)
 			raise Exception ("Cannot write mbr: %s" % e)
@@ -1729,7 +1831,11 @@ class Harddisk:
 		
 		cmd = "%s -p %s %s" % (which('ms-sys'), fsType, self.getPartition(partition)['device'])
 		try:
+			if self.ldPreload:
+				os.putenv("LD_PRELOAD", self.ldPreload)
 			result = execute(cmd)
+			if self.ldPreload:
+				os.unsetenv("LD_PRELOAD")
 			if (result[0].find('successfully') == -1):
 				raise Exception(result)
 			
@@ -1962,7 +2068,11 @@ class Harddisk:
 				options = '-f'
 			cmd = ( "mkfs.%s %s %s" % (fs, options, self.getPartition(partition)['device']) )
 		
+		if self.ldPreload:
+			os.putenv("LD_PRELOAD", self.ldPreload)
 		execute(cmd)
+		if self.ldPreload:
+			os.unsetenv("LD_PRELOAD")
 		self.readPartitionTable()
 		
 		
@@ -1982,10 +2092,15 @@ class Harddisk:
 		if ui: ui.getMessageBox().addText(_("Resizing filesystem on partition '%s' (%s) to %s MB.\n") \
 							% (self.getPartition(partition)['device'], fs, (size/(1000*1000))) )
 		
+		if self.ldPreload:
+			os.putenv("LD_PRELOAD", self.ldPreload)
+		
 		if (fs.lower() == 'ntfs'):
 			cmd = ( "%s --force --size %s %s" % (which('ntfsresize'), size, self.getPartition(partition)['device']) )
 			execute(cmd)
 		
+		if self.ldPreload:
+			os.unsetenv("LD_PRELOAD")
 		
 	def saveImage(self, partition, imageFile, ui='default'):
 		if ui == 'default': ui=userInterface
@@ -2000,6 +2115,9 @@ class Harddisk:
 							% (part['device'], imageFile) )
 		
 		if (part['fs'].lower() == 'ntfs'):
+			if self.ldPreload:
+				os.putenv("LD_PRELOAD", self.ldPreload)
+			
 			pipe = ''
 			if imageFile.startswith('|'):
 				pipe = imageFile
@@ -2081,6 +2199,8 @@ class Harddisk:
 			if handle: handle.close	
 			if progress: progress.hide()
 			
+			if self.ldPreload:
+				os.unsetenv("LD_PRELOAD")
 		else:
 			raise Exception("Unsupported filesystem '%s'." % part['fs'])
 	
@@ -2141,6 +2261,9 @@ class Harddisk:
 			raise
 		
 		if (imageType == 'ntfsclone'):
+			
+			if self.ldPreload:
+				os.putenv("LD_PRELOAD", self.ldPreload)
 			
 			logger.info("Restoring ntfsclone-image '%s' to '%s'" % \
 							(imageFile, self.getPartition(partition)['device']) )
@@ -2203,6 +2326,9 @@ class Harddisk:
 			time.sleep(3)
 			if handle: handle.close	
 			if progress: progress.hide()
+			
+			if self.ldPreload:
+				os.unsetenv("LD_PRELOAD")
 			
 			self.setNTFSPartitionStartSector(partition, ui=ui)
 			self.resizeFilesystem(partition, fs='ntfs', ui=ui)

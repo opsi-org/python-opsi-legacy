@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.5'
+__version__ = '0.9.8.6'
 
 # Imports
 import os
@@ -661,6 +661,8 @@ class ProductPackageSource(ProductPackage):
 		
 		self.sourceDir = os.path.abspath(sourceDir)
 		self.tempDir = os.path.abspath(tempDir)
+		if not os.path.isdir(self.tempDir):
+			raise Exception("Temporary directory '%s' does not exist" % self.tempDir)
 		
 		controlFile = os.path.join(self.sourceDir, 'OPSI', 'control')
 		if customName and os.path.exists( os.path.join(self.sourceDir, 'OPSI.' + customName, 'control') ):
@@ -807,6 +809,9 @@ class ProductPackageFile(ProductPackage):
 				tempDir = '/tmp'
 			else:
 				tempDir = 'C:\tmp'
+		tempDir = os.path.abspath(tempDir)
+		if not os.path.isdir(tempDir):
+			raise Exception("Temporary directory '%s' does not exist" % tempDir)
 		
 		self.product = Product()
 		self.packageFile = os.path.abspath(packageFile)
