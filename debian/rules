@@ -1,17 +1,11 @@
 #!/usr/bin/make -f
 
-v23 := 2.3
-v24 := 2.4
-
 OPSI_VERSION := $(shell head -n 1 debian/changelog | cut -d" " -f2 | cut -d"-" -f1 | sed 's/.//')
+PYTHON_VERSION := $(shell python -c "import sys; print '%d.%d' % sys.version_info[:2]")
 
 build: build-arch build-indep
 
-build-arch: build23-stamp build24-stamp build-stamp
-
-build23-stamp:
-	
-build24-stamp:
+build-arch: build-stamp
 
 build-stamp:
 
@@ -32,51 +26,18 @@ build-indep-stamp:
 	touch build-indep-stamp
 
 clean:
-	rm -f *-stamp
-
+	rm debian/files || true
+	rm -f *-stamp || true
+	rm _librsyncmodule.o _librsync.so || true
+	
 binary: binary-arch binary-indep
 
-binary-arch: build-arch binary23-stamp binary24-stamp binary-stamp
+binary-arch: build-arch binary-stamp
 
-binary23-stamp:
-	mkdir -p debian/python${v23}-opsi/usr/lib/python${v23}/site-packages/OPSI/Backend
-	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python${v23}-opsi/usr/lib/python${v23}/site-packages/$$i; done
-	mkdir -p debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES
-	install -m 0644 gettext/opsi_system.mo debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
-	install -m 0644 gettext/opsi_ui.mo     debian/python${v23}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
-	mkdir -p debian/python${v23}-opsi/etc/opsi/backendManager.d
-	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python${v23}-opsi/etc/opsi/backendManager.d/$$i; done
-	mkdir -p debian/python${v23}-opsi/etc/opsi/hwaudit/locales
-	chmod -R 755 debian/python${v23}-opsi/etc/opsi/hwaudit
-	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python${v23}-opsi/etc/opsi/hwaudit/opsihwaudit.conf
-	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python${v23}-opsi/etc/opsi/hwaudit/locales/; done
-	mkdir -p debian/python${v23}-opsi/etc/ldap/schema
-	install -m 0644 files/opsi.schema debian/python${v23}-opsi/etc/ldap/schema/opsi.schema
-	mkdir -p debian/python${v23}-opsi/usr/share/opsi
-	install -m 0755 files/share/init-opsi-mysql-db.py debian/python${v23}-opsi/usr/share/opsi/
-	install -m 0755 files/share/register-depot.py debian/python${v23}-opsi/usr/share/opsi/
-	echo $(OPSI_VERSION) > debian/python${v23}-opsi/etc/opsi/version
-	
-binary24-stamp:
-	mkdir -p debian/python${v24}-opsi/usr/lib/python${v24}/site-packages/OPSI/Backend
-	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python${v24}-opsi/usr/lib/python${v24}/site-packages/$$i; done
-	mkdir -p debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES
-	install -m 0644 gettext/opsi_system.mo debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
-	install -m 0644 gettext/opsi_ui.mo     debian/python${v24}-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
-	mkdir -p debian/python${v24}-opsi/etc/opsi/backendManager.d
-	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python${v24}-opsi/etc/opsi/backendManager.d/$$i; done
-	mkdir -p debian/python${v24}-opsi/etc/opsi/hwaudit/locales
-	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python${v24}-opsi/etc/opsi/hwaudit/opsihwaudit.conf
-	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python${v24}-opsi/etc/opsi/hwaudit/locales/; done
-	mkdir -p debian/python${v24}-opsi/etc/ldap/schema
-	install -m 0644 files/opsi.schema debian/python${v24}-opsi/etc/ldap/schema/opsi.schema
-	mkdir -p debian/python${v24}-opsi/usr/share/opsi
-	install -m 0755 files/share/init-opsi-mysql-db.py debian/python${v24}-opsi/usr/share/opsi/
-	install -m 0755 files/share/register-depot.py debian/python${v24}-opsi/usr/share/opsi/
-	echo $(OPSI_VERSION) > debian/python${v24}-opsi/etc/opsi/version
-	
 binary-stamp:
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
+	gcc -pthread -fno-strict-aliasing -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fPIC -I/usr/include/python${PYTHON_VERSION} -c src/librsync/_librsyncmodule.c -o _librsyncmodule.o
+	gcc -pthread -shared -Wl,-O1 -Wl,-Bsymbolic-functions _librsyncmodule.o -lrsync -o _librsync.so
 	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python-opsi/usr/share/python-support/python-opsi/$$i; done
 	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
 	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
@@ -88,6 +49,7 @@ binary-stamp:
 	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python-opsi/etc/opsi/hwaudit/locales/; done
 	mkdir -p debian/python-opsi/etc/ldap/schema
 	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi.schema
+	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi-standalone.schema
 	mkdir -p debian/python-opsi/usr/share/opsi
 	install -m 0755 files/share/init-opsi-mysql-db.py debian/python-opsi/usr/share/opsi/
 	install -m 0755 files/share/register-depot.py debian/python-opsi/usr/share/opsi/

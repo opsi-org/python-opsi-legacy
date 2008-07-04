@@ -32,14 +32,14 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.5'
+__version__ = '0.9.8.8'
 
 # Imports
 import os
 if os.name == 'posix':
-	import stat, gettext, time, pwd, grp, re
+	import stat, gettext, time, pwd, grp, re, codecs
 else:
-	import stat, gettext, time, re
+	import stat, gettext, time, re, codecs
 
 # OPSI imports
 from OPSI.Logger import *
@@ -418,59 +418,70 @@ class Product:
 	def writeControlFile(self, controlFile):
 		logger.info("Writing control file '%s'" % controlFile)
 		# Write control file
-		control = open(controlFile, 'w')
-		print >> control, '[Package]'
-		print >> control, 'version: %s' % self.packageVersion
-		print >> control, 'depends:'
-		print >> control, 'incremental: False'
-		print >> control, ''
-		print >> control, '[Product]'
-		print >> control, 'type: %s' % self.productType
-		print >> control, 'id: %s' % self.productId
-		print >> control, 'name: %s' % self.name
-		print >> control, 'description:',
-		for line in self.description.split('\\n'):
-			print >> control, line
-		print >> control, 'advice: %s' % self.advice
-		print >> control, 'version: %s' % self.productVersion
-		print >> control, 'priority: %s' % self.priority
-		print >> control, 'licenseRequired: %s' % self.licenseRequired
-		print >> control, 'productClasses: %s' % ', '.join(self.productClassNames)
-		print >> control, 'setupScript: %s' % self.setupScript
-		print >> control, 'uninstallScript: %s' % self.uninstallScript
-		print >> control, 'updateScript: %s' % self.updateScript
-		print >> control, 'alwaysScript: %s' % self.alwaysScript
-		print >> control, 'onceScript: %s' % self.onceScript
+		lines = [ '[Package]' ]
+		lines.append( 'version: %s' % self.packageVersion )
+		lines.append( 'depends:' )
+		lines.append( 'incremental: False' )
+		lines.append( '' )
+		lines.append( '[Product]' )
+		lines.append( 'type: %s' % self.productType )
+		lines.append( 'id: %s' % self.productId )
+		lines.append( 'name: %s' % self.name )
+		lines.append( 'description: ' )
+		descLines = self.description.split('\\n')
+		if (len(descLines) > 0):
+			lines[-1] += descLines[0]
+			if (len(descLines) > 1):
+				lines.extend( descLines )
+		lines.append( 'advice: %s' % self.advice )
+		lines.append( 'version: %s' % self.productVersion )
+		lines.append( 'priority: %s' % self.priority )
+		lines.append( 'licenseRequired: %s' % self.licenseRequired )
+		lines.append( 'productClasses: %s' % ', '.join(self.productClassNames) )
+		lines.append( 'setupScript: %s' % self.setupScript )
+		lines.append( 'uninstallScript: %s' % self.uninstallScript )
+		lines.append( 'updateScript: %s' % self.updateScript )
+		lines.append( 'alwaysScript: %s' % self.alwaysScript )
+		lines.append( 'onceScript: %s' % self.onceScript )
 		if (self.productType == 'netboot'):
-			print >> control, 'pxeConfigTemplate: %s' % self.pxeConfigTemplate
+			lines.append( 'pxeConfigTemplate: %s' % self.pxeConfigTemplate )
 		
 		if (self.productType != 'server'):
 			for dependency in self.productDependencies:
-				print >> control, '\n[ProductDependency]'
-				print >> control, 'action: %s' % dependency.action
+				lines.append( '' )
+				lines.append( '[ProductDependency]' )
+				lines.append( 'action: %s' % dependency.action )
 				if dependency.requiredProductId:
-					print >> control, 'requiredProduct: %s' % dependency.requiredProductId
+					lines.append( 'requiredProduct: %s' % dependency.requiredProductId )
 				if dependency.requiredProductClassId:
-					print >> control, 'requiredClass: %s' % dependency.requiredProductClassId
+					lines.append( 'requiredClass: %s' % dependency.requiredProductClassId )
 				if dependency.requiredAction:
-					print >> control, 'requiredAction: %s' % dependency.requiredAction
+					lines.append( 'requiredAction: %s' % dependency.requiredAction )
 				if dependency.requiredInstallationStatus:
-					print >> control, 'requiredStatus: %s' % dependency.requiredInstallationStatus
+					lines.append( 'requiredStatus: %s' % dependency.requiredInstallationStatus )
 				if dependency.requirementType:
-					print >> control, 'requirementType: %s' % dependency.requirementType
+					lines.append( 'requirementType: %s' % dependency.requirementType )
 			
 			for productProperty in self.productProperties:
-				print >> control, '\n[ProductProperty]'
-				print >> control, 'name: %s' % productProperty.name
+				lines.append( '' )
+				lines.append( '[ProductProperty]' )
+				lines.append( 'name: %s' % productProperty.name )
 				if productProperty.description:
-					print >> control, 'description:',
-					for line in productProperty.description.split('\\n'):
-						print >> control, line
+					lines.append( 'description:' )
+					descLines = productProperty.description.split('\\n')
+					if (len(descLines) > 0):
+						lines[-1] += descLines[0]
+						if (len(descLines) > 1):
+							lines.extend( descLines )
 				if productProperty.possibleValues:
-					print >> control, 'values: %s' % ', '.join(productProperty.possibleValues)
+					lines.append( 'values: %s' % ', '.join(productProperty.possibleValues) )
 				if productProperty.defaultValue:
-					print >> control, 'default: %s' % productProperty.defaultValue
+					lines.append( 'default: %s' % productProperty.defaultValue )
 		
+		control = codecs.open(controlFile, 'w', 'utf-8')
+		#control = codecs.open(controlFile, 'w', 'iso-8859-1')
+		for line in lines:
+			control.write( (line + '\n').decode('utf-8', 'replace') )
 		control.close()
 	
 	
@@ -661,6 +672,8 @@ class ProductPackageSource(ProductPackage):
 		
 		self.sourceDir = os.path.abspath(sourceDir)
 		self.tempDir = os.path.abspath(tempDir)
+		if not os.path.isdir(self.tempDir):
+			raise Exception("Temporary directory '%s' does not exist" % self.tempDir)
 		
 		controlFile = os.path.join(self.sourceDir, 'OPSI', 'control')
 		if customName and os.path.exists( os.path.join(self.sourceDir, 'OPSI.' + customName, 'control') ):
@@ -807,6 +820,9 @@ class ProductPackageFile(ProductPackage):
 				tempDir = '/tmp'
 			else:
 				tempDir = 'C:\tmp'
+		tempDir = os.path.abspath(tempDir)
+		if not os.path.isdir(tempDir):
+			raise Exception("Temporary directory '%s' does not exist" % tempDir)
 		
 		self.product = Product()
 		self.packageFile = os.path.abspath(packageFile)

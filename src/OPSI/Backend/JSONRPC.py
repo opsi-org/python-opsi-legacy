@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.5.5'
+__version__ = '0.9.5.6'
 
 # Imports
 import json, base64, urllib, httplib, new, stat, socket, random
@@ -211,7 +211,7 @@ class JSONRPCBackend(DataBackend):
 		jsonrpc = json.write( {"id": 1, "method": method, "params": params } )
 		logger.debug("jsonrpc string: %s" % jsonrpc)
 		
-		logger.debug("requesting: base-url '%s', query '%s'" % (self.__baseUrl, jsonrpc))
+		logger.debug("requesting: '%s', query '%s'" % (self.__address, jsonrpc))
 		response = self.__request(self.__baseUrl, jsonrpc, retry=retry )
 		
 		# Read response
@@ -253,9 +253,11 @@ class JSONRPCBackend(DataBackend):
 			
 			self.__connection.endheaders()
 			if (self.__method == METHOD_POST):
+				logger.debug2("Sending query")
 				self.__connection.send(query)
 			
 			# Get response
+			logger.debug2("Getting response")
 			response = self.__connection.getresponse()
 			
 			# Get cookie from header
@@ -265,14 +267,15 @@ class JSONRPCBackend(DataBackend):
 				self.__sessionId = cookie.split(';')[0].strip()
 		
 		except Exception, e:
+			logger.logException(e)
 			if retry:
-				logger.warning("Requesting base-url '%s', query '%s' failed: %s" % (baseUrl, query, e))
+				logger.warning("Requesting '%s', query '%s' failed: %s" % (self.__address, query, e))
 				logger.notice("Trying to reconnect...")
 				self._connect()
 				return self.__request(baseUrl, query=query, retry=False)
 			
 			# Error occurred => raise BackendIOError
-			raise BackendIOError("Requesting base-url '%s', query '%s' failed: %s" % (baseUrl, query, e))
+			raise BackendIOError("Requesting '%s', query '%s' failed: %s" % (self.__address, query, e))
 		
 		try:
 			# Return response content (body)

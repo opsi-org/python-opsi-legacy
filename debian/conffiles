@@ -1,7 +1,8 @@
 etc/opsi/hwaudit/opsihwaudit.conf
+etc/opsi/hwaudit/locales/de_DE
+etc/opsi/hwaudit/locales/en_US
 etc/opsi/backendManager.d/10_file.conf
 etc/opsi/backendManager.d/11_ldap.conf
-etc/opsi/backendManager.d/12_univention.conf
 etc/opsi/backendManager.d/13_dhcpd.conf
 etc/opsi/backendManager.d/15_jsonrpc.conf
 etc/opsi/backendManager.d/16_etherwake.conf

@@ -139,14 +139,14 @@ objectclass ( 1.3.6.1.4.1.23807.1.2.2
 objectclass ( 1.3.6.1.4.1.23807.1.2.3
 	NAME 'opsiDepotserver'
 	SUP opsiHost
-	AUXILIARY
+	STRUCTURAL
 	DESC 'Opsi depotserver'
 	MAY ( opsiDepotRemoteUrl $ opsiDepotLocalUrl $ opsiRepositoryRemoteUrl $ opsiRepositoryLocalUrl $ opsiNetworkAddress $ opsiMaximumBandwidth ) )
 
 objectclass ( 1.3.6.1.4.1.23807.1.2.4
 	NAME 'opsiClient'
 	SUP opsiHost
-	AUXILIARY
+	STRUCTURAL
 	DESC 'Opsi client' )
 
 # $OID: 1.3.6.1.4.1.23807.3 (Products) $

@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.5'
+__version__ = '0.9.8.6'
 
 # Imports
 import socket, re
@@ -144,6 +144,11 @@ class Backend:
 	def checkForErrors(self):
 		return []
 	
+	def _preProcessHostId(self, hostId):
+		if (hostId.split('.') < 3):
+			raise BackendBadValueError("Bad host id '%s'" % hostId)
+		return hostId.lower()
+	
 	def getDomain(self, hostId = None):
 		''' Returns the domain of a host specified by an id. '''
 		# HostId is the host's FQDN by default
@@ -202,11 +207,6 @@ class DataBackend(Backend):
 	
 	def getPossibleRequirementTypes_list(self):
 		return Product.POSSIBLE_REQUIREMENT_TYPES
-	
-	def _preProcessHostId(self, hostId):
-		if (hostId.split('.') < 3):
-			raise BackendBadValueError("Bad host id '%s'" % hostId)
-		return hostId.lower()
 	
 	def getOpsiHWAuditConf(self, lang=None):
 		if not lang:

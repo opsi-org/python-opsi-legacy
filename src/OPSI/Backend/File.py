@@ -35,7 +35,7 @@
 __version__ = '0.9.7.3'
 
 # Imports
-import socket, os, time, re, ConfigParser, json, StringIO
+import socket, os, time, re, ConfigParser, json, StringIO, codecs
 
 if os.name == 'nt':
 	# Windows imports for file locking
@@ -136,9 +136,9 @@ class File:
 		data = StringIO.StringIO()
 		cp.write(data)
 		# Open ini-file for writing
-		iniFile = self.openFile(filename, 'w')
+		iniFile = self.openFile(filename, 'w', unicode = True)
 		# Write ConfigParser data
-		iniFile.write(data.getvalue().replace('\r', '').replace('\n', '\r\n'))
+		iniFile.write(data.getvalue().replace('\r', '').replace('\n', '\r\n').decode('utf-8', 'replace'))
 		# Close file
 		self.closeFile(iniFile)
 	
@@ -154,7 +154,7 @@ class File:
 		''' Deletes a file. '''
 		os.remove(filename)
 	
-	def openFile(self, filename, mode = 'r'):
+	def openFile(self, filename, mode = 'r', unicode=False):
 		''' 
 		Opens a file for reading or writing.
 		Locks the file (exclusive mode for writing, shared mode for reading). 
@@ -163,7 +163,10 @@ class File:
 		'''
 		# Open the file
 		try:
-			f = open(filename, mode)
+			if unicode:
+				f = codecs.open(filename, mode, 'utf-8')
+			else:
+				f = open(filename, mode)
 		except IOError, e:
 			raise BackendIOError(e)
 		

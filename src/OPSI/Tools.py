@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.9'
+__version__ = '0.9.9'
 
 # Imports
 import time, json, gettext, os, re, random, md5
@@ -209,14 +209,17 @@ def compareVersions(v1, condition, v2):
 	return True
 	
 	
-def compressFile(filename, format):
+def compressFile(filename, format, rsyncable=True):
 	
 	logger.notice("Compressing file '%s', format: %s" % (filename, format) )
 	
 	if (format == 'gzip' or format == 'gz'):
+		options = ''
+		if rsyncable:
+			options = '--rsyncable'
 		if os.path.exists(filename + '.gz'):
 			os.unlink(filename + '.gz')
-		System.execute('%s "%s"' % (System.which('gzip'), filename) )
+		System.execute('%s %s "%s"' % (System.which('gzip'), options, filename) )
 		return filename + '.gz'
 	elif (format == 'bzip2' or format == 'bz2'):
 		if os.path.exists(filename + '.bz2'):
