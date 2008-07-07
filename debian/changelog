@@ -1,3 +1,10 @@
+python-opsi (3.3.0.20-1) stable; urgency=low
+
+  * File31.py 0.2.7.10
+  * LDAP.py 0.9.1.2
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 07 Jul 2008 14:11:40 +0200
+
 python-opsi (3.3.0.19-1) stable; urgency=low
 
   * LDAP.py 0.9.1.1
