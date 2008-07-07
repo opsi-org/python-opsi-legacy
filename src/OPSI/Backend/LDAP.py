@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.1'
+__version__ = '0.9.1.2'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -1131,13 +1131,13 @@ class LDAPBackend(DataBackend):
 			except BackendMissingDataError:
 				raise Exception("Failed to get pcpatch password for host '%s'" % hostId)
 		else:
-			serverId = self._backendManager.getServerId(hostId)
+			serverId = self.getServerId(hostId)
 			if (serverId == hostId):
 				# Avoid loops
 				raise BackendError("Bad backend configuration: server of host '%s' is '%s', current server id is '%s'" \
 								% (hostId, serverId, self.getServerId()))
-			cleartext = Tools.blowfishDecrypt( self._backendManager.getOpsiHostKey(serverId), self.getPcpatchPassword(serverId) )
-			return Tools.blowfishEncrypt( self._backendManager.getOpsiHostKey(hostId), cleartext )
+			cleartext = Tools.blowfishDecrypt( self.getOpsiHostKey(serverId), self.getPcpatchPassword(serverId) )
+			return Tools.blowfishEncrypt( self.getOpsiHostKey(hostId), cleartext )
 	
 	def setPcpatchPassword(self, hostId, password):
 		hostId = self._preProcessHostId(hostId)
