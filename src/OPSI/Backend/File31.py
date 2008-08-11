@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.10'
+__version__ = '0.2.7.11'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -1220,6 +1220,9 @@ class File31Backend(File, FileBackend):
 		if hostId in self._aliaslist():
 			return
 		
+		for i in range(len(macs)):
+			macs[i] = macs[i].lower()
+		
 		iniFile = self.getClientIniFile(hostId)
 		ini = self.readIniFile(iniFile)
 		
@@ -1958,7 +1961,7 @@ class File31Backend(File, FileBackend):
 		
 		clientId = self._preProcessHostId(clientId)
 		
-		netBootProduct = self.getGeneralConfig(clientId).get('os')
+		netBootProduct = self.getGeneralConfig_hash(clientId).get('os')
 		
 		if not netBootProduct:
 			raise BackendMissingDataError("No default netboot product for client '%s' found in generalConfig" % clientId )
