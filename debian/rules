@@ -36,6 +36,7 @@ binary-arch: build-arch binary-stamp
 
 binary-stamp:
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/System
 	gcc -pthread -fno-strict-aliasing -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fPIC -I/usr/include/python${PYTHON_VERSION} -c src/librsync/_librsyncmodule.c -o _librsyncmodule.o
 	gcc -pthread -shared -Wl,-O1 _librsyncmodule.o -lrsync -o _librsync.so
 	install -m 0755 _librsync.so src/librsync/librsync.py debian/python-opsi/usr/share/python-support/python-opsi/
