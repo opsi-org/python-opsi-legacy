@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.9'
+__version__ = '0.2.7.13'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -275,10 +275,10 @@ class File31Backend(File, FileBackend):
 	# -     LOGGING                                   -
 	# -------------------------------------------------
 	def writeLog(self, type, data, objectId=None, append=True):
-		if type not in ('bootimage'):
-			raise BackendBadValueError("Unkown log type '%s'" % type)
+		if type not in ('bootimage', 'clientconnect', 'instlog', 'opsiconfd'):
+			raise BackendBadValueError("Unknown log type '%s'" % type)
 		
-		if not objectId and type in ('bootimage'):
+		if not objectId and type in ('bootimage', 'clientconnect', 'instlog', 'opsiconfd'):
 			raise BackendBadValueError("Log type '%s' requires objectId" % type)
 		
 		if not os.path.exists( os.path.join(self.__logDir, type) ):
@@ -287,9 +287,7 @@ class File31Backend(File, FileBackend):
 		if objectId and (objectId.find('/') != -1):
 			raise BackendBadValueError("Bad objectId '%s'" % objectId)
 			
-		logFile = ''
-		if (type == 'bootimage'):
-			logFile = os.path.join(self.__logDir, type, objectId + '.log')
+		logFile = os.path.join(self.__logDir, type, objectId + '.log')
 		
 		f = None
 		if append:
@@ -301,10 +299,10 @@ class File31Backend(File, FileBackend):
 		os.chmod(logFile, 0640)
 		
 	def readLog(self, type, objectId=None):
-		if type not in ('bootimage'):
-			raise BackendBadValueError('Unkown log type %s' % type)
+		if type not in ('bootimage', 'clientconnect', 'instlog', 'opsiconfd'):
+			raise BackendBadValueError('Unknown log type %s' % type)
 		
-		if not objectId and type in ('bootimage'):
+		if not objectId and type in ('bootimage', 'clientconnect', 'instlog', 'opsiconfd'):
 			raise BackendBadValueError("Log type '%s' requires objectId" % type)
 		
 		if objectId and (objectId.find('/') != -1):
@@ -312,6 +310,8 @@ class File31Backend(File, FileBackend):
 		
 		logFile = os.path.join(self.__logDir, type, objectId + '.log')
 		data = ''
+		if not os.path.exists(logFile):
+			return data
 		logFile = open(logFile)
 		data = logFile.read()
 		logFile.close()
@@ -1220,6 +1220,9 @@ class File31Backend(File, FileBackend):
 		if hostId in self._aliaslist():
 			return
 		
+		for i in range(len(macs)):
+			macs[i] = macs[i].lower()
+		
 		iniFile = self.getClientIniFile(hostId)
 		ini = self.readIniFile(iniFile)
 		
@@ -1292,13 +1295,13 @@ class File31Backend(File, FileBackend):
 			return password
 		
 		else:
-			serverId = self._backendManager.getServerId(hostId)
+			serverId = self.getServerId(hostId)
 			if (serverId == hostId):
 				# Avoid loops
 				raise BackendError("Bad backend configuration: server of host '%s' is '%s', current server id is '%s'" \
 								% (hostId, serverId, self.getServerId()))
-			cleartext = Tools.blowfishDecrypt( self._backendManager.getOpsiHostKey(serverId), self.getPcpatchPassword(serverId) )
-			return Tools.blowfishEncrypt( self._backendManager.getOpsiHostKey(hostId), cleartext )
+			cleartext = Tools.blowfishDecrypt( self.getOpsiHostKey(serverId), self.getPcpatchPassword(serverId) )
+			return Tools.blowfishEncrypt( self.getOpsiHostKey(hostId), cleartext )
 	
 	def setPcpatchPassword(self, hostId, password):
 		hostId = self._preProcessHostId(hostId)
@@ -1958,7 +1961,7 @@ class File31Backend(File, FileBackend):
 		
 		clientId = self._preProcessHostId(clientId)
 		
-		netBootProduct = self.getGeneralConfig(clientId).get('os')
+		netBootProduct = self.getGeneralConfig_hash(clientId).get('os')
 		
 		if not netBootProduct:
 			raise BackendMissingDataError("No default netboot product for client '%s' found in generalConfig" % clientId )

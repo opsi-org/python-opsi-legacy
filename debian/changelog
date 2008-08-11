@@ -1,8 +1,33 @@
-python-opsi (3.3.0.20-1) stable; urgency=low
+python-opsi (3.3.0.23-1) stable; urgency=low
+
+  * Util.py 0.1
+  * File31.py 0.2.7.13
+  * LDAP.py 0.9.1.4
+  * System.py removed
+  * System/Posix.py 1.1.5
+  * System/Windows.py 0.0.1
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 11 Aug 2008 11:50:51 +0200
+
+python-opsi (3.3.0.22-1) stable; urgency=low
 
   * librsync included
 
- -- Jan Schneider <j.schneider@uib.de>  Sun, 06 Jul 2008 18:53:46 +0200
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 09 Jul 2008 17:12:04 +0200
+
+python-opsi (3.3.0.21-1) stable; urgency=low
+
+  * File31.py 0.2.7.11
+     fixed bug in getDefaultNetbootProductId
+
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 09 Jul 2008 17:07:02 +0200
+
+python-opsi (3.3.0.20-1) stable; urgency=low
+
+  * File31.py 0.2.7.10
+  * LDAP.py 0.9.1.2
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 07 Jul 2008 14:11:40 +0200
 
 python-opsi (3.3.0.19-1) stable; urgency=low
 

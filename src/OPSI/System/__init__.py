@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-   = = = = = = = = = = = = = = = = = =
-   =   opsi python library - Dummy   =
-   = = = = = = = = = = = = = = = = = =
+   = = = = = = = = = = = = = = = = = = =
+   =   opsi python library - System    =
+   = = = = = = = = = = = = = = = = = = =
    
    This module is part of the desktop management solution opsi
    (open pc server integration) http://www.opsi.org
@@ -32,4 +32,10 @@
    @license: GNU General Public License version 2
 """
 
+import os
+
+if (os.name == 'posix'):
+	from Posix import *
+if (os.name == 'nt'):
+	from Windows import *
 

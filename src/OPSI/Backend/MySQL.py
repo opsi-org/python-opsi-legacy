@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.4'
+__version__ = '0.2.4.1'
 
 # Imports
 import MySQLdb, warnings, time
@@ -147,7 +147,7 @@ class MySQLBackend(DataBackend):
 	def __init__(self, username = '', password = '', address = 'localhost', backendManager=None, args={}):
 		''' MySQLBackend constructor. '''
 		
-		self._backendManager = backendManager
+		self.__backendManager = backendManager
 		
 		# Default values
 		self._defaultDomain = 'opsi.org'

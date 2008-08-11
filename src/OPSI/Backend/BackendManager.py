@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.6'
+__version__ = '0.9.6.1'
 
 # Imports
 import os, stat, types, re, socket, new, base64
@@ -405,7 +405,8 @@ class BackendManager(DataBackend):
 				allow = True
 				break
 		if not allow:
-			raise BackendPermissionDeniedError("Access denied: Group membership '%s' required!" % ' or '.join(groups))
+			raise BackendPermissionDeniedError("Access denied for user '%s': Group membership '%s' required!" \
+								% (self.__username, ' or '.join(groups)))
 	
 	def _verifyUser(self, *userIds):
 		if not self.__authRequired: 

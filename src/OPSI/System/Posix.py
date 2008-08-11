@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
    = = = = = = = = = = = = = = = = = =
-   =   opsi python library - System  =
+   =   opsi python library - Posix   =
    = = = = = = = = = = = = = = = = = =
    
    This module is part of the desktop management solution opsi
@@ -10,7 +10,7 @@
    
    Copyright (C) 2006, 2007, 2008 uib GmbH
    
-   http://www.uib.de/d
+   http://www.uib.de/
    
    All rights reserved.
    
@@ -32,18 +32,19 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.1'
+__version__ = '1.1.5'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
+import copy as pycopy
 if (os.name == 'posix'):
 	import posix, fcntl
 else:
 	import win32file
 
 # OPSI imports
-from Logger import *
-import Tools
+from OPSI.Logger import *
+from OPSI.Tools import *
 
 # Get Logger instance
 logger = Logger()
@@ -219,7 +220,7 @@ def getKernelParams():
 	return params
 
 
-def getDHCPResult(retry=5):
+def getDHCPResult(retry=3):
 	"""
 	Reads DHCP result from pump
 	returns possible key/values:
@@ -258,10 +259,10 @@ def getDHCPResult(retry=5):
 					interface[keyValue[0].replace(' ','').lower()] = keyValue[1].strip().split()[0]
 			except Exception, e:
 				logger.warning("Pump failed: %s" % e)
-				try:
-					execute( '%s -i %s' % (which('pump'), interface['device']) )
-				except Exception, e:
-					logger.warning("Pump failed: %s" % e)
+				#try:
+				#	execute( '%s -i %s' % (which('pump'), interface['device']) )
+				#except Exception, e:
+				#	logger.warning("Pump failed: %s" % e)
 				i += 1
 			else:
 				i = retry
@@ -478,11 +479,12 @@ def mount(dev, mountpoint, ui='default', **options):
 		# Do not log smb password
 		logLevel = LOG_CONFIDENTIAL
 		
-		match = re.search('^smb:(//[^/]+\/.+)$', dev, re.IGNORECASE)
+		match = re.search('^smb://([^/]+\/.+)$', dev, re.IGNORECASE)
 		if match:
 			#fs = '-t smbfs'
 			fs = '-t cifs'
-			dev = match.group(1)
+			parts = match.group(1).split('/')
+			dev = '//%s/%s' % (parts[0], parts[1])
 		else:
 			raise Exception("Bad smb uri '%s'" % dev)
 		
@@ -635,729 +637,412 @@ def hardwareInventory(ui='default', filename=None, config=None):
 	if ui:
 		ui.getMessageBox().addText(_("Collecting hardware information.\n"))
 	
-	if config:
-		import xml.dom.minidom
+	if not config:
+		logger.error("hardwareInventory: no config given")
+		return {}
+	
+	import xml.dom.minidom
+	
+	opsiValues = {}
+	
+	def getAttribute(dom, tagname, attrname):
+		nodelist = dom.getElementsByTagName(tagname)
+		if nodelist:
+			return nodelist[0].getAttribute(attrname).strip()
+		else:
+			return ""
+	
+	def getElementsByAttributeValue(dom, tagName, attributeName, attributeValue):
+		elements = []
+		for element in dom.getElementsByTagName(tagName):
+			if re.search(attributeValue , element.getAttribute(attributeName)):
+				elements.append(element)
+		return elements
+	
+	# Read output from lshw
+	xmlOut = '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False))
+	xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xbd, 0xbf, 0xef, 0xdd), '.', xmlOut)
+	dom = xml.dom.minidom.parseString( xmlOut.decode('utf-8', 'replace').encode('utf-8') )
+	
+	# Read output from lspci
+	lspci = {}
+	busId = None
+	devRegex = re.compile('([\d\.:a-f]+)\s+([\da-f]+):\s+([\da-f]+):([\da-f]+)\s*(\(rev ([^\)]+)\)|)')
+	subRegex = re.compile('\s*Subsystem:\s+([\da-f]+):([\da-f]+)\s*')
+	for line in execute("%s -vn" % which("lspci")):
+		if not line.strip():
+			continue
+		match = re.search(devRegex, line)
+		if match:
+			busId = match.group(1)
+			lspci[busId] = { 	'vendorId':		match.group(3),
+						'deviceId':		match.group(4),
+						'subsystemVendorId':	'',
+						'subsystemDeviceId':	'',
+						'revision':		match.group(6) or '' }
+			continue
+		match = re.search(subRegex, line)
+		if match:
+			lspci[busId]['subsystemVendorId'] = match.group(1)
+			lspci[busId]['subsystemDeviceId'] = match.group(2)
+	logger.debug("Parsed lspci info:")
+	logger.debug(objectToBeautifiedText(lspci))
+	
+	# Read output from lsusb
+	lsusb = {}
+	busId = None
+	devId = None
+	indent = -1
+	currentKey = None
+	status = False
+	
+	devRegex = re.compile('^Bus\s+(\d+)\s+Device\s+(\d+)\:\s+ID\s+([\da-fA-F]{4})\:([\da-fA-F]{4})\s*(.*)$')
+	descriptorRegex = re.compile('^(\s*)(.*)\s+Descriptor\:\s*$')
+	deviceStatusRegex = re.compile('^(\s*)Device\s+Status\:\s+(\S+)\s*$')
+	deviceQualifierRegex = re.compile('^(\s*)Device\s+Qualifier\s+.*\:\s*$')
+	keyRegex = re.compile('^(\s*)([^\:]+)\:\s*$')
+	keyValueRegex = re.compile('^(\s*)(\S+)\s+(.*)$')
+	
+	for line in execute("%s -v" % which("lsusb")):
+		if not line.strip() or (line.find('** UNAVAILABLE **') != -1):
+			continue
+		match = re.search(devRegex, line)
+		if match:
+			busId = match.group(1)
+			devId = match.group(2)
+			descriptor = None
+			indent = -1
+			currentKey = None
+			status = False
+			logger.debug("Device: %s:%s" % (busId, devId))
+			lsusb[busId+":"+devId] = {
+				'device': {},
+				'configuration': {},
+				'interface': {},
+				'endpoint': [],
+				'hid device': {},
+				'hub': {},
+				'qualifier': {},
+				'status': {}
+			}
+			continue
 		
-		opsiValues = {}
+		if status:
+			lsusb[busId+":"+devId]['status'].append(line.strip())
+			continue
 		
-		def getAttribute(dom, tagname, attrname):
-			nodelist = dom.getElementsByTagName(tagname)
-			if nodelist:
-				return nodelist[0].getAttribute(attrname).strip()
-			else:
-				return ""
+		match = re.search(deviceStatusRegex, line)
+		if match:
+			status = True
+			lsusb[busId+":"+devId]['status'] = [ match.group(2) ]
+			continue
 		
-		def getElementsByAttributeValue(dom, tagName, attributeName, attributeValue):
-			elements = []
-			for element in dom.getElementsByTagName(tagName):
-				if re.search(attributeValue , element.getAttribute(attributeName)):
-					elements.append(element)
-			return elements
+		match = re.search(deviceQualifierRegex, line)
+		if match:
+			descriptor = 'qualifier'
+			logger.debug("Qualifier")
+			currentKey = None
+			indent = -1
+			continue
 		
-		# Read output from lshw
-		xmlOut = '\n'.join(execute("%s -xml 2>/dev/null" % which("lshw"), capturestderr=False))
-		xmlOut = re.sub('[%c%c%c%c%c%c%c%c%c%c%c%c]' % (0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xbd, 0xbf, 0xef), '.', xmlOut)
-		dom = xml.dom.minidom.parseString( xmlOut.encode("utf-8") )
+		match = re.search(descriptorRegex, line)
+		if match:
+			descriptor = match.group(2).strip().lower()
+			logger.debug("Descriptor: %s" % descriptor)
+			if type(lsusb[busId+":"+devId][descriptor]) is list:
+				lsusb[busId+":"+devId][descriptor].append({})
+			currentKey = None
+			indent = -1
+			continue
 		
-		# Read output from lspci
-		lspci = {}
-		busId = None
-		devRegex = re.compile('([\d\.:a-f]+)\s+([\da-f]+):\s+([\da-f]+):([\da-f]+)\s*(\(rev ([^\)]+)\)|)')
-		subRegex = re.compile('\s*Subsystem:\s+([\da-f]+):([\da-f]+)\s*')
-		for line in execute("%s -vn" % which("lspci")):
+		if not descriptor:
+			logger.error("No descriptor")
+			continue
+		
+		if not lsusb[busId+":"+devId].has_key(descriptor):
+			logger.error("Unkown descriptor '%s'" % descriptor)
+			continue
+		
+		(key, value) = ('', '')
+		match = re.search(keyRegex, line)
+		if match:
+			key = match.group(2)
+			indent = len(match.group(1))
+		else:
+			match = re.search(keyValueRegex, line)
+			if match:
+				if (indent >= 0) and (len(match.group(1)) > indent):
+					key = currentKey
+					value = match.group(0).strip()
+				else:
+					(key, value) = (match.group(2), match.group(3).strip())
+					indent = len(match.group(1))
+		
+		logger.debug("key: '%s', value: '%s'" % (key, value))
+		
+		if not key or not value:
+			continue
+		
+		currentKey = key
+		if type(lsusb[busId+":"+devId][descriptor]) is list:
+			if not lsusb[busId+":"+devId][descriptor][-1].has_key(key):
+				lsusb[busId+":"+devId][descriptor][-1][key] = [ ]
+			lsusb[busId+":"+devId][descriptor][-1][key].append(value)
+		
+		else:
+			if not lsusb[busId+":"+devId][descriptor].has_key(key):
+				lsusb[busId+":"+devId][descriptor][key] = [ ]
+			lsusb[busId+":"+devId][descriptor][key].append(value)
+		
+		
+	logger.debug("Parsed lsusb info:")
+	logger.debug(objectToBeautifiedText(lsusb))
+	
+	# Read output from dmidecode
+	dmidecode = {}
+	dmiType = None
+	header = True
+	option = None
+	optRegex = re.compile('(\s+)([^:]+):(.*)')
+	for line in execute(which("dmidecode")):
+		try:
 			if not line.strip():
 				continue
-			match = re.search(devRegex, line)
-			if match:
-				busId = match.group(1)
-				lspci[busId] = { 	'vendorId':		match.group(3),
-							'deviceId':		match.group(4),
-							'subsystemVendorId':	'',
-							'subsystemDeviceId':	'',
-							'revision':		match.group(6) or '' }
+			if line.startswith('Handle'):
+				dmiType = None
+				header = False
+				option = None
 				continue
-			match = re.search(subRegex, line)
-			if match:
-				lspci[busId]['subsystemVendorId'] = match.group(1)
-				lspci[busId]['subsystemDeviceId'] = match.group(2)
-		logger.debug("Parsed lspci info:")
-		logger.debug(Tools.objectToBeautifiedText(lspci))
-		
-		# Read output from dmidecode
-		dmidecode = {}
-		dmiType = None
-		header = True
-		option = None
-		optRegex = re.compile('(\s+)([^:]+):(.*)')
-		for line in execute(which("dmidecode")):
-			try:
-				if not line.strip():
-					continue
-				if line.startswith('Handle'):
-					dmiType = None
-					header = False
-					option = None
-					continue
-				if header:
-					continue
-				if not dmiType:
-					dmiType = line.strip()
-					if (dmiType.lower() == 'end of table'):
-						break
-					if not dmidecode.has_key(dmiType):
-						dmidecode[dmiType] = []
-					dmidecode[dmiType].append({})
-				else:
-					match = re.search(optRegex, line)
-					if match:
-						option = match.group(2).strip()
-						value = match.group(3).strip()
-						dmidecode[dmiType][-1][option] = Tools.removeUnit(value)
-					elif option:
-						if not type(dmidecode[dmiType][-1][option]) is list:
-							if dmidecode[dmiType][-1][option]:
-								dmidecode[dmiType][-1][option] = [ dmidecode[dmiType][-1][option] ]
-							else:
-								dmidecode[dmiType][-1][option] = []
-						dmidecode[dmiType][-1][option].append(Tools.removeUnit(line.strip()))
-			except Exception, e:
-				logger.error("Error while parsing dmidecode output '%s': %s" % (line.strip(), e))
-		logger.debug("Parsed dmidecode info:")
-		logger.debug(Tools.objectToBeautifiedText(dmidecode))
-		
-		# Get hw info from lshw
-		for hwClass in config:
-			
-			if not hwClass.get('Class') or not hwClass['Class'].get('Opsi') or not hwClass['Class'].get('Linux'):
+			if header:
 				continue
-			
-			opsiClass = hwClass['Class']['Opsi']
-			linuxClass = hwClass['Class']['Linux']
-			
-			logger.debug( "Processing class '%s' : '%s'" % (opsiClass, linuxClass) )
-			
-			if linuxClass.startswith('[lshw]'):
-				# Get matching xml nodes
-				devices = []
-				for hwclass in linuxClass[6:].split('|'):
-					hwid = ''
-					filter = None
-					if (hwclass.find(':') != -1):
-						(hwclass, hwid) = hwclass.split(':', 1)
-						if (hwid.find(':') != -1):
-							(hwid, filter) = hwid.split(':', 1)
-					
-					logger.debug( "Class is '%s', id is '%s', filter is: %s" % (hwClass, hwid, filter) )
-					
-					devs = getElementsByAttributeValue(dom, 'node', 'class', hwclass)
+			if not dmiType:
+				dmiType = line.strip()
+				if (dmiType.lower() == 'end of table'):
+					break
+				if not dmidecode.has_key(dmiType):
+					dmidecode[dmiType] = []
+				dmidecode[dmiType].append({})
+			else:
+				match = re.search(optRegex, line)
+				if match:
+					option = match.group(2).strip()
+					value = match.group(3).strip()
+					dmidecode[dmiType][-1][option] = removeUnit(value)
+				elif option:
+					if not type(dmidecode[dmiType][-1][option]) is list:
+						if dmidecode[dmiType][-1][option]:
+							dmidecode[dmiType][-1][option] = [ dmidecode[dmiType][-1][option] ]
+						else:
+							dmidecode[dmiType][-1][option] = []
+					dmidecode[dmiType][-1][option].append(removeUnit(line.strip()))
+		except Exception, e:
+			logger.error("Error while parsing dmidecode output '%s': %s" % (line.strip(), e))
+	logger.debug("Parsed dmidecode info:")
+	logger.debug(objectToBeautifiedText(dmidecode))
+	
+	# Build hw info structure
+	for hwClass in config:
+		
+		if not hwClass.get('Class') or not hwClass['Class'].get('Opsi') or not hwClass['Class'].get('Linux'):
+			continue
+		
+		opsiClass = hwClass['Class']['Opsi']
+		linuxClass = hwClass['Class']['Linux']
+		
+		logger.debug( "Processing class '%s' : '%s'" % (opsiClass, linuxClass) )
+		
+		if linuxClass.startswith('[lshw]'):
+			# Get matching xml nodes
+			devices = []
+			for hwclass in linuxClass[6:].split('|'):
+				hwid = ''
+				filter = None
+				if (hwclass.find(':') != -1):
+					(hwclass, hwid) = hwclass.split(':', 1)
+					if (hwid.find(':') != -1):
+						(hwid, filter) = hwid.split(':', 1)
+				
+				logger.debug( "Class is '%s', id is '%s', filter is: %s" % (hwClass, hwid, filter) )
+				
+				devs = getElementsByAttributeValue(dom, 'node', 'class', hwclass)
+				for dev in devs:
+					if dev.hasChildNodes():
+						for child in dev.childNodes:
+							if (child.nodeName == "businfo"):
+								busInfo = child.firstChild.data.strip()
+								if busInfo.startswith('pci@'):
+									logger.debug("Getting pci bus info for '%s'" % busInfo)
+									pciBusId = busInfo.split('@')[1]
+									if pciBusId.startswith('0000:'):
+										pciBusId = pciBusId[5:]
+									pciInfo = lspci.get(pciBusId, {})
+									for (key, value) in pciInfo.items():
+										elem = dom.createElement(key)
+										elem.childNodes.append( dom.createTextNode(value) )
+										dev.childNodes.append( elem )
+								break
+				if hwid:
+					filtered = []
 					for dev in devs:
-						if dev.hasChildNodes():
-							for child in dev.childNodes:
-								if (child.nodeName == "businfo"):
-									busInfo = child.firstChild.data.strip()
-									if busInfo.startswith('pci@'):
-										logger.debug("Getting pci bus info for '%s'" % busInfo)
-										pciBusId = busInfo.split('@')[1]
-										if pciBusId.startswith('0000:'):
-											pciBusId = pciBusId[5:]
-										pciInfo = lspci.get(pciBusId, {})
-										for (key, value) in pciInfo.items():
-											elem = dom.createElement(key)
-											elem.childNodes.append( dom.createTextNode(value) )
-											dev.childNodes.append( elem )
-									break
-					if hwid:
-						filtered = []
-						for dev in devs:
-							if re.search(hwid, dev.getAttribute('id')):
-								if not filter:
-									filtered.append(dev)
-								else:
-									(attr, method) = filter.split('.', 1)
-									if dev.getAttribute(attr):
-										if eval("dev.getAttribute(attr).%s" % method):
-											filtered.append(dev)
-									elif dev.hasChildNodes():
-										for child in dev.childNodes:
-											if (child.nodeName == attr) and child.hasChildNodes():
-												if eval("child.firstChild.data.strip().%s" % method):
+						if re.search(hwid, dev.getAttribute('id')):
+							if not filter:
+								filtered.append(dev)
+							else:
+								(attr, method) = filter.split('.', 1)
+								if dev.getAttribute(attr):
+									if eval("dev.getAttribute(attr).%s" % method):
+										filtered.append(dev)
+								elif dev.hasChildNodes():
+									for child in dev.childNodes:
+										if (child.nodeName == attr) and child.hasChildNodes():
+											if eval("child.firstChild.data.strip().%s" % method):
+												filtered.append(dev)
+												break
+										try:
+											if child.hasAttributes() and child.getAttribute(attr):
+												if eval("child.getAttribute(attr).%s" % method):
 													filtered.append(dev)
 													break
-											try:
-												if child.hasAttributes() and child.getAttribute(attr):
-													if eval("child.getAttribute(attr).%s" % method):
-														filtered.append(dev)
-														break
-											except:
-												pass
-						devs = filtered
-					
-					logger.debug2( "Found matching devices: %s" % devs)
-					devices.extend(devs)
-				
-				# Process matching xml nodes
-				for i in range(len(devices)):
-					
-					if not opsiValues.has_key(opsiClass):
-						opsiValues[opsiClass] = []
-					opsiValues[opsiClass].append({})
-					
-					if not hwClass.get('Values'):
-						break
-					
-					for attribute in hwClass['Values']:
-						elements = [ devices[i] ]
-						if not attribute.get('Opsi') or not attribute.get('Linux'):
-							continue
-						logger.debug2( "Processing attribute '%s' : '%s'" % (attribute['Linux'], attribute['Opsi']) )
-						for attr in attribute['Linux'].split('||'):
-							attr = attr.strip()
-							method = None
-							data = None
-							for part in attr.split('/'):
-								if (part.find('.') != -1):
-									(part, method) = part.split('.', 1)
-								nextElements = []
-								for element in elements:
-									for child in element.childNodes:
-										try:
-											if (child.nodeName == part):
-												nextElements.append(child)
-											elif child.hasAttributes() and \
-											     ((child.getAttribute('class') == part) or (child.getAttribute('id').split(':')[0] == part)):
-												nextElements.append(child)
 										except:
 											pass
-								if not nextElements:
-									logger.warning("Attribute part '%s' not found" % part)
-									break
-								elements = nextElements
-							
-							if not data:
-								if not elements:
-									opsiValues[opsiClass][i][attribute['Opsi']] = ''
-									logger.warning("No data found for attribute '%s' : '%s'" % (attribute['Linux'], attribute['Opsi']))
-									continue
-								
-								for element in elements:
-									if element.getAttribute(attr):
-										data = element.getAttribute(attr).strip()
-									elif element.getAttribute('value'):
-										data = element.getAttribute('value').strip()
-									elif element.hasChildNodes():
-										data = element.firstChild.data.strip()
-							if method and data:
-								try:
-									logger.debug("Eval: %s.%s" % (data, method))
-									data = eval("data.%s" % method)
-								except Exception, e:
-									logger.error("Failed to excecute '%s.%s': %s" % (data, method, e))
-							logger.debug2("Data: %s" % data)
-							opsiValues[opsiClass][i][attribute['Opsi']] = data
-							if data:
-								break
+					devs = filtered
+				
+				logger.debug2( "Found matching devices: %s" % devs)
+				devices.extend(devs)
 			
-			# Get hw info from dmidecode
-			elif linuxClass.startswith('[dmidecode]'):
-				opsiValues[opsiClass] = []
-				for hwclass in linuxClass[11:].split('|'):
-					(filterAttr, filterExp) = (None, None)
-					if (hwclass.find(':') != -1):
-						(hwclass, filter) = hwclass.split(':', 1)
-						if (filter.find('.') != -1):
-							(filterAttr, filterExp) = filter.split('.', 1)
-					
-					for dev in dmidecode.get(hwclass, []):
-						if filterAttr and dev.get(filterAttr) and not eval("str(dev.get(filterAttr)).%s" % filterExp):
-							continue
-						device = {}
-						for attribute in hwClass['Values']:
-							if not attribute.get('Linux'):
-								continue
-							for aname in attribute['Linux'].split('||'):
-								aname = aname.strip()
-								method = None
-								if (aname.find('.') != -1):
-									(aname, method) = aname.split('.', 1)
-								if method:
+			# Process matching xml nodes
+			for i in range(len(devices)):
+				
+				if not opsiValues.has_key(opsiClass):
+					opsiValues[opsiClass] = []
+				opsiValues[opsiClass].append({})
+				
+				if not hwClass.get('Values'):
+					break
+				
+				for attribute in hwClass['Values']:
+					elements = [ devices[i] ]
+					if not attribute.get('Opsi') or not attribute.get('Linux'):
+						continue
+					logger.debug2( "Processing attribute '%s' : '%s'" % (attribute['Linux'], attribute['Opsi']) )
+					for attr in attribute['Linux'].split('||'):
+						attr = attr.strip()
+						method = None
+						data = None
+						for part in attr.split('/'):
+							if (part.find('.') != -1):
+								(part, method) = part.split('.', 1)
+							nextElements = []
+							for element in elements:
+								for child in element.childNodes:
 									try:
-										logger.debug("Eval: %s.%s" % (dev.get(aname, ''), method))
-										device[attribute['Opsi']] = eval("dev.get(aname, '').%s" % method)
-									except Exception, e:
-										device[attribute['Opsi']] = ''
-										logger.error("Failed to excecute '%s.%s': %s" % (dev.get(aname, ''), method, e))
-								else:
-									device[attribute['Opsi']] = dev.get(aname)
-								if device[attribute['Opsi']]:
-									break
-						opsiValues[hwClass['Class']['Opsi']].append(device)
-		
-		opsiValues['SCANPROPERTIES'] = [ { "scantime": time.strftime("%Y-%m-%d %H:%M:%S") } ]
-		
-		logger.debug("Result of hardware inventory:\n" + Tools.objectToBeautifiedText(opsiValues))
-		
-		return opsiValues
-	
-	# Legacy hardware inventory
-	hardware = {}
-	
-	current = 'unknown_pci'
-	lines = execute(which('lspci') + " -vm")
-	for line in lines:
-		line = line.strip()
-		match = re.search('^Device:\s+([a-f\d\.\:]+)\s*$', line)
-		if match:
-			current = match.group(1)
-			hardware[current] = {}
-			hardware[current]['busAddress'] = current
-			hardware[current]['bus'] = 'pci'
-			
-		elif line:
-			keyvalue = line.split(':')
-			key = keyvalue[0].strip()
-			value = ':'.join(keyvalue[1:]).strip()
-			
-			if (key.lower() == 'class'):
-				key = 'class'
-				if (value == 'Multimedia audio controller'):
-					value = 'AUDIO_CONTROLLER'
-				elif (value == 'VGA compatible controller'):
-					value = 'VGA_CONTROLLER'
-				elif (value == 'FireWire (IEEE 1394)'):
-					value = 'FIREWIRE_CONTROLLER'
-				elif (value == 'Host bridge'):
-					value = 'HOST_BRIDGE'
-				elif (value == 'ISA bridge'):
-					value = 'ISA_BRIDGE'
-				elif (value == 'SMBus'):
-					value = 'SM_BUS'
-				elif (value == 'USB Controller'):
-					value = 'USB_CONTROLLER'
-				elif (value == 'IDE interface'):
-					value = 'IDE_INTERFACE'
-				elif (value == 'PCI bridge'):
-					value = 'PCI_BRIDGE'
-				elif (value == 'SCSI storage controller'):
-					value = 'SCSI_CONTROLLER'
-				elif (value == 'Ethernet controller'):
-					value = 'ETHERNET_CONTROLLER'
-				elif (value == 'Bridge'):
-					value = 'BRIDGE'
-				else:
-					logger.error('Unknown device class: %s' % value)
-					value = 'UNKNOWN'
-			
-			elif (key.lower() == 'vendor'):
-				pass
-			elif (key.lower() == 'device'):
-				key = 'name'
-				if ( hardware[current]['class'] == 'BRIDGE' and value.lower().find("ethernet") != -1 ):
-					hardware[current]['class'] = 'ETHERNET_CONTROLLER'
-			elif (key.lower() == 'svendor'):
-				key = 'subsystemVendor'
-			elif (key.lower() == 'sdevice'):
-				key = 'subsystemName'
-			elif (key.lower() == 'rev'):
-				key = 'version'
-			else:
-				logger.error('Unknown key in lspci output: %s' % key)
-				continue
-			
-			hardware[current][key] = value.strip()
-	
-	ethernetControllers = 0
-	for value in hardware.values():
-		if (value.get('class') == 'ETHERNET_CONTROLLER'):
-			ethernetControllers += 1
-	
-	current = 'unknown_pci'
-	lines = execute(which('lspci') + " -vvv")
-	for line in lines:
-		if not line:
-			continue
-		elif line.lstrip().startswith('0000'):
-			current = line.split()[0][5:]
-		elif not hardware.get(current):
-			continue
-		elif line.lstrip().startswith('Subsystem'):
-			continue
-		elif line.lstrip().startswith('Flags'):
-			hardware[current]['flags'] = line.split(':')[-1].strip().split(', ')
-		elif hardware.get(current):
-			if not hardware[current].get('info'):
-				hardware[current]['info'] = ""
-			else:
-				hardware[current]['info'] += '\n'
-			hardware[current]['info'] += line.lstrip()
-		
-		if (hardware.get(current) and hardware[current].get('class') == 'ETHERNET_CONTROLLER'):
-			# Search I/O base address in lspci output
-			match = re.search("I/O\s+ports\s+at\s+([\da-fA-F]+)\s+", line)
-			if match:
-				addr = match.group(1)
-				logger.debug("lspci reports %s as I/O base address of device %s" % 
-							(addr, hardware[current].get('busAddress')) )
-				mac = None
-				for l in execute("%s -a" % which('ifconfig')):
-					# Search for mac address
-					match = re.search('([\da-fA-F]{2}\:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2})', l)
-					if match:
-						mac = match.group(1)
-						logger.debug("Found hardware address %s" % mac)
-						if (ethernetControllers == 1):
-							logger.debug("Assigning mac %s to device %s" % (mac, hardware[current].get('busAddress')) )
-							hardware[current]['macAddress'] = mac
+										if (child.nodeName == part):
+											nextElements.append(child)
+										elif child.hasAttributes() and \
+										     ((child.getAttribute('class') == part) or (child.getAttribute('id').split(':')[0] == part)):
+											nextElements.append(child)
+									except:
+										pass
+							if not nextElements:
+								logger.warning("Attribute part '%s' not found" % part)
+								break
+							elements = nextElements
+						
+						if not data:
+							if not elements:
+								opsiValues[opsiClass][i][attribute['Opsi']] = ''
+								logger.warning("No data found for attribute '%s' : '%s'" % (attribute['Linux'], attribute['Opsi']))
+								continue
+							
+							for element in elements:
+								if element.getAttribute(attr):
+									data = element.getAttribute(attr).strip()
+								elif element.getAttribute('value'):
+									data = element.getAttribute('value').strip()
+								elif element.hasChildNodes():
+									data = element.firstChild.data.strip()
+						if method and data:
+							try:
+								logger.debug("Eval: %s.%s" % (data, method))
+								data = eval("data.%s" % method)
+							except Exception, e:
+								logger.error("Failed to excecute '%s.%s': %s" % (data, method, e))
+						logger.debug2("Data: %s" % data)
+						opsiValues[opsiClass][i][attribute['Opsi']] = data
+						if data:
 							break
-					
-					# Search for I/O base address in ifconfig output
-					match = re.search('\:0x([\da-fA-F]+)\s*', l)
-					if match:
-						if (match.group(1) == addr):
-							# I/O base address matches address from lspci
-							logger.debug("I/O base address %s matches %s" % (match.group(1), addr))
-							logger.debug("Assigning mac %s to device %s" % (mac, hardware[current].get('busAddress')) )
-							hardware[current]['macAddress'] = mac
-							break
-						else:
-							logger.debug("I/O base address %s does not match %s" % (match.group(1), addr))
-				
-				if not hardware[current].get('macAddress'):
-					logger.error("Could not get mac address for device %s" % hardware[current].get('busAddress'))
-			
-			# Search Interrupt in lspci output
-			match = re.search("routed\s+to\s+IRQ\s+(\d+)\s*", line)
-			if match:
-				irq = match.group(1)
-				logger.debug("lspci reports %s as interrupt of device %s" % 
-							(irq, hardware[current].get('busAddress')) )
-				mac = None
-				for l in execute("%s -a" % which('ifconfig')):
-					# Search for mac address
-					match = re.search('([\da-fA-F]{2}\:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2}:[\da-fA-F]{2})', l)
-					if match:
-						mac = match.group(1)
-						logger.debug("Found hardware address %s" % mac)
-						if (ethernetControllers == 1):
-							logger.debug("Assigning mac %s to device %s" % (mac, hardware[current].get('busAddress')) )
-							hardware[current]['macAddress'] = mac
-							break
-					
-					# Search for Interrupt in ifconfig output
-					match = re.search('Interrupt\:(\d+)\s+', l)
-					if match:
-						if (match.group(1) == irq):
-							# Interrupt matches irq from lspci
-							logger.debug("IRQ %s matches %s" % (match.group(1), irq))
-							logger.debug("Assigning mac %s to device %s" % (mac, hardware[current].get('busAddress')) )
-							hardware[current]['macAddress'] = mac
-							break
-						else:
-							logger.debug("IRQ %s does not match %s" % (match.group(1), irq))
-				
-				if not hardware[current].get('macAddress'):
-					logger.error("Could not get mac address for device %s" % hardware[current].get('busAddress'))
-				
-	
-	# get vendor and device ids
-	current = ''
-	lines = execute(which('lspci') + " -vmn 2>&1")
-	for line in lines:
-		line = line.strip()
-		if not line:
-			current = ''
-			continue
-		match = re.search('^Device:\s+([a-f\d\.]+\:[a-f\d\:\.]+)\s*$', line)
-		if match:
-			current = match.group(1)
-			continue
 		
-		if not current:
-			continue
+		# Get hw info from dmidecode
+		elif linuxClass.startswith('[dmidecode]'):
+			opsiValues[opsiClass] = []
+			for hwclass in linuxClass[11:].split('|'):
+				(filterAttr, filterExp) = (None, None)
+				if (hwclass.find(':') != -1):
+					(hwclass, filter) = hwclass.split(':', 1)
+					if (filter.find('.') != -1):
+						(filterAttr, filterExp) = filter.split('.', 1)
+				
+				for dev in dmidecode.get(hwclass, []):
+					if filterAttr and dev.get(filterAttr) and not eval("str(dev.get(filterAttr)).%s" % filterExp):
+						continue
+					device = {}
+					for attribute in hwClass['Values']:
+						if not attribute.get('Linux'):
+							continue
+						for aname in attribute['Linux'].split('||'):
+							aname = aname.strip()
+							method = None
+							if (aname.find('.') != -1):
+								(aname, method) = aname.split('.', 1)
+							if method:
+								try:
+									logger.debug("Eval: %s.%s" % (dev.get(aname, ''), method))
+									device[attribute['Opsi']] = eval("dev.get(aname, '').%s" % method)
+								except Exception, e:
+									device[attribute['Opsi']] = ''
+									logger.error("Failed to excecute '%s.%s': %s" % (dev.get(aname, ''), method, e))
+							else:
+								device[attribute['Opsi']] = dev.get(aname)
+							if device[attribute['Opsi']]:
+								break
+					opsiValues[hwClass['Class']['Opsi']].append(device)
 		
-		keyvalue = line.split(':')
-		key = keyvalue[0].strip()
-		value = ':'.join(keyvalue[1:]).strip()
-		try:
-			if (key.lower() == 'vendor'):
-				hardware[current]['vendorId'] = value
-			elif (key.lower() == 'device'):
-				hardware[current]['deviceId'] = value
-			elif (key.lower() == 'svendor'):
-				hardware[current]['subsystemVendorId'] = value
-			elif (key.lower() == 'sdevice'):
-				hardware[current]['subsystemDeviceId'] = value
-			
-		except Exception, e:
-			pass
-	# dmidecode
-	current = ''
-	newInfo = False
-	flags = False
-	lines = execute(which('dmidecode'))
-	for line in lines:
-		if line.lstrip().startswith('Handle'):
-			if current and not hardware[current].get('id'):
-				hardware[current]['id'] = current
-			
-			current = line.split()[1]
-			if current.endswith(','):
-				current = current[:-1]
-			hardware[current] = {}
-			newInfo = True
-			flags = False
-		elif not current:
-			continue
-		elif newInfo:
-			if line.lstrip().startswith('DMI type'):
-				continue
-			
-			newInfo = False
-			
-			if (line.strip() == 'System Slot Information'):
-				hardware[current]['class'] = 'SYSTEM_SLOT'
-			elif (line.strip() == 'BIOS Information'):
-				hardware[current]['class'] = 'SYSTEM_BIOS'
-			elif (line.strip() == 'System Information'):
-				hardware[current]['class'] = 'SYSTEM'
-			elif (line.strip() == 'Base Board Information'):
-				hardware[current]['class'] = 'BASE_BOARD'
-			elif (line.strip() == 'Chassis Information'):
-				hardware[current]['class'] = 'CHASSIS'
-			elif (line.strip() == 'Processor Information'):
-				hardware[current]['class'] = 'PROCESSOR'
-			elif (line.strip() == 'Memory Controller Information'):
-				hardware[current]['class'] = 'MEMORY_CONTROLLER'
-			elif (line.strip() == 'Memory Module Information' or line.strip() == 'Memory Device'):
-				hardware[current]['class'] = 'MEMORY_MODULE'
-			elif (line.strip() == 'Cache Information'):
-				hardware[current]['class'] = 'CACHE'
-				hardware[current]['id'] = current
-			elif (line.strip() == 'Port Connector Information'):
-				hardware[current]['class'] = 'PORT_CONNECTOR'
-			
-			else:
-				del hardware[current]
-				current = ''
-				continue
-			
-			
-		elif line:
-			key = ''
-			value = line.strip()
-			try:
-				keyvalue = value.split(':')
-				key = keyvalue[0].strip()
-				value = ':'.join(keyvalue[1:]).strip()
-			except:
-				pass
-			
-			key = key.lower()
-			
-			if (key == 'flags'):
-				# save whitespace charachters in var flags
-				flags = line[:line.find('flags')]
-				hardware[current]['flags'] = []
-				continue
-			
-			if (flags != False):
-				if line.startswith(flags + "\t"):
-					hardware[current]['flags'].append(line.strip())
-					continue
-				else:
-					flags = False
-			
-			if key in ('vendor', 'version'):
-				pass
-			elif (key == 'manufacturer'):
-				key = 'vendor'
-			elif (key == 'product name' or key == 'designation'):
-				key = 'name'
-			elif (key == 'serial number' or key == 'uuid'):
-				key = 'serialnumber'
-			elif (key in ('length', 'id', 'type', 'family', 'signature', 'locator')):
-				pass
-			elif (key == 'current usage'):
-				key = 'used'
-				if (value.strip().lower() == 'available'):
-					value = False
-				else:
-					value = True
-			elif (key == 'socket designation'):
-				key = 'socket'
-			elif (key == 'external clock'):
-				key = 'externalClock'
-				value = value.split()[0]
-			elif (key == 'max speed'):
-				key = 'maxSpeed'
-				value = value.split()[0]
-			elif (key == 'current speed'):
-				key = 'currentSpeed'
-				value = value.split()[0]
-			elif (key == 'voltage'):
-				value = value.split()[0]
-			
-			elif (key == 'total width'):
-				key = 'totalWidth'
-				value = value.split()[0]
-			
-			elif (key == 'data width'):
-				key = 'dataWidth'
-				value = value.split()[0]
-			
-			elif (key == 'size' or key == 'installed size'):
-				key = 'size'
-				if (value == 'No Module Installed') or (value == 'Not Installed'):
-					value = '0'
-					hardware[current]['used'] = False
-				value = value.split()[0]
-			
-			elif (key == 'form factor'):
-				key = 'formFactor'
-			
-			elif (key == 'bank locator'):
-				key = 'bankLocator'
-			
-			
-			elif (key == 'port type'):
-				key = 'type'
-			
-			elif (key == 'internal reference designator'):
-				key = 'internalConnectorName'
-				if (value == 'Not Specified'):
-					value = None
-				elif value and not hardware[current].get('name'):
-					hardware[current]['name'] = value
-			
-			elif (key == 'internal connector type'):
-				key = 'internalConnectorType'
-				if (value == 'None'):
-					value = None
-			
-			elif (key == 'external reference designator'):
-				key = 'externalConnectorName'
-				if (value == 'Not Specified'):
-					value = None
-				elif value:
-					hardware[current]['name'] = value
-			
-			elif (key == 'external connector type'):
-				key = 'externalConnectorType'
-				if (value == 'None'):
-					value = None
-			
-			else:
-				if not hardware[current].get('info'):
-					hardware[current]['info'] = ''
-				else:
-					hardware[current]['info'] += '\n'
-				hardware[current]['info'] += line.lstrip()
-				continue
-			
-			if (value or type(value) == type(False)):
-				hardware[current][key] = value
+		# Get hw info from lsusb
+		elif linuxClass.startswith('[lsusb]'):
+			opsiValues[opsiClass] = []
+			for (busId, dev) in lsusb.items():
+				device = {}
+				for attribute in hwClass['Values']:
+					if not attribute.get('Linux'):
+						continue
+					try:
+						value = pycopy.deepcopy(dev)
+						for key in (attribute['Linux'].split('/')):
+							method = None
+							if (key.find('.') != -1):
+								(key, method) = key.split('.', 1)
+							if not type(value) is dict or not value.has_key(key):
+								logger.error("Key '%s' not found" % key)
+								value = ''
+								break
+							value = value[key]
+							if type(value) is list:
+								value = ', '.join(value)
+							if method:
+								value = eval("value.%s" % method)
+							
+						device[attribute['Opsi']] = value
+					except Exception, e:
+						logger.warning(e)
+						device[attribute['Opsi']] = ''
+				opsiValues[opsiClass].append(device)
 	
+	opsiValues['SCANPROPERTIES'] = [ { "scantime": time.strftime("%Y-%m-%d %H:%M:%S") } ]
 	
-	# disks
-	disks = getHarddisks(ui=None)
-	for disk in disks:
-		hardware[disk.device] = {}
-		hardware[disk.device]['class'] = 'HARDDISK'
-		if disk.device.startswith('/dev/s'):
-			hardware[disk.device]['bus'] = 'sata/scsi'
-		else:
-			hardware[disk.device]['bus'] = 'ata'
-		hardware[disk.device]['busAddress'] = disk.device
-		hardware[disk.device]['size'] = str(disk.size)
-		hardware[disk.device]['partition'] = disk.getPartitions()
-		hardware[disk.device]['info'] = ""
-		hardware[disk.device]['biosDevice'] = disk.biosDevice
-		hardware[disk.device]['heads'] = disk.biosHeads
-		hardware[disk.device]['sectors'] = disk.biosSectors
-		hardware[disk.device]['cylinders'] = disk.biosCylinders
-		try:
-			for line in execute('%s -i %s' % (which('hdparm'), disk.device)):
-				line = line.strip()
-				if line.lstrip().lower().startswith('model'):
-					keyValuePairs = line.split(', ')
-					for keyValuePair in keyValuePairs:
-						(key, value) = keyValuePair.split('=')
-						if (key.lower() == 'model'):
-							hardware[disk.device]['name'] = value
-						elif (key.lower() == 'fwrev'):
-							hardware[disk.device]['version'] = value
-						elif (key.lower() == 'serialno'):
-							hardware[disk.device]['serialnumber'] = value
-				
-				elif line and not line.lstrip().lower().startswith('/') and not line.lstrip().lower().startswith('*'):
-					if hardware[disk.device]['info']:
-						hardware[disk.device]['info'] += '\n'
-					hardware[disk.device]['info'] += line
-				
-				if line.lstrip().lower().startswith('rawchs') and not hardware[disk.device].get('heads'):
-					(c, h, s) = line.split(', ')[0].split('=')[1].split('/')
-					hardware[disk.device]['heads'] = h
-					hardware[disk.device]['sectors'] = s
-					hardware[disk.device]['cylinders'] = c
-				
-				
-				
-		except Exception, e:
-			logger.error(e)
+	logger.debug("Result of hardware inventory:\n" + objectToBeautifiedText(opsiValues))
 	
+	return opsiValues
 	
-	if filename:
-		# This will be removed in OPSI 3.0
-		from Backend.File import File
-		import json
-		
-		f = File()
-		
-		f.createFile(filename)
-		ini = f.readIniFile(filename)
-		
-		for (key, info) in hardware.items():
-			
-			section = info.get('id', '???')
-			
-			if (info.get('class') == 'BASE_BOARD'):
-				section = 'base_board'
-			elif (info.get('class') == 'SYSTEM'):
-				section = 'system'
-			elif (info.get('class') == 'SYSTEM_SLOT'):
-				section = 'slot_' + info.get('id', '?').replace(' ','')
-			elif (info.get('class') == 'SYSTEM_BIOS'):
-				section = 'system_bios'
-			elif (info.get('class') == 'CHASSIS'):
-				section = 'chassis'
-			elif (info.get('class') == 'PROCESSOR'):
-				section = 'cpu_' + info.get('id', '?').replace(' ','')
-			elif (info.get('class') == 'MEMORY_CONTROLLER'):
-				section = 'memory_controller'
-			elif (info.get('class') == 'MEMORY_MODULE'):
-				section = 'memory_module_' + info.get('socket', info.get('locator','?')).replace(' ','')
-			elif (info.get('class') == 'CACHE'):
-				section = 'cache_' + info.get('id','?').replace(' ','')
-			elif (info.get('class') == 'PORT_CONNECTOR'):
-				section = 'port_' + info.get('name','?').replace(' ','_')
-			elif (info.get('class') == 'HARDDISK'):
-				section = 'disk_' + info.get('serialnumber', info.get('busAddress','?'))
-			elif info.get('bus'):
-				section = info.get('bus') + '_' + info.get('busAddress', 'unknown')
-			
-			section = section.lower()
-			if ini.has_section(section):
-				ini.remove_section(section)
-			ini.add_section(section)
-			
-			for (key, value) in info.items():
-				key = key.lower()
-				ini.set(section, key, json.write(value))
-			
-		f.writeIniFile(filename, ini)
-			
-	return hardware
-	
-			
 def runDosemu(harddisk = None, todo = ()):
 	if type(todo) not in (list, tuple):
 		todo = [ todo ]

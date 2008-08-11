@@ -32,14 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.1'
-
-#Imports
-import os
-if os.name == 'posix':
-	import os
-else:
-	import win32evtlogutil
+__version__ = '0.9.8.4'
 
 # Loglevels
 LOG_CONFIDENTIAL = 9
@@ -55,8 +48,8 @@ LOG_NONE = -1
 
 # Imports
 import sys, time, os, thread, threading
-
-if os.name == 'nt':
+if (os.name == 'nt'):
+	import win32evtlogutil
 	# Windows imports for file locking
 	import win32con, win32file, pywintypes
 	LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
@@ -83,7 +76,7 @@ if os.name == 'nt':
 	COLOR_LIGHT_CYAN = ''
 	COLOR_LIGHT_WHITE = ''
 
-elif os.name == 'posix':
+elif (os.name == 'posix'):
 	# Posix imports for file locking
 	import fcntl
 	LOCK_EX = fcntl.LOCK_EX
@@ -123,6 +116,36 @@ CRITICAL_COLOR = COLOR_LIGHT_RED
 CONFIDENTIAL_COLOR = COLOR_LIGHT_YELLOW
 COMMENT_COLOR = COLOR_LIGHT_CYAN
 
+class LoggerSubject:
+	def __init__(self):
+		self._observers = []
+	
+	def getId(self):
+		return 'logger'
+	
+	def getType(self):
+		return 'MessageSubject'
+	
+	def setMessage(self, message):
+		self._message = str(message)
+		for o in self._observers:
+			o.messageChanged(self, message)
+	
+	def getMessage(self):
+		return self._message
+	
+	def attachObserver(self, observer):
+		if not observer in self._observers:
+			self._observers.append(observer)
+	
+	def detachObserver(self, observer):
+		if observer in self._observers:
+			self._observers.remove(observer)
+	
+	
+	def serializable(self):
+		return { "message": self.getMessage(), "id": self.getId(), "type": self.getType() }
+	
 '''= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 =                                   CLASS LOGGERIMPLEMENTATION                                       =
 = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ='''
@@ -139,6 +162,7 @@ class LoggerImplementation:
 		self.__logFile = logFile
 		self.__syslogFormat = '%M'
 		self.__consoleFormat = '%M'
+		self.__consoleStdout = False
 		self.__fileFormat = '%D [%L] %M (%F|%N)'
 		self.univentionLogger_priv = None
 		self.__univentionClass = None
@@ -147,7 +171,9 @@ class LoggerImplementation:
 		self.__objectConfig = {}
 		self.__stdout = VirtFile(self, LOG_NOTICE)
 		self.__stderr = VirtFile(self, LOG_ERROR)
-	
+		self.__lock = threading.Lock()
+		#self.__loggerSubject = LoggerSubject()
+		
 	def getStderr(self):
 		return self.__stderr
 	
@@ -164,6 +190,9 @@ class LoggerImplementation:
 			self._setThreadConfig('consoleFormat', format)
 		else:
 			self.__consoleFormat = format
+	
+	def logToStdout(self, stdout):
+		self.__consoleStdout = stdout
 	
 	def setSyslogFormat(self, format, currentThread=False):
 		if currentThread:
@@ -188,6 +217,9 @@ class LoggerImplementation:
 	
 	def setUniventionClass(self, c):
 		self.__univentionClass = c
+	
+	#def getMessageSubject(self):
+	#	return self.__loggerSubject
 	
 	def setColor(self, color):
 		''' Enable or disable ansi color output '''
@@ -336,10 +368,15 @@ class LoggerImplementation:
 		    not self.univentionLogger_priv):
 			    return
 		
+		self.__lock.acquire()
+		
 		if type(message) is unicode:
 			message = message.encode('utf-8')
 		if not type(message) is str:
 			message = "%s" % message
+		
+		#self.__loggerSubject.setMessage(message)
+		
 		levelname = ''
 		color = COLOR_NORMAL
 		filename = ''
@@ -404,70 +441,71 @@ class LoggerImplementation:
 			m = m.replace('%M', message)
 			m = m.replace('%F', filename)
 			m = m.replace('%N', linenumber)
+			fh = sys.stderr
+			if (self.__consoleStdout):
+				fh = sys.stdout
 			if self.__consoleColor:
-				print >> sys.stderr, "%s%s%s" % (color, m, COLOR_NORMAL)
+				print >> fh, "%s%s%s" % (color, m, COLOR_NORMAL)
 			else:
-				print >> sys.stderr, m
+				print >> fh, m
 		
 		if (level <= self.__fileLevel):
 			# Log to file
 			logFile = self.__logFile
 			if specialConfig:
 				logFile = specialConfig.get('logFile', logFile)
-			if not logFile:
-				return
-			
-			m = self.__fileFormat
-			if specialConfig:
-				m = specialConfig.get('fileFormat', m)
-			
-			m = m.replace('%D', datetime)
-			m = m.replace('%T', threadId)
-			m = m.replace('%l', str(level))
-			m = m.replace('%L', levelname)
-			m = m.replace('%M', message)
-			m = m.replace('%F', filename)
-			m = m.replace('%N', linenumber)
-			
-			# Open the file
-			lf = None
-			try:
-				lf = open(logFile, 'a+')
-			except Exception, e:
-				pass
-			
-			if lf:
-				# Flags for exclusive, non-blocking lock
-				flags = LOCK_EX | LOCK_NB
+			if logFile:
+				m = self.__fileFormat
+				if specialConfig:
+					m = specialConfig.get('fileFormat', m)
 				
-				timeout = 0
-				locked = False
-				while (not locked and timeout < 2000):
-					# While not timed out and not locked
-					try:
-						# Try to lock file
-						if (os.name == 'nt'):
-							hfile = win32file._get_osfhandle(lf.fileno())
-							self.ov=pywintypes.OVERLAPPED()
-							win32file.LockFileEx(hfile, win32con.LOCKFILE_EXCLUSIVE_LOCK, 0,-0x7fff0000,self.ov)
-							#win32file.LockFileEx(hfile, flags, 0, -0x10000, __overlapped)
-						elif (os.name =='posix'):
-							fcntl.flock(lf.fileno(), flags)
-					except IOError, e:
-						# Locking failed 
-						# increase timeout counter, sleep 100 millis
-						timeout += 100
-						time.sleep(0.1)
-					else:
-						# File successfully locked
-						locked = True
+				m = m.replace('%D', datetime)
+				m = m.replace('%T', threadId)
+				m = m.replace('%l', str(level))
+				m = m.replace('%L', levelname)
+				m = m.replace('%M', message)
+				m = m.replace('%F', filename)
+				m = m.replace('%N', linenumber)
 				
-				if locked:
-					if self.__fileColor:
-						print >> lf, "%s%s%s" % (color, m, COLOR_NORMAL)
-					else:
-						print >> lf, m
-					lf.close()
+				# Open the file
+				lf = None
+				try:
+					lf = open(logFile, 'a+')
+				except Exception, e:
+					pass
+				
+				if lf:
+					# Flags for exclusive, non-blocking lock
+					flags = LOCK_EX | LOCK_NB
+					
+					timeout = 0
+					locked = False
+					while (not locked and timeout < 2000):
+						# While not timed out and not locked
+						try:
+							# Try to lock file
+							if (os.name == 'nt'):
+								hfile = win32file._get_osfhandle(lf.fileno())
+								self.ov=pywintypes.OVERLAPPED()
+								win32file.LockFileEx(hfile, win32con.LOCKFILE_EXCLUSIVE_LOCK, 0,-0x7fff0000,self.ov)
+								#win32file.LockFileEx(hfile, flags, 0, -0x10000, __overlapped)
+							elif (os.name =='posix'):
+								fcntl.flock(lf.fileno(), flags)
+						except IOError, e:
+							# Locking failed 
+							# increase timeout counter, sleep 100 millis
+							timeout += 100
+							time.sleep(0.1)
+						else:
+							# File successfully locked
+							locked = True
+					
+					if locked:
+						if self.__fileColor:
+							print >> lf, "%s%s%s" % (color, m, COLOR_NORMAL)
+						else:
+							print >> lf, m
+						lf.close()
 		
 		if (level <= self.__syslogLevel):
 			# Log to syslog
@@ -538,6 +576,8 @@ class LoggerImplementation:
 				self.univentionLogger_priv.debug(self.__univentionClass, self.univentionLogger_priv.ERROR, m)
 			elif (level == LOG_COMMENT):
 				self.univentionLogger_priv.debug(self.__univentionClass, self.univentionLogger_priv.ERROR, m)
+		
+		self.__lock.release()
 	
 	def logException(self, e):
 		self.logTraceback(sys.exc_info()[2])
