@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 # Imports
 import json, threading
@@ -358,7 +358,8 @@ class NotificationServer(threading.Thread):
 			logger.logException(e)
 	
 	def stop(self):
-		reactor.stop()
+		if reactor and reactor.running:
+			reactor.stop()
 
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -476,8 +477,9 @@ class NotificationClient(threading.Thread):
 			logger.logException(e)
 	
 	def stop(self):
-		#reactor.stop()
-		pass
+		if reactor and reactor.running:
+			reactor.stop()
+	
 	
 	#def getSubjects(self):
 	#	timeout = 0

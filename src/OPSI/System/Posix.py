@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -703,100 +703,103 @@ def hardwareInventory(ui='default', filename=None, config=None):
 	keyRegex = re.compile('^(\s*)([^\:]+)\:\s*$')
 	keyValueRegex = re.compile('^(\s*)(\S+)\s+(.*)$')
 	
-	for line in execute("%s -v" % which("lsusb")):
-		if not line.strip() or (line.find('** UNAVAILABLE **') != -1):
-			continue
-		match = re.search(devRegex, line)
-		if match:
-			busId = match.group(1)
-			devId = match.group(2)
-			descriptor = None
-			indent = -1
-			currentKey = None
-			status = False
-			logger.debug("Device: %s:%s" % (busId, devId))
-			lsusb[busId+":"+devId] = {
-				'device': {},
-				'configuration': {},
-				'interface': {},
-				'endpoint': [],
-				'hid device': {},
-				'hub': {},
-				'qualifier': {},
-				'status': {}
-			}
-			continue
-		
-		if status:
-			lsusb[busId+":"+devId]['status'].append(line.strip())
-			continue
-		
-		match = re.search(deviceStatusRegex, line)
-		if match:
-			status = True
-			lsusb[busId+":"+devId]['status'] = [ match.group(2) ]
-			continue
-		
-		match = re.search(deviceQualifierRegex, line)
-		if match:
-			descriptor = 'qualifier'
-			logger.debug("Qualifier")
-			currentKey = None
-			indent = -1
-			continue
-		
-		match = re.search(descriptorRegex, line)
-		if match:
-			descriptor = match.group(2).strip().lower()
-			logger.debug("Descriptor: %s" % descriptor)
-			if type(lsusb[busId+":"+devId][descriptor]) is list:
-				lsusb[busId+":"+devId][descriptor].append({})
-			currentKey = None
-			indent = -1
-			continue
-		
-		if not descriptor:
-			logger.error("No descriptor")
-			continue
-		
-		if not lsusb[busId+":"+devId].has_key(descriptor):
-			logger.error("Unkown descriptor '%s'" % descriptor)
-			continue
-		
-		(key, value) = ('', '')
-		match = re.search(keyRegex, line)
-		if match:
-			key = match.group(2)
-			indent = len(match.group(1))
-		else:
-			match = re.search(keyValueRegex, line)
+	try:
+		for line in execute("%s -v" % which("lsusb")):
+			if not line.strip() or (line.find('** UNAVAILABLE **') != -1):
+				continue
+			match = re.search(devRegex, line)
 			if match:
-				if (indent >= 0) and (len(match.group(1)) > indent):
-					key = currentKey
-					value = match.group(0).strip()
-				else:
-					(key, value) = (match.group(2), match.group(3).strip())
-					indent = len(match.group(1))
-		
-		logger.debug("key: '%s', value: '%s'" % (key, value))
-		
-		if not key or not value:
-			continue
-		
-		currentKey = key
-		if type(lsusb[busId+":"+devId][descriptor]) is list:
-			if not lsusb[busId+":"+devId][descriptor][-1].has_key(key):
-				lsusb[busId+":"+devId][descriptor][-1][key] = [ ]
-			lsusb[busId+":"+devId][descriptor][-1][key].append(value)
-		
-		else:
-			if not lsusb[busId+":"+devId][descriptor].has_key(key):
-				lsusb[busId+":"+devId][descriptor][key] = [ ]
-			lsusb[busId+":"+devId][descriptor][key].append(value)
-		
-		
-	logger.debug("Parsed lsusb info:")
-	logger.debug(objectToBeautifiedText(lsusb))
+				busId = match.group(1)
+				devId = match.group(2)
+				descriptor = None
+				indent = -1
+				currentKey = None
+				status = False
+				logger.debug("Device: %s:%s" % (busId, devId))
+				lsusb[busId+":"+devId] = {
+					'device': {},
+					'configuration': {},
+					'interface': {},
+					'endpoint': [],
+					'hid device': {},
+					'hub': {},
+					'qualifier': {},
+					'status': {}
+				}
+				continue
+			
+			if status:
+				lsusb[busId+":"+devId]['status'].append(line.strip())
+				continue
+			
+			match = re.search(deviceStatusRegex, line)
+			if match:
+				status = True
+				lsusb[busId+":"+devId]['status'] = [ match.group(2) ]
+				continue
+			
+			match = re.search(deviceQualifierRegex, line)
+			if match:
+				descriptor = 'qualifier'
+				logger.debug("Qualifier")
+				currentKey = None
+				indent = -1
+				continue
+			
+			match = re.search(descriptorRegex, line)
+			if match:
+				descriptor = match.group(2).strip().lower()
+				logger.debug("Descriptor: %s" % descriptor)
+				if type(lsusb[busId+":"+devId][descriptor]) is list:
+					lsusb[busId+":"+devId][descriptor].append({})
+				currentKey = None
+				indent = -1
+				continue
+			
+			if not descriptor:
+				logger.error("No descriptor")
+				continue
+			
+			if not lsusb[busId+":"+devId].has_key(descriptor):
+				logger.error("Unkown descriptor '%s'" % descriptor)
+				continue
+			
+			(key, value) = ('', '')
+			match = re.search(keyRegex, line)
+			if match:
+				key = match.group(2)
+				indent = len(match.group(1))
+			else:
+				match = re.search(keyValueRegex, line)
+				if match:
+					if (indent >= 0) and (len(match.group(1)) > indent):
+						key = currentKey
+						value = match.group(0).strip()
+					else:
+						(key, value) = (match.group(2), match.group(3).strip())
+						indent = len(match.group(1))
+			
+			logger.debug("key: '%s', value: '%s'" % (key, value))
+			
+			if not key or not value:
+				continue
+			
+			currentKey = key
+			if type(lsusb[busId+":"+devId][descriptor]) is list:
+				if not lsusb[busId+":"+devId][descriptor][-1].has_key(key):
+					lsusb[busId+":"+devId][descriptor][-1][key] = [ ]
+				lsusb[busId+":"+devId][descriptor][-1][key].append(value)
+			
+			else:
+				if not lsusb[busId+":"+devId][descriptor].has_key(key):
+					lsusb[busId+":"+devId][descriptor][key] = [ ]
+				lsusb[busId+":"+devId][descriptor][key].append(value)
+			
+			
+		logger.debug("Parsed lsusb info:")
+		logger.debug(objectToBeautifiedText(lsusb))
+	except Exception, e:
+		logger.error(e)
 	
 	# Read output from dmidecode
 	dmidecode = {}
