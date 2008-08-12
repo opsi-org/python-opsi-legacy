@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.4.1'
+__version__ = '0.2.4.2'
 
 # Imports
 import MySQLdb, warnings, time
@@ -384,7 +384,7 @@ class MySQLBackend(DataBackend):
 		pNames.sort()
 		for p in pNames:
 			if tableExists:
-				if value['Opsi'] in tables['HARDWARE_INFO']:
+				if p in tables['HARDWARE_INFO']:
 					# Column exists => change
 					table += 'CHANGE `%s` `%s` %s NULL,\n' % (p, p, properties[p])
 				else:
