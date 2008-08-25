@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.3'
 
 # Imports
 import re, os, time
@@ -77,10 +77,43 @@ class PROCESSENTRY32(Structure):
                  ("dwFlags", c_ulong),
                  ("szExeFile", c_char * 260)]
 
+#def setWallpaper(filename):
+#	win32gui.SystemParametersInfo ( win32con.SPI_SETDESKWALLPAPER, filename, win32con.SPIF_SENDCHANGE )
+
+def getFileVersionInfo(filename):
+	(lang, codepage) = win32api.GetFileVersionInfo(filename, '\\VarFileInfo\\Translation')[0]
+	path = u'\\StringFileInfo\\%04X%04X\\%%s' % (lang, codepage)
+	info = {
+		'CompanyName':      win32api.GetFileVersionInfo(filename, path % 'CompanyName'),
+		'SpecialBuild':     win32api.GetFileVersionInfo(filename, path % 'SpecialBuild'),
+		'Comments':         win32api.GetFileVersionInfo(filename, path % 'Comments'),
+		'FileDescription':  win32api.GetFileVersionInfo(filename, path % 'FileDescription'),
+		'FileVersion':      win32api.GetFileVersionInfo(filename, path % 'FileVersion'),
+		'InternalName':     win32api.GetFileVersionInfo(filename, path % 'InternalName'),
+		'LegalCopyright':   win32api.GetFileVersionInfo(filename, path % 'LegalCopyright'),
+		'LegalTrademarks':  win32api.GetFileVersionInfo(filename, path % 'LegalTrademarks'),
+		'OriginalFilename': win32api.GetFileVersionInfo(filename, path % 'OriginalFilename'),
+		'PrivateBuild':     win32api.GetFileVersionInfo(filename, path % 'PrivateBuild'),
+		'ProductName':      win32api.GetFileVersionInfo(filename, path % 'ProductName'),
+		'ProductVersion':   win32api.GetFileVersionInfo(filename, path % 'ProductVersion'),
+	}
+	logger.debug("File version info for '%s': %s" % (filename, info))
+	return info
+
 def getRegistryValue(key, subKey, valueName):
 	hkey = _winreg.OpenKey(key, subKey)
 	(value, type) = _winreg.QueryValueEx(hkey, valueName)
 	return value
+
+def setRegistryValue(key, subKey, valueName, value):
+	hkey = _winreg.OpenKey(key, subKey, 0, _winreg.KEY_WRITE)
+	if type(value) is int:
+		_winreg.SetValueEx(hkey, valueName, 0, _winreg.REG_DWORD, value)
+	else:
+		_winreg.SetValueEx(hkey, valueName, 0, _winreg.REG_SZ, value)
+
+def getProgramFilesDir():
+	return getRegistryValue(HKEY_LOCAL_MACHINE, 'Software\\Microsoft\\Windows\\CurrentVersion', 'ProgramFilesDir')
 
 def mount(dev, mountpoint, ui='default', **options):
 	#if ui == 'default': ui=userInterface
@@ -117,21 +150,39 @@ def mount(dev, mountpoint, ui='default', **options):
 				logger.info(e)
 			
 			logger.notice("Mounting '%s' to '%s'" % (dev, mountpoint))
-			#win32wnet.WNetAddConnection2(
-			#	win32netcon.RESOURCETYPE_DISK,
-			#	mountpoint,
-			#	dev,
-			#	None,
-			#	options['username'],
-			#	options['password'],
-			#	0
-			#)
-			os.system("net use %s %s %s /USER:%s /PERSISTENT:NO" % (mountpoint, dev, options['password'], options['username']))
+			# Mount not persistent
+			win32wnet.WNetAddConnection2(
+				win32netcon.RESOURCETYPE_DISK,
+				mountpoint,
+				dev,
+				None,
+				options['username'],
+				options['password'],
+				0
+			)
 			
 		except Exception, e:
 			logger.error("Cannot mount: %s" % e)
 			raise Exception ("Cannot mount: %s" % e)
 
+def umount(mountpoint, ui='default'):
+	#if ui == 'default': ui=userInterface
+	#if ui: ui.getMessageBox().addText(_("Umounting '%s'.\n") % mountpoint)
+	
+	try:
+		# Remove connection and update user profile (remove persistent connection)
+		win32wnet.WNetCancelConnection2(mountpoint, win32netcon.CONNECT_UPDATE_PROFILE, True)
+	except pywintypes.error, details:
+		if (details[0] == 2250):
+			# Not connected
+			logger.warning("Failed to umount '%s': %s" % (mountpoint, details))
+		else:
+			raise
+	
+	except Exception, e:
+		logger.error("Failed to umount '%s': %s" % (mountpoint, e))
+		raise Exception ("Failed to umount '%s': %s" % (mountpoint, e))
+	
 def getActiveConsoleSessionId():
 	return windll.kernel32.WTSGetActiveConsoleSessionId()
 	
@@ -146,24 +197,48 @@ def logonUser(username, password, domain=None):
 	return impersonated_user_handler
 
 def logoffCurrentUser():
+	logger.notice("Logging off current user")
 	#win32api.ExitWindows()
 	#win32api.ExitWindowsEx(0)
 	## Windows Server 2008 and Windows Vista:  A call to WTSShutdownSystem does not work when Remote Connection Manager (RCM) is disabled. This is the case when the Terminal Services service is stopped.
 	#win32ts.WTSShutdownSystem(win32ts.WTS_CURRENT_SERVER_HANDLE, win32ts.WTS_WSD_LOGOFF)
+	#runAsSystemInSession(
+	#		command              = "logoff.exe",
+	#		sessionId            = getActiveConsoleSessionId(),
+	#		waitForProcessEnding = False )
 	runAsSystemInSession(
-			command 	= "logoff.exe",
-			sessionId 	= getActiveConsoleSessionId() )
+			command              = 'shutdown.exe /l',
+			sessionId            = getActiveConsoleSessionId(),
+			waitForProcessEnding = False )
 	
 def lockWorkstation():
 	#windll.winsta.WinStationConnectW(0, 0, sessionId, "", 0)
 	#windll.user32.LockWorkStation()
 	runAsSystemInSession(
-			command		= "rundll32.exe user32.dll,LockWorkStation",
-			sessionId	= getActiveConsoleSessionId() )
+			command              = "rundll32.exe user32.dll,LockWorkStation",
+			sessionId            = getActiveConsoleSessionId(),
+			waitForProcessEnding = False )
 
-def getActiveDesktop():
-	raise NotImplementedError
-	
+def reboot(wait=10):
+	logger.notice("Rebooting in %s seconds" % wait)
+	wait = int(wait)
+	runAsSystemInSession(
+			command              = 'shutdown.exe /r /c "Opsi reboot" /t %d' % wait,
+			sessionId            = getActiveConsoleSessionId(),
+			waitForProcessEnding = False )
+
+def shutdown(wait=10):
+	logger.notice("Shutting down in %s seconds" % wait)
+	wait = int(wait)
+	runAsSystemInSession(
+			command              = 'shutdown.exe /s /c "Opsi shutdown" /t %d' % wait,
+			sessionId            = getActiveConsoleSessionId(),
+			waitForProcessEnding = False )
+
+def getActiveDesktopName():
+	desktop = win32service.OpenInputDesktop(0, True, win32con.MAXIMUM_ALLOWED)
+	return win32service.GetUserObjectInformation(desktop, win32con.UOI_NAME)
+
 def createWindowStation(name):
 	sa = pywintypes.SECURITY_ATTRIBUTES()
 	sa.bInheritHandle = 1
@@ -194,7 +269,7 @@ def createDesktop(name, cmd):
 def getPids(process, sessionId = None):
 	if not sessionId:
 		sessionId = getActiveConsoleSessionId()
-	logger.notice("Searching pid of process %s in session %d" % (process, sessionId))
+	logger.info("Searching pids of process name %s in session %d" % (process, sessionId))
 	processIds = []
 	CreateToolhelp32Snapshot = windll.kernel32.CreateToolhelp32Snapshot
 	Process32First = windll.kernel32.Process32First
@@ -203,16 +278,16 @@ def getPids(process, sessionId = None):
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
 	pe32 = PROCESSENTRY32()
 	pe32.dwSize = sizeof(PROCESSENTRY32)
-	logger.info("Getting first process")
+	logger.debug2("Getting first process")
 	if ( Process32First(hProcessSnap, byref(pe32)) == win32con.FALSE ):
 		logger.error("Failed to get first process")
 		return
 	while True:
-		logger.debug("   got process %s" % pe32.szExeFile)
+		logger.debug2("   got process %s" % pe32.szExeFile)
 		if (pe32.szExeFile == process):
 			sid = win32ts.ProcessIdToSessionId(pe32.th32ProcessID)
 			pid = pe32.th32ProcessID
-			logger.notice("Found process %s with pid %d in session %d" % (process, pid, sid))
+			logger.info("Found process %s with pid %d in session %d" % (process, pid, sid))
 			if (sid == sessionId):
 				processIds.append(pid)
 		if Process32Next(hProcessSnap, byref(pe32)) == win32con.FALSE:
@@ -261,7 +336,9 @@ def terminateProcess(hProcess):
 	win32process.TerminateProcess(hProcess, exitCode)
 	return exitCode
 
-def runAsSystem(self, command, waitForProcessEnding=True):
+def runAsSystem(command, waitForProcessEnding=True):
+	logger.notice("Executing: %s" % command)
+	
 	sessionId = 1
 	
 	s = win32process.STARTUPINFO()
@@ -295,18 +372,19 @@ def runAsSystem(self, command, waitForProcessEnding=True):
 	
 	win32security.AdjustTokenPrivileges(hUserTokenDup, 0, newPrivileges)
 	
-	logger.notice("Executing: %s" % command)
 	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(hUserTokenDup,None,command,None,None,0,dwCreationFlags,None,None,s)
 	#win32process.CreateProcess(None,command,None,None,0,dwCreationFlags,None,None,s)
-	logger.notice("Process runnig: %s" % hProcess)
+	logger.info("Process startet, pid: %d" % dwProcessId)
 	if not waitForProcessEnding:
 		return (hProcess, hThread, dwProcessId, dwThreadId)
-	logger.info("Waiting for process ending: %s" % hProcess)
+	logger.info("Waiting for process ending: %d" % dwProcessId)
 	while win32event.WaitForSingleObject(hProcess, 0):
 		time.sleep(0.1)
-	logger.notice("Process ended: %s" % hProcess)
+	logger.notice("Process ended: %d" % dwProcessId)
+	
 	
 def runAsSystemInSession(command, sessionId = None, desktop = "default", duplicateFrom = "winlogon.exe", waitForProcessEnding=True):
+	logger.notice("Executing: %s" % command)
 	if not type(sessionId) is int or (sessionId < 0):
 		sessionId = getActiveConsoleSessionId()
 	if not desktop:
@@ -346,14 +424,14 @@ def runAsSystemInSession(command, sessionId = None, desktop = "default", duplica
 	
 	win32security.AdjustTokenPrivileges(hUserTokenDup, 0, newPrivileges)
 	
-	logger.notice("Executing: %s" % command)
 	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(hUserTokenDup,None,command,None,None,0,dwCreationFlags,None,None,s)
+	logger.info("Process startet, pid: %d" % dwProcessId)
 	if not waitForProcessEnding:
 		return (hProcess, hThread, dwProcessId, dwThreadId)
-	logger.info("Waiting for process ending: %s" % hProcess)
+	logger.info("Waiting for process ending: %d" % dwProcessId)
 	while win32event.WaitForSingleObject(hProcess, 0):
 		time.sleep(0.1)
-	logger.notice("Process ended: %s" % hProcess)
+	logger.notice("Process ended: %d" % dwProcessId)
 	
 	
 def getWindowsInSession(sessionId):

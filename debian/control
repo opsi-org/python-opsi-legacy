@@ -2,13 +2,13 @@ Source: python-opsi
 Section: opsi
 Priority: optional
 Maintainer: uib GmbH <info@uib.de>
-Build-Depends: debhelper (>= 5.0.37.1), python-support, librsync-dev
+Build-Depends: debhelper (>= 5.0.37.1), python-support, python-dev
 Standards-Version: 3.7.2
 
 Package: python-opsi
 Section: opsi
-Architecture: any
-Depends: python-crypto, python-json, python-ldap, python-newt, python-pam, python-pyopenssl, python-support, python-mysqldb, librsync1
+Architecture: all
+Depends: python-crypto, python-json, python-ldap, python-newt, python-pam, python-pyopenssl, python-support, python-mysqldb, duplicity
 Suggests: slapd
 Provides: python2.3-opsi, python2.4-opsi, python2.5-opsi
 Description: OPSI python library

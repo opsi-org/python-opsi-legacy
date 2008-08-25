@@ -32,11 +32,11 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.6.1'
+__version__ = '0.9.6.2'
 
 # Imports
 import os, stat, types, re, socket, new, base64
-import librsync
+from duplicity import librsync
 
 # OS dependend imports
 if os.name == 'posix':

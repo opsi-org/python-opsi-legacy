@@ -28,7 +28,6 @@ build-indep-stamp:
 clean:
 	rm debian/files || true
 	rm -f *-stamp || true
-	rm _librsyncmodule.o _librsync.so || true
 	
 binary: binary-arch binary-indep
 
@@ -37,9 +36,6 @@ binary-arch: build-arch binary-stamp
 binary-stamp:
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/System
-	gcc -pthread -fno-strict-aliasing -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fPIC -I/usr/include/python${PYTHON_VERSION} -c src/librsync/_librsyncmodule.c -o _librsyncmodule.o
-	gcc -pthread -shared -Wl,-O1 _librsyncmodule.o -lrsync -o _librsync.so
-	install -m 0755 _librsync.so src/librsync/librsync.py debian/python-opsi/usr/share/python-support/python-opsi/
 	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python-opsi/usr/share/python-support/python-opsi/$$i; done
 	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
 	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo

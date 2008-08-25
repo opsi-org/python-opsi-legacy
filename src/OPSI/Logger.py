@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.4'
+__version__ = '0.9.8.5'
 
 # Loglevels
 LOG_CONFIDENTIAL = 9
@@ -180,35 +180,43 @@ class LoggerImplementation:
 	def getStdout(self):
 		return self.__stdout
 	
-	def setLogFormat(self, format, currentThread=False):
-		self.setConsoleFormat(format, currentThread)
-		self.setSyslogFormat(format, currentThread)
-		self.setFileFormat(format, currentThread)
+	def setLogFormat(self, format, currentThread=False, object=None):
+		self.setConsoleFormat(format, currentThread, object)
+		self.setSyslogFormat(format, currentThread, object)
+		self.setFileFormat(format, currentThread, object)
 		
-	def setConsoleFormat(self, format, currentThread=False):
+	def setConsoleFormat(self, format, currentThread=False, object=None):
 		if currentThread:
 			self._setThreadConfig('consoleFormat', format)
+		elif object:
+			self._setObjectConfig(id(object), 'consoleFormat', format)
 		else:
 			self.__consoleFormat = format
 	
 	def logToStdout(self, stdout):
 		self.__consoleStdout = stdout
 	
-	def setSyslogFormat(self, format, currentThread=False):
+	def setSyslogFormat(self, format, currentThread=False, object=None):
 		if currentThread:
 			self._setThreadConfig('syslogFormat', format)
+		elif object:
+			self._setObjectConfig(id(object), 'syslogFormat', format)
 		else:
 			self.__syslogFormat = format
 		
-	def setFileFormat(self, format, currentThread=False):
+	def setFileFormat(self, format, currentThread=False, object=None):
 		if currentThread:
 			self._setThreadConfig('fileFormat', format)
+		elif object:
+			self._setObjectConfig(id(object), 'fileFormat', format)
 		else:
 			self.__fileFormat = format
 	
-	def setUniventionFormat(self, format, currentThread=False):
+	def setUniventionFormat(self, format, currentThread=False, object=None):
 		if currentThread:
 			self._setThreadConfig('univentionFormat', format)
+		elif object:
+			self._setObjectConfig(id(object), 'univentionFormat', format)
 		else:
 			self.__univentionFormat = format
 	

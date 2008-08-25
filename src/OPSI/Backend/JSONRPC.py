@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.5.6'
+__version__ = '0.9.5.7'
 
 # Imports
 import json, base64, urllib, httplib, new, stat, socket, random
@@ -267,15 +267,13 @@ class JSONRPCBackend(DataBackend):
 				self.__sessionId = cookie.split(';')[0].strip()
 		
 		except Exception, e:
-			logger.logException(e)
 			if retry:
-				logger.warning("Requesting '%s', query '%s' failed: %s" % (self.__address, query, e))
-				logger.notice("Trying to reconnect...")
+				logger.warning("Requesting '%s' failed: %s, trying to reconnect" % (self.__address, e))
 				self._connect()
 				return self.__request(baseUrl, query=query, retry=False)
-			
-			# Error occurred => raise BackendIOError
-			raise BackendIOError("Requesting '%s', query '%s' failed: %s" % (self.__address, query, e))
+			else:
+				logger.logException(e)
+				raise BackendIOError("Requesting '%s' failed: %s" % (self.__address, e))
 		
 		try:
 			# Return response content (body)
