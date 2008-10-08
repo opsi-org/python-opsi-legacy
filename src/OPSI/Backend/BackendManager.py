@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.6.3'
+__version__ = '0.9.7'
 
 # Imports
 import os, stat, types, re, socket, new, base64
@@ -293,17 +293,22 @@ class BackendManager(DataBackend):
 		
 		class AuthConv:
 			''' Handle PAM conversation '''
-			def __init__(_, password):
+			def __init__(_, user, password):
+				_.user = user
 				_.password = password
 			
-			def __call__(_, auth, queryList, userData):
-				''' Callback conversation function '''
+			def __call__(_, auth, query_list):
 				response = []
-				for query, qt in queryList:
-					if (qt == PAM.PAM_PROMPT_ECHO_ON) or (qt == PAM.PAM_PROMPT_ECHO_OFF):
+				for i in range(len(query_list)):
+					(query, type) = query_list[i]
+					logger.debug("PAM conversation: query '%s', type '%s'" % (query, type))
+					if (type == PAM.PAM_PROMPT_ECHO_ON):
+						response.append((_.user, 0))
+					elif (type == PAM.PAM_PROMPT_ECHO_OFF):
 						response.append((_.password, 0))
-					elif (qt == PAM.PAM_ERROR_MSG) or (qt == PAM.PAM_TEXT_INFO):
-						response.append(('', 0))
+					elif (type == PAM.PAM_PROMPT_ERROR_MSG) or (type == PAM.PAM_PROMPT_TEXT_INFO):
+						print query
+						response.append(('', 0));
 					else:
 						return None
 				return response
@@ -312,14 +317,16 @@ class BackendManager(DataBackend):
 			auth = PAM.pam()
 			auth.start(self._pamService)
 			# Authenticate
-			auth.set_item(PAM.PAM_USER, user)
-			auth.set_item(PAM.PAM_CONV, AuthConv(password))
+			auth.set_item(PAM.PAM_CONV, AuthConv(user, password))
 			# Set the tty
 			# Workaround for:
 			#   If running as daemon without a tty the following error
 			#   occurs with older versions of pam:
 			#      pam_access: couldn't get the tty name
-			auth.set_item(PAM.PAM_TTY, '/dev/null')
+			try:
+				auth.set_item(PAM.PAM_TTY, '/dev/null')
+			except:
+				pass
 			auth.authenticate()
 			auth.acct_mgmt()
 			

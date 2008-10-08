@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.5.7'
+__version__ = '0.9.5.8'
 
 # Imports
 import json, base64, urllib, httplib, new, stat, socket, random
@@ -69,6 +69,7 @@ class JSONRPCBackend(DataBackend):
 		self.__protocol = 'https'
 		self.__method = METHOD_POST
 		self.__timeout = None
+		self._defaultDomain = None
 		
 		# Parse arguments
 		for (option, value) in args.items():
@@ -78,7 +79,7 @@ class JSONRPCBackend(DataBackend):
 				if not self.__username:			self.__username = value
 			elif (option.lower() == 'password'):
 				if not self.__password:			self.__password = value
-			elif (option.lower() == 'defaultdomain'): 	self.__defaultDomain = value
+			elif (option.lower() == 'defaultdomain'): 	self._defaultDomain = value
 			elif (option.lower() == 'sessionid'): 		self.__sessionId = value
 			elif (option.lower() == 'timeout'): 		self.__timeout = value
 			elif (option.lower() == 'method'):

@@ -1,8 +1,10 @@
 python-opsi (3.3.0.25-1) stable; urgency=low
 
   * Added Twisted.Web2.dav
+  * Posix.py 1.1.8
+  * JSONRPC.py 0.9.5.8
 
- -- Jan Schneider <j.schneider@uib.de>  Fri, 12 Sep 2008 13:37:38 +0200
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 08 Oct 2008 15:53:05 +0200
 
 python-opsi (3.3.0.24-1) stable; urgency=low
 
