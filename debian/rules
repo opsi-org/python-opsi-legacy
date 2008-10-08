@@ -1,140 +1,169 @@
 #!/usr/bin/make -f
 
-OPSI_VERSION    := $(shell head -n 1 debian/changelog | cut -d" " -f2 | cut -d"-" -f1 | sed 's/.//')
-PYTHON_VERSION  := $(shell /usr/bin/python -c 'import sys; print sys.version[:3]')
-PYTHON_VERSIONS := $(shell pyversions -vs)
+OPSI_VERSION := $(shell head -n 1 debian/changelog | cut -d" " -f2 | cut -d"-" -f1 | sed 's/.//')
+PYTHON_VERSION := $(shell python -c "import sys; print '%d.%d' % sys.version_info[:2]")
 
-build: build-stamp
+build: build-arch build-indep
 
-build-stamp: $(PYTHON_VERSIONS:%=build-python%) build-indep
-	touch $@
+build-arch: build-stamp
 
-build-python%:
-	python$* setup.py build
-	touch $@
+build-stamp:
 
-build-indep:
-	msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
-	msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
+build-indep: build-indep-stamp
 
-clean:
-	rm debian/files || true
-	rm -rf *-stamp build || true
-
-install: build-stamp install-prereq $(PYTHON_VERSIONS:%=install-python%) install-indep
-
-install-prereq: build-stamp
+build-indep-stamp:
 	# Make sure we are in the correct directory
 	dh_testdir
 	# Ensure that package is built as root
 	dh_testroot
 	# Clean up package build directories
 	dh_clean -k
-	
-install-python%: install-prereq
-	python$* setup.py install --prefix=debian/python-opsi/usr
-	find debian/python-opsi -name '*.py[co]' | xargs rm -f
+	# Create subdirectories in package build directories
+	dh_installdirs
+	rm -f build-indep-stamp
+	msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
+	msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
+	touch build-indep-stamp
 
-install-indep:
+clean:
+	rm debian/files || true
+	rm -f *-stamp || true
+	
+binary: binary-arch binary-indep
+
+binary-arch: build-arch binary-stamp
+
+binary-stamp:
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/System
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav/test
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav/method
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav/element
+	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python-opsi/usr/share/python-support/python-opsi/$$i; done
 	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
-	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/
-	install -m 0644 gettext/opsi_ui.mo     debian/python-opsi/usr/share/locale/de/LC_MESSAGES/
+	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
+	install -m 0644 gettext/opsi_ui.mo     debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
 	mkdir -p debian/python-opsi/etc/opsi/backendManager.d
 	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python-opsi/etc/opsi/backendManager.d/; done
 	mkdir -p debian/python-opsi/etc/opsi/hwaudit/locales
-	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python-opsi/etc/opsi/hwaudit/
+	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python-opsi/etc/opsi/hwaudit/opsihwaudit.conf
 	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python-opsi/etc/opsi/hwaudit/locales/; done
 	mkdir -p debian/python-opsi/etc/ldap/schema
-	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/
-	install -m 0644 files/opsi-standalone.schema debian/python-opsi/etc/ldap/schema/
+	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi.schema
+	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi-standalone.schema
 	mkdir -p debian/python-opsi/usr/share/opsi
 	install -m 0755 files/share/init-opsi-mysql-db.py debian/python-opsi/usr/share/opsi/
 	install -m 0755 files/share/register-depot.py debian/python-opsi/usr/share/opsi/
 	echo $(OPSI_VERSION) > debian/python-opsi/etc/opsi/version
+	
+binary-indep: build-indep binary-indep-stamp
 
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs -i
-	dh_installdocs -i
-	dh_installmenu -i
-	dh_compress -i -X.py
-	dh_fixperms -i
-	dh_pycentral -i
-	dh_python -i
-	dh_installdeb -i
-	dh_gencontrol -i
-	dh_md5sums -i
-	dh_builddeb -i
+binary-indep-stamp:
+	# Install changelogs into package build directories
+	dh_installchangelogs
+	# Fix permissions of files in package build directories
+	dh_fixperms
+	## Use the python-support framework to handle Python modules
+	#dh_pysupport
+	# Install files into the DEBIAN directory
+	dh_installdeb
+	# Generate and install control file
+	dh_gencontrol
+	# Install files used by debconf in package build directories
+	dh_installdebconf
+	# Generate DEBIAN/md5sums file
+	dh_md5sums
+	# Build debian packages
+	dh_builddeb
 
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs -a
-	dh_installdocs -a
-	dh_installmenu -a
-	dh_strip -a
-	dh_compress -a -X.py
-	dh_fixperms -a
-	dh_pycentral -a
-	dh_python -a
-	dh_installdeb -a
-	dh_shlibdeps -a
-	dh_gencontrol -a
-	dh_md5sums -a
-	dh_builddeb -a
+.PHONY: clean build build-arch build-indep binary binary-arch binary-indep
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install install-nover install-prereq
-
-###########################
-#	# Create subdirectories in package build directories
-#	dh_installdirs
-#	rm -f build-indep-stamp
+### pycentral ##########################################################################################
+#
+#OPSI_VERSION    := $(shell head -n 1 debian/changelog | cut -d" " -f2 | cut -d"-" -f1 | sed 's/.//')
+#PYTHON_VERSION  := $(shell /usr/bin/python -c 'import sys; print sys.version[:3]')
+#PYTHON_VERSIONS := $(shell pyversions -vs)
+#
+#build: build-stamp
+#
+#build-stamp: $(PYTHON_VERSIONS:%=build-python%) build-indep
+#	touch $@
+#
+#build-python%:
+#	python$* setup.py build
+#	touch $@
+#
+#build-indep:
 #	msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
 #	msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
-#	touch build-indep-stamp
 #
-#binary-stamp:
+#clean:
+#	rm debian/files || true
+#	rm -rf *-stamp build || true
+#
+#install: build-stamp install-prereq $(PYTHON_VERSIONS:%=install-python%) install-indep
+#
+#install-prereq: build-stamp
+#	# Make sure we are in the correct directory
+#	dh_testdir
+#	# Ensure that package is built as root
+#	dh_testroot
+#	# Clean up package build directories
+#	dh_clean -k
 #	
-#	#mkdir debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav
-#	#cp -r src/twisted-web2-dav/* debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav/
-#	#find debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav -name '.svn' -exec rm -rf '{}' \; 2>/dev/null || true
-#	#find debian/python-opsi/usr/share/python-support/python-opsi/OPSI/dav -name '*~' -exec rm -f '{}' \; 2>/dev/null || true
-#	#mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
-#	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
-#	install -m 0644 gettext/opsi_ui.mo     debian/python-opsi/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+#install-python%: install-prereq
+#	python$* setup.py install --prefix=debian/python-opsi/usr
+#	find debian/python-opsi -name '*.py[co]' | xargs rm -f
+#
+#install-indep:
+#	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES
+#	install -m 0644 gettext/opsi_system.mo debian/python-opsi/usr/share/locale/de/LC_MESSAGES/
+#	install -m 0644 gettext/opsi_ui.mo     debian/python-opsi/usr/share/locale/de/LC_MESSAGES/
 #	mkdir -p debian/python-opsi/etc/opsi/backendManager.d
 #	for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$$i debian/python-opsi/etc/opsi/backendManager.d/; done
 #	mkdir -p debian/python-opsi/etc/opsi/hwaudit/locales
-#	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python-opsi/etc/opsi/hwaudit/opsihwaudit.conf
+#	install -m 0644 files/hwaudit/opsihwaudit.conf debian/python-opsi/etc/opsi/hwaudit/
 #	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python-opsi/etc/opsi/hwaudit/locales/; done
 #	mkdir -p debian/python-opsi/etc/ldap/schema
-#	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi.schema
-#	install -m 0644 files/opsi-standalone.schema debian/python-opsi/etc/ldap/schema/opsi-standalone.schema
+#	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/
+#	install -m 0644 files/opsi-standalone.schema debian/python-opsi/etc/ldap/schema/
 #	mkdir -p debian/python-opsi/usr/share/opsi
 #	install -m 0755 files/share/init-opsi-mysql-db.py debian/python-opsi/usr/share/opsi/
 #	install -m 0755 files/share/register-depot.py debian/python-opsi/usr/share/opsi/
 #	echo $(OPSI_VERSION) > debian/python-opsi/etc/opsi/version
-#	
-#binary-indep: build-indep binary-indep-stamp
 #
-#binary-indep-stamp:
-#	# Install changelogs into package build directories
-#	dh_installchangelogs
-#	# Fix permissions of files in package build directories
-#	dh_fixperms
-#	## Use the python-support framework to handle Python modules
-#	#dh_pysupport
-#	# Install files into the DEBIAN directory
-#	dh_installdeb
-#	# Generate and install control file
-#	dh_gencontrol
-#	# Install files used by debconf in package build directories
-#	dh_installdebconf
-#	# Generate DEBIAN/md5sums file
-#	dh_md5sums
-#	# Build debian packages
-#	dh_builddeb
+#binary-indep: build install
+#	dh_testdir
+#	dh_testroot
+#	dh_installchangelogs -i
+#	dh_installdocs -i
+#	dh_installmenu -i
+#	dh_compress -i -X.py
+#	dh_fixperms -i
+#	dh_pycentral -i
+#	dh_python -i
+#	dh_installdeb -i
+#	dh_gencontrol -i
+#	dh_md5sums -i
+#	dh_builddeb -i
 #
-#.PHONY: clean build build-arch build-indep binary binary-arch binary-indep
+#binary-arch: build install
+#	dh_testdir
+#	dh_testroot
+#	dh_installchangelogs -a
+#	dh_installdocs -a
+#	dh_installmenu -a
+#	dh_strip -a
+#	dh_compress -a -X.py
+#	dh_fixperms -a
+#	dh_pycentral -a
+#	dh_python -a
+#	dh_installdeb -a
+#	dh_shlibdeps -a
+#	dh_gencontrol -a
+#	dh_md5sums -a
+#	dh_builddeb -a
+#
+#binary: binary-indep binary-arch
+#.PHONY: build clean binary-indep binary-arch binary install install-nover install-prereq
+
