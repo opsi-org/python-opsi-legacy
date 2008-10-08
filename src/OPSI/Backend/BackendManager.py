@@ -297,7 +297,7 @@ class BackendManager(DataBackend):
 				_.user = user
 				_.password = password
 			
-			def __call__(_, auth, query_list):
+			def __call__(_, auth, query_list, userData=None):
 				response = []
 				for i in range(len(query_list)):
 					(query, type) = query_list[i]
