@@ -50,7 +50,7 @@ binary-stamp:
 	for i in files/hwaudit/locales/*; do install -m 0644 $$i debian/python-opsi/etc/opsi/hwaudit/locales/; done
 	mkdir -p debian/python-opsi/etc/ldap/schema
 	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi.schema
-	install -m 0644 files/opsi.schema debian/python-opsi/etc/ldap/schema/opsi-standalone.schema
+	install -m 0644 files/opsi-standalone.schema debian/python-opsi/etc/ldap/schema/opsi-standalone.schema
 	mkdir -p debian/python-opsi/usr/share/opsi
 	install -m 0755 files/share/init-opsi-mysql-db.py debian/python-opsi/usr/share/opsi/
 	install -m 0755 files/share/register-depot.py debian/python-opsi/usr/share/opsi/
