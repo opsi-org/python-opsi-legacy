@@ -17,9 +17,15 @@ setup (
 		'OPSI',
 		'OPSI.Backend',
 		'OPSI.System',
-		'OPSI.dav',
-		'OPSI.dav.element',
-		'OPSI.dav.method',
+		'OPSI.web2',
+		'OPSI.web2.filter',
+		'OPSI.web2.topfiles',
+		'OPSI.web2.auth',
+		'OPSI.web2.channel',
+		'OPSI.web2.dav',
+		'OPSI.web2.dav.method',
+		'OPSI.web2.dav.element',
+		'OPSI.web2.client',
 	],
 	#data_files=[
 	#	('/usr/share/locale/de/LC_MESSAGES opsi_system.mo', ['gettext/opsi_system.mo', 'gettext/opsi_ui.mo'])
