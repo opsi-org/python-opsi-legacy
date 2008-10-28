@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.4.2'
+__version__ = '0.2.4.3'
 
 # Imports
 import MySQLdb, warnings, time
@@ -103,7 +103,7 @@ class MySQL:
 			if type(value) in (float, long, int, bool):
 				values += "%s, " % value
 			else:
-				values += "\'%s\', " % ('%s' %value).replace("'", "\\\'")
+				values += "\'%s\', " % ('%s' % value).replace("\\", "\\\\").replace("'", "\\\'")
 			
 		query = "INSERT INTO `%s` (%s) VALUES (%s);" % (table, colNames[:-2], values[:-2])
 		logger.debug2("db_insert: %s" % query)
@@ -523,9 +523,9 @@ class MySQLBackend(DataBackend):
 			swId = -1
 			query = 'SELECT `software_id` FROM `SOFTWARE` WHERE'
 			for (k, v) in software.items():
-				if type(v) is type(''):
+				if type(v) in (str, unicode):
 					# String-value
-					query += " `%s` = '%s' AND" % (k, v.replace("'", "\\\'"))
+					query += " `%s` = '%s' AND" % (k, v.replace("\\", "\\\\").replace("'", "\\\'"))
 				else:
 					query += " `%s` = %s AND" % (k, v)
 			query = query[:-4] + ';'
@@ -560,9 +560,9 @@ class MySQLBackend(DataBackend):
 				if k in ('usageFrequency', 'lastUsed'):
 					# Update only, do not create new entry in history
 					continue
-				if type(v) is type(''):
+				if type(v) in (str, unicode):
 					# String-value
-					query += " `%s` = '%s' AND" % (k, v.replace("'", "\\\'"))
+					query += " `%s` = '%s' AND" % (k, v.replace("\\", "\\\\").replace("'", "\\\'"))
 				else:
 					query += " `%s` = %s AND" % (k, v)
 			query = query + " `audit_state`=1 AND `audit_lastseen` != '%s'" % scantime
@@ -728,9 +728,9 @@ class MySQLBackend(DataBackend):
 				hwId = -1
 				query = 'SELECT `hardware_id` FROM `HARDWARE_DEVICE_%s` WHERE' % hwClass
 				for (k, v) in hardwareDevice.items():
-					if type(v) is type(''):
+					if type(v) in (str, unicode):
 						# String-value
-						query += " `%s` = '%s' AND" % (k, v.replace("'", "\\\'"))
+						query += " `%s` = '%s' AND" % (k, v.replace("\\", "\\\\").replace("'", "\\\'"))
 					else:
 						query += " `%s` = %s AND" % (k, v)
 				query = query[:-4] + ';'
@@ -762,9 +762,9 @@ class MySQLBackend(DataBackend):
 				for (k, v) in hardwareConfig.items():
 					if k in ('audit_firstseen', 'audit_lastseen', 'audit_state'):
 						continue
-					if type(v) is type(''):
+					if type(v) in (str, unicode):
 						# String-value
-						query += " `%s` = '%s' AND" % (k, v.replace("'", "\\\'"))
+						query += " `%s` = '%s' AND" % (k, v.replace("\\", "\\\\").replace("'", "\\\'"))
 					else:
 						query += " `%s` = %s AND" % (k, v)
 				query = query + " `audit_state`=1 AND `audit_lastseen` != '%s'" % scantime

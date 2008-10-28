@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8.8'
+__version__ = '0.9.8.9'
 
 # Imports
 import os
@@ -252,168 +252,171 @@ class Product:
 	
 	def readControlFile(self, controlFile):
 		logger.info("Reading control file '%s'" % controlFile)
-		cf = open (controlFile)
-		
-		result= []
-		section = None
-		option = None
-		lineNum = 0
-		for line in cf.readlines():
-			lineNum += 1
-			if line.startswith(';') or line.startswith('#'):
-				# Comment
-				continue
+		try:
+			cf = open(controlFile)
 			
-			if (line.rstrip().lower() == '[package]'):
-				section = 'package'
-				result.append({ 'section': section })
-				continue
-			
-			elif (line.rstrip().lower() == '[product]'):
-				section = 'product'
-				result.append({ 'section': section })
-				continue
+			result= []
+			section = None
+			option = None
+			lineNum = 0
+			for line in cf.readlines():
+				lineNum += 1
+				if line.startswith(';') or line.startswith('#'):
+					# Comment
+					continue
 				
-			elif (line.rstrip().lower() == '[productdependency]'):
-				section = 'productdependency'
-				result.append({ 'section': section })
-				continue
+				if (line.rstrip().lower() == '[package]'):
+					section = 'package'
+					result.append({ 'section': section })
+					continue
 				
-			elif (line.rstrip().lower() == '[productproperty]'):
-				section = 'productproperty'
-				result.append({ 'section': section })
-				continue
-			
-			elif not section and line:
-				raise Exception("Parse error in line '%s': not in a section" % lineNum)
-			
-			key = None
-			value = None
-			if re.search("^\s+", line):
-				value = line
-			elif re.search("^\S+\:", line):
-				(key, value) = line.split(':', 1)
-				key = key.lower()
-				value = value.lstrip()
-			
-			if (section == 'package' and key in \
-					['version', 'depends', 'incremental']):
-				option = key
-			
-			elif (section == 'product' and key in \
-					['id', 'type', 'name', 	'description', 'advice', 
-					 'version', 'packageversion', 'priority', 
-					 'licenserequired', 'productclasses', 'pxeconfigtemplate',
-					 'setupscript', 'uninstallscript', 'updatescript',
-					 'alwaysscript', 'oncescript']):
-				option = key
-			
-			elif (section == 'productdependency' and key in \
-					['action', 'requiredproduct', 'requiredclass', 
-					 'requiredstatus', 'requiredaction', 'requirementtype']):
-				option = key
-			
-			elif (section == 'productproperty' and key in \
-					['name', 'default', 'values', 'description']):
-				option = key
-			
-			else:
-				value = line
-			
-			if not option:
-				raise Exception("Parse error in line '%s': no option / bad option defined" % lineNum)
-				
-			if not result[-1].has_key(option):
-				result[-1][option] = value.rstrip()
-			else:
-				result[-1][option] += '\n' + value.rstrip()
-		
-		for section in result:
-			for (option, value) in section.items():
-				if (option == 'description'):
-					value = value.rstrip()
-				
-				elif (section['section'] == 'product' and option == 'productclasses') or \
-				     (section['section'] == 'package' and option == 'depends') or \
-				     (section['section'] == 'productproperty' and option == 'values'):
-					value = value.replace('\n', '')
-					value = value.replace('\t', '')
-					value = value.split(',')
-					value = map ( lambda x:x.strip(), value )
-					# Remove duplicates
-					tmp = []
-					for v in value:
-						if v and v not in tmp:
-							tmp.append(v)
-					value = tmp
-				else:
-					value = value.replace('\n', '')
-					value = value.replace('\t', '')
-				
-				section[option] = value
-			
-			if (section['section'] == 'package'):
-				if section.get('version'):
-					self.setPackageVersion( section['version'] )
-			
-			elif (section['section'] == 'product'):
-				try:
-					self.setProductId( section['id'] )
-					self.setProductType( section['type'] )
-					self.setName( section['name'] )
-					self.setProductVersion( section['version'] )
-					if section.get('packageversion'):
-						self.setPackageVersion( section['packageversion'] )
-					self.setLicenseRequired( section['licenserequired'] )
-					self.setPriority( section['priority'] )
-					self.setDescription( section['description'] )
-					self.setAdvice( section['advice'] )
-					self.setProductClassNames( section['productclasses'] )
-					self.setSetupScript( section['setupscript'] )
-					self.setUninstallScript( section['uninstallscript'] )
-					self.setUpdateScript( section['updatescript'] )
-					self.setAlwaysScript( section['alwaysscript'] )
-					self.setOnceScript( section['oncescript'] )
-					if section.get('pxeconfigtemplate'):
-						self.setPxeConfigTemplate( section['pxeconfigtemplate'] )
+				elif (line.rstrip().lower() == '[product]'):
+					section = 'product'
+					result.append({ 'section': section })
+					continue
 					
-				except Exception, e:
-					raise Exception("Missing option %s in control file '%s'" % (e, controlFile) )
-		
-		for section in result:
-			if (section['section'] == 'productproperty'):
-				productProperty = ProductProperty(
-					productId	= self.productId,
-					name		= section.get('name'),
-					description	= section.get('description', ''),
-					possibleValues	= section.get('values', []),
-					defaultValue	= section.get('default', ''), 
-				)
-				self.addProductProperty(productProperty)
+				elif (line.rstrip().lower() == '[productdependency]'):
+					section = 'productdependency'
+					result.append({ 'section': section })
+					continue
+					
+				elif (line.rstrip().lower() == '[productproperty]'):
+					section = 'productproperty'
+					result.append({ 'section': section })
+					continue
+				
+				elif not section and line:
+					raise Exception("Parse error in line '%s': not in a section" % lineNum)
+				
+				key = None
+				value = None
+				if re.search("^\s+", line):
+					value = line
+				elif re.search("^\S+\:", line):
+					(key, value) = line.split(':', 1)
+					key = key.lower()
+					value = value.lstrip()
+				
+				if (section == 'package' and key in \
+						['version', 'depends', 'incremental']):
+					option = key
+				
+				elif (section == 'product' and key in \
+						['id', 'type', 'name', 	'description', 'advice', 
+						 'version', 'packageversion', 'priority', 
+						 'licenserequired', 'productclasses', 'pxeconfigtemplate',
+						 'setupscript', 'uninstallscript', 'updatescript',
+						 'alwaysscript', 'oncescript']):
+					option = key
+				
+				elif (section == 'productdependency' and key in \
+						['action', 'requiredproduct', 'requiredclass', 
+						 'requiredstatus', 'requiredaction', 'requirementtype']):
+					option = key
+				
+				elif (section == 'productproperty' and key in \
+						['name', 'default', 'values', 'description']):
+					option = key
+				
+				else:
+					value = line
+				
+				if not option:
+					raise Exception("Parse error in line '%s': no option / bad option defined" % lineNum)
+					
+				if not result[-1].has_key(option):
+					result[-1][option] = value.rstrip()
+				else:
+					result[-1][option] += '\n' + value.rstrip()
 			
-			elif (section['section'] == 'productdependency'):
-				productDependency = ProductDependency(
-					productId 			= self.productId,
-					action 				= section.get('action'),
-					requiredProductId 		= section.get('requiredproduct'),
-					requiredProductClassId		= section.get('requiredclass'),
-					requiredAction 			= section.get('requiredaction'),
-					requiredInstallationStatus 	= section.get('requiredstatus'),
-					requirementType 		= section.get('requirementtype'),
-				)
-				self.addProductDependency(productDependency)
+			for section in result:
+				for (option, value) in section.items():
+					if (option == 'description'):
+						value = value.rstrip()
+					
+					elif (section['section'] == 'product' and option == 'productclasses') or \
+					     (section['section'] == 'package' and option == 'depends') or \
+					     (section['section'] == 'productproperty' and option == 'values'):
+						value = value.replace('\n', '')
+						value = value.replace('\t', '')
+						value = value.split(',')
+						value = map ( lambda x:x.strip(), value )
+						# Remove duplicates
+						tmp = []
+						for v in value:
+							if v and v not in tmp:
+								tmp.append(v)
+						value = tmp
+					else:
+						value = value.replace('\n', '')
+						value = value.replace('\t', '')
+					
+					section[option] = value
+				
+				if (section['section'] == 'package'):
+					if section.get('version'):
+						self.setPackageVersion( section['version'] )
+				
+				elif (section['section'] == 'product'):
+					try:
+						self.setProductId( section['id'] )
+						self.setProductType( section['type'] )
+						self.setName( section['name'] )
+						self.setProductVersion( section['version'] )
+						if section.get('packageversion'):
+							self.setPackageVersion( section['packageversion'] )
+						self.setLicenseRequired( section['licenserequired'] )
+						self.setPriority( section['priority'] )
+						self.setDescription( section['description'] )
+						self.setAdvice( section['advice'] )
+						self.setProductClassNames( section['productclasses'] )
+						self.setSetupScript( section['setupscript'] )
+						self.setUninstallScript( section['uninstallscript'] )
+						self.setUpdateScript( section['updatescript'] )
+						self.setAlwaysScript( section['alwaysscript'] )
+						self.setOnceScript( section['oncescript'] )
+						if section.get('pxeconfigtemplate'):
+							self.setPxeConfigTemplate( section['pxeconfigtemplate'] )
+						
+					except Exception, e:
+						raise Exception("Missing option %s in control file '%s'" % (e, controlFile) )
 			
+			for section in result:
+				if (section['section'] == 'productproperty'):
+					productProperty = ProductProperty(
+						productId	= self.productId,
+						name		= section.get('name'),
+						description	= section.get('description', ''),
+						possibleValues	= section.get('values', []),
+						defaultValue	= section.get('default', ''), 
+					)
+					self.addProductProperty(productProperty)
+				
+				elif (section['section'] == 'productdependency'):
+					productDependency = ProductDependency(
+						productId 			= self.productId,
+						action 				= section.get('action'),
+						requiredProductId 		= section.get('requiredproduct'),
+						requiredProductClassId		= section.get('requiredclass'),
+						requiredAction 			= section.get('requiredaction'),
+						requiredInstallationStatus 	= section.get('requiredstatus'),
+						requirementType 		= section.get('requirementtype'),
+					)
+					self.addProductDependency(productDependency)
+				
+				
+			#for section in result:
+			#	logger.debug(section['section'])
+			#	for (key, value) in section.items():
+			#		if (key == section):
+			#			pass
+			#		else:
+			#			logger.debug("%s: %s" % (key, value))
+			#	logger.debug("")
 			
-		#for section in result:
-		#	logger.debug(section['section'])
-		#	for (key, value) in section.items():
-		#		if (key == section):
-		#			pass
-		#		else:
-		#			logger.debug("%s: %s" % (key, value))
-		#	logger.debug("")
-		
-		cf.close()
+			cf.close()
+		except Exception, e:
+			raise  Exception("Failed to read control file '%s': %s" % (controlFile, e))
 	
 	def writeControlFile(self, controlFile):
 		logger.info("Writing control file '%s'" % controlFile)

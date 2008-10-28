@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7'
+__version__ = '0.9.7.1'
 
 # Imports
 import os, stat, types, re, socket, new, base64
@@ -542,12 +542,16 @@ class BackendManager(DataBackend):
 			raise BackendBadValueError("oldfile and deltafile are the same file")
 		
 		(of, df, nf, pf) = (None, None, None, None)
+		bufsize = 1024*1024
 		try:
 			of = open(oldfile, "rb")
 			df = open(deltafile, "rb")
 			nf = open(newfile, "wb")
 			pf = librsync.PatchedFile(of, df)
-			nf.write(pf.read())
+			data = True
+			while(data):
+				data = pf.read(bufsize)
+				nf.write(data)
 			nf.close()
 			pf.close()
 			df.close()

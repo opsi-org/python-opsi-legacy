@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.8'
+__version__ = '1.1.9'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal
@@ -332,7 +332,7 @@ def countFiles(src):
 			count += countFiles(srcname)
 	return count
 
-def copy(src, dst, ui='default'):
+def copy(src, dst, ui='default', symlinks=True):
 	if ui == 'default': ui=userInterface
 	logger.info('Copying from %s to %s' % (src, dst))
 	progress = None
@@ -378,7 +378,7 @@ def copy(src, dst, ui='default'):
 		dst = os.path.join(dst, os.path.basename(src))
 		mkdir(dst, ui=None)
 	
-	copyTree( src, dst, True, 0, total, progress)
+	copyTree( src, dst, symlinks, 0, total, progress)
 	logger.info('Copy done!')
 	if progress:
 		progress.hide()
@@ -394,8 +394,15 @@ def copyTree(src, dst, symlinks=False, current=0, total=1, progress=None):
 		srcname = os.path.join(src, name)
 		dstname = os.path.join(dst, name)
 		if symlinks and os.path.islink(srcname):
-			linkto = os.readlink(srcname)
-			os.symlink(linkto, dstname)
+			try:
+				linkto = os.readlink(srcname)
+				os.symlink(linkto, dstname)
+			except os.error, e:
+				if (e.errno != 1):
+					raise
+				# Operation not permitted / filesystem does not support symlinks
+				logger.warning(e)
+				current = copyTree(srcname, dstname, symlinks, current, total, progress)
 		elif os.path.isdir(srcname):
 			current = copyTree(srcname, dstname, symlinks, current, total, progress)
 		else:

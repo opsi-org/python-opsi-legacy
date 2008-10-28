@@ -1,3 +1,13 @@
+python-opsi (3.3.0.26-1) stable; urgency=low
+
+  * Product.py 0.9.8.9
+  * Backend/MySQL.py 0.2.4.3
+  * System/Posix.py 1.1.9
+  * new version of opsihwaudit.conf
+  * register-depot.py 1.1.1
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 28 Oct 2008 14:43:01 +0100
+
 python-opsi (3.3.0.25-1) stable; urgency=low
 
   * Added Twisted.Web2.dav
