@@ -1592,7 +1592,7 @@ class File31Backend(File, FileBackend):
 			"alwaysScript":			product.alwaysScript,
 			"productClassNames":		product.productClassNames,
 			"pxeConfigTemplate":		product.pxeConfigTemplate,
-			"windowsSoftwareIds":		product.windowsSoftwareIds )
+			"windowsSoftwareIds":		product.windowsSoftwareIds
 		}
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
