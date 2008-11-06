@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.13'
+__version__ = '0.2.7.14'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -1410,7 +1410,8 @@ class File31Backend(File, FileBackend):
 		
 	def createProduct(self, productType, productId, name, productVersion, packageVersion, licenseRequired=0,
 			   setupScript="", uninstallScript="", updateScript="", alwaysScript="", onceScript="",
-			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='', depotIds=[]):
+			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='',
+			   windowsSoftwareIds=[], depotIds=[]):
 		
 		if not re.search(PRODUCT_ID_REGEX, productId):
 			raise BackendBadValueError("Unallowed chars in productId!")
@@ -1442,7 +1443,8 @@ class File31Backend(File, FileBackend):
 			description		= description,
 			advice			= advice,
 			productClassNames	= productClassNames,
-			pxeConfigTemplate	= pxeConfigTemplate )
+			pxeConfigTemplate	= pxeConfigTemplate,
+			windowsSoftwareIds	= windowsSoftwareIds )
 		
 		if (depotIds == self.getDepotIds_list()):
 			ini = self.readIniFile( self.__defaultClientTemplateFile )
@@ -1589,7 +1591,8 @@ class File31Backend(File, FileBackend):
 			"onceScript":			product.onceScript,
 			"alwaysScript":			product.alwaysScript,
 			"productClassNames":		product.productClassNames,
-			"pxeConfigTemplate":		product.pxeConfigTemplate
+			"pxeConfigTemplate":		product.pxeConfigTemplate,
+			"windowsSoftwareIds":		product.windowsSoftwareIds )
 		}
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):

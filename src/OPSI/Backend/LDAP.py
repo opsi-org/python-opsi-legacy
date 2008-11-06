@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.5'
+__version__ = '0.9.1.6'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -1217,7 +1217,8 @@ class LDAPBackend(DataBackend):
 		
 	def createProduct(self, productType, productId, name, productVersion, packageVersion, licenseRequired=0,
 			   setupScript="", uninstallScript="", updateScript="", alwaysScript="", onceScript="",
-			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='', depotIds=[]):
+			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='',
+			   windowsSoftwareIds=[], depotIds=[]):
 		""" Creates a new product. """
 		
 		if not re.search(PRODUCT_ID_REGEX, productId):
@@ -1292,7 +1293,8 @@ class LDAPBackend(DataBackend):
 					product.addAttributeValue('opsiProductClassProvided', productClass.getDn())
 			if pxeConfigTemplate and (productType == 'netboot'):
 				product.setAttribute('opsiPxeConfigTemplate', [ pxeConfigTemplate ])
-				
+			if windowsSoftwareIds:
+				product.setAttribute('opsiWindowsSoftwareId', windowsSoftwareIds )
 			# Write object to ldap
 			product.writeToDirectory(self._ldap)
 			
@@ -1359,8 +1361,8 @@ class LDAPBackend(DataBackend):
 			"onceScript":			attributes.get('opsiOnceScript', ''),
 			"alwaysScript":			attributes.get('opsiAlwaysScript', ''),
 			"productClassNames":		attributes.get('opsiProductClassProvided'),
-			"pxeConfigTemplate":		attributes.get('opsiPxeConfigTemplate', '') }
-	
+			"pxeConfigTemplate":		attributes.get('opsiPxeConfigTemplate', ''),
+			"windowsSoftwareIds":		product.getAttribute('opsiWindowsSoftwareId', [], True) }
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
 		

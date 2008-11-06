@@ -1,3 +1,27 @@
+python-opsi (3.3.0.27-1) stable; urgency=low
+
+  * new versions of opsi-standalone.schema, opsi.schema
+  * new version of 50_interface.conf
+  * Windows.py 0.1.1
+  * Util.py 0.1.2.1
+  * Product.py 0.9.9
+  * Backend/LDAP.py 0.9.1.6
+  * Backend/BackendManager.py 0.9.7.2
+  * Backend/File31.py 0.2.7.14
+  * Backend/File.py 0.9.7.4
+  
+ -- Jan Schneider <j.schneider@uib.de>  Thu, 06 Nov 2008 13:34:50 +0100
+
+python-opsi (3.3.0.26-1) stable; urgency=low
+
+  * Product.py 0.9.8.9
+  * Backend/MySQL.py 0.2.4.3
+  * System/Posix.py 1.1.9
+  * new version of opsihwaudit.conf
+  * register-depot.py 1.1.1
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 28 Oct 2008 14:43:01 +0100
+
 python-opsi (3.3.0.25-1) stable; urgency=low
 
   * Added Twisted.Web2.dav

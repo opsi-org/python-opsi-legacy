@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.2'
+__version__ = '0.1.2.1'
 
 # Imports
 import json, threading
@@ -451,7 +451,7 @@ class NotificationServer(threading.Thread, SubjectsObserver):
 		if not self._address:
 			self._address = '0.0.0.0'
 		self._port = int(port)
-		elf._factory = NotificationServerFactory()
+		self._factory = NotificationServerFactory()
 		self._factory.setSubjects(subjects)
 	
 	def getFactory(self):

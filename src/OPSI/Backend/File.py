@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7.3'
+__version__ = '0.9.7.4'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, codecs
@@ -1341,7 +1341,8 @@ class FileBackend(File, DataBackend):
 	
 	def createProduct(self, productType, productId, name, productVersion, packageVersion, licenseRequired=0,
 			   setupScript="", uninstallScript="", updateScript="", alwaysScript="", onceScript="",
-			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='', depotIds=[]):
+			   priority=0, description="", advice="", productClassNames=(), pxeConfigTemplate='',
+			   windowsSoftwareIds=[], depotIds=[]):
 		
 		if not re.search(PRODUCT_ID_REGEX, productId):
 			raise BackendBadValueError("Unallowed chars in productId!")

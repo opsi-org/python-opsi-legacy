@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 # Imports
 import re, os, time
@@ -134,6 +134,21 @@ def copyACL(src, dest):
 		elif (ace[0][0] == win32con.SYSTEM_AUDIT_OBJECT_ACE_TYPE):
 			dest.AddAuditAccessObjectAce(revision, ace[0][1], ace[1], ace[2], ace[3], ace[4], 1, 1)
 	return src.GetAceCount()
+
+def adjustPrivilege(priv, enable = 1):
+	# Get the process token.
+	flags = ntsecuritycon.TOKEN_ADJUST_PRIVILEGES | ntsecuritycon.TOKEN_QUERY
+	htoken = win32security.OpenProcessToken(win32api.GetCurrentProcess(), flags)
+	# Get the ID for the system shutdown privilege.
+	id = win32security.LookupPrivilegeValue(None, priv)
+	# Now obtain the privilege for this process.
+	# Create a list of the privileges to be added.
+	if enable:
+		newPrivileges = [(id, win32security.SE_PRIVILEGE_ENABLED)]
+	else:
+		newPrivileges = [(id, 0)]
+	# and make the adjustment.
+	win32security.AdjustTokenPrivileges(htoken, 0, newPrivileges)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                             REGISTRY                                              -
@@ -269,6 +284,11 @@ def lockWorkstation():
 def reboot(wait=10):
 	logger.notice("Rebooting in %s seconds" % wait)
 	wait = int(wait)
+	
+	adjustPrivilege(ntsecuritycon.SE_SHUTDOWN_NAME)
+	win32api.InitiateSystemShutdown(None, "Opsi reboot", wait, True, True)
+	return
+	
 	command = ''
 	if (sys.getwindowsversion()[0] == 5):
 		# NT5: XP
@@ -286,6 +306,11 @@ def reboot(wait=10):
 def shutdown(wait=10):
 	logger.notice("Shutting down in %s seconds" % wait)
 	wait = int(wait)
+	
+	adjustPrivilege(ntsecuritycon.SE_SHUTDOWN_NAME)
+	win32api.InitiateSystemShutdown(None, "Opsi shutdown", wait, True, False)
+	return
+	
 	if (sys.getwindowsversion()[0] == 5):
 		# NT5: XP
 		command = 'shutdown.exe /l /s /t:%d "Opsi shutdown" /y /c' % wait

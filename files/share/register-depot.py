@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1'
+__version__ = '1.1.1'
 
 import sys, os, getpass, socket
 
@@ -140,14 +140,19 @@ try:
 	
 	password = Tools.blowfishDecrypt(hostKey, be.getPcpatchPassword(depotId))
 	
-	f = os.popen(which('chpasswd'), 'w')
-	f.write("pcpatch:%s\n" % password)
-	f.close()
-	
-	f = os.popen('%s -a -s pcpatch 1>/dev/null 2>/dev/null' % which('smbpasswd'), 'w')
-	f.write("%s\n%s\n" % (password, password))
-	f.close()
-	
+	try:
+		# Nothing to do on univention
+		uva = which('univention-admin')
+	except:
+		# Not running on ucs
+		f = os.popen(which('chpasswd'), 'w')
+		f.write("pcpatch:%s\n" % password)
+		f.close()
+		
+		f = os.popen('%s -a -s pcpatch 1>/dev/null 2>/dev/null' % which('smbpasswd'), 'w')
+		f.write("%s\n%s\n" % (password, password))
+		f.close()
+		
 	be.exit()
 	
 	logger.notice("Connection / credentials ok, pcpatch password set!")
