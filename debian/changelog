@@ -9,8 +9,8 @@ python-opsi (3.3.0.27-1) stable; urgency=low
   * Backend/BackendManager.py 0.9.7.2
   * Backend/File31.py 0.2.7.14
   * Backend/File.py 0.9.7.4
-  
- -- Jan Schneider <j.schneider@uib.de>  Thu, 06 Nov 2008 13:34:50 +0100
+
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 19 Nov 2008 13:50:22 +0100
 
 python-opsi (3.3.0.26-1) stable; urgency=low
 
