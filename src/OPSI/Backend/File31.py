@@ -298,7 +298,7 @@ class File31Backend(File, FileBackend):
 		f.close()
 		os.chmod(logFile, 0640)
 		
-	def readLog(self, type, objectId=None):
+	def readLog(self, type, objectId=None, maxSize=0):
 		if type not in ('bootimage', 'clientconnect', 'instlog', 'opsiconfd'):
 			raise BackendBadValueError('Unknown log type %s' % type)
 		
@@ -315,6 +315,11 @@ class File31Backend(File, FileBackend):
 		logFile = open(logFile)
 		data = logFile.read()
 		logFile.close()
+		if maxSize and (len(data) > maxSize):
+			start = data.find('\n', len(data)-maxSize)
+			if (start == -1):
+				start = len(data)-maxSize
+			return str(start) + " " + data[start:]
 		return data
 		
 	# -------------------------------------------------
