@@ -322,7 +322,7 @@ class File31Backend(File, FileBackend):
 			start = data.find('\n', len(data)-maxSize)
 			if (start == -1):
 				start = len(data)-maxSize
-			return data[start:]
+			return data[start+1:]
 		return data
 		
 	# -------------------------------------------------
