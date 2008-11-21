@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.14'
+__version__ = '0.2.7.15'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -322,7 +322,7 @@ class File31Backend(File, FileBackend):
 			start = data.find('\n', len(data)-maxSize)
 			if (start == -1):
 				start = len(data)-maxSize
-			return str(start) + " " + data[start:]
+			return data[start:]
 		return data
 		
 	# -------------------------------------------------
