@@ -308,6 +308,9 @@ class File31Backend(File, FileBackend):
 		if objectId and (objectId.find('/') != -1):
 			raise BackendBadValueError("Bad objectId '%s'" % objectId)
 		
+		if maxSize:
+			maxSize = int(maxSize)
+		
 		logFile = os.path.join(self.__logDir, type, objectId + '.log')
 		data = ''
 		if not os.path.exists(logFile):
