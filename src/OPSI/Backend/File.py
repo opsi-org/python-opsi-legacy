@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7.4'
+__version__ = '0.9.7.5'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, codecs
@@ -1117,16 +1117,34 @@ class FileBackend(File, DataBackend):
 		return clientIds
 
 	def getServerIds_list(self):
-		return [ self.getServerId()  ]
+		return [ self.getServerId() ]
 	
 	def getServerId(self, clientId=None):
 		# Return hostid of localhost
 		return self.getHostId(socket.gethostname())
 
 	def getDepotIds_list(self):
-		return []
+		return self.getServerIds_list()
 		
 	def getDepotId(self, clientId=None):
+		return self.getServerId()
+	
+	def getDepot_hash(self, depotId):
+		depotId = self._preProcessHostId(depotId)
+		return {
+			"description" : "",
+			"notes" : "",
+			"network" : "0.0.0.0/0",
+			"depotLocalUrl" : "file:///opt/pcbin/install",
+			"depotRemoteUrl" : "smb://%s/opt_pcbin/install" % depotId.split('.')[0],
+			"repositoryLocalUrl" : "file:///var/lib/opsi/products",
+			"repositoryRemoteUrl" : "webdavs://%s:4447/products" % depotId,
+			"repositoryMaxBandwidth" : 0
+		}
+	
+	def deleteDepot(self, depotId):
+		depotId = self._preProcessHostId(depotId)
+		logger.error("Cannot delete depot '%s': not implemented in File backend" % depotId)
 		return
 	
 	def getOpsiHostKey(self, hostId):
@@ -1338,6 +1356,14 @@ class FileBackend(File, DataBackend):
 	# -------------------------------------------------
 	# -     PRODUCT FUNCTIONS                         -
 	# -------------------------------------------------
+	def lockProduct(self, productId, depotIds=[]):
+		return
+	
+	def unlockProduct(self, productId, depotIds=[]):
+		return
+	
+	def getProductLocks_hash(self, depotIds=[]):
+		return {}
 	
 	def createProduct(self, productType, productId, name, productVersion, packageVersion, licenseRequired=0,
 			   setupScript="", uninstallScript="", updateScript="", alwaysScript="", onceScript="",
