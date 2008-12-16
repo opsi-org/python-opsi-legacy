@@ -1,3 +1,9 @@
+python-opsi (3.3.0.30-1) stable; urgency=low
+
+  * Fixed bug in File31.py method getSoftwareInformation_hash
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 16 Dec 2008 11:46:13 +0100
+
 python-opsi (3.3.0.29-1) stable; urgency=low
 
   * Fixed bug in Product.py (Product instance has no attribute 'windowsSoftwareId')

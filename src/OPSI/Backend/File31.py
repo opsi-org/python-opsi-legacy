@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.15'
+__version__ = '0.2.7.16'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -703,7 +703,7 @@ class File31Backend(File, FileBackend):
 		hostId = hostId.lower()
 		ini = None
 		try:
-			ini = self.readIniFile( "%s.sw" % os.path.join(self.__auditInfoDir, hostId) )
+			ini = self.readIniFile( "%s.sw" % os.path.join(self.__auditInfoDir, hostId), raw = True )
 		except BackendIOError, e:
 			logger.warning("No software info for host '%s' found: %s" % (hostId, e))
 			return []
@@ -759,7 +759,7 @@ class File31Backend(File, FileBackend):
 		hostId = hostId.lower()
 		ini = None
 		try:
-			ini = self.readIniFile( "%s.hw" % os.path.join(self.__auditInfoDir, hostId) )
+			ini = self.readIniFile( "%s.hw" % os.path.join(self.__auditInfoDir, hostId), raw = True )
 		except BackendIOError, e:
 			logger.warning("No hardware info for host '%s' found: %s" % (hostId, e))
 			return []
