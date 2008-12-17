@@ -447,7 +447,14 @@ class MySQLBackend(DataBackend):
 		
 		# Execute sql query
 		self._writeToServer_(table)
-		
+	
+	def getClientIds_list(self, serverId = None, depotId = None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
+		clientIds = []
+		# TODO
+		for res in self.__mysql__.db_getSet("SELECT hostId FROM `HOST`"):
+			clientIds.append(res['hostId'].encode('utf-8'))
+		return clientIds
+	
 	def getSoftwareInformation_hash(self, hostId):
 		hostId = self._preProcessHostId(hostId)
 		
