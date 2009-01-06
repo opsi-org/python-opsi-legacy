@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 # Imports
-import re, os, time
+import re, os, time, socket
 
 # Win32 imports
 from ctypes import *
@@ -84,6 +84,18 @@ class PROCESSENTRY32(Structure):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                               INFO                                                -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+def getHostname():
+	hostname = socket.getfqdn().lower().split('.')[0]
+	if (hostname != 'localhost'):
+		return hostname
+	return getRegistryValue(HKEY_LOCAL_MACHINE, 'SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName', 'ComputerName').lower()
+	
+def getFQDN():
+	fqdn = socket.getfqdn().lower()
+	if ( len(fqdn.split('.')) < 2 ):
+		return getHostname()
+	return getHostname() + '.' + '.'.join(fqdn.split('.')[1:])
+
 def getFileVersionInfo(filename):
 	(lang, codepage) = win32api.GetFileVersionInfo(filename, '\\VarFileInfo\\Translation')[0]
 	path = u'\\StringFileInfo\\%04X%04X\\%%s' % (lang, codepage)

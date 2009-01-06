@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.9'
+__version__ = '1.1.11'
 
 # Imports
-import os, sys, re, shutil, time, gettext, popen2, select, signal
+import os, sys, re, shutil, time, gettext, popen2, select, signal, socket
 import copy as pycopy
 if (os.name == 'posix'):
 	import posix, fcntl
@@ -79,6 +79,16 @@ def setUI(ui):
 	global userInterface
 	userInterface = ui
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# -                                               INFO                                                -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+def getHostname():
+	return socket.getfqdn().lower().split('.')[0]
+	
+def getFQDN():
+	return socket.getfqdn().lower()
+	
 def which(cmd):
 	if not WHICH_CACHE.has_key(cmd):
 		w = os.popen('%s "%s" 2>/dev/null' % (BIN_WHICH, cmd))
@@ -695,6 +705,40 @@ def hardwareInventory(ui='default', filename=None, config=None):
 	logger.debug("Parsed lspci info:")
 	logger.debug(objectToBeautifiedText(lspci))
 	
+	# Read hdaudio information from alsa
+	hdaudio = {}
+	if os.path.exists('/proc/asound'):
+		for card in os.listdir('/proc/asound'):
+			if not re.search('^card\d$', card):
+				continue
+			logger.debug("Found hdaudio card '%s'" % card)
+			for codec in os.listdir('/proc/asound/' + card):
+				if not re.search('^codec#\d$', codec):
+					continue
+				if not os.path.isfile('/proc/asound/' + card + '/' + codec):
+					continue
+				f = open('/proc/asound/' + card + '/' + codec)
+				logger.debug("   Found hdaudio codec '%s'" % codec)
+				hdaudioId = card + codec
+				hdaudio[hdaudioId] = {}
+				for line in f.readlines():
+					if   line.startswith('Codec:'):
+						hdaudio[hdaudioId]['codec'] = line.split(':', 1)[1].strip()
+					elif line.startswith('Address:'):
+						hdaudio[hdaudioId]['address'] = line.split(':', 1)[1].strip()
+					elif line.startswith('Vendor Id:'):
+						vid = line.split('x', 1)[1].strip()
+						hdaudio[hdaudioId]['vendorId'] = vid[0:4]
+						hdaudio[hdaudioId]['deviceId'] = vid[4:8]
+					elif line.startswith('Subsystem Id:'):
+						sid = line.split('x', 1)[1].strip()
+						hdaudio[hdaudioId]['subsytemVendorId'] = sid[0:4]
+						hdaudio[hdaudioId]['subsytemDeviceId'] = sid[4:8]
+					elif line.startswith('Revision Id:'):
+						hdaudio[hdaudioId]['revision'] = line.split('x', 1)[1].strip()
+				f.close()
+				logger.debug("      Codec info: '%s'" % hdaudio[hdaudioId])
+	
 	# Read output from lsusb
 	lsusb = {}
 	busId = None
@@ -1016,6 +1060,21 @@ def hardwareInventory(ui='default', filename=None, config=None):
 							if device[attribute['Opsi']]:
 								break
 					opsiValues[hwClass['Class']['Opsi']].append(device)
+		
+		# Get hw info from alsa hdaudio info
+		elif linuxClass.startswith('[hdaudio]'):
+			opsiValues[opsiClass] = []
+			for (hdaudioId, dev) in hdaudio.items():
+				device = {}
+				for attribute in hwClass['Values']:
+					if not attribute.get('Linux') or not dev.has_key(attribute['Linux']):
+						continue
+					try:
+						device[attribute['Opsi']] = dev[attribute['Linux']]
+					except Exception, e:
+						logger.warning(e)
+						device[attribute['Opsi']] = ''
+				opsiValues[opsiClass].append(device)
 		
 		# Get hw info from lsusb
 		elif linuxClass.startswith('[lsusb]'):
