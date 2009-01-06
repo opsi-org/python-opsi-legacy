@@ -2484,7 +2484,7 @@ class FileBackend(File, DataBackend):
 	
 	def getProductProperties_hash(self, productId, objectId = None):
 		
-		if not objectId:
+		if not objectId or (objectId.lower() == self.getDepotId().lower()):
 			objectId = self._defaultDomain
 		
 		productId = productId.lower()
@@ -2543,12 +2543,15 @@ class FileBackend(File, DataBackend):
 		
 	def setProductProperties(self, productId, properties, objectId = None):
 		
+		if not objectId or (objectId.lower() == self.getDepotId().lower()):
+			objectId = self._defaultDomain
+		
 		productId = productId.lower()
 		
 		if productId in self.getProductIds_list('netboot'):
 			# The product is a net-boot product
 			iniFile = None
-			if (not objectId or objectId == self._defaultDomain):
+			if (objectId == self._defaultDomain):
 				iniFile = os.path.join(self.__opsiTFTPDir, "global.sysconf")
 			else:
 				iniFile = os.path.join(self.__opsiTFTPDir, self.getSysconfFile(objectId))
@@ -2581,7 +2584,7 @@ class FileBackend(File, DataBackend):
 		# The product is a local-boot product
 		setIniFiles = []
 		iniFiles = []
-		if (not objectId or objectId == self._defaultDomain):
+		if (objectId == self._defaultDomain):
 			# No specific client selected => change config files of all clients and prototype file
 			setIniFiles = [ os.path.join(self.__pcpatchDir, "pcproto.ini") ]
 			for clientId in self.getClientIds_list():
@@ -2646,6 +2649,10 @@ class FileBackend(File, DataBackend):
 			raise BackendIOError( ', '.join(errorList) )
 	
 	def deleteProductProperty(self, productId, property, objectId = None):
+		
+		if not objectId or (objectId.lower() == self.getDepotId().lower()):
+			objectId = self._defaultDomain
+		
 		productId = productId.lower()
 		
 		iniFiles = []
@@ -2653,7 +2660,7 @@ class FileBackend(File, DataBackend):
 		
 		if productId in self.getProductIds_list('netboot'):
 			# The product is a net-boot product
-			if (not objectId or objectId == self._defaultDomain):
+			if (objectId == self._defaultDomain):
 				iniFiles = [ os.path.join(self.__opsiTFTPDir, "global.sysconf") ]
 				for clientId in self.getClientIds_list():
 					iniFiles.append( os.path.join(self.__opsiTFTPDir, self.getSysconfFile(clientId)) )
@@ -2683,7 +2690,7 @@ class FileBackend(File, DataBackend):
 			
 		else:
 			# The product is a local-boot product
-			if (not objectId or objectId == self._defaultDomain):
+			if (objectId == self._defaultDomain):
 				# No specific client selected => change config files of all clients and prototype file
 				iniFiles = [ os.path.join(self.__pcpatchDir, "pcproto.ini") ]
 				for clientId in self.getClientIds_list():
@@ -2717,10 +2724,13 @@ class FileBackend(File, DataBackend):
 		
 		if ( len(errorList) > 0 ):
 			# One or more errors occured => raise esception
-			raise BackendIOError( ', '.join(errorList) )	
+			raise BackendIOError( ', '.join(errorList) )
 		
 	
 	def deleteProductProperties(self, productId, objectId = None):
+		if not objectId or (objectId.lower() == self.getDepotId().lower()):
+			objectId = self._defaultDomain
+		
 		productId = productId.lower()
 		
 		iniFiles = []
@@ -2728,7 +2738,7 @@ class FileBackend(File, DataBackend):
 		
 		if productId in self.getProductIds_list('netboot'):
 			# The product is a net-boot product
-			if (not objectId or objectId == self._defaultDomain):
+			if (objectId == self._defaultDomain):
 				iniFiles = [ os.path.join(self.__opsiTFTPDir, "global.sysconf") ]
 				for clientId in self.getClientIds_list():
 					iniFiles.append( os.path.join(self.__opsiTFTPDir, self.getSysconfFile(clientId)) )
@@ -2764,7 +2774,7 @@ class FileBackend(File, DataBackend):
 			
 		else:
 			# The product is a local-boot product
-			if (not objectId or objectId == self._defaultDomain):
+			if (objectId == self._defaultDomain):
 				# No specific client selected => change config files of all clients and prototype file
 				iniFiles = [ os.path.join(self.__pcpatchDir, "pcproto.ini") ]
 				for clientId in self.getClientIds_list():
