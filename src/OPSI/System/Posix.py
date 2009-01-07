@@ -732,8 +732,8 @@ def hardwareInventory(ui='default', filename=None, config=None):
 						hdaudio[hdaudioId]['deviceId'] = vid[4:8]
 					elif line.startswith('Subsystem Id:'):
 						sid = line.split('x', 1)[1].strip()
-						hdaudio[hdaudioId]['subsytemVendorId'] = sid[0:4]
-						hdaudio[hdaudioId]['subsytemDeviceId'] = sid[4:8]
+						hdaudio[hdaudioId]['subsystemVendorId'] = sid[0:4]
+						hdaudio[hdaudioId]['subsystemDeviceId'] = sid[4:8]
 					elif line.startswith('Revision Id:'):
 						hdaudio[hdaudioId]['revision'] = line.split('x', 1)[1].strip()
 				f.close()
