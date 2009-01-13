@@ -59,6 +59,12 @@ attributetype ( 1.3.6.1.4.1.23807.1.1.9
 	SUBSTR caseIgnoreIA5SubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
 
+attributetype ( 1.3.6.1.4.1.23807.1.1.10
+	NAME 'opsiCreatedTimestamp'
+	SUP opsiTimestamp
+	DESC 'timestamp when object was created'
+	SINGLE-VALUE )
+
 attributetype ( 1.3.6.1.4.1.23807.1.1.20
 	NAME 'opsiHostReference'
 	SUP distinguishedName
@@ -128,7 +134,7 @@ objectclass ( 1.3.6.1.4.1.23807.1.2.1
 	ABSTRACT
 	DESC 'Opsi host'
 	MUST ( cn $ opsiHostId )
-	MAY ( opsiDescription $ opsiNotes $ opsiHostKey $ opsiPcpatchPassword $ opsiLastSeenTimestamp $ opsiHardwareAddress $ opsiIpAddress ) )
+	MAY ( opsiDescription $ opsiNotes $ opsiHostKey $ opsiPcpatchPassword $ opsiLastSeenTimestamp $ opsiCreatedTimestamp $ opsiHardwareAddress $ opsiIpAddress ) )
 
 objectclass ( 1.3.6.1.4.1.23807.1.2.2
 	NAME 'opsiConfigserver'

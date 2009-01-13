@@ -38,6 +38,7 @@ binary-stamp:
 	cp -R src/OPSI/web2 debian/python-opsi/usr/share/python-support/python-opsi/OPSI/
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Backend
 	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/System
+	mkdir -p debian/python-opsi/usr/share/python-support/python-opsi/OPSI/Tool/File
 	for i in `(cd src; find OPSI -name "*.py")`; do install -m 0755 src/$$i debian/python-opsi/usr/share/python-support/python-opsi/$$i; done
 	find debian/python-opsi/usr/share/python-support/python-opsi/OPSI -name '.svn' -exec rm -rf '{}' \; 2>/dev/null || true
 	mkdir -p debian/python-opsi/usr/share/locale/de/LC_MESSAGES

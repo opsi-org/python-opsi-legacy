@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.15'
+__version__ = '0.2.7.17'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -603,12 +603,14 @@ class File31Backend(File, FileBackend):
 		if not hardwareAddress:
 			hardwareAddress = ''
 		
+		created = False
 		clientId = clientName.lower() + '.' + domain.lower()
 		iniFile = self.getClientIniFile(clientId)
 		
 		if os.path.exists(iniFile):
 			logger.notice("Client %s already exists, recreating" % clientId)
 		else:
+			created = True
 			# Copy the client configuration prototype
 			self.createFile(iniFile, mode=0660)
 			globalConfig = self.openFile(self.__defaultClientTemplateFile)
@@ -632,6 +634,8 @@ class File31Backend(File, FileBackend):
 			ini.set("info", "notes", notes.replace('\n', '\\n').replace('%', ''))
 		if hardwareAddress:
 			ini.set('info', 'macaddress', hardwareAddress)
+		if created:
+			ini.set('info', 'created', Tools.timestamp())
 		
 		self.writeIniFile(iniFile, ini)
 		
@@ -703,7 +707,7 @@ class File31Backend(File, FileBackend):
 		hostId = hostId.lower()
 		ini = None
 		try:
-			ini = self.readIniFile( "%s.sw" % os.path.join(self.__auditInfoDir, hostId) )
+			ini = self.readIniFile( "%s.sw" % os.path.join(self.__auditInfoDir, hostId), raw = True )
 		except BackendIOError, e:
 			logger.warning("No software info for host '%s' found: %s" % (hostId, e))
 			return []
@@ -759,7 +763,7 @@ class File31Backend(File, FileBackend):
 		hostId = hostId.lower()
 		ini = None
 		try:
-			ini = self.readIniFile( "%s.hw" % os.path.join(self.__auditInfoDir, hostId) )
+			ini = self.readIniFile( "%s.hw" % os.path.join(self.__auditInfoDir, hostId), raw = True )
 		except BackendIOError, e:
 			logger.warning("No hardware info for host '%s' found: %s" % (hostId, e))
 			return []
@@ -830,7 +834,8 @@ class File31Backend(File, FileBackend):
 			"hostId": 	hostId,
 			"description":	"",
 			"notes":	"",
-			"lastSeen":	"" }
+			"lastSeen":	"",
+			"created":	"" }
 		
 		if hostId in self.getDepotIds_list():
 			depot = self.getDepot_hash(hostId)
@@ -848,12 +853,14 @@ class File31Backend(File, FileBackend):
 				info['notes'] = ini.get('info', 'notes').replace('\\n', '\n')
 			if ini.has_option('info', 'lastseen'):
 				info['lastSeen'] = ini.get('info', 'lastseen')
+			if ini.has_option('info', 'created'):
+				info['created'] = ini.get('info', 'created')
 		else:
 			logger.warning("No section 'info' in ini file '%s'" % iniFile)
 		
 		return info
 		
-	def getClients_listOfHashes(self, serverId=None, depotId=None, groupId=None, productId=None, installationStatus=None, actionRequest=None, productVersion=None, packageVersion=None):
+	def getClients_listOfHashes(self, serverId=None, depotIds=[], groupId=None, productId=None, installationStatus=None, actionRequest=None, productVersion=None, packageVersion=None):
 		""" Returns a list of client-ids which are connected 
 		    to the server with the specified server-id. 
 		    If no server is specified, all registered clients are returned """
@@ -861,8 +868,12 @@ class File31Backend(File, FileBackend):
 		if (serverId and serverId != self.getServerId()):
 			raise BackendMissingDataError("Can only access data on server: %s" % self.getServerId())
 		
-		if depotId:
-			depotId = depotId.lower()
+		if not depotIds:
+			depotIds = self.getDepotIds_list()
+		if not type(depotIds) is list:
+			depotIds = [ depotIds ]
+		for i in range(len(depotIds)):
+			depotIds[i] = depotIds[i].lower()
 		
 		if productId:
 			productId = productId.lower()
@@ -909,13 +920,15 @@ class File31Backend(File, FileBackend):
 						logger.error("Skipping hostId: '%s': %s" % (hostId, e))
 		
 		# Filter by depot-id
-		if depotId:
-			filteredHostIds = []
-			for hostId in hostIds:
-				if (self.getDepotId(hostId) == depotId):
-					filteredHostIds.append(hostId)
-			hostIds = filteredHostIds
-			
+		hostIdToDepotId = {}
+		filteredHostIds = []
+		for hostId in hostIds:
+			depotId = self.getDepotId(hostId)
+			if (depotId in depotIds):
+				hostIdToDepotId[hostId] = depotId
+				filteredHostIds.append(hostId)
+		hostIds = filteredHostIds
+		
 		# Filter by product state
 		if installationStatus or actionRequest or productVersion or packageVersion:
 			filteredHostIds = []
@@ -979,17 +992,19 @@ class File31Backend(File, FileBackend):
 		infos = []
 		for hostId in hostIds:
 			try:
-				infos.append( self.getHost_hash(hostId) )
+				info = self.getHost_hash(hostId)
+				info['depotId'] = hostIdToDepotId[hostId]
+				infos.append(info)
 			except BackendIOError, e:
 				logger.error(e)
 		
 		return infos
 		
 		
-	def getClientIds_list(self, serverId=None, depotId=None, groupId=None, productId=None, installationStatus=None, actionRequest=None, productVersion=None, packageVersion=None):
+	def getClientIds_list(self, serverId=None, depotIds=[], groupId=None, productId=None, installationStatus=None, actionRequest=None, productVersion=None, packageVersion=None):
 		clientIds = []
 		
-		if not depotId and not groupId and not productId and not installationStatus and not actionRequest and not productVersion and not packageVersion:
+		if not depotIds and not groupId and not productId and not installationStatus and not actionRequest and not productVersion and not packageVersion:
 			try:
 				for f in os.listdir(self.__clientConfigDir):
 					if f.endswith('.ini'):
@@ -998,10 +1013,10 @@ class File31Backend(File, FileBackend):
 				raise BackendIOError(e)
 			return clientIds
 		
-		for info in self.getClients_listOfHashes(serverId, depotId, groupId, productId, installationStatus, actionRequest, productVersion, packageVersion):
+		for info in self.getClients_listOfHashes(serverId, depotIds, groupId, productId, installationStatus, actionRequest, productVersion, packageVersion):
 			clientIds.append( info.get('hostId') )
 		return clientIds
-                                                     
+	
 	def getServerIds_list(self):
 		return [ self.getServerId() ]
 	

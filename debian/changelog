@@ -1,3 +1,32 @@
+python-opsi (3.3.1.0-1) stable; urgency=low
+
+  * changed signature of methods getClientIds_list, getClients_listOfHashes
+      depotid=None => depotIds=[]
+  * added creation timestamp to host hash
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 13 Jan 2009 12:42:41 +0100
+
+python-opsi (3.3.0.32-1) stable; urgency=low
+
+  * Posix 1.1.11
+      hardwareInventory(): added alsa hdaudio information
+  * opsihwaudit.conf: added class HDAUDIO_DEVICE 
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 06 Jan 2009 11:49:47 +0100
+
+python-opsi (3.3.0.31-1) stable; urgency=low
+
+  * MySQL.py 0.2.4.4
+
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 17 Dec 2008 16:23:51 +0100
+
+python-opsi (3.3.0.30-1) stable; urgency=low
+
+  * Fixed bug in File31.py method getSoftwareInformation_hash
+  * File.py 0.9.7.5
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 16 Dec 2008 17:44:35 +0100
+
 python-opsi (3.3.0.29-1) stable; urgency=low
 
   * Fixed bug in Product.py (Product instance has no attribute 'windowsSoftwareId')

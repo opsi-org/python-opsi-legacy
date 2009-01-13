@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.6'
+__version__ = '0.9.1.7'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -499,12 +499,14 @@ class LDAPBackend(DataBackend):
 		hostId = self._preProcessHostId(clientName + '.' + domain)
 		
 		# Create or update client object
+		created = False
 		client = None
 		try:
 			client = Object( self.getHostDn(hostId) )
 			logger.notice("Client %s already exists, recreating" % hostId)
 		except BackendMissingDataError:
 			# Host not found
+			created = True
 			if self._clientObjectSearchFilter:
 				filter = self._clientObjectSearchFilter
 				filter = filter.replace('%name%', clientName.lower())
@@ -546,7 +548,8 @@ class LDAPBackend(DataBackend):
 			client.setAttribute(self._hostAttributeIpAddress, [ ipAddress ])
 		if hardwareAddress:
 			client.setAttribute(self._hostAttributeHardwareAddress, [ hardwareAddress ])
-		
+		if created:
+			client.setAttribute('opsiCreatedTimestamp', [ Tools.timestamp() ])
 		client.writeToDirectory(self._ldap)
 		
 		# Create product states container
@@ -688,19 +691,24 @@ class LDAPBackend(DataBackend):
 	def getHost_hash(self, hostId):
 		hostId = self._preProcessHostId(hostId)
 		host = Object( self.getHostDn(hostId) )
-		host.readFromDirectory(self._ldap, self._hostAttributeDescription, self._hostAttributeNotes, 'opsiLastSeenTimestamp')
+		host.readFromDirectory(self._ldap, self._hostAttributeDescription, self._hostAttributeNotes, 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp')
 		return { 	'hostId': 	hostId,
 				'description':	host.getAttribute(self._hostAttributeDescription, ""),
 				'notes':	host.getAttribute(self._hostAttributeNotes, ""),
-				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', "") }
+				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', ""),
+				'created':	host.getAttribute('opsiCreatedTimestamp', "")}
 	
-	def getClients_listOfHashes(self, serverId = None, depotId=None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
+	def getClients_listOfHashes(self, serverId = None, depotIds=[], groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
 		
 		if (serverId and serverId != self.getServerId()):
 			raise BackendMissingDataError("Can only access data on server: %s" % self.getServerId())
 		
-		if depotId:
-			depotId = depotId.lower()
+		if not depotIds:
+			depotIds = self.getDepotIds_list()
+		if not type(depotIds) is list:
+			depotIds = [ depotIds ]
+		for i in range(len(depotIds)):
+			depotIds[i] = depotIds[i].lower()
 		
 		if productId:
 			productId = productId.lower()
@@ -710,25 +718,14 @@ class LDAPBackend(DataBackend):
 		
 		# Get host dn list by depot
 		hostDns = []
-		if not depotId:
-			# No depot id given => search all registered clients
-			try:
-				# Search all opsiClient objects in host container
-				search = ObjectSearch(self._ldap, self.getHostContainerDn(), filter='(objectClass=opsiClient)')
-			except BackendMissingDataError:
-				# No client found
-				logger.warning("No clients found in LDAP")
-				return []
-			hostDns = search.getDns()
-		
-		else:
-			# Depot given => only search connected clients
+		hostDnToDepotId = {}
+		networkConfigObj = Object( 'cn=%s,%s' % ( self.getServerId(), self._networkConfigsContainerDn ) )
+		networkConfigObj.readFromDirectory(self._ldap, 'opsiDepotserverReference')
+		defaultDepotDn = networkConfigObj.getAttribute('opsiDepotserverReference')
+		for depotId in depotIds:
+			logger.debug("Searching clients connected to depot '%s'" % depotId)
 			depotDn = self.getHostDn(depotId)
-			networkConfigObj = Object( 'cn=%s,%s' % ( self.getServerId(), self._networkConfigsContainerDn ) )
-			networkConfigObj.readFromDirectory(self._ldap, 'opsiDepotserverReference')
-			defaultDepotDn = networkConfigObj.getAttribute('opsiDepotserverReference')
-			defaultDepot = (depotDn == defaultDepotDn)
-			if defaultDepot:
+			if (depotDn == defaultDepotDn):
 				excludeDns = []
 				try:
 					search = ObjectSearch(
@@ -751,6 +748,7 @@ class LDAPBackend(DataBackend):
 					if hostDn in excludeDns:
 						continue
 					hostDns.append(hostDn)
+					hostDnToDepotId[hostDn] = depotId
 			else:
 				try:
 					search = ObjectSearch(
@@ -758,7 +756,9 @@ class LDAPBackend(DataBackend):
 							self._networkConfigsContainerDn,
 							filter='(&(objectClass=opsiNetworkConfig)(opsiDepotserverReference=%s))' % depotDn)
 					for clientId in search.getCns():
-						hostDns.append( self.getHostDn(clientId) )
+						hostDn = self.getHostDn(clientId)
+						hostDns.append(hostDn)
+						hostDnToDepotId[hostDn] = depotId
 				except BackendMissingDataError:
 					pass
 		
@@ -848,14 +848,15 @@ class LDAPBackend(DataBackend):
 			host.readFromDirectory(self._ldap, 'opsiHostId', self._hostAttributeDescription, self._hostAttributeNotes, 'opsiLastSeenTimestamp')
 			infos.append( { 
 				'hostId': 	host.getAttribute('opsiHostId', self.getHostId(host.getDn())),
+				'depotId': 	hostDnToDepotId[hostDn],
 				'description':	host.getAttribute(self._hostAttributeDescription, ""),
 				'notes':	host.getAttribute(self._hostAttributeNotes, ""),
 				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', "") } )
 		return infos
 	
-	def getClientIds_list(self, serverId = None, depotId=None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
+	def getClientIds_list(self, serverId = None, depotIds=[], groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
 		clientIds = []
-		for info in self.getClients_listOfHashes(serverId, depotId, groupId, productId, installationStatus, actionRequest, productVersion, packageVersion):
+		for info in self.getClients_listOfHashes(serverId, depotIds, groupId, productId, installationStatus, actionRequest, productVersion, packageVersion):
 			clientIds.append( info.get('hostId') )
 		return clientIds
 	
@@ -1024,7 +1025,7 @@ class LDAPBackend(DataBackend):
 					System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 				elif depot.exists(self._ldap):
 					# Delete host object and possible childs
-					server.deleteFromDirectory(self._ldap, recursive = True)
+					depot.deleteFromDirectory(self._ldap, recursive = True)
 			elif depot.exists(self._ldap):
 				logger.info("Removing opsi objectClasses from object '%s'" % depot.getDn())
 				depot.readFromDirectory(self._ldap)

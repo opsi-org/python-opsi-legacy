@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.4.3'
+__version__ = '0.2.4.4'
 
 # Imports
 import MySQLdb, warnings, time
@@ -111,8 +111,26 @@ class MySQL:
 		return self.__cursor__.lastrowid
 		#return self.__cursor__.rowcount
 		
-	#def db_update(self, table, valueHash):
-	#	pass
+	def db_update(self, table, where, valueHash):
+		query = "UPDATE `%s` " % table
+		for (key, value) in valueHash.items():
+			query += "SET `%s` = " % key
+			if type(value) in (float, long, int, bool):
+				query += "%s, " % value
+			else:
+				query += "\'%s\', " % ('%s' % value).replace("\\", "\\\\").replace("'", "\\\'")
+		
+		query = '%s WHERE %s;' % (query[:-2], where)
+		
+		logger.debug2("db_update: %s" % query)
+		self.db_execute(query)
+		return self.__cursor__.lastrowid
+	
+	def db_delete(self, table, where):
+		query = "DELETE FROM `%s` WHERE %s;" % (table, where)
+		logger.debug2("db_delete: %s" % query)
+		self.db_execute(query)
+		return self.__cursor__.lastrowid
 	
 	def db_execute(self, query):
 		if not self.__conn__:
@@ -205,7 +223,21 @@ class MySQLBackend(DataBackend):
 				hwConfig.update(hardware)
 				hwConfig['hardware_class'] = hwClass
 				self.__mysql__.db_insert( "HARDWARE_INFO", hwConfig )
-			
+	
+	def deleteOpsiBase(self):
+		# Drop database
+		failure = 0
+		done = False
+		while not done and (failure < 100):
+			done = True
+			for i in self.__mysql__.db_getSet('SHOW TABLES;'):
+				try:
+					self.__mysql__.db_execute('DROP TABLE %s;' % i.values()[0])
+				except Exception, e:
+					logger.error(e)
+					done = False
+					failure += 1
+		
 	def createOpsiBase(self):
 		# Hardware audit database
 		tables = {}
@@ -219,6 +251,10 @@ class MySQLBackend(DataBackend):
 				tables[tableName].append(j['Field'])
 		
 		logger.notice('Creating opsi base')
+		
+		# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+		# = Client Management                                                                           =
+		# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 		
 		# Host table
 		if not 'HOST' in tables.keys():
@@ -411,7 +447,14 @@ class MySQLBackend(DataBackend):
 		
 		# Execute sql query
 		self._writeToServer_(table)
-		
+	
+	def getClientIds_list(self, serverId = None, depotId = None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
+		clientIds = []
+		# TODO
+		for res in self.__mysql__.db_getSet("SELECT hostId FROM `HOST`"):
+			clientIds.append(res['hostId'].encode('utf-8'))
+		return clientIds
+	
 	def getSoftwareInformation_hash(self, hostId):
 		hostId = self._preProcessHostId(hostId)
 		
@@ -602,7 +645,19 @@ class MySQLBackend(DataBackend):
 	
 	def deleteSoftwareInformation(self, hostId):
 		hostId = self._preProcessHostId(hostId)
-	
+		hostDbId = self.__mysql__.db_getRow("SELECT `host_id` FROM `HOST` WHERE `hostId`='%s'" % hostId).get('host_id')
+		if hostDbId:
+			self.__mysql__.db_delete('SOFTWARE_CONFIG', '`host_id` = %d;' % hostDbId)
+			for config in self.getOpsiHWAuditConf():
+				if self.__mysql__.db_getRow('SELECT `host_id` FROM HARDWARE_CONFIG_%s WHERE `host_id` = %d' % (config['Class']['Opsi'], hostDbId)):
+					return
+			if self.__mysql__.db_getRow('SELECT `host_id` FROM HARDWARE_INFO WHERE `host_id` = %d' % hostDbId):
+				return
+			self.__mysql__.db_delete('HOST', '`host_id` = %d' % hostDbId)
+		
+	# -------------------------------------------------
+	# -     Hardware Inventory                        -
+	# -------------------------------------------------
 	def getHardwareInformation_listOfHashes(self, hostId):
 		return []
 	
@@ -800,6 +855,13 @@ class MySQLBackend(DataBackend):
 		
 	def deleteHardwareInformation(self, hostId):
 		hostId = self._preProcessHostId(hostId)
+		hostDbId = self.__mysql__.db_getRow("SELECT `host_id` FROM `HOST` WHERE `hostId`='%s'" % hostId).get('host_id')
+		if hostDbId:
+			for config in self.getOpsiHWAuditConf():
+				self.__mysql__.db_delete('HARDWARE_CONFIG_%s' % config['Class']['Opsi'], '`host_id` = %d' % hostDbId)
+			self.__mysql__.db_delete('HARDWARE_INFO', '`host_id` = %d' % hostDbId)
+			if not self.__mysql__.db_getRow('SELECT `host_id` FROM `SOFTWARE_CONFIG` WHERE `host_id` = %d;' % hostDbId):
+				self.__mysql__.db_delete('HOST', '`host_id` = %d' % hostDbId)
 	
 	def exit(self):
 		self.__mysql__.db_close()
