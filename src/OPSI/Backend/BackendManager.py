@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7.2'
+__version__ = '0.9.9.1'
 
 # Imports
 import os, stat, types, re, socket, new, base64
@@ -851,10 +851,14 @@ class BackendManager(DataBackend):
 		#locks = self.getProductLocks_hash(depotIds = depotIds)
 		
 		products = {}
+		depotProducts = {}
 		for depotId in depotIds:
+			depotProducts[depotId] = {}
 			if not depotId in knownDepotIds:
 				raise BackendMissingDataError("Unkown depot '%s'" % depotId)
-			for productId in self.getProductIds_list(objectId = depotId):
+			for product in self.getProducts_listOfHashes(depotId = depotId):
+				productId = product['productId']
+				depotProducts[depotId][productId] = product
 				if not productId in products.keys():
 					products[productId] = {
 						'productVersion': None,
@@ -866,7 +870,7 @@ class BackendManager(DataBackend):
 			logger.info("Processing depot '%s'" % depotId)
 			for productId in products.keys():
 				try:
-					product = self.getProduct_hash(productId = productId, depotId = depotId)
+					product = depotProducts[depotId][productId]
 				except Exception, e:
 					logger.notice("Depots %s not synchronous: product '%s' not available on depot '%s': %s" \
 						% (', '.join(depotIds), productId, depotId, e))
@@ -886,7 +890,50 @@ class BackendManager(DataBackend):
 						% (', '.join(depotIds), productId, products[productId]['packageVersion'], depotId, product.get('packageVersion')))
 					return False
 		return True
+	
+	def adjustProductStates(self, productStates, objectIds=[], options={}):
+		logger.debug("adjusting product states")
+		if not options:
+			return productStates
+		for (key, values) in options.items():
+			if (key == 'actionProcessingFilter'):
+				logger.debug("action processing filter found")
+				for (k, v) in values.items():
+					if (k == "productIds"):
+						productIds = v
+						if not type(productIds) is list:
+							productIds = [productIds]
+						for hostId in productStates.keys():
+							for i in range(len(productStates[hostId])):
+								if not productStates[hostId][i]['productId'] in productIds:
+									productStates[hostId][i]['actionRequest'] = 'none'
+					else:
+						logger.warning("adjustProductStates: unkown key '%s' in %s options" % (k, key))
+			else:
+				logger.warning("adjustProductStates: unkown key '%s' in options" % key)
+		return productStates
 		
+	def adjustProductActionRequests(self, productActionRequests, hostId='', options={}):
+		logger.debug("adjusting product action requests")
+		if not options:
+			return productActionRequests
+		for (key, values) in options.items():
+			if (key == 'actionProcessingFilter'):
+				logger.debug("action processing filter found")
+				for (k, v) in values.items():
+					if (k == "productIds"):
+						productIds = v
+						if not type(productIds) is list:
+							productIds = [productIds]
+						for i in range(len(productActionRequests)):
+							if not productActionRequests[i]['productId'] in productIds:
+								productActionRequests[i]['actionRequest'] = 'none'
+					else:
+						logger.warning("adjustProductStates: unkown key '%s' in %s options" % (k, key))
+			else:
+				logger.warning("adjustProductStates: unkown key '%s' in options" % key)
+		return productActionRequests
+	
 	def getPossibleMethods_listOfHashes(self):
 		''' This function returns a list of available interface methods.
 		The methods are defined by hashes containing the keys "name" and

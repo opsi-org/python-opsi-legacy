@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.5.8'
+__version__ = '0.9.5.12'
 
 # Imports
-import json, base64, urllib, httplib, new, stat, socket, random
+import json, base64, urllib, httplib, new, stat, socket, random, time
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -179,21 +179,6 @@ class JSONRPCBackend(DataBackend):
 		''' This function executes a JSON-RPC and
 		    returns the result as a JSON object. '''
 		
-		if method in ('installPackage', 'uninstallPackage', 'getMD5Sum'):
-			retry = False
-			## Execution of these methods can take very long
-			#if socket.getdefaulttimeout():
-			#	# A timeout is set, remove the timeout and reconnect
-			#	logger.warning("Setting socket timeout to None")
-			#	socket.setdefaulttimeout(None)
-			#	self._connect()
-		
-		#elif not socket.getdefaulttimeout():
-		#	# No timeout is set, set timeout and reconnect
-		#	logger.warning("Setting socket timeout to %d" % self.__timeout)
-		#	socket.setdefaulttimeout(self.__timeout)
-		#	self._connect()
-		
 		# Get params
 		params = []
 		logger.debug("Options: %s" % options)
@@ -223,8 +208,11 @@ class JSONRPCBackend(DataBackend):
 		# Return result as json object
 		return json.read(response).get('result', None)
 	
-	def __request(self, baseUrl, query='', retry=True):
+	def __request(self, baseUrl, query='', retry=True, maxRetrySeconds=5, started=None):
 		''' Do a http request '''
+		
+		if not started:
+			started = time.time()
 		
 		#logger.debug("__request(%s)" % request)
 		response = None
@@ -268,13 +256,13 @@ class JSONRPCBackend(DataBackend):
 				self.__sessionId = cookie.split(';')[0].strip()
 		
 		except Exception, e:
-			if retry:
-				logger.warning("Requesting '%s' failed: %s, trying to reconnect" % (self.__address, e))
+			if retry and (time.time()-started < maxRetrySeconds):
+				logger.warning("Request to '%s' failed: %s, trying to reconnect" % (self.__address, e))
 				self._connect()
-				return self.__request(baseUrl, query=query, retry=False)
+				return self.__request(baseUrl, query=query, retry=retry, maxRetrySeconds=maxRetrySeconds, started=started)
 			else:
 				logger.logException(e)
-				raise BackendIOError("Requesting '%s' failed: %s" % (self.__address, e))
+				raise BackendIOError("Request to '%s' failed: %s" % (self.__address, e))
 		
 		try:
 			# Return response content (body)
