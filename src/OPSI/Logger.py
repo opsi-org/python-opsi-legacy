@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9.1'
+__version__ = '0.9.9.2'
 
 # Loglevels
 LOG_CONFIDENTIAL = 9
@@ -740,4 +740,7 @@ class VirtFile:
 		
 	def write(self, s):
 		self.logger.log(self.level, s)
-
+	
+	def flush(self):
+		return
+	
