@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.11'
+__version__ = '1.1.12'
 
 # Imports
 import os, sys, re, shutil, time, gettext, popen2, select, signal, socket
@@ -1695,9 +1695,9 @@ class Harddisk:
 		else:
 			end = int(end)
 		
-		if (start < 1):
-			# Lowest possible cylinder is 1
-			start = 1
+		if (start < 0):
+			# Lowest possible cylinder is 0
+			start = 0
 		if (end >= self.cylinders):
 			# Highest possible cylinder is total cylinders - 1
 			end = self.cylinders-1

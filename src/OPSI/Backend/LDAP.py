@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.7'
+__version__ = '0.9.1.11'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -622,6 +622,9 @@ class LDAPBackend(DataBackend):
 		if productStatesContainer.exists(self._ldap):
 			productStatesContainer.deleteFromDirectory(self._ldap, recursive = True)
 		
+		self.deleteGeneralConfig(clientId)
+		self.deleteNetworkConfig(clientId)
+		
 		if client:
 			# Delete client from groups
 			groups = []
@@ -756,9 +759,12 @@ class LDAPBackend(DataBackend):
 							self._networkConfigsContainerDn,
 							filter='(&(objectClass=opsiNetworkConfig)(opsiDepotserverReference=%s))' % depotDn)
 					for clientId in search.getCns():
-						hostDn = self.getHostDn(clientId)
-						hostDns.append(hostDn)
-						hostDnToDepotId[hostDn] = depotId
+						try:
+							hostDn = self.getHostDn(clientId)
+							hostDns.append(hostDn)
+							hostDnToDepotId[hostDn] = depotId
+						except Exception, e:
+							logger.error("Host '%s' not found" % clientId)
 				except BackendMissingDataError:
 					pass
 		
@@ -854,7 +860,7 @@ class LDAPBackend(DataBackend):
 				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', "") } )
 		return infos
 	
-	def getClientIds_list(self, serverId = None, depotIds=[], groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
+	def getClientIds_list(self, serverId = None, depotIds = [], groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
 		clientIds = []
 		for info in self.getClients_listOfHashes(serverId, depotIds, groupId, productId, installationStatus, actionRequest, productVersion, packageVersion):
 			clientIds.append( info.get('hostId') )
@@ -1300,7 +1306,7 @@ class LDAPBackend(DataBackend):
 			product.writeToDirectory(self._ldap)
 			
 			# TODO: productStates
-			#for clientId in self.getClientIds_list(serverId = None, depotId = depotId):
+			#for clientId in self.getClientIds_list(serverId = None, depotIds = [ depotId ]):
 		
 	def deleteProduct(self, productId, depotIds=[]):
 		productId = productId.lower()
@@ -1364,6 +1370,57 @@ class LDAPBackend(DataBackend):
 			"productClassNames":		attributes.get('opsiProductClassProvided'),
 			"pxeConfigTemplate":		attributes.get('opsiPxeConfigTemplate', ''),
 			"windowsSoftwareIds":		product.getAttribute('opsiWindowsSoftwareId', [], True) }
+	
+	def getProducts_hash(self, depotIds=[]):
+		products = {}
+		if not depotIds:
+			depotIds = self.getDepotIds_list()
+		if not type(depotIds) is list:
+			depotIds = [ depotIds ]
+		for depotId in depotIds:
+			depotId = self._preProcessHostId(depotId)
+			products[depotId] = {}
+			try:
+				search = ObjectSearch(
+						self._ldap,
+						"cn=%s,%s" % (depotId, self._productsContainerDn),
+						filter = '(objectClass=opsiProduct)'
+				)
+				for product in search.getObjects():
+					product.readFromDirectory(self._ldap)
+					productId = product.getCn()
+					attributes = product.getAttributeDict()
+					products[depotId][productId] = {
+						"name":				attributes.get('opsiProductName', ''),
+						"description":			attributes.get('description', ''),
+						"advice":			attributes.get('opsiProductAdvice', ''),
+						"priority":			attributes.get('opsiProductPriority', 0),
+						"licenseRequired":		attributes.get('opsiProductLicenseRequired') == 'TRUE',
+						"productVersion":		attributes.get('opsiProductVersion', ''),
+						"packageVersion":		attributes.get('opsiPackageVersion', ''),
+						"creationTimestamp":		attributes.get('opsiProductCreationTimestamp', ''),
+						"setupScript":			attributes.get('opsiSetupScript', ''),
+						"uninstallScript":		attributes.get('opsiUninstallScript', ''),
+						"updateScript":			attributes.get('opsiUpdateScript', ''),
+						"onceScript":			attributes.get('opsiOnceScript', ''),
+						"alwaysScript":			attributes.get('opsiAlwaysScript', ''),
+						"productClassNames":		attributes.get('opsiProductClassProvided'),
+						"pxeConfigTemplate":		attributes.get('opsiPxeConfigTemplate', ''),
+						"windowsSoftwareIds":		product.getAttribute('opsiWindowsSoftwareId', [], True) }
+			except BackendMissingDataError, e:
+				logger.warning("No products found for depot '%s'" % depotId)
+		return products
+	
+	def getProducts_listOfHashes(self, depotId=None):
+		products = []
+		for productId in self.getProductIds_list():
+			try:
+				product = self.getProduct_hash(productId, depotId)
+				product['productId'] = productId
+				products.append(product)
+			except Exception, e:
+				logger.error("Failed to get info for product '%s': %s" % (productId, e))
+		return products
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
 		
@@ -2160,7 +2217,7 @@ class LDAPBackend(DataBackend):
 		clientIds = [ objectId ]
 		if objectId in self.getDepotIds_list():
 			self.deleteProductPropertyDefinition(productId = productId, name = property, depotIds = [ objectId ])
-			clientIds = self.getClientIds_list(None, objectId)
+			clientIds = self.getClientIds_list(depotIds = [ objectId ])
 		
 		for clientId in clientIds:
 			productProperty = Object("cn=%s,cn=%s,%s" % (productId, objectId, self._productPropertiesContainerDn))
@@ -2190,7 +2247,7 @@ class LDAPBackend(DataBackend):
 					container = Object("cn=productPropertyDefinitions,%s" % product.getDn())
 					if container.exists(self._ldap):
 						container.deleteFromDirectory(self._ldap, recursive = True)
-					clientIds = self.getClientIds_list(None, objectId)
+					clientIds = self.getClientIds_list(depotIds = [ objectId ])
 				except BackendMissingDataError, e:
 					pass
 		
@@ -3519,62 +3576,13 @@ if (__name__ == "__main__"):
 	assert 'group 2' in groupIds
 	
 	print "Getting members of group 2"
-	hostIds = be.getClientIds_list(serverId = None, depotId=None, groupId = 'group 2', productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None)
+	hostIds = be.getClientIds_list(serverId = None, depotIds=[], groupId = 'group 2', productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None)
 	print "  =>>>", hostIds
 	assert len(hostIds) == 2
 	assert 'test-client2.%s' % defaultDomain in hostIds
 	assert 'test-client3.%s' % defaultDomain in hostIds
 	
 	sys.exit(0)
-	
-        #deleteServer(self, serverId):
-        #getClients_listOfHashes(self, serverId = None, depotId=None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
-        #getClientIds_list(self, serverId = None, depotId=None, groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
-        #getServerIds_list(self):
-        #getServerId(self, clientId=None):
-        #createDepot(self, depotName, domain, depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl, network, description=None, notes=None, maxBandwidth=0):
-        #getDepotIds_list(self):
-        #getDepotId(self, clientId=None):
-        #getDepot_hash(self, depotId):
-        #deleteDepot(self, depotId):
-	 
-        #createProduct(self, productType, productId, name, productVersion, packageVersion, licenseRequired=0,
-        #deleteProduct(self, productId, depotIds=[]):
-        #getProduct_hash(self, productId, depotId=None):
-        #getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
-        #getProductInstallationStatus_hash(self, productId, objectId):
-        #getProductInstallationStatus_listOfHashes(self, objectId):
-        #setProductState(self, productId, objectId, installationStatus="", actionRequest="", productVersion="", packageVersion="", lastStateChange="", licenseKey=""):
-        #setProductInstallationStatus(self, productId, objectId, installationStatus, policyId="", licenseKey=""):
-        #getPossibleProductActions_list(self, productId=None, depotId=None):
-        #getPossibleProductActions_hash(self, depotId=None):
-        #getProductActionRequests_listOfHashes(self, clientId):
-        #getDefaultNetBootProductId(self, clientId):
-        #setProductActionRequest(self, productId, clientId, actionRequest):
-        #unsetProductActionRequest(self, productId, clientId):
-        #_getProductStates_hash(self, objectIds = [], productType = None):
-        #getNetBootProductStates_hash(self, objectIds = []):
-        #getLocalBootProductStates_hash(self, objectIds = []):
-        #getProductStates_hash(self, objectIds = []):
-        #getProductPropertyDefinitions_hash(self, depotId=None):
-        #getProductPropertyDefinitions_listOfHashes(self, productId, depotId=None):
-        #deleteProductPropertyDefinition(self, productId, name, depotIds=[]):
-        #deleteProductPropertyDefinitions(self, productId, depotIds=[]):
-        #createProductPropertyDefinition(self, productId, name, description=None, defaultValue=None, possibleValues=[], depotIds=[]):
-        #getProductProperties_hash(self, productId, objectId = None):
-        #setProductProperties(self, productId, properties, objectId = None):
-        #deleteProductProperty(self, productId, property, objectId = None):
-        #deleteProductProperties(self, productId, objectId = None):
-        #getProductDependencies_listOfHashes(self, productId = None, depotId=None):
-        #createProductDependency(self, productId, action, requiredProductId="", requiredProductClassId="", requiredAction="", requiredInstallationStatus="", requirementType="", depotIds=[]):
-        #deleteProductDependency(self, productId, action="", requiredProductId="", requiredProductClassId="", requirementType="", depotIds=[]):
-        #createLicenseKey(self, productId, licenseKey):
-        #getLicenseKey(self, productId, clientId):
-        #getLicenseKeys_listOfHashes(self, productId):
-        #deleteLicenseKey(self, productId, licenseKey):
-        #getProductClassIds_list(self):
-
-	
 	
 	
 	

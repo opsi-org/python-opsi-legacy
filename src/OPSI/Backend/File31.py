@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.7.17'
+__version__ = '0.2.8'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -117,22 +117,30 @@ class File31Backend(File, FileBackend):
 			self.__productLockFile = '/var/lib/opsi/config/depots/product.locks'
 			self.__auditInfoDir = '/var/lib/opsi/audit'
 		
+		# Return hostid of localhost
+		self.__serverId = socket.getfqdn()
+		parts = self.__serverId.split('.')
+		if (len(parts) < 3):
+			self.__serverId = parts[0] + '.' + self._defaultDomain
+		self.__serverId = self.__serverId.lower()
+		
 		# Parse arguments
 		for (option, value) in args.items():
 			if   (option.lower() == 'logdir'):			self.__logDir = value
 			elif (option.lower() == 'pckeyfile'):			self.__pckeyFile = value
 			elif (option.lower() == 'passwdfile'):			self.__passwdFile = value
-			elif (option.lower() == 'groupsfile'): 		self.__groupsFile = value
+			elif (option.lower() == 'groupsfile'): 			self.__groupsFile = value
 			elif (option.lower() == 'licensesfile'): 		self.__licensesFile = value
 			elif (option.lower() == 'defaultdomain'): 		self._defaultDomain = value
 			elif (option.lower() == 'clientconfigdir'): 		self.__clientConfigDir = value
 			elif (option.lower() == 'globalconfigfile'):		self.__globalConfigFile = value
 			elif (option.lower() == 'depotconfigdir'): 		self.__depotConfigDir = value
 			elif (option.lower() == 'auditinfodir'): 		self.__auditInfoDir = value
-			elif (option.lower() == 'clienttemplatesdir'): 	self.__clientTemplatesDir = value
+			elif (option.lower() == 'clienttemplatesdir'): 		self.__clientTemplatesDir = value
 			elif (option.lower() == 'defaultclienttemplatefile'): 	self.__defaultClientTemplateFile = value
 			elif (option.lower() == 'productlockfile'): 		self.__productLockFile = value
 			elif (option.lower() == 'fileopentimeout'): 		self.__fileOpenTimeout = value
+			elif (option.lower() == 'serverid'): 			self.__serverId = value
 			else:
 				logger.warning("Unknown argument '%s' passed to File31Backend constructor" % option)
 		
@@ -155,6 +163,28 @@ class File31Backend(File, FileBackend):
 		
 		return aliaslist
 	
+	def createOpsiBase(self):
+		if not os.path.exists(self.__logDir):
+			os.mkdir(self.__logDir)
+		if not os.path.exists(self.__clientConfigDir):
+			os.mkdir(self.__clientConfigDir)
+		if not os.path.exists(self.__depotConfigDir):
+			os.mkdir(self.__depotConfigDir)
+		if not os.path.exists(self.__clientTemplatesDir):
+			os.mkdir(self.__clientTemplatesDir)
+		if not os.path.exists(self.__auditInfoDir):
+			os.mkdir(self.__auditInfoDir)
+		if not os.path.exists(self.__pckeyFile):
+			File().createFile(filename = self.__pckeyFile, mode = 0660)
+		if not os.path.exists(self.__passwdFile):
+			File().createFile(filename = self.__passwdFile, mode = 0660)
+		if not os.path.exists(self.__groupsFile):
+			File().createFile(filename = self.__groupsFile, mode = 0660)
+		if not os.path.exists(self.__defaultClientTemplateFile):
+			File().createFile(filename = self.__defaultClientTemplateFile, mode = 0660)
+		if not os.path.exists(self.__globalConfigFile):
+			File().createFile(filename = self.__globalConfigFile, mode = 0660)
+		
 	def checkForErrors(self):
 		import stat, grp, pwd
 		errors = []
@@ -355,12 +385,8 @@ class File31Backend(File, FileBackend):
 					del config[key]
 			iniFile = self.getClientIniFile(objectId)
 		
-		# Read the ini file or create if not exists
-		try:
-			ini = self.readIniFile(iniFile)
-		except BackendIOError:
-			self.createFile(iniFile, mode=0660)
-			ini = self.readIniFile(iniFile)
+		# Read the ini file
+		ini = self.readIniFile(iniFile)
 		
 		# Delete section generalConfig if exists
 		if ini.has_section("generalconfig"):
@@ -434,6 +460,7 @@ class File31Backend(File, FileBackend):
 			ini = self.readIniFile(iniFile)
 		except BackendIOError, e:
 			logger.warning("Cannot delete general config for object '%s': %s" % (objectId, e))
+			return
 		
 		# Delete section shareinfo if exists
 		if ini.has_section("generalconfig"):
@@ -481,12 +508,7 @@ class File31Backend(File, FileBackend):
 					del config[key]
 			iniFile = self.getClientIniFile(objectId)
 		
-		# Read the ini file or create if not exists
-		try:
-			ini = self.readIniFile(iniFile)
-		except BackendIOError:
-			self.createFile(iniFile, mode=0660)
-			ini = self.readIniFile(iniFile)
+		ini = self.readIniFile(iniFile)
 		
 		# Delete section generalConfig if exists
 		if ini.has_section("networkconfig"):
@@ -575,6 +597,7 @@ class File31Backend(File, FileBackend):
 			ini = self.readIniFile(iniFile)
 		except BackendIOError, e:
 			logger.warning("Cannot delete network config for object '%s': %s" % (objectId, e))
+			return
 		
 		# Delete section shareinfo if exists
 		if ini.has_section("networkconfig"):
@@ -904,7 +927,7 @@ class File31Backend(File, FileBackend):
 					logger.notice("Skipping host '%s' in group '%s' (value = 0)" % (key, groupId))
 					continue
 				if ( key.find(self._defaultDomain) == -1):
-					key = '.'.join(key, self._defaultDomain)
+					key += self._defaultDomain
 				try:
 					hostIds.append( key.encode('ascii') )
 				except Exception, e:
@@ -1021,12 +1044,7 @@ class File31Backend(File, FileBackend):
 		return [ self.getServerId() ]
 	
 	def getServerId(self, clientId=None):
-		# Return hostid of localhost
-		serverId = socket.getfqdn()
-		parts = serverId.split('.')
-		if (len(parts) < 3):
-			serverId = parts[0] + '.' + self._defaultDomain
-		return serverId.lower()
+		return self.__serverId
 	
 	def createDepot(self, depotName, domain, depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl, network, description=None, notes=None, maxBandwidth=0):
 		if not re.search(HOST_NAME_REGEX, depotName):
@@ -1491,7 +1509,7 @@ class File31Backend(File, FileBackend):
 			except:
 				pass
 			
-			for clientId in self.getClientIds_list(serverId = None, depotId = depotId):
+			for clientId in self.getClientIds_list(serverId = None, depotIds = [ depotId ]):
 				ini = self.readIniFile( self.getClientIniFile(clientId) )
 				
 				if not ini.has_section('%s_product_states' % productType):
@@ -1540,7 +1558,7 @@ class File31Backend(File, FileBackend):
 			
 			# Try to delete product status entry from every client's configuration file
 			iniFiles =[]
-			for clientId in self.getClientIds_list(serverId = None, depotId = depotId):
+			for clientId in self.getClientIds_list(serverId = None, depotIds = [ depotId ]):
 				iniFiles.append( self.getClientIniFile(clientId) )
 			for iniFile in iniFiles:
 				try:
@@ -1617,6 +1635,58 @@ class File31Backend(File, FileBackend):
 			"pxeConfigTemplate":		product.pxeConfigTemplate,
 			"windowsSoftwareIds":		product.windowsSoftwareIds
 		}
+	
+	def getProducts_hash(self, depotIds=[]):
+		products = {}
+		if not depotIds:
+			depotIds = self.getDepotIds_list()
+		if not type(depotIds) is list:
+			depotIds = [ depotIds ]
+		for depotId in depotIds:
+			depotId = self._preProcessHostId(depotId)
+			products[depotId] = {}
+			for d in ('localboot', 'netboot'):
+				d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
+				if not os.path.exists(d):
+					logger.warning("Product config directory '%s' for depot '%s' does not exist" % (d, depotId))
+					continue
+				for productId in os.listdir(d):
+					if productId.startswith('.'):
+						continue
+					productFile = os.path.join(d, productId)
+					timestamp = Tools.timestamp( os.path.getmtime(productFile) )
+					product = Product()
+					product.readControlFile(productFile)
+					products[depotId][productId] = {
+						"name":				product.name,
+						"description":			product.description,
+						"advice":			product.advice,
+						"priority":			product.priority,
+						"licenseRequired":		product.licenseRequired,
+						"productVersion":		product.productVersion,
+						"packageVersion":		product.packageVersion,
+						"creationTimestamp":		timestamp,
+						"setupScript":			product.setupScript,
+						"uninstallScript":		product.uninstallScript,
+						"updateScript":			product.updateScript,
+						"onceScript":			product.onceScript,
+						"alwaysScript":			product.alwaysScript,
+						"productClassNames":		product.productClassNames,
+						"pxeConfigTemplate":		product.pxeConfigTemplate,
+						"windowsSoftwareIds":		product.windowsSoftwareIds
+					}
+		return products
+	
+	def getProducts_listOfHashes(self, depotId=None):
+		products = []
+		for productId in self.getProductIds_list():
+			try:
+				product = self.getProduct_hash(productId, depotId)
+				product['productId'] = productId
+				products.append(product)
+			except Exception, e:
+				logger.error("Failed to get info for product '%s': %s" % (productId, e))
+		return products
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
 		
@@ -2236,7 +2306,7 @@ class File31Backend(File, FileBackend):
 			product.writeControlFile(productFile)
 			
 			errorList = []
-			for clientId in self.getClientIds_list(None, depotId):
+			for clientId in self.getClientIds_list(depotIds = [ depotId ]):
 				try:
 					self.deleteProductProperty(productId, name, objectId = clientId)
 				except Exception, e:
@@ -2375,13 +2445,7 @@ class File31Backend(File, FileBackend):
 							depotIds =		[ objectId ])
 		else:
 			iniFile = self.getClientIniFile(objectId)
-			
-			# Read the ini file or create if not exists
-			try:
-				ini = self.readIniFile(iniFile)
-			except BackendIOError:
-				self.createFile(iniFile, mode=0660)
-				ini = self.readIniFile(iniFile)
+			ini = self.readIniFile(iniFile)
 			
 			# Remove section if exists
 			if ini.has_section(productId + "-install"):
@@ -2405,7 +2469,7 @@ class File31Backend(File, FileBackend):
 		iniFiles = []
 		if objectId in self.getDepotIds_list():
 			self.deleteProductPropertyDefinition(productId = productId, name = property, depotIds = [ objectId ])
-			for clientId in self.getClientIds_list(None, objectId):
+			for clientId in self.getClientIds_list(depotIds = [ objectId ]):
 				iniFiles.append( self.getClientIniFile(clientId) )
 		else:
 			iniFiles = [ self.getClientIniFile(objectId) ]
@@ -2453,7 +2517,7 @@ class File31Backend(File, FileBackend):
 		iniFiles = []
 		if objectId in self.getDepotIds_list():
 			self.deleteProductPropertyDefinitions(productId = productId, depotIds = [ objectId ])
-			for clientId in self.getClientIds_list(None, objectId):
+			for clientId in self.getClientIds_list(depotIds = [ objectId ]):
 				iniFiles.append( self.getClientIniFile(clientId) )
 		else:
 			iniFiles = [ self.getClientIniFile(objectId) ]
