@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9.1'
+__version__ = '0.9.9.2'
 
 # Imports
 import time, json, gettext, os, re, random, md5
@@ -437,7 +437,7 @@ def getArchiveContent(filename, format=None):
 	return filelist
 	
 	
-def findFiles(directory, prefix='', excludeDir=None, excludeFile=None):
+def findFiles(directory, prefix='', excludeDir=None, excludeFile=None, includeDir=None, includeFile=None):
 	files = []
 	entries = os.listdir(directory)
 	for entry in entries:
@@ -446,7 +446,10 @@ def findFiles(directory, prefix='', excludeDir=None, excludeFile=None):
 		
 		if os.path.isdir(os.path.join(directory, entry)):
 			if excludeDir and re.match(excludeDir, entry):
-				logger.debug("Excluding dir '%s' and contained files" % entry)
+				logger.debug("Excluding dir '%s' and containing files" % entry)
+				continue
+			if includeDir and not re.match(includeDir, entry):
+				logger.debug("Excluding dir '%s' and containing files" % entry)
 				continue
 			files.append( os.path.join(prefix, entry) )
 			files.extend(
@@ -457,6 +460,9 @@ def findFiles(directory, prefix='', excludeDir=None, excludeFile=None):
 					excludeFile ) )
 		else:
 			if excludeFile and re.match(excludeFile, entry):
+				logger.debug("Excluding file '%s'" % entry)
+				continue
+			if includeFile and not re.match(includeFile, entry):
 				logger.debug("Excluding file '%s'" % entry)
 				continue
 			files.append( os.path.join(prefix, entry) )

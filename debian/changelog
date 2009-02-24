@@ -1,3 +1,67 @@
+python-opsi (3.3.1.3-1) stable; urgency=low
+
+  * Product.py 1.1.2
+  * BackendManager.py 0.9.9.5
+  * LDAP.py 0.9.1.12
+
+ -- Jan Schneider <schneider@pcbon14.uib.local>  Tue, 24 Feb 2009 14:02:42 +0100
+
+python-opsi (3.3.1.2-1) stable; urgency=low
+
+  * Posix.py 1.1.12
+     - createPartition: lowest possible start sector now 0
+  * Util.py 0.2
+  * BackendManager.py 0.9.9.3
+     - possibility to pass forced backend instance to constructor 
+  * Cache.py 0.1 (starting a new data backend)
+  * Backend.py 0.9.9
+  * Product.py 1.1.1
+     - introducing file-info-file
+  * Tools.py 0.9.9.2
+     - includeDir, includeFile parms for findFile
+
+ -- Jan Schneider <schneider@pcbon14.uib.local>  Tue, 17 Feb 2009 10:28:12 +0100
+
+python-opsi (3.3.1.1-1) stable; urgency=low
+
+  * Product.py 1.0.1
+  * Util.py 0.2
+  * BackendManager.py 0.9.9.2
+
+ -- Jan Schneider <schneider@pcbon14.uib.local>  Wed, 11 Feb 2009 16:18:17 +0100
+
+python-opsi (3.3.1.0-5) stable; urgency=low
+
+  * File31.py 0.2.7.22
+  * Windows.py 0.1.5 
+
+ -- Jan Schneider <schneider@pcbon14.uib.local>  Wed, 04 Feb 2009 14:51:24 +0100
+
+python-opsi (3.3.1.0-4) stable; urgency=low
+
+  * Bugfixes in:
+      - Windows.py
+      - LDAP.py
+      - BackendManager.py
+
+ -- Jan Schneider <schneider@pcbon14.uib.local>  Wed, 04 Feb 2009 14:50:08 +0100
+
+python-opsi (3.3.1.0-3) stable; urgency=low
+
+  * BackendManager.py 0.9.9
+      new methods adjustProductActionRequests, adjustProductStates
+  * File.py 0.9.7.9
+      pathnams.ini fixes
+  * new version of config file 50_interface.conf
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 26 Jan 2009 11:54:04 +0100
+
+python-opsi (3.3.1.0-2) stable; urgency=low
+
+  * Fix
+
+ -- Jan Schneider <j.schneider@uib.de>  Wed, 14 Jan 2009 17:57:18 +0100
+
 python-opsi (3.3.1.0-1) stable; urgency=low
 
   * changed signature of methods getClientIds_list, getClients_listOfHashes

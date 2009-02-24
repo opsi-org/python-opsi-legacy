@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7.6'
+__version__ = '0.9.7.9'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, codecs
@@ -1386,22 +1386,15 @@ class FileBackend(File, DataBackend):
 				ini.remove_section(productId + "-install")
 			ini.add_section(productId + "-install")
 			
-			for script in [ setupScript, uninstallScript, updateScript, alwaysScript, onceScript ]:
-				if not script:
+			for script in [ ('setupwinst', setupScript), ('deinstallwinst', uninstallScript),
+					('updatewinst', updateScript), ('alwayswinst', alwaysScript),
+					('oncewinst', onceScript) ]:
+				if not script[1]:
 					# Script does not exist => next script
 					continue
 				
-				if not script.startswith(productId + '\\'):
-					##filename = productId + script
-					logger.warning("Script path '%s' does not start with '\\%s'" % (script, productId))
-				
-				option = 'setupwinst'
-				if   (script == uninstallScript): 	option = 'deinstallwinst'
-				elif (script == updateScript): 	option = 'updatewinst'
-				elif (script == alwaysScript): 	option = 'alwayswinst'
-				elif (script == onceScript): 		option = 'oncewinst'
 				# Set script filename
-				ini.set(productId + "-install", option, script)
+				ini.set(productId + "-install", script[0], script[1])
 			
 			# Writeback pathnams.ini
 			self.writeIniFile( os.path.join(self.__pcpatchDir, "pathnams.ini"), ini )
@@ -1431,6 +1424,7 @@ class FileBackend(File, DataBackend):
 			# Try to add product entry to every client's configuration file
 			errorList = []		
 			for clientId in self.getClientIds_list():
+				installationStatus = None
 				try:
 					installationStatus = self.getProductInstallationStatus_hash(productId, clientId)
 				except BackendMissingDataError, e:
@@ -1441,6 +1435,8 @@ class FileBackend(File, DataBackend):
 					err = "Failed to register product '%s' for client '%s': '%s'" % (productId, clientId, e)
 					errorList.append(err)
 					logger.error(err)
+				if not installationStatus or not installationStatus.get('lastStateChange', ''):
+					self.setProductInstallationStatus(productId, clientId, 'not_installed')
 			if ( len(errorList) > 0 ):
 				# One or more errors occured => raise error
 				raise BackendIOError( ', '.join(errorList) )
@@ -1667,6 +1663,25 @@ class FileBackend(File, DataBackend):
 		
 		# Return product hash (dict)
 		return product
+	
+	def getProducts_hash(self, depotIds=[]):
+		products = {}
+		depotId = self.getDepotId()
+		products[depotId] = {}
+		for productId in self.getProductIds_list():
+			products[depotId][productId] = self.getProduct_hash(productId, depotId)
+		return products
+	
+	def getProducts_listOfHashes(self, depotId=None):
+		products = []
+		for productId in self.getProductIds_list():
+			try:
+				product = self.getProduct_hash(productId, depotId)
+				product['productId'] = productId
+				products.append(product)
+			except Exception, e:
+				logger.error("Failed to get info for product '%s': %s" % (productId, e))
+		return products
 	
 	def getProductIds_list(self, productType=None, objectId=None, installationStatus=None):
 		productIds = []
@@ -2528,20 +2543,27 @@ class FileBackend(File, DataBackend):
 		
 		# Product is a local-boot product
 		logger.debug("Product %s is an local-boot product" % productId)
-		ini = None
-		if (objectId == self._defaultDomain):
-			# No specific client selected => use config prototype
-			ini = self.readIniFile( os.path.join(self.__pcpatchDir, 'pcproto.ini') )
-		else:
+		
+		# Read product info file
+		ini = self.readIniFile(self.__productsFile)
+		for section in ini.sections():
+			if section.startswith('%s-property-' % productId):
+				propertyName = section.split('-property-')[1]
+				defaultValue = ''
+				if ini.has_option(section ,'default'):
+					defaultValue = ini.get(section, 'default')
+				properties[propertyName] = defaultValue
+		
+		if (objectId != self._defaultDomain):
 			# Specific client selected => use client's config
 			ini = self.readIniFile( os.path.join(self.__pcpatchDir, self.getIniFile(objectId)) )
-		
-		try:
-			# Read all properites from section <productid>-install
-			for item in ini.items(productId + "-install"):
-				properties[ item[0] ] = item[1]
-		except ConfigParser.NoSectionError, e:
-			pass
+			try:
+				# Read all properites from section <productid>-install
+				for item in ini.items(productId + "-install"):
+					if properties.has_key(item[0]):
+						properties[ item[0] ] = item[1]
+			except ConfigParser.NoSectionError, e:
+				pass
 		
 		return properties
 		
