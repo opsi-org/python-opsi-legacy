@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 # Imports
 import json, threading, re, stat, base64, urllib
@@ -86,19 +86,23 @@ class KillableThread(threading.Thread):
 # =       Subjects                                                                    =
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 class Subject(object):
-	def __init__(self, id, type='', **args):
+	def __init__(self, id, type='', title='', **args):
 		self._id = id
-		self._observers = []
 		self._type = type
-	
-	def getId(self):
-		return self._id
+		self._title = title
+		self._observers = []
 	
 	def getClass(self):
 		return self.__class__.__name__
 	
+	def getId(self):
+		return self._id
+	
 	def getType(self):
 		return self._type
+	
+	def getTitle(self):
+		return self._title
 	
 	def attachObserver(self, observer):
 		if not observer in self._observers:
@@ -109,11 +113,11 @@ class Subject(object):
 			self._observers.remove(observer)
 	
 	def serializable(self):
-		return { "id": self.getId(), "type": self.getType(), "class": self.getClass() }
+		return { "id": self.getId(), "type": self.getType(), "title": self.getTitle(), "class": self.getClass() }
 	
 class MessageSubject(Subject):
-	def __init__(self, id, type='', **args):
-		Subject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		Subject.__init__(self, id, type, title, **args)
 		self._message = ""
 		self._severity = 0
 		if args.has_key('message'):
@@ -143,8 +147,8 @@ class MessageSubject(Subject):
 		return s
 
 class ChoiceSubject(MessageSubject):
-	def __init__(self, id, type='', **args):
-		MessageSubject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		MessageSubject.__init__(self, id, type, title, **args)
 		self._message = ""
 		self._choices = []
 		self._selectedIndex = -1
@@ -205,8 +209,8 @@ class ChoiceSubject(MessageSubject):
 		return s
 
 class ProgressSubject(MessageSubject):
-	def __init__(self, id, type='', **args):
-		MessageSubject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		MessageSubject.__init__(self, id, type, title, **args)
 		self._end = 0
 		self._percent = 0
 		self._state = 0

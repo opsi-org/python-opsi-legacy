@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 # Imports
 import re, os, time, socket
@@ -56,8 +56,6 @@ import _winreg
 
 # OPSI imports
 from OPSI.Logger import *
-#from OPSI import Tools
-
 
 # Get Logger instance
 logger = Logger()
@@ -508,7 +506,7 @@ def getPids(process, sessionId = None):
 		return
 	while True:
 		logger.debug2("   got process %s" % pe32.szExeFile)
-		if (pe32.szExeFile == process):
+		if (pe32.szExeFile.lower() == process.lower()):
 			sid = win32ts.ProcessIdToSessionId(pe32.th32ProcessID)
 			pid = pe32.th32ProcessID
 			logger.info("Found process %s with pid %d in session %d" % (process, pid, sid))
