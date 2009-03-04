@@ -32,14 +32,16 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.7.2'
+__version__ = '1.0'
 
 # Imports
-import os, stat, types, re, socket, new, base64
+import os, stat, types, re, socket, new, base64, md5
+import copy as pycopy
 from duplicity import librsync
+from twisted.conch.ssh import keys
 
 # OS dependend imports
-if os.name == 'posix':
+if (os.name == 'posix'):
 	import pwd, grp
 else:
 	import win32security
@@ -56,6 +58,9 @@ from OPSI import System
 logger = Logger()
 
 HOST_GROUP = '|HOST_GROUP|'
+SYSTEM_ADMIN_GROUP = 'opsiadmin'
+OPSI_VERSION_FILE='/etc/opsi/version'
+OPSI_MODULES_FILE='/etc/opsi/modules'
 
 '''= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 =                                  CLASS BACKENDMANAGER                                              =
@@ -69,15 +74,15 @@ class BackendManager(DataBackend):
 		self._pamService = 'common-auth'
 		self._sshRSAPublicKeyFile = '/etc/ssh/ssh_host_rsa_key.pub'
 		
-		if os.name == 'nt':
-			try:
-				regroot = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
-				regpath = "SOFTWARE\\opsi.org\\opsiconfd"
-				reg = OpenKey(regroot,regpath)
-				windefaultdir = QueryValueEx(reg,"BaseDir")[0]
-			except:
-				windefaultdir = 'C:\\Programme\\opsi.org\\opsiconfd'
-			configFile = windefaultdir+'\\backendManager.conf'
+		#if os.name == 'nt':
+		#	try:
+		#		regroot = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
+		#		regpath = "SOFTWARE\\opsi.org\\opsiconfd"
+		#		reg = OpenKey(regroot,regpath)
+		#		windefaultdir = QueryValueEx(reg,"BaseDir")[0]
+		#	except:
+		#		windefaultdir = 'C:\\Programme\\opsi.org\\opsiconfd'
+		#	configFile = windefaultdir+'\\backendManager.conf'
 		
 		if not configFile:
 			configFile = '/etc/opsi/backendManager.d'
@@ -87,7 +92,7 @@ class BackendManager(DataBackend):
 		''' 
 		The constructor of the class BackendManager creates an instance of the
 		class and initializes the backends to use. It will also read the values
-		from the config file (default: /etc/opsi/backendManager.conf).
+		from the config file (default: /etc/opsi/backendManager.d).
 		'''
 		
 		self.__authRequired = authRequired
@@ -122,8 +127,8 @@ class BackendManager(DataBackend):
 		
 		# Now read the config file to overwrite the defaults
 		self._readConfigFile()
-		if os.name == 'nt':
-			self.__readConfigFromReg()
+		#if os.name == 'nt':
+		#	self.__readConfigFromReg()
 		
 		logger.info("Using default domain '%s'" % self.defaultDomain)
 		
@@ -175,9 +180,19 @@ class BackendManager(DataBackend):
 		    to the function groups according to the configuration '''
 		
 		backendsUsed = []
+		if self.forcedBackend:
+			backendType = self.forcedBackend
+			if isinstance(self.forcedBackend, DataBackend):
+				backendType = str(self.forcedBackend.__class__).split('.')[-1][:-7]
+			if not backendType in self.backends.keys():
+				self.backends[backendType] = {}
+		
 		for (key, value) in self.backends.items():
 			if self.forcedBackend:
-				if (self.forcedBackend != key):
+				if isinstance(self.forcedBackend, DataBackend):
+					if (key != str(self.forcedBackend.__class__).split('.')[-1][:-7]):
+						continue
+				elif (self.forcedBackend != key):
 					continue
 			
 			elif not value.get('load', False):
@@ -194,25 +209,43 @@ class BackendManager(DataBackend):
 			
 			logger.info("Backend config for '%s': %s" % (key, self.backends[key]['config']) )
 			
-			exec('from %s import %sBackend' % (key, key))
-			exec('b = %sBackend(	address 	= "%s", \
-						username 	= "%s", \
-						password 	= "%s", \
-						args 		= %s, \
-						backendManager	= self )' \
-				% (	key,
-					self.__address,
-					self.__username,
-					self.__password,
-					self.backends[key]['config'] ) )
+			if not isinstance(self.forcedBackend, DataBackend):
+				exec('from %s import %sBackend' % (key, key))
+				exec('b = %sBackend(	address 	= "%s", \
+							username 	= "%s", \
+							password 	= "%s", \
+							args 		= %s, \
+							backendManager	= self )' \
+					% (	key,
+						self.__address,
+						self.__username,
+						self.__password,
+						self.backends[key]['config'] ) )
+				self.backends[key]['instance'] = b
+			else:
+				self.backends[key]['instance'] = self.forcedBackend
+				self.forcedBackend         = key
+				self.defaultBackend        = key
+				self.clientManagingBackend = key
+				self.pxebootconfBackend    = key
+				self.passwordBackend       = key
+				self.pckeyBackend          = key
+				self.swinventBackend       = key
+				self.hwinventBackend       = key
+				self.loggingBackend        = key
 			
-			self.backends[key]['instance'] = b
 			backendsUsed.append(key)
-			logger.info("Using backend %s." % b.__class__)
+			logger.info("Using backend %s." % self.backends[key]['instance'].__class__)
 			
 			if self.forcedBackend:
-				for (n, t) in b.__class__.__dict__.items():
+				methods = []
+				for pm in self.getPossibleMethods_listOfHashes():
+					methods.append(pm['name'])
+				
+				for (n, t) in self.backends[key]['instance'].__class__.__dict__.items():
 					if ( (type(t) == types.FunctionType or type(t) == types.MethodType ) and not n.startswith('_') ):
+						if n in methods:
+							continue
 						argCount = t.func_code.co_argcount
 						args = list(t.func_code.co_varnames[1:argCount])
 						argDefaults = t.func_defaults
@@ -225,7 +258,7 @@ class BackendManager(DataBackend):
 								else:
 									argsWithDefaults[offset+i] = "%s=%s" % (args[offset+i], argDefaults[i])
 						
-						logger.debug("Overwriting instance method '%s'" % n)
+						logger.debug("Adding instance method '%s'" % n)
 						argString = ''
 						if (len(args) > 0):
 							argString = ', ' + ', '.join(args)
@@ -307,7 +340,7 @@ class BackendManager(DataBackend):
 					elif (type == PAM.PAM_PROMPT_ECHO_OFF):
 						response.append((_.password, 0))
 					elif (type == PAM.PAM_PROMPT_ERROR_MSG) or (type == PAM.PAM_PROMPT_TEXT_INFO):
-						print query
+						#print query
 						response.append(('', 0));
 					else:
 						return None
@@ -721,6 +754,8 @@ class BackendManager(DataBackend):
 			logger.info("Unpacking package '%s'" % filename)
 			ppf.unpack()
 			
+			ppf.writeFileInfoFile()
+			
 			ppf.setAccessRights()
 			
 			logger.info("Creating product in database")
@@ -812,7 +847,7 @@ class BackendManager(DataBackend):
 		depot = self.getDepot_hash(depotId)
 		
 		if not productId in self.getProductIds_list(objectId = depotId, installationStatus = 'installed'):
-			return
+			raise BackendBadValueError("Product '%s' is not installed on depot '%s'" % (productId, depotId))
 		
 		lockedOnDepots = self.getProductLocks_hash(depotIds = [ depotId ]).get(productId, [])
 		logger.info("Product currently locked on : %s" % lockedOnDepots)
@@ -851,10 +886,14 @@ class BackendManager(DataBackend):
 		#locks = self.getProductLocks_hash(depotIds = depotIds)
 		
 		products = {}
+		depotProducts = {}
 		for depotId in depotIds:
+			depotProducts[depotId] = {}
 			if not depotId in knownDepotIds:
 				raise BackendMissingDataError("Unkown depot '%s'" % depotId)
-			for productId in self.getProductIds_list(objectId = depotId):
+			for product in self.getProducts_listOfHashes(depotId = depotId):
+				productId = product['productId']
+				depotProducts[depotId][productId] = product
 				if not productId in products.keys():
 					products[productId] = {
 						'productVersion': None,
@@ -866,7 +905,7 @@ class BackendManager(DataBackend):
 			logger.info("Processing depot '%s'" % depotId)
 			for productId in products.keys():
 				try:
-					product = self.getProduct_hash(productId = productId, depotId = depotId)
+					product = depotProducts[depotId][productId]
 				except Exception, e:
 					logger.notice("Depots %s not synchronous: product '%s' not available on depot '%s': %s" \
 						% (', '.join(depotIds), productId, depotId, e))
@@ -886,6 +925,250 @@ class BackendManager(DataBackend):
 						% (', '.join(depotIds), productId, products[productId]['packageVersion'], depotId, product.get('packageVersion')))
 					return False
 		return True
+	
+	def adjustProductStates(self, productStates, objectIds=[], options={}):
+		logger.debug("adjusting product states")
+		if not productStates:
+			return {}
+		if not objectIds:
+			raise BackendBadValueError("No object ids given")
+		if not options:
+			options = {}
+		
+		options['processPriorities'] = options.get('processPriorities', True)
+		options['processDependencies'] = options.get('processDependencies', False)
+		options['forceAccorateSequence'] = options.get('forceAccorateSequence', False)
+		
+		if options['processPriorities'] or options['processDependencies']:
+			opts = dict(options)
+			opts['processPriorities'] = False
+			opts['processDependencies'] = False
+			allProductStates = self.getProductStates_hash(objectIds, options=opts)
+			
+			# TODO: optimize for speed
+			allProducts = {}
+			allProductDependencies = {}
+			hostToDepot = {}
+			for hostId in objectIds:
+				depotId = self.getDepotId(hostId)
+				hostToDepot[hostId] = depotId
+				if depotId in allProducts.keys():
+					continue
+				allProducts[depotId] = {}
+				allProductDependencies[depotId] = {}
+				for productId in self.getProductIds_list(objectId = depotId):
+					allProducts[depotId][productId] = self.getProduct_hash(productId = productId, depotId = depotId)
+					allProductDependencies[depotId][productId] = self.getProductDependencies_listOfHashes(productId = productId, depotId = depotId)
+				
+			for hostId in objectIds:
+				products = {}
+				sequence = []
+				for productState in allProductStates[hostId]:
+					productId = productState['productId']
+					sequence.append(productId)
+					depotId = hostToDepot[hostId]
+					products[productId] = pycopy.deepcopy(allProducts[depotId][productId])
+					products[productId]['state'] = productState
+					products[productId]['dependencies'] = pycopy.deepcopy(allProductDependencies[depotId][productId])
+					for ps in productStates[hostId]:
+						if (ps['productId'] == productId):
+							if ps.get('installationStatus'):
+								products[productId]['state']['installationStatus'] = ps['installationStatus']
+							if ps.get('actionRequest'):
+								products[productId]['state']['actionRequest'] = ps['actionRequest']
+							break
+				
+				if options['processPriorities']:
+					# Sort by priority
+					priorityToProductIds = {}
+					sequence = []
+					for (productId, product) in products.items():
+						priority = int(products[productId]['priority'])
+						if not priorityToProductIds.has_key(priority):
+							priorityToProductIds[priority] = []
+						priorityToProductIds[priority].append(productId)
+					priorities = priorityToProductIds.keys()
+					priorities.sort()
+					priorities.reverse()
+					for priority in priorities:
+						sequence.extend(priorityToProductIds[priority])
+				
+					logger.debug("Sequence after priority sorting:")
+					for productId in sequence:
+						logger.debug("   %s (%s)" % (productId, products[productId]['priority']))
+					
+				if options['processDependencies']:
+					# Add dependent products
+					def addActionRequest(productId, actionRequest):
+						logger.debug("Adding action request '%s' for product '%s'" % (actionRequest, productId))
+						products[productId]['state']['actionRequest'] = actionRequest
+						for dependency in products[productId]['dependencies']:
+							if (dependency['action'] != actionRequest):
+								continue
+							if not products.has_key(dependency['requiredProductId']):
+								logger.warning("Got a dependency to an unkown product %s, ignoring!" % dependency['requiredProductId'])
+								continue
+							logger.debug("   Product '%s' defines a dependency to product '%s' for action '%s'" \
+									% (productId, dependency['requiredProductId'], actionRequest))
+							requiredAction = dependency['requiredAction']
+							if not requiredAction:
+								if (dependency['requiredInstallationStatus'] == products[dependency['requiredProductId']]['state']['installationStatus']):
+									continue
+								elif (dependency['requiredInstallationStatus'] == 'installed'):
+									requiredAction = 'setup'
+								elif (dependency['requiredInstallationStatus'] == 'not_installed'):
+									requiredAction = 'uninstall'
+							if (products[dependency['requiredProductId']]['state']['actionRequest'] == requiredAction):
+								continue
+							elif products[dependency['requiredProductId']]['state']['actionRequest'] not in ('undefined', 'none'):
+								raise BackendUnaccomplishableError("Cannot fulfill actions '%s' and '%s' for product '%s'" \
+									% (products[dependency['requiredProductId']]['state']['actionRequest'], requiredAction, dependency['requiredProductId']))
+							addActionRequest(dependency['requiredProductId'], requiredAction)
+					
+					for (productId, product) in products.items():
+						if product['state']['actionRequest'] in ('none', 'undefined'):
+							continue
+						addActionRequest(productId, product['state']['actionRequest'])
+				
+					# Sort by dependencies
+					for run in (1, 2):
+						for (productId, product) in products.items():
+							if product['state']['actionRequest'] in ('none', 'undefined'):
+								continue
+							logger.debug("Correcting sequence of action request '%s' for product '%s'" % (product['state']['actionRequest'], productId))
+							for dependency in products[productId]['dependencies']:
+								if (dependency['action'] != product['state']['actionRequest']):
+									continue
+								if not products.has_key(dependency['requiredProductId']):
+									logger.warning("Got a dependency to an unkown product %s, ignoring!" % dependency['requiredProductId'])
+									continue
+								logger.debug("   Product '%s' defines a dependency to product '%s' for action '%s'" \
+										% (productId, dependency['requiredProductId'], product['state']['actionRequest']))
+								if not dependency['requirementType']:
+									continue
+								(ppos, dpos) = (0, 0)
+								for i in range(len(sequence)):
+									if (sequence[i] == productId):
+										ppos = i
+									elif (sequence[i] == dependency['requiredProductId']):
+										dpos = i
+								if (dependency['requirementType'] == 'before') and (ppos < dpos):
+									if (run == 2):
+										raise BackendUnaccomplishableError("Cannot resolve sequence for products '%s', '%s'" \
+														% (productId, dependency['requiredProductId']))
+									sequence.remove(dependency['requiredProductId'])
+									sequence.insert(ppos, dependency['requiredProductId'])
+								elif (dependency['requirementType'] == 'after') and (dpos < ppos):
+									if (run == 2):
+										raise BackendUnaccomplishableError("Cannot resolve sequence for products '%s', '%s'" \
+														% (productId, dependency['requiredProductId']))
+									sequence.remove(dependency['requiredProductId'])
+									sequence.insert(ppos+1, dependency['requiredProductId'])
+						logger.debug("Sequence after dependency sorting (run %d):" % run)
+						for productId in sequence:
+							logger.debug("   %s (%s)" % (productId, products[productId]['priority']))
+						if not options['forceAccorateSequence']:
+							break
+						
+				productStates[hostId] = []
+				for productId in sequence:
+					state = products[productId]['state']
+					state['productId'] = productId
+					productStates[hostId].append(state)
+		
+		# Other options
+		for (key, values) in options.items():
+			if (key == 'actionProcessingFilter'):
+				logger.debug("action processing filter found")
+				for (k, v) in values.items():
+					if (k == "productIds"):
+						productIds = v
+						if not type(productIds) is list:
+							productIds = [productIds]
+						for hostId in productStates.keys():
+							for i in range(len(productStates[hostId])):
+								if not productStates[hostId][i]['productId'] in productIds:
+									productStates[hostId][i]['actionRequest'] = 'none'
+					else:
+						logger.warning("adjustProductStates: unkown key '%s' in %s options" % (k, key))
+			elif not key in ('processDependencies', 'processPriorities', 'forceAccorateSequence'):
+				logger.warning("adjustProductStates: unkown key '%s' in options" % key)
+		
+		return productStates
+		
+	def adjustProductActionRequests(self, productActionRequests, hostId='', options={}):
+		logger.debug("adjusting product action requests")
+		if not productActionRequests:
+			return []
+		if not hostId:
+			raise BackendBadValueError("No host id given")
+		if not options:
+			options = {}
+		
+		productStates = {}
+		productStates[hostId] = productActionRequests
+		productActionRequests = []
+		for productState in self.adjustProductStates(productStates = productStates, objectIds = [hostId], options = options)[hostId]:
+			productActionRequests.append( {'productId': productState['productId'], 'actionRequest': productState['actionRequest']} )
+		return productActionRequests
+	
+	def getOpsiInformation_hash(self):
+		opsiVersion = 'unknown'
+		try:
+			f = open(OPSI_VERSION_FILE, 'r')
+			opsiVersion = f.readline().strip()
+			f.close()
+		except Exception, e:
+			logger.error("Failed to read version info from file '%s': %s" % (OPSI_VERSION_FILE, e))
+		
+		modules = {}
+		try:
+			modules['valid'] = False
+			f = open(OPSI_MODULES_FILE, 'r')
+			for line in f.readlines():
+				line = line.strip()
+				if (line.find('=') == -1):
+					logger.error("Found bad line '%s' in modules file '%s'" % (line, OPSI_MODULES_FILE))
+					continue
+				(module, state) = line.split('=', 1)
+				module = module.strip().lower()
+				state = state.strip()
+				if (module == 'signature'):
+					modules[module] = long(state)
+					continue
+				if (module == 'customer'):
+					modules[module] = state
+					continue
+				state = state.lower()
+				if not state in ('yes', 'no'):
+					logger.error("Found bad line '%s' in modules file '%s'" % (line, OPSI_MODULES_FILE))
+					continue
+				modules[module] = (state == 'yes')
+			f.close()
+			if not modules.get('signature'):
+				raise Exception('Signature not found')
+			if not modules.get('customer'):
+				raise Exception('Customer not found')
+			
+			publicKey = keys.getPublicKeyObject(data = base64.decodestring('AAAAB3NzaC1yc2EAAAADAQABAAABAQCAD/I79Jd0eKwwfuVwh5B2z+S8aV0C5suItJa18RrYip+d4P0ogzqoCfOoVWtDojY96FDYv+2d73LsoOckHCnuh55GA0mtuVMWdXNZIE8Avt/RzbEoYGo/H0weuga7I8PuQNC/nyS8w3W8TH4pt+ZCjZZoX8S+IizWCYwfqYoYTMLgB0i+6TCAfJj3mNgCrDZkQ24+rOFS4a8RrjamEz/b81noWl9IntllK1hySkR+LbulfTGALHgHkDUlk0OSu+zBPw/hcDSOMiDQvvHfmR4quGyLPbQ2FOVm1TzE0bQPR+Bhx4V8Eo2kNYstG2eJELrz7J1TJI0rCjpB+FQjYPsP'))
+			data = ''
+			mks = modules.keys()
+			mks.sort()
+			for module in mks:
+				if module in ('valid', 'signature'):
+					continue
+				val = modules[module]
+				if (val == False): val = 'no'
+				if (val == True):  val = 'yes'
+				data += module.lower().strip() + ' = ' + val + '\r\n'
+			modules['valid'] = bool(publicKey.verify(md5.new(data).digest(), [ modules['signature'] ]))
+		except Exception, e:
+			logger.error("Failed to read opsi modules file '%s': %s" % (OPSI_MODULES_FILE, e))
+		
+		return {
+			"opsiVersion": opsiVersion,
+			"modules":     modules
+		}
 		
 	def getPossibleMethods_listOfHashes(self):
 		''' This function returns a list of available interface methods.

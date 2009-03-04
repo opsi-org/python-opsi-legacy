@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.2'
+__version__ = '0.1.6'
 
 # Imports
 import re, os, time, socket
@@ -56,8 +56,6 @@ import _winreg
 
 # OPSI imports
 from OPSI.Logger import *
-#from OPSI import Tools
-
 
 # Get Logger instance
 logger = Logger()
@@ -255,7 +253,11 @@ def umount(mountpoint, ui='default'):
 # -                               SESSION / WINSTA / DESKTOP HANDLING                                 -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def getActiveConsoleSessionId():
-	return windll.kernel32.WTSGetActiveConsoleSessionId()
+	try:
+		return windll.kernel32.WTSGetActiveConsoleSessionId()
+	except Exception, e:
+		logger.warning(e)
+		return 0
 
 def getActiveDesktopName():
 	desktop = win32service.OpenInputDesktop(0, True, win32con.MAXIMUM_ALLOWED)
@@ -273,8 +275,12 @@ def logoffCurrentUser():
 	#		waitForProcessEnding = False )
 	command = ''
 	if (sys.getwindowsversion()[0] == 5):
-		# NT5: XP
-		command = 'logoff.exe'
+		if (sys.getwindowsversion()[1] == 0):
+			# NT5.0: win2k
+			raise NotImplemented("Not available on win2k")
+		else:
+			# NT5.1: XP
+			command = 'logoff.exe'
 	elif (sys.getwindowsversion()[0] == 6):
 		# NT6: Vista
 		command = 'shutdown.exe /l'
@@ -483,9 +489,9 @@ def addUserToWindowStation(winsta, userSid):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def getPids(process, sessionId = None):
-	if not sessionId:
-		sessionId = getActiveConsoleSessionId()
-	logger.info("Searching pids of process name %s in session %d" % (process, sessionId))
+	#if not sessionId:
+	#	sessionId = getActiveConsoleSessionId()
+	logger.info("Searching pids of process name %s (only in session id: %s)" % (process, sessionId))
 	processIds = []
 	CreateToolhelp32Snapshot = windll.kernel32.CreateToolhelp32Snapshot
 	Process32First = windll.kernel32.Process32First
@@ -500,11 +506,11 @@ def getPids(process, sessionId = None):
 		return
 	while True:
 		logger.debug2("   got process %s" % pe32.szExeFile)
-		if (pe32.szExeFile == process):
+		if (pe32.szExeFile.lower() == process.lower()):
 			sid = win32ts.ProcessIdToSessionId(pe32.th32ProcessID)
 			pid = pe32.th32ProcessID
 			logger.info("Found process %s with pid %d in session %d" % (process, pid, sid))
-			if (sid == sessionId):
+			if not sessionId or (sid == sessionId):
 				processIds.append(pid)
 		if Process32Next(hProcessSnap, byref(pe32)) == win32con.FALSE:
 			break
@@ -546,26 +552,40 @@ def getProcessName(processId):
 	CloseHandle(hProcessSnap)
 	return processName
 
+def getProcessHandle(processId):
+	processHandle = win32api.OpenProcess(1, 0, processId)
+	return processHandle
 
-def terminateProcess(hProcess):
+def getProcessWindowHandles(processId):
+	logger.info("Getting window handles of process with id %s" % processId)
+	def callback (windowHandle, windowHandles):
+		#if win32gui.IsWindowVisible(windowHandle) and win32gui.IsWindowEnabled(windowHandle):
+		if (win32process.GetWindowThreadProcessId(windowHandle)[1] == processId):
+			logger.debug("Found window %s of process with id %s" % (windowHandle, processId))
+			windowHandles.append(windowHandle)
+		return True
+	windowHandles = []
+	win32gui.EnumWindows(callback, windowHandles)
+	return windowHandles
+
+def closeProcessWindows(processId):
+	logger.info("Closing windows of process with id %s" % processId)
+	for windowHandle in getProcessWindowHandles(processId):
+		logger.debug("Sending WM_CLOSE message to window %s" % windowHandle)
+		win32gui.SendMessage(windowHandle, win32con.WM_CLOSE, 0, 0)
+
+def terminateProcess(processHandle=None, processId=None):
+	if not processHandle and not processId:
+		raise ValueError("Neither process handle not process id given")
 	exitCode = 0
-	win32process.TerminateProcess(hProcess, exitCode)
+	if not processHandle:
+		processHandle = getProcessHandle(processId)
+	win32process.TerminateProcess(processHandle, exitCode)
 	return exitCode
 
-def runCommandInSession(command, sessionId = None, desktop = "default", duplicateFrom = "winlogon.exe", waitForProcessEnding=True):
-	logger.notice("Executing: %s" % command)
+def getUserToken(sessionId = None, duplicateFrom = "winlogon.exe"):
 	if not type(sessionId) is int or (sessionId < 0):
 		sessionId = getActiveConsoleSessionId()
-	if not desktop:
-		desktop = "default"
-	if (desktop.find('\\') == -1):
-		desktop = 'winsta0\\' + desktop
-	
-	dwCreationFlags = win32con.NORMAL_PRIORITY_CLASS|win32con.CREATE_NEW_CONSOLE
-	
-	s = win32process.STARTUPINFO()
-	s.lpDesktop = desktop
-	#s.wShowWindow = win32con.SW_MAXIMIZE
 	
 	hProcess = win32api.OpenProcess(win32con.MAXIMUM_ALLOWED, False, getPid(process = duplicateFrom, sessionId = sessionId))
 	hPToken = win32security.OpenProcessToken(
@@ -591,7 +611,24 @@ def runCommandInSession(command, sessionId = None, desktop = "default", duplicat
 	
 	win32security.AdjustTokenPrivileges(hUserTokenDup, 0, newPrivileges)
 	
-	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(hUserTokenDup,None,command,None,None,0,dwCreationFlags,None,None,s)
+	return hUserTokenDup
+
+def runCommandInSession(command, sessionId = None, desktop = "default", duplicateFrom = "winlogon.exe", waitForProcessEnding=True):
+	if not desktop:
+		desktop = "default"
+	if (desktop.find('\\') == -1):
+		desktop = 'winsta0\\' + desktop
+	
+	userToken = getUserToken(sessionId, duplicateFrom)
+	
+	dwCreationFlags = win32con.NORMAL_PRIORITY_CLASS|win32con.CREATE_NEW_CONSOLE
+	
+	s = win32process.STARTUPINFO()
+	s.lpDesktop = desktop
+	#s.wShowWindow = win32con.SW_MAXIMIZE
+	
+	logger.notice("Executing: %s" % command)
+	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(userToken,None,command,None,None,0,dwCreationFlags,None,None,s)
 	logger.info("Process startet, pid: %d" % dwProcessId)
 	if not waitForProcessEnding:
 		return (hProcess, hThread, dwProcessId, dwThreadId)
@@ -657,9 +694,11 @@ def getAdminGroupName():
 	return groupName
 
 class Impersonate:
-	def __init__(self, username, password, desktop = "default"):
-		if not existsUser(username):
-			raise Exception("User '%s' does not exists" % username)
+	def __init__(self, username="", password="", userToken = None, desktop = "default"):
+		if not username and not userToken:
+			raise Exception("Neither username nor user token given")
+		#if username and not existsUser(username):
+		#	raise Exception("User '%s' does not exist" % username)
 		self.username = username
 		self.password = password
 		if not desktop:
@@ -668,59 +707,70 @@ class Impersonate:
 			desktop = 'winsta0\\' + desktop
 		(self.winsta, self.desktop) = desktop.split('\\', 1)
 		self.domain = win32api.GetComputerName()
-		self.userHandle = None
+		self.userToken = userToken
 		self.saveWindowStation = None 
 		self.saveDesktop = None
 		self.newWindowStation = None
 		self.newDesktop = None
 		
-	def start(self):
+	def start(self, logonType='INTERACTIVE', newDesktop=False):
 		try:
-			self.userHandle = win32security.LogonUser(
+			if (logonType == 'NEW_CREDENTIALS'):
+				# Stay who you are but add credentials for network connections
+				logonType = win32security.LOGON32_LOGON_NEW_CREDENTIALS
+			elif (logonType == 'INTERACTIVE'):
+				logonType = win32con.LOGON32_LOGON_INTERACTIVE
+			else:
+				raise ValueError("Unhandled logon type '%s'" % logonType)
+			
+			if not self.userToken:
+				self.userToken = win32security.LogonUser(
 					self.username,
 					self.domain,
 					self.password,
-					win32con.LOGON32_LOGON_INTERACTIVE,
+					logonType,
 					win32con.LOGON32_PROVIDER_DEFAULT)
 			
-			userSid = getUserSidFromHandle(self.userHandle)
-			if not userSid:
-				raise Exception("Failed to determine sid of user '%s'" % self.username)
-			logger.debug("Got sid of user '%s'" % self.username)
-			
-			self.saveWindowStation = win32service.GetProcessWindowStation()
-			logger.debug("Got current window station")
-			
-			self.saveDesktop = win32service.GetThreadDesktop(win32api.GetCurrentThreadId())
-			logger.debug("Got current desktop")
-			
-			self.newWindowStation = win32service.OpenWindowStation(
-							self.winsta,
-							False,
-							win32con.READ_CONTROL |
-							win32con.WRITE_DAC)
-			
-			self.newWindowStation.SetProcessWindowStation()
-			logger.debug("Process window station set")
+			if newDesktop:
+				self.saveWindowStation = win32service.GetProcessWindowStation()
+				logger.debug("Got current window station")
 				
-			self.newDesktop = win32service.OpenDesktop(
-							self.desktop,
-							win32con.DF_ALLOWOTHERACCOUNTHOOK, #0,
-							False,
-							win32con.READ_CONTROL |
-							win32con.WRITE_DAC |
-							win32con.DESKTOP_READOBJECTS |
-							win32con.DESKTOP_WRITEOBJECTS)
-			self.newDesktop.SetThreadDesktop()
-			logger.debug("Thread desktop set")
-			
-			winstaAceIndices = addUserToWindowStation(self.newWindowStation, userSid)
-			logger.debug("Added user to window station")
+				self.saveDesktop = win32service.GetThreadDesktop(win32api.GetCurrentThreadId())
+				logger.debug("Got current desktop")
 				
-			desktopAceIndices = addUserToDesktop(self.newDesktop, userSid)
-			logger.debug("Added user to desktop")
+				self.newWindowStation = win32service.OpenWindowStation(
+								self.winsta,
+								False,
+								win32con.READ_CONTROL |
+								win32con.WRITE_DAC)
+				
+				self.newWindowStation.SetProcessWindowStation()
+				logger.debug("Process window station set")
+					
+				self.newDesktop = win32service.OpenDesktop(
+								self.desktop,
+								win32con.DF_ALLOWOTHERACCOUNTHOOK, #0,
+								False,
+								win32con.READ_CONTROL |
+								win32con.WRITE_DAC |
+								win32con.DESKTOP_READOBJECTS |
+								win32con.DESKTOP_WRITEOBJECTS)
+				self.newDesktop.SetThreadDesktop()
+				logger.debug("Thread desktop set")
+				
+				userSid = getUserSidFromHandle(self.userToken)
+				if not userSid:
+					logger.warning("Failed to determine sid of user '%s'" % self.username)
+				else:
+					logger.debug("Got sid of user '%s'" % self.username)
+					
+					winstaAceIndices = addUserToWindowStation(self.newWindowStation, userSid)
+					logger.debug("Added user to window station")
+						
+					desktopAceIndices = addUserToDesktop(self.newDesktop, userSid)
+					logger.debug("Added user to desktop")
 			
-			win32security.ImpersonateLoggedOnUser(self.userHandle)
+			win32security.ImpersonateLoggedOnUser(self.userToken)
 			logger.debug("User imersonated")
 		except Exception, e:
 			logger.logException(e)
@@ -738,10 +788,9 @@ class Impersonate:
 		logger.notice("Running command '%s' as user '%s' on desktop '%s'" % (command, self.username, self.desktop))
 		
 		(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(
-					self.userHandle, None, command, None, None, 0, dwCreationFlags, None, None, s)
+					self.userToken, None, command, None, None, 0, dwCreationFlags, None, None, s)
 		logger.info("Process startet, pid: %d" % dwProcessId)
 		if not waitForProcessEnding:
-			win32security.RevertToSelf()
 			return (hProcess, hThread, dwProcessId, dwThreadId)
 		logger.info("Waiting for process ending: %d" % dwProcessId)
 		while win32event.WaitForSingleObject(hProcess, 0):
@@ -749,7 +798,7 @@ class Impersonate:
 		logger.notice("Process ended: %d" % dwProcessId)
 
 	def end(self):
-		if self.userHandle:        self.userHandle.Close()
+		if self.userToken: self.userToken.Close()
 		win32security.RevertToSelf()
 		if self.saveWindowStation: self.saveWindowStation.SetProcessWindowStation()
 		if self.saveDesktop:       self.saveDesktop.SetThreadDesktop()

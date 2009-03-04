@@ -32,10 +32,13 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.2.1'
+__version__ = '0.2.1'
 
 # Imports
-import json, threading
+import json, threading, re, stat, base64, urllib
+from OPSI.web2 import responsecode
+from OPSI.web2.dav import davxml
+from httplib import HTTPConnection, HTTPSConnection
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory, ClientFactory
 from twisted.internet import reactor, ssl
@@ -47,18 +50,15 @@ from Logger import *
 logger = Logger()
 
 
-import threading
-import ctypes
- 
- 
 def _async_raise(tid, excobj):
+	import ctypes
 	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(excobj))
 	if (res == 0):
 		logger.error("_async_raise: nonexistent thread id")
 		raise ValueError("nonexistent thread id")
 	elif (res > 1):
-		# """if it returns a number greater than one, you're in trouble, 
-		# and you should call it again with exc=NULL to revert the effect"""
+		# if it returns a number greater than one, you're in trouble,
+		# and you should call it again with exc=NULL to revert the effect
 		ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
 		logger.error("_async_raise: PyThreadState_SetAsyncExc failed")
 		raise SystemError("PyThreadState_SetAsyncExc failed")
@@ -86,19 +86,23 @@ class KillableThread(threading.Thread):
 # =       Subjects                                                                    =
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 class Subject(object):
-	def __init__(self, id, type='', **args):
+	def __init__(self, id, type='', title='', **args):
 		self._id = id
-		self._observers = []
 		self._type = type
-	
-	def getId(self):
-		return self._id
+		self._title = title
+		self._observers = []
 	
 	def getClass(self):
 		return self.__class__.__name__
 	
+	def getId(self):
+		return self._id
+	
 	def getType(self):
 		return self._type
+	
+	def getTitle(self):
+		return self._title
 	
 	def attachObserver(self, observer):
 		if not observer in self._observers:
@@ -109,11 +113,11 @@ class Subject(object):
 			self._observers.remove(observer)
 	
 	def serializable(self):
-		return { "id": self.getId(), "type": self.getType(), "class": self.getClass() }
+		return { "id": self.getId(), "type": self.getType(), "title": self.getTitle(), "class": self.getClass() }
 	
 class MessageSubject(Subject):
-	def __init__(self, id, type='', **args):
-		Subject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		Subject.__init__(self, id, type, title, **args)
 		self._message = ""
 		self._severity = 0
 		if args.has_key('message'):
@@ -143,8 +147,8 @@ class MessageSubject(Subject):
 		return s
 
 class ChoiceSubject(MessageSubject):
-	def __init__(self, id, type='', **args):
-		MessageSubject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		MessageSubject.__init__(self, id, type, title, **args)
 		self._message = ""
 		self._choices = []
 		self._selectedIndex = -1
@@ -205,8 +209,8 @@ class ChoiceSubject(MessageSubject):
 		return s
 
 class ProgressSubject(MessageSubject):
-	def __init__(self, id, type='', **args):
-		MessageSubject.__init__(self, id, type, **args)
+	def __init__(self, id, type='', title='', **args):
+		MessageSubject.__init__(self, id, type, title, **args)
 		self._end = 0
 		self._percent = 0
 		self._state = 0
@@ -603,7 +607,408 @@ class NotificationClient(threading.Thread):
 
 
 
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# =       Repositories                                                                =
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+class RepositoryError(Exception):
+	ExceptionShortDescription = "Repository error"
+	
+	def __init__(self, message = None):
+		self.message = message
+	
+	def __str__(self):
+		#return "<%s: %s>" % (self.__class__.__name__, self.message)
+		return str(self.message)
+	
+	def complete_message(self):
+		if self.message:
+			return "%s: %s" % (self.ExceptionShortDescription, self.message)
+		else:
+			return "%s" % self.ExceptionShortDescription
 
+def getRepository(url, username='', password=''):
+	if re.search('^file://', url):
+		return FileRepository(url, username, password)
+	if re.search('^webdavs*://', url):
+		return WebDAVRepository(url, username, password)
+	raise RepositoryError("Repository url '%s' not supported" % url)
+	
+class Repository:
+	def __init__(self, url, username='', password=''):
+		self._url = url
+		self._username = username
+		self._password = password
+		self._path = ''
+		self._maxBandwidth = 0
+	
+	def _transfer(self, src, dst, progressSubject=None):
+		buf = True
+		waitTime = 0.0
+		bufferSize = 64*1024
+		while(buf):
+			t1 = time.time()
+			buf = src.read(bufferSize)
+			read = len(buf)
+			if (read > 0):
+				if isinstance(dst, HTTPConnection) or isinstance(dst, HTTPSConnection):
+					dst.send(buf)
+				else:
+					dst.write(buf)
+				time.sleep(waitTime)
+				t2 = time.time()
+				dt = t2-t1
+				if self._maxBandwidth and (dt > 0):
+					speed = int(read/dt)
+					wt = 0
+					if (speed > 0) and (speed > self._maxBandwidth):
+						wt = ( (float(speed)/float(self._maxBandwidth)) ** (0.1) )
+					elif (speed > 0) and (speed < self._maxBandwidth):
+						wt = ( (float(self._maxBandwidth)/float(speed)) ** (0.1) )
+					if wt:
+						while (wt > 1):
+							wt -= 1
+						if (wt > 0.2):
+							wt = 0.2
+						if (speed > self._maxBandwidth):
+							waitTime += wt
+						else:
+							waitTime -= wt
+						if (waitTime < 0):
+							waitTime = 0.00001
+				if progressSubject:
+					progressSubject.addToState(read)
+	
+	def setMaxBandwidth(self, maxBandwidth):
+		self._maxBandwidth = maxBandwidth
+	
+	def content(self, destination=''):
+		raise RepositoryError("Not implemented")
+		
+	def upload(self, source, destination):
+		raise RepositoryError("Not implemented")
+		
+	def delete(self, destination):
+		raise RepositoryError("Not implemented")
+	
+	def fileInfo(self, destination):
+		raise RepositoryError("Not implemented")
+	
+class FileRepository(Repository):
+	def __init__(self, url, username='', password=''):
+		Repository.__init__(self, url, username, password)
+		
+		match = re.search('^file://(/[^/]+.*)$', self._url)
+		if not match:
+			raise RepositoryError("Bad url: '%s'" % self._url)
+		self._path = match.group(1)
+		self._maxBandwidth = 0
+		
+	def _absolutePath(self, destination):
+		if destination.startswith('/'):
+			destination = destination[1:]
+		return self._path + '/' + destination
+	
+	def content(self, destination=''):
+		content = []
+		destination = self._absolutePath(destination)
+		try:
+			for e in os.listdir(destination):
+				fs = os.stat(os.path.join(destination, e))
+				type = 'file'
+				if os.path.isdir(os.path.join(destination, e)):
+					type = 'dir'
+				content.append({
+					'name': e,
+					'size': fs[stat.ST_SIZE],
+					'type': type })
+		except:
+			raise RepositoryError("Not a directory: '%s'" % destination)
+		return content
+		
+	def fileInfo(self, destination):
+		destination = self._absolutePath(destination)
+		info = {}
+		try:
+			fs = os.stat(destination)
+			info['size'] = fs[stat.ST_SIZE]
+			return info
+		except Exception, e:
+			raise RepositoryError("Failed to get file info for '%s': %s" % (destination, e))
+	
+	def download(self, source, destination, progressObserver=None):
+		
+		size = self.fileInfo(source)['size']
+		source = self._absolutePath(source)
+		
+		logger.debug("Length of binary data to download: %d" % size)
+		
+		progressSubject = ProgressSubject(id='download', end=size)
+		progressSubject.setMessage( os.path.basename(source) + ' >> ' + self._path )
+		
+		if progressObserver: progressSubject.attachObserver(progressObserver)
+		
+		(src, dst) = (None, None)
+		try:
+			src = open(source, 'rb')
+			dst = open(destination, 'wb')
+			self._transfer(src, dst, progressSubject)
+			src.close()
+			dst.close()
+		except Exception, e:
+			if src: src.close()
+			if dst: dst.close()
+			raise RepositoryError("Failed to download '%s' to '%s': %s" \
+						% (source, destination, e))
+	
+	def upload(self, source, destination, progressObserver=None):
+		
+		destination = self._absolutePath(destination)
+		
+		fs = os.stat(source)
+		size = fs[stat.ST_SIZE]
+		logger.debug("Length of binary data to upload: %d" % size)
+		
+		progressSubject = ProgressSubject(id='upload', end=size)
+		progressSubject.setMessage( os.path.basename(source) + ' >> ' + self._path )
+		
+		if progressObserver: progressSubject.attachObserver(progressObserver)
+		
+		(src, dst) = (None, None)
+		try:
+			src = open(source, 'rb')
+			dst = open(destination, 'wb')
+			self._transfer(src, dst, progressSubject)
+			src.close()
+			dst.close()
+		except Exception, e:
+			if src: src.close()
+			if dst: dst.close()
+			raise RepositoryError("Failed to upload '%s' to '%s': %s" \
+						% (source, destination, e))
+	
+	def delete(self, source, destination):
+		destination = self._absolutePath(destination)
+		os.unlink(destination)
+	
+class WebDAVRepository(Repository):
+	def __init__(self, url, username='', password=''):
+		Repository.__init__(self, url, username, password)
+		
+		match = re.search('^(webdavs*)://([^:]+:*[^:]+):(\d+)(/.*)$', self._url)
+		if not match:
+			raise RepositoryError("Bad url: '%s'" % self._url)
+		
+		self._protocol = match.group(1)
+		self._host = match.group(2)
+		if (self._host.find('@') != -1):
+			(username, self._host) = self._host.split('@', 1)
+			password = ''
+			if (username.find(':') != -1):
+				(username, password) = username.split(':', 1)
+			if not self._username and username: self._username = username
+			if not self._password and password: self._password = password
+		self._port = int(match.group(3))
+		self._path = match.group(4)
+		self._auth = 'Basic '+ base64.encodestring( urllib.unquote(self._username + ':' + self._password) ).strip()
+		self._connection = None
+		self._cookie = ''
+		self._maxBandwidth = 0
+		
+	def _absolutePath(self, destination):
+		if destination.startswith('/'):
+			destination = destination[1:]
+		return self._path + '/' + destination
+	
+	def _connect(self):
+		logger.debug("WebDAVRepository _connect()")
+		if self._protocol.endswith('s'):
+			self._connection = HTTPSConnection(self._host, self._port)
+		else:
+			self._connection = HTTPConnection(self._host, self._port)
+		
+		self._connection.putrequest('PROPFIND', urllib.quote(self._absolutePath('/')))
+		if self._cookie:
+			# Add cookie to header
+			self._connection.putheader('cookie', self._cookie)
+		self._connection.putheader('authorization', self._auth)
+		self._connection.putheader('depth', '0')
+		self._connection.endheaders()
+		
+		response = self._connection.getresponse()
+		if (response.status != responsecode.MULTI_STATUS):
+			raise RepositoryError("Failed to connect to '%s://%s:%s': %s" \
+				% (self._protocol, self._host, self._port, response.status))
+		# We have to read the response!
+		response.read()
+		
+		# Get cookie from header
+		cookie = response.getheader('set-cookie', None)
+		if cookie:
+			# Store cookie 
+			self._cookie = cookie.split(';')[0].strip()
+	
+	def _getContent(self, destination=''):
+		content = []
+		if not destination.endswith('/'):
+			destination += '/'
+		
+		self._connect()
+		
+		self._connection.putrequest('PROPFIND', urllib.quote(destination))
+		self._connection.putheader('depth', '1')
+		if self._cookie:
+			# Add cookie to header
+			self._connection.putheader('cookie', self._cookie)
+		self._connection.putheader('authorization', self._auth)
+		self._connection.endheaders()
+		
+		response = self._connection.getresponse()
+		if (response.status != responsecode.MULTI_STATUS):
+			raise RepositoryError("Failed to list dir '%s': %s" \
+				% (destination, response.status))
+		
+		msr = davxml.WebDAVDocument.fromString(response.read())
+		if not msr.root_element.children[0].childOfType(davxml.PropertyStatus).childOfType(davxml.PropertyContainer).childOfType(davxml.ResourceType).children:
+			raise RepositoryError("Not a directory: '%s'" % destination)
+		for child in msr.root_element.children[1:]:
+			#<prop>
+			#	<resourcetype/>
+			#	<getetag>W/"1737A0-373-47DFF2F3"</getetag>
+			#	<getcontenttype>text/plain</getcontenttype>
+			#	<getcontentlength>883</getcontentlength>
+			#	<getlastmodified>Tue, 18 Mar 2008 17:50:59 GMT</getlastmodified>
+			#	<creationdate>2008-03-18T17:50:59Z</creationdate>
+			#	<displayname>connect.vnc</displayname>
+			#</prop>
+			pContainer = child.childOfType(davxml.PropertyStatus).childOfType(davxml.PropertyContainer)
+			info = { 'size': long(0), 'type': 'file' }
+			info['name'] = str(pContainer.childOfType(davxml.DisplayName))
+			if (str(pContainer.childOfType(davxml.GETContentLength)) != 'None'):
+				info['size'] = long( str(pContainer.childOfType(davxml.GETContentLength)) )
+			if pContainer.childOfType(davxml.ResourceType).children:
+				info['type'] = 'dir'
+			
+			content.append(info)
+		
+		return content
+	
+	def content(self, destination=''):
+		result = []
+		destination = self._absolutePath(destination)
+		#for c in self._getContent(destination):
+		#	result.append( c['name'] )
+		return self._getContent(destination)
+		return result
+	
+	def fileInfo(self, destination):
+		info = {}
+		try:
+			path = self._absolutePath('/'.join(destination.split('/')[:-1]))
+			name = destination.split('/')[-1]
+			for c in self._getContent(path):
+				if (c['name'] == name):
+					info['size'] = c['size']
+					return info
+			raise Exception('file not found')
+		except Exception, e:
+			raise RepositoryError("Failed to get file info for '%s': %s" % (destination, e))
+	
+	def download(self, source, destination, progressObserver=None):
+		
+		size = self.fileInfo(source)['size']
+		source = self._absolutePath(source)
+		
+		logger.debug("Length of binary data to download: %d" % size)
+		
+		progressSubject = ProgressSubject(id='upload', end=size)
+		progressSubject.setMessage( os.path.basename(source) + ' >> ' + self._path )
+		
+		if progressObserver: progressSubject.attachObserver(progressObserver)
+		
+		dst = None
+		try:
+			self._connect()
+			self._connection.putrequest('GET', urllib.quote(source))
+			if self._cookie:
+				# Add cookie to header
+				self._connection.putheader('cookie', self._cookie)
+			self._connection.putheader('authorization', self._auth)
+			self._connection.endheaders()
+			
+			response = self._connection.getresponse()
+			if (response.status != responsecode.OK):
+				raise Exception(response.status)
+			
+			dst = open(destination, 'wb')
+			self._transfer(response, dst, progressSubject)
+			dst.close()
+			
+		except Exception, e:
+			logger.logException(e)
+			#if self._connection: self._connection.close()
+			if dst: dst.close()
+			raise RepositoryError("Failed to download '%s' to '%s': %s" \
+						% (source, destination, e))
+		logger.debug2("WebDAV download done")
+	
+	def upload(self, source, destination, progressObserver=None):
+		destination = self._absolutePath(destination)
+		
+		fs = os.stat(source)
+		size = fs[stat.ST_SIZE]
+		logger.debug("Length of binary data to upload: %d" % size)
+		
+		progressSubject = ProgressSubject(id='upload', end=size)
+		progressSubject.setMessage( os.path.basename(source) + ' >> ' + self._path )
+		
+		if progressObserver: progressSubject.attachObserver(progressObserver)
+		
+		src = None
+		try:
+			self._connect()
+			self._connection.putrequest('PUT', urllib.quote(destination))
+			if self._cookie:
+				# Add cookie to header
+				self._connection.putheader('cookie', self._cookie)
+			self._connection.putheader('authorization', self._auth)
+			self._connection.putheader('content-length', size)
+			self._connection.endheaders()
+			
+			src = open(source, 'rb')
+			self._transfer(src, self._connection, progressSubject)
+			src.close()
+			
+			response = self._connection.getresponse()
+			if (response.status != responsecode.CREATED) and (response.status != responsecode.NO_CONTENT):
+				raise Exception(response.status)
+			# We have to read the response!
+			response.read()
+		except Exception, e:
+			logger.logException(e)
+			#if self._connection: self._connection.close()
+			if src: src.close()
+			raise RepositoryError("Failed to upload '%s' to '%s': %s" \
+						% (source, destination, e))
+		logger.debug2("WebDAV upload done")
+	
+	def delete(self, destination):
+		self._connect()
+		
+		destination = self._absolutePath(destination)
+		
+		self._connection.putrequest('DELETE', urllib.quote(destination))
+		if self._cookie:
+			# Add cookie to header
+			self._connection.putheader('cookie', self._cookie)
+		self._connection.putheader('authorization', self._auth)
+		self._connection.endheaders()
+		
+		response = self._connection.getresponse()
+		if (response.status != responsecode.NO_CONTENT):
+			raise RepositoryError("Failed to delete '%s': %s" \
+				% (destination, response.status))
+		# We have to read the response!
+		response.read()
 
 
 

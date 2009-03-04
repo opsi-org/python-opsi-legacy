@@ -32,22 +32,20 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9.1'
+__version__ = '0.9.9.6'
 
 # Imports
 import time, json, gettext, os, re, random, md5
 
 # OPSI imports
 from Logger import *
+from Util import *
 import System
 
 # Blowfish initialization vector
 BLOWFISH_IV = 'OPSI1234'
 #RANDOM_DEVICE = '/dev/random'
-if os.name == "posix":
-	RANDOM_DEVICE = '/dev/urandom'
-else:
-	RANDOM_DEVICE = 'PYTHON_LIB'
+RANDOM_DEVICE = '/dev/urandom'
 
 # Get Logger instance
 logger = Logger()
@@ -437,7 +435,7 @@ def getArchiveContent(filename, format=None):
 	return filelist
 	
 	
-def findFiles(directory, prefix='', excludeDir=None, excludeFile=None):
+def findFiles(directory, prefix='', excludeDir=None, excludeFile=None, includeDir=None, includeFile=None, returnDirs=True):
 	files = []
 	entries = os.listdir(directory)
 	for entry in entries:
@@ -445,22 +443,33 @@ def findFiles(directory, prefix='', excludeDir=None, excludeFile=None):
 			continue
 		
 		if os.path.isdir(os.path.join(directory, entry)):
-			if excludeDir and re.match(excludeDir, entry):
-				logger.debug("Excluding dir '%s' and contained files" % entry)
+			if excludeDir and re.search(excludeDir, entry):
+				logger.debug("Excluding dir '%s' and containing files" % entry)
 				continue
-			files.append( os.path.join(prefix, entry) )
+			if includeDir:
+				if not re.search(includeDir, entry):
+					continue
+				logger.debug("Including dir '%s' and containing files" % entry)
+			if returnDirs:
+				files.append( os.path.join(prefix, entry) )
 			files.extend(
-				findFiles( 
-					os.path.join(directory, entry), 
-					os.path.join(prefix, entry),
-					excludeDir, 
-					excludeFile ) )
+				findFiles(
+					directory   = os.path.join(directory, entry),
+					prefix      = os.path.join(prefix, entry),
+					excludeDir  = excludeDir,
+					excludeFile = excludeFile,
+					includeDir  = includeDir,
+					includeFile = includeFile,
+					returnDirs  = returnDirs ) )
 		else:
-			if excludeFile and re.match(excludeFile, entry):
+			if excludeFile and re.search(excludeFile, entry):
 				logger.debug("Excluding file '%s'" % entry)
 				continue
+			if includeFile:
+				if not re.search(includeFile, entry):
+					continue
+				logger.debug("Including file '%s'" % entry)
 			files.append( os.path.join(prefix, entry) )
-		
 	return files
 
 def generateOpsiHostKey():
@@ -626,4 +635,396 @@ def jsonObjToBash(jsonObj, bashVars={}, cur=-1):
 	
 	return bashVars
 
+def integrateDrivers(driverSourceDirectories, driverDestinationDirectory, messageObserver=None, progressObserver=None):
+	logger.info("Integrating drivers")
+	
+	messageSubject = MessageSubject(id='integrateDrivers')
+	if messageObserver:
+		messageSubject.attachObserver(messageObserver)
+	messageSubject.setMessage("Integrating drivers")
+	
+	driverDestinationDirectories = []
+	driverNumber = 0
+	if not os.path.exists(driverDestinationDirectory):
+		os.mkdir(driverDestinationDirectory)
+	
+	integratedFiles = []
+	for filename in os.listdir(driverDestinationDirectory):
+		dirname = os.path.join(driverDestinationDirectory, filename)
+		if not os.path.isdir(dirname):
+			continue
+		if re.search('^\d+$', filename):
+			if (int(filename) >= driverNumber):
+				driverNumber = int(filename)
+			files = []
+			for f in os.listdir(dirname):
+				files.append(f.lower())
+			files.sort()
+			integratedFiles.append(','.join(files))
+	for driverSourceDirectory in driverSourceDirectories:
+		logger.notice("Integrating driver dir '%s'" % driverSourceDirectory)
+		messageSubject.setMessage("Integrating driver dir '%s'" % os.path.basename(driverSourceDirectory), severity='INFO')
+		if not os.path.exists(driverSourceDirectory):
+			logger.error("Driver directory '%s' not found" % driverSourceDirectory)
+			messageSubject.setMessage("Driver directory '%s' not found" % driverSourceDirectory, severity='ERROR')
+			continue
+		files = []
+		for f in os.listdir(driverSourceDirectory):
+			files.append(f.lower())
+		files.sort()
+		files = ','.join(files)
+		logger.debug("Driver files: %s" % files)
+		for fs in integratedFiles:
+			logger.debug("   Integrated files: %s" % fs)
+		if files in integratedFiles:
+			logger.notice("Driver directory '%s' already integrated" % driverSourceDirectory)
+			messageSubject.setMessage("Driver directory '%s' already integrated" % driverSourceDirectory, severity = 'INFO')
+			continue
+		driverNumber += 1
+		dstDriverPath = os.path.join(driverDestinationDirectory, str(driverNumber))
+		if not os.path.exists(dstDriverPath):
+			os.mkdir(dstDriverPath)
+		System.copy(driverSourceDirectory + '/*', dstDriverPath)
+		driverDestinationDirectories.append(str(dstDriverPath))
+		integratedFiles.append(files)
+	return driverDestinationDirectories
+
+def integrateTextmodeDrivers(driverDirectory, destination, hardware, sifFile=None, messageObserver=None, progressObserver=None):
+	logger.info("Integrating textmode drivers")
+	
+	messageSubject = MessageSubject(id='integrateTextmodeDrivers')
+	if messageObserver:
+		messageSubject.attachObserver(messageObserver)
+	messageSubject.setMessage("Integrating textmode drivers")
+	
+	hardwareIds = {}
+	for info in hardware.get("PCI_DEVICE", []):
+		vendorId = info.get('vendorId', '').upper()
+		deviceId = info.get('deviceId', '').upper()
+		if not hardwareIds.has_key(vendorId):
+			hardwareIds[vendorId] = []
+		hardwareIds[vendorId].append(deviceId)
+	
+	logger.info("Searching for txtsetup.oem in '%s'" % driverDirectory)
+	txtSetupOems = findFiles(directory = driverDirectory, prefix = driverDirectory, includeFile = re.compile('^txtsetup\.oem$', re.IGNORECASE), returnDirs=False)
+	for txtSetupOem in txtSetupOems:
+		logger.notice("'%s' found, integrating textmode driver" % txtSetupOem)
+		messageSubject.setMessage("'%s' found, integrating textmode driver" % txtSetupOem, severity='INFO')
+		driverPath = os.path.dirname(txtSetupOem)
+		
+		# Parse txtsetup.oem
+		logger.info("Parsing txtsetup.oem")
+		sections = {}
+		sectionRegex = re.compile('\[\s*([^\]]+)\s*\]')
+		deviceRegex = re.compile('VEN_([\da-fA-F]+)(&DEV_([\da-fA-F]+))?')
+		f = open(txtSetupOem)
+		section = None
+		for line in f.readlines():
+			line = line.strip()
+			if not line or line.startswith('#') or line.startswith(';'):
+				continue
+			logger.debug("txtsetup.oem: %s" % line)
+			match = re.search(sectionRegex, line)
+			if match:
+				section = match.group(1)
+				sections[section] = []
+			elif section:
+				sections[section].append(line)
+		f.close()
+		
+		# Search for default id
+		defaultHwComponentId = ''
+		logger.info("Searching for default hardware component id")
+		for (section, lines) in sections.items():
+			if (section.lower() != 'defaults'):
+				continue
+			for line in lines:
+				(key, value) = line.split('=', 1)
+				if (key.strip().lower() == 'scsi'):
+					defaultHwComponentId = value.strip()
+		if not defaultHwComponentId:
+			logger.error("Default hardware component id not found in txtsetup.oem, failed to integrate textmode driver.")
+			messageSubject.setMessage("Default hardware component id not found in txtsetup.oem, failed to integrate textmode driver", severity='ERROR')
+			continue
+		logger.notice("Found default hardware component id '%s'" % defaultHwComponentId)
+		
+		# Search for hardware id
+		logger.info("Searching for hardware id and tagfile")
+		tagfiles = {}
+		for (section, lines) in sections.items():
+			if not section.lower().startswith('hardwareids.'):
+				continue
+			logger.info("Found hardwareIds section %s" % section)
+			for line in lines:
+				if not re.search('[iI][dD]\s*=', line):
+					continue
+				(device, tf) = line.split('=', 1)[1].strip().split(',', 1)
+				device = device.strip()
+				if device.startswith('"') and device.endswith('"'):
+					device = device[1:-1]
+				tf = tf.strip()
+				if tf.startswith('"') and tf.endswith('"'):
+					tf = tf[1:-1]
+				match = re.search(deviceRegex, device)
+				if not match:
+					logger.error("Parsing error: =>%s<=" % device)
+					continue
+				if match.group(1).upper() in hardwareIds.keys() and (not match.group(2) or match.group(3).upper() in hardwareIds[match.group(1).upper()]):
+					hwComponentId = section.split('.', 2)[2].lower()
+					tagfiles[hwComponentId] = tf
+		if not tagfiles:
+			logger.warning("No needed hardware component id found in txtsetup.oem, not integrating textmode driver.")
+			messageSubject.setMessage("No needed hardware component id found in txtsetup.oem, not integrating textmode driver.", severity='WARNING')
+			continue
+		logger.debug("Found tagfiles: %s" % tagfiles)
+		
+		hwComponentId = tagfiles.keys()[0]
+		if (len(tagfiles.keys()) > 0) and tagfiles.has_key(defaultHwComponentId.lower()):
+			hwComponentId = defaultHwComponentId.lower()
+		tagfile = tagfiles[hwComponentId]
+		logger.notice("Using component id '%s' and tagfile '%s'" % (hwComponentId, tagfile))
+		
+		# Search for disks
+		logger.info("Searching for disks")
+		driverDisks = {}
+		for (section, lines) in sections.items():
+			if (section.lower() != 'disks'):
+				continue
+			for line in lines:
+				if (line.find('=') == -1):
+					continue
+				(driverDisk, value) = line.split('=', 1)
+				driverDisk = driverDisk.strip()
+				(dn, tf, dd) = value.split(',', 2)
+				tf = tf.strip()
+				if tf.startswith('\\'): tf = tf[1:]
+				dd = dd.strip()
+				if dd.startswith('\\'): dd = dd[1:]
+				driverDisks[driverDisk] = { "displayName": dn, "tagfile": tf, "driverDir": dd }
+		if not driverDisks:
+			logger.error("No disks found in txtsetup.oem, failed to integrate textmode driver.")
+			messageSubject.setMessage("No disks found in txtsetup.oem, failed to integrate textmode driver", severity='ERROR')
+			continue
+		
+		# Search for needed files
+		logger.info("Searching for needed files")
+		driver = []
+		inf = []
+		catalog = []
+		filesRegex = re.compile('Files\.scsi\.%s' % hwComponentId, re.IGNORECASE)
+		for (section, lines) in sections.items():
+			match = re.search(filesRegex, section)
+			if not match:
+				continue
+			for line in lines:
+				(key, value) = line.split('=', 1)
+				key = key.strip()
+				driverDisk = value.split(',')[0].strip()
+				filename = value.split(',')[1].strip()
+				if   (key.lower() == 'driver'):
+					driver.append( os.path.join(driverDisks[driverDisk]['driverDir'], filename) )
+				elif (key.lower() == 'inf'):
+					inf.append( os.path.join(driverDisks[driverDisk]['driverDir'], filename) )
+				elif (key.lower() == 'catalog'):
+					catalog.append( os.path.join(driverDisks[driverDisk]['driverDir'], filename) )
+			break
+		
+		logger.notice("Needed files: %s, %s, %s" % (', '.join(driver), ', '.join(inf), ', '.join(catalog) ))
+		if not (driver and inf and catalog):
+			logger.error("Failed to find needed info")
+			messageSubject.setMessage("Failed to find needed info", severity='ERROR')
+			continue
+		
+		# Search for hardware description
+		logger.info("Searching for hardware description")
+		description = ''
+		for (section, lines) in sections.items():
+			if (section.lower() == 'scsi'):
+				for line in lines:
+					(key, value) = line.split('=', 1)
+					if (key.strip().lower() == hwComponentId.lower()):
+						description = value.split(',')[0].strip()
+						if description.startswith('"') and description.endswith('"'):
+							description = description[1:-1]
+		if not description:
+			logger.error("Hardware description not found in txtsetup.oem, failed to integrate textmode driver.")
+			messageSubject.setMessage("Hardware description not found in txtsetup.oem, failed to integrate textmode driver.", severity='ERROR')
+		logger.notice("Hardware description is '%s'" % description)
+		
+		# Copy files
+		oemBootFiles = []
+		oemBootFiles.append( os.path.basename(txtSetupOem) )
+		for textmodePath in ( 	os.path.join(destination, '$', 'textmode'), \
+					os.path.join(destination, '$win_nt$.~bt', '$oem$') ):
+			if not os.path.exists(textmodePath):
+				os.mkdir(textmodePath)
+			System.System.copy(txtSetupOem, textmodePath)
+		
+		for one in inf, driver, catalog:
+			for fn in one:
+				System.copy(os.path.join(driverPath, fn), os.path.join(destination, '$', 'textmode', os.path.basename(fn)))
+				System.copy(os.path.join(driverPath, fn), os.path.join(destination, '$win_nt$.~bt', '$oem$',fn))
+				oemBootFiles.append(fn)
+		
+		# Patch winnt.sif
+		if sifFile:
+			logger.notice("Registering textmode drivers in sif file '%s'" % sifFile)
+			lines = []
+			massStorageDriverLines = []
+			oemBootFileLines = []
+			section = ''
+			sif = open(sifFile, 'r')
+			for line in sif.readlines():
+				if line.strip():
+					logger.debug2("Current sif file content: %s" % line.rstrip())
+				if line.strip().startswith('['):
+					section = line.strip().lower()[1:-1]
+					if section in ('massstoragedrivers', 'oembootfiles'):
+						continue
+				if (section == 'massstoragedrivers'):
+					massStorageDriverLines.append(line)
+					continue
+				if (section == 'oembootfiles'):
+					oemBootFileLines.append(line)
+					continue
+				lines.append(line)
+			sif.close()
+			
+			logger.info("Patching sections for driver '%s'" % description)
+			
+			if not massStorageDriverLines:
+				massStorageDriverLines = ['\r\n', '[MassStorageDrivers]\r\n']
+			massStorageDriverLines.append('"%s" = OEM\r\n' % description)
+			
+			if not oemBootFileLines:
+				oemBootFileLines = ['\r\n', '[OEMBootFiles]\r\n']
+			for obf in oemBootFiles:
+				oemBootFileLines.append('%s\r\n' % obf)
+			
+			logger.debug("Patching [MassStorageDrivers] in file '%s':" % sifFile)
+			logger.debug(massStorageDriverLines)
+			lines.extend(massStorageDriverLines)
+			logger.debug("Patching [OEMBootFiles] in file '%s':" % sifFile)
+			logger.debug(oemBootFileLines)
+			lines.extend(oemBootFileLines)
+			
+			sif = open(sifFile, 'w')
+			sif.writelines(lines)
+			sif.close()
+		
+def integrateAdditionalDrivers(driverSourceDirectory, driverDestinationDirectory, additionalDrivers, messageObserver=None, progressObserver=None):
+	logger.info("Adding additional drivers")
+	
+	messageSubject = MessageSubject(id='integrateAdditionalDrivers')
+	if messageObserver:
+		messageSubject.attachObserver(messageObserver)
+	messageSubject.setMessage("Adding additional drivers")
+	
+	driverDirectories = []
+	for additionalDriver in additionalDrivers.split(','):
+		additionalDriver = additionalDriver.strip()
+		if not additionalDriver:
+			continue
+		additionalDriverDir = os.path.join(driverSourceDirectory, additionalDriver)
+		if not os.path.exists(additionalDriverDir):
+			logger.error("Additional drivers dir '%s' not found" % additionalDriverDir)
+			messageSubject.setMessage("Additional drivers dir '%s' not found" % additionalDriverDir, severity='ERROR')
+			continue
+		infFiles = findFiles(directory = additionalDriverDir, prefix = additionalDriverDir, includeFile = re.compile('\.inf$', re.IGNORECASE), returnDirs=False)
+		logger.info("Found inf files: %s in dir '%s'" % (infFiles, additionalDriverDir))
+		if not infFiles:
+			logger.error("No drivers found in dir '%s'" % additionalDriverDir)
+			messageSubject.setMessage("No drivers found in dir '%s'" % additionalDriverDir, severity='ERROR')
+			continue
+		for infFile in infFiles:
+			additionalDriverDir = os.path.dirname(infFile)
+			if additionalDriverDir in driverDirectories:
+				continue
+			logger.info("Adding additional driver dir '%s'" % additionalDriverDir)
+			messageSubject.setMessage("Adding additional driver dir '%s'" % additionalDriverDir, severity='INFO')
+			driverDirectories.append(additionalDriverDir)
+	
+	if messageObserver:
+		messageSubject.detachObserver(messageObserver)
+	
+	return integrateDrivers(driverDirectories, driverDestinationDirectory, messageObserver, progressObserver)
+
+def integrateHardwareDrivers(driverSourceDirectory, driverDestinationDirectory, hardware, messageObserver=None, progressObserver=None):
+	logger.info("Adding drivers for detected hardware")
+	
+	messageSubject = MessageSubject(id='integrateHardwareDrivers')
+	if messageObserver:
+		messageSubject.attachObserver(messageObserver)
+	messageSubject.setMessage("Adding drivers for detected hardware")
+	
+	driverDirectories = []
+	integratedFiles = []
+	for type in ('PCI', 'USB', 'HDAUDIO'):
+		devices = []
+		baseDir = ''
+		if (type == 'PCI'):
+			devices = hardware.get("PCI_DEVICE", [])
+			baseDir = 'pciids'
+		elif (type == 'USB'):
+			devices = hardware.get("USB_DEVICE", [])
+			baseDir = 'usbids'
+		elif (type == 'HDAUDIO'):
+			devices = hardware.get("HDAUDIO_DEVICE", [])
+			baseDir = 'hdaudioids'
+		for info in devices:
+			name = info.get('name', '???')
+			name = name.replace('/', '_')
+			vendorId = info.get('vendorId', '').upper()
+			deviceId = info.get('deviceId', '').upper()
+			if not vendorId or not deviceId:
+				continue
+			logger.info("Searching driver for %s device '%s', id '%s:%s'" % (type, name, vendorId, deviceId))
+			messageSubject.setMessage("Searching driver for %s device '%s', id '%s:%s'" % (type, name, vendorId, deviceId), severity = 'INFO')
+			srcDriverPath = os.path.join(driverSourceDirectory, baseDir, vendorId)
+			if not os.path.exists(srcDriverPath):
+				logger.error("%s Vendor directory '%s' not found" % (type, srcDriverPath))
+				messageSubject.setMessage("%s Vendor directory '%s' not found" % (type, srcDriverPath), severity = 'ERROR')
+				continue
+			srcDriverPath = os.path.join(srcDriverPath, deviceId)
+			if not os.path.exists(srcDriverPath):
+				logger.error("%s Device directory '%s' not found" % (type, srcDriverPath))
+				messageSubject.setMessage("%s Device directory '%s' not found" % (type, srcDriverPath), severity = 'ERROR')
+				continue
+			if os.path.exists( os.path.join(srcDriverPath, 'WINDOWS_BUILDIN') ):
+				logger.notice("Using build-in windows driver")
+				messageSubject.setMessage("Using build-in windows driver", severity = 'SUCCESS')
+				continue
+			logger.notice("Found driver for %s device '%s', in dir '%s'" % (type, name, srcDriverPath))
+			logger.notice("Integrating driver for %s device '%s'" % (type, name))
+			messageSubject.setMessage("Integrating driver for %s device '%s'" % (type, name), severity = 'SUCCESS')
+			driverDirectories.append(srcDriverPath)
+	
+	if messageObserver:
+		messageSubject.detachObserver(messageObserver)
+	
+	return integrateDrivers(driverDirectories, driverDestinationDirectory, messageObserver, progressObserver)
+
+def getOemPnpDriversPath(driverDirectory, target, separator=';', prePath='', postPath=''):
+	logger.info("Generating oemPnpDriversPath")
+	if not driverDirectory.startswith(target):
+		raise Exception("Driver directory '%s' not on target '%s'" % (driverDirectory, target))
+	
+	relPath = driverDirectory[len(target):]
+	while relPath.startswith(os.sep):
+		relPath = relPath[1:]
+	while relPath.endswith(os.sep):
+		relPath = relPath[:-1]
+	relPath = '\\'.join(relPath.split(os.sep))
+	oemPnpDriversPath = ''
+	for dirname in os.listdir(driverDirectory):
+		dirname = relPath + '\\' + dirname
+		if prePath:
+			dirname = prePath + '\\' + dirname
+		if postPath:
+			dirname = postPath + '\\' + dirname
+		if oemPnpDriversPath:
+			oemPnpDriversPath += separator
+		oemPnpDriversPath += dirname
+	logger.info("Returning oemPnpDriversPath '%s'" % oemPnpDriversPath)
+	return oemPnpDriversPath
 

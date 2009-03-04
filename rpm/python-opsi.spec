@@ -8,12 +8,12 @@
 
 Name:           python-opsi
 BuildRequires:  python-devel gettext-devel
-Requires:       python-curses python-crypto python-json python-ldap python-newt python-pam python-openssl python-mysql duplicity
+Requires:       python-twisted-web python-curses python-crypto python-json python-ldap python-newt python-pam python-openssl python-mysql duplicity
 Url:            http://www.opsi.org
 License:        GPL v2 or later
 Group:          Productivity/Networking/Opsi
 AutoReqProv:    on
-Version:        3.3.1.0
+Version:        3.3.1.4
 Release:        1
 Summary:        opsi python library
 %define tarname python-opsi

@@ -32,11 +32,11 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9'
+__version__ = '1.1.2'
 
 # Imports
 import os
-if os.name == 'posix':
+if (os.name == 'posix'):
 	import stat, gettext, time, pwd, grp, re, codecs
 else:
 	import stat, gettext, time, re, codecs
@@ -45,7 +45,7 @@ else:
 from OPSI.Logger import *
 from OPSI.System import *
 from OPSI import Tools
-if os.name == 'nt':
+if (os.name == 'nt'):
 	from _winreg import *
 
 # Get Logger instance
@@ -106,8 +106,36 @@ except Exception, e:
 		Uses the fallback language (called C; means english) then."""
 		return string
 
-class Product:
+def readFileInfoFile(infoFile):
+	fileInfo = {}
+	f = open(infoFile)
+	for line in f.readlines():
+		(type, tmp) = line.strip().split(' ', 1)
+		filename = ''
+		for i in range(len(tmp)):
+			if (tmp[i] == "'"):
+				if (i > 0):
+					if (tmp[i-1] == '\\'):
+						filename = filename[:-1] + "'"
+						continue
+					else:
+						break
+				else:
+					continue
+			filename += tmp[i]
+		(size, target, md5) = (0, '', '')
+		tmp = tmp[i+2:]
+		if (tmp.find(' ') != -1):
+			(size, tmp) = tmp.split(' ', 1)
+		if (type == 'f'):
+			md5 = tmp
+		elif (type == 'l'):
+			target = tmp[1:-1].replace('\\\'', '\'')
+		fileInfo[filename] = { 'type': type, 'size': int(size), 'md5sum': md5, 'target': target }
+	f.close()
+	return fileInfo
 	
+class Product:
 	def __init__(self, productId="", productType=None, name='', productVersion='', packageVersion='', licenseRequired=False,
 			   setupScript='', uninstallScript='', updateScript='', alwaysScript='', onceScript='', 
 			   priority=0, description='', advice='', productClassNames=[], pxeConfigTemplate='',
@@ -687,6 +715,9 @@ class ProductPackage:
 		
 		cf.close()
 	
+	def writeControlFile(self):
+		self.product.writeControlFile(self.controlFile)
+	
 class ProductPackageSource(ProductPackage):
 	def __init__(self, sourceDir, tempDir = None, customName = None, customOnly = False, packageFileDestDir = None):
 		self.product = None
@@ -883,8 +914,7 @@ class ProductPackageFile(ProductPackage):
 				
 		self.clientDataDir = os.path.join('/tmp', self.product.productId)
 		
-		
-		
+	
 	def install(self):
 		self.checkDependencies()
 		self.runPreinst()
@@ -929,10 +959,13 @@ class ProductPackageFile(ProductPackage):
 		if os.path.isdir(self.tmpUnpackDir):
 			rmdir(self.tmpUnpackDir, recursive=True)
 	
-	
-	def unpackSource(self, sourceDir=''):
+	def unpackSource(self, sourceDir='', newProductId=''):
 		if not sourceDir:
 			raise Exception("Failed to unpack source: no destination directory given.")
+		
+		oldProductId = self.product.productId
+		if newProductId:
+			self.product.setProductId(newProductId)
 		
 		sourceDir = os.path.join(sourceDir, self.product.productId)
 		
@@ -988,8 +1021,19 @@ class ProductPackageFile(ProductPackage):
 		if not os.path.isdir( os.path.join(sourceDir, 'SERVER_DATA') ):
 			os.mkdir( os.path.join(sourceDir, 'SERVER_DATA') )
 		
-		
-		
+		if newProductId:
+			self.controlFile = os.path.join(sourceDir, 'OPSI', 'control')
+			self.readControlFile()
+			self.product.setProductId(newProductId)
+			for scriptName in ('setupScript', 'uninstallScript', 'updateScript', 'alwaysScript', 'onceScript'):
+				script = getattr(self.product, scriptName)
+				if not script:
+					continue
+				newScript = script.replace(oldProductId, newProductId)
+				os.rename(os.path.join(sourceDir, 'CLIENT_DATA', script), os.path.join(sourceDir, 'CLIENT_DATA', newScript))
+				setattr(self.product, scriptName, newScript)
+			self.writeControlFile()
+			
 	def unpack(self, dataArchives=True):
 		
 		prevUmask = os.umask(0077)
@@ -1071,7 +1115,10 @@ class ProductPackageFile(ProductPackage):
 				try:
 					if (name != 'OPSI'):
 						for filename in Tools.getArchiveContent(archive):
-							self.installedFiles.append( os.path.join(dstDir, filename) )
+							fn = os.path.join(dstDir, filename).strip()
+							if not fn:
+								continue
+							self.installedFiles.append(fn)
 					Tools.extractArchive(archive, chdir=dstDir)
 				except Exception, e:
 					self.cleanup()
@@ -1102,10 +1149,47 @@ class ProductPackageFile(ProductPackage):
 			for filename in self.installedFiles:
 				logger.debug("Installed file: %s" % filename)
 		
-		
+	def writeFileInfoFile(self):
+		logger.notice("Writing file info file")
+		cut = len(self.clientDataDir)+1
+		f = open(os.path.join(self.clientDataDir, '%s.files' % self.product.productId), 'w')
+		if not self.installedFiles:
+			f.close()
+			return
+		for filename in self.installedFiles:
+			if (filename == self.clientDataDir):
+				continue
+			type = 'f'
+			md5 = ''
+			target = ''
+			size = 0
+			
+			if os.path.islink(filename):
+				type = 'l'
+				target = os.path.realpath(filename)
+				if target.startswith(self.clientDataDir):
+					target = target[cut:]
+				else:
+					# link target not in client data dir => treat as file
+					type = 'f'
+					size = os.path.getsize(target)
+					md5 = Tools.md5sum(target)
+					target = ''
+			elif os.path.isdir(filename):
+				type = 'd'
+			else:
+				size = os.path.getsize(filename)
+				md5 = Tools.md5sum(filename)
+			
+			if target:
+				#f.write("%s '%s' %s '%s'\n" % (type, filename[cut:].replace('\'', '\\\''), size, target.replace('\'', '\\\'')) )
+				f.write("%s '%s' %s '%s'\n" % (type, filename[cut:].replace('\'', '\\\''), size, target.replace('\'', '\\\'')) )
+			else:
+				f.write("%s '%s' %s %s\n" % (type, filename[cut:].replace('\'', '\\\''), size, md5) )
+		f.close()
+		self.installedFiles.append( os.path.join(self.clientDataDir, '%s.files' % self.product.productId) )
 		
 	def setAccessRights(self):
-		
 		logger.notice("Setting access rights of files")
 		
 		user = pwd.getpwuid(os.getuid())[0]
