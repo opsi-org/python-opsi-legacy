@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 # Imports
 import os, stat, types, re, socket, new, base64, md5
@@ -139,7 +139,7 @@ class BackendManager(DataBackend):
 		if not self.__authRequired:
 			# Authenticate by remote server
 			self.__userGroups = []
-			logger.debug("Authorization disabled...")
+			logger.info("Skipping local authorization")
 			
 		elif re.search('^\S+\.\S+\.\S+$', self.__username):
 			# Username starts with something like xxx.yyy.zzz: 
@@ -224,6 +224,8 @@ class BackendManager(DataBackend):
 				self.backends[key]['instance'] = b
 			else:
 				self.backends[key]['instance'] = self.forcedBackend
+			
+			if self.forcedBackend:
 				self.forcedBackend         = key
 				self.defaultBackend        = key
 				self.clientManagingBackend = key
@@ -1146,8 +1148,10 @@ class BackendManager(DataBackend):
 				modules[module] = (state == 'yes')
 			f.close()
 			if not modules.get('signature'):
+				modules = {'valid': False}
 				raise Exception('Signature not found')
 			if not modules.get('customer'):
+				modules = {'valid': False}
 				raise Exception('Customer not found')
 			
 			publicKey = keys.getPublicKeyObject(data = base64.decodestring('AAAAB3NzaC1yc2EAAAADAQABAAABAQCAD/I79Jd0eKwwfuVwh5B2z+S8aV0C5suItJa18RrYip+d4P0ogzqoCfOoVWtDojY96FDYv+2d73LsoOckHCnuh55GA0mtuVMWdXNZIE8Avt/RzbEoYGo/H0weuga7I8PuQNC/nyS8w3W8TH4pt+ZCjZZoX8S+IizWCYwfqYoYTMLgB0i+6TCAfJj3mNgCrDZkQ24+rOFS4a8RrjamEz/b81noWl9IntllK1hySkR+LbulfTGALHgHkDUlk0OSu+zBPw/hcDSOMiDQvvHfmR4quGyLPbQ2FOVm1TzE0bQPR+Bhx4V8Eo2kNYstG2eJELrz7J1TJI0rCjpB+FQjYPsP'))
