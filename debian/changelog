@@ -1,3 +1,9 @@
+python-opsi (3.3.1.5-1) stable; urgency=low
+
+  * Fixed getSelections on lenny in module UI (snack)
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 06 Apr 2009 15:30:13 +0200
+
 python-opsi (3.3.1.4-1) stable; urgency=low
 
   * Tools.py 0.9.9.6

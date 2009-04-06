@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.1'
+__version__ = '0.9.1.2'
 
 # Constants
 LOCALE_DIR = '/usr/share/locale'
@@ -340,8 +340,7 @@ class SnackUI(UI):
 		entriesGrid = Grid(1, len(entries))
 		
 		row = 0
-		#group = RadioGroup()
-		group = 0
+		group = None
 		for entry in entries:
 			if radio:
 				group = entry['entry'] = SingleRadioButton(
@@ -371,7 +370,7 @@ class SnackUI(UI):
 		gridForm.add (textGrid, col=0, row=0, padding=(0, 0, 0, 1))
 		gridForm.add (entriesGrid, col=0, row=1, padding=(0, 0, 0, 1))
 		gridForm.add (buttonsGrid, col=0, row=2, padding=(0, 0, 0, 0))
-	        
+		
 		# help line
 		helpLine = 	"<ESC> %s | <F12> %s" % (cancelLabel, okLabel) + \
 				" | <Tab> %s" % _("move cursor") + \
@@ -381,7 +380,11 @@ class SnackUI(UI):
 		self.getScreen().pushHelpLine(helpLine)
 		
 		# run
-		buttonPressed = gridForm.runOnce()
+		gridForm.draw()
+		buttonPressed = gridForm.run()
+		
+		while (buttonPressed not in [ okButton, 'F12', cancelButton, 'ESC' ] ):
+			buttonPressed = gridForm.run()
 		
 		if (buttonPressed not in [ okButton, 'F12' ] ):
 			return None
