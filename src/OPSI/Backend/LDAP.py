@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.1.12'
+__version__ = '0.9.2'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -301,11 +301,8 @@ class LDAPBackend(DataBackend):
 						'depotid', 'windomain', 'nextbootservertype', 'nextbootserviceurl' ):
 				logger.error("Unknown networkConfig key '%s'" % key)
 				continue
-			if (key == 'depoturl'):
-				logger.error("networkConfig: Setting key 'depotUrl' is no longer supported, use depotId")
-				continue
-			if key in ('configurl', 'utilsurl'):
-				logger.error("networkConfig: Setting key '%s' is no longer supported" % key)
+			if key in ('depoturl', 'configurl', 'utilsurl'):
+				logger.warning("networkConfig: Setting key '%s' is no longer supported" % key)
 				continue
 			configNew[key] = value
 		config = configNew
@@ -586,7 +583,22 @@ class LDAPBackend(DataBackend):
 				group.deleteAttributeValue('uniqueMember', server.getDn())
 				group.writeToDirectory(self._ldap)
 			
-			if self._deleteServer:
+			deleteServer = self._deleteServer
+			if not deleteServer and server.exists(self._ldap):
+				logger.info("Removing opsi objectClasses from object '%s'" % server.getDn())
+				server.readFromDirectory(self._ldap)
+				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
+					server.setAttribute(attr, [])
+				server.removeObjectClass('opsiConfigserver')
+				server.removeObjectClass('opsiDepotserver')
+				server.removeObjectClass('opsiHost')
+				if not server.getObjectClasses():
+					# No object classes left => delete object
+					deleteServer = True
+				else:
+					server.writeToDirectory(self._ldap)
+			
+			if deleteServer:
 				# Delete server
 				if self._deleteServerCommand:
 					cmd = self._deleteServerCommand
@@ -597,15 +609,6 @@ class LDAPBackend(DataBackend):
 				elif server.exists(self._ldap):
 					# Delete host object and possible childs
 					server.deleteFromDirectory(self._ldap, recursive = True)
-			elif server.exists(self._ldap):
-				logger.info("Removing opsi objectClasses from object '%s'" % server.getDn())
-				server.readFromDirectory(self._ldap)
-				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
-					server.setAttribute(attr, [])
-				server.removeObjectClass('opsiConfigserver')
-				server.removeObjectClass('opsiDepotserver')
-				server.removeObjectClass('opsiHost')
-				server.writeToDirectory(self._ldap)
 	
 	def deleteClient(self, clientId):
 		clientId = self._preProcessHostId(clientId)
@@ -654,7 +657,7 @@ class LDAPBackend(DataBackend):
 			elif client.exists(self._ldap):
 				logger.info("Removing opsi objectClasses from object '%s'" % client.getDn())
 				client.readFromDirectory(self._ldap)
-				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
+				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
 					client.setAttribute(attr, [])
 				client.removeObjectClass('opsiClient')
 				client.removeObjectClass('opsiHost')
@@ -722,8 +725,13 @@ class LDAPBackend(DataBackend):
 		hostDns = []
 		hostDnToDepotId = {}
 		networkConfigObj = Object( 'cn=%s,%s' % ( self.getServerId(), self._networkConfigsContainerDn ) )
-		networkConfigObj.readFromDirectory(self._ldap, 'opsiDepotserverReference')
-		defaultDepotDn = networkConfigObj.getAttribute('opsiDepotserverReference')
+		try:
+			networkConfigObj.readFromDirectory(self._ldap, 'opsiDepotserverReference')
+			defaultDepotDn = networkConfigObj.getAttribute('opsiDepotserverReference')
+		except Exception, e:
+			logger.warning("Failed to read default networkconfig: %s" % e)
+			defaultDepotDn = ''
+		
 		for depotId in depotIds:
 			logger.debug("Searching clients connected to depot '%s'" % depotId)
 			depotDn = self.getHostDn(depotId)
@@ -770,16 +778,21 @@ class LDAPBackend(DataBackend):
 		# Filter by group
 		if groupId:
 			filteredHostDns = []
-			group = Object( "cn=%s,%s" % (groupId, self._groupsContainerDn) )
+			group = None
 			try:
+				search = ObjectSearch(self._ldap, self._groupsContainerDn, filter='(&(objectClass=opsiGroup)(cn=%s))' % groupId)
+				group = search.getObject()
 				group.readFromDirectory(self._ldap)
 			except BackendMissingDataError, e:
 				raise BackendMissingDataError("Group '%s' not found: %s" % (groupId, e))
 			
-			for member in group.getAttribute('uniqueMember', valuesAsList=True):
-				if member in hostDns and not member in filteredHostDns:
-					filteredHostDns.append(member)
-			hostDns = filteredHostDns
+			try:
+				for member in group.getAttribute('uniqueMember', valuesAsList=True):
+					if member in hostDns and not member in filteredHostDns:
+						filteredHostDns.append(member)
+				hostDns = filteredHostDns
+			except BackendMissingDataError, e:
+				logger.warning("Group '%s' is empty" % groupId)
 		
 		# Filter by product state
 		if installationStatus or actionRequest or productVersion or packageVersion:
@@ -1020,7 +1033,21 @@ class LDAPBackend(DataBackend):
 			productsContainer.deleteFromDirectory(self._ldap, recursive = True)
 		
 		if depot:
-			if self._deleteServer:
+			deleteServer = self._deleteServer
+			if not deleteServer and depot.exists(self._ldap):
+				logger.info("Removing opsi objectClasses from object '%s'" % depot.getDn())
+				depot.readFromDirectory(self._ldap)
+				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
+					depot.setAttribute(attr, [])
+				depot.removeObjectClass('opsiDepotserver')
+				depot.removeObjectClass('opsiHost')
+				if not depot.getObjectClasses():
+					# No object classes left => delete object
+					deleteServer = True
+				else:
+					depot.writeToDirectory(self._ldap)
+			
+			if deleteServer:
 				# Delete server
 				if self._deleteServerCommand:
 					cmd = self._deleteServerCommand
@@ -1031,14 +1058,6 @@ class LDAPBackend(DataBackend):
 				elif depot.exists(self._ldap):
 					# Delete host object and possible childs
 					depot.deleteFromDirectory(self._ldap, recursive = True)
-			elif depot.exists(self._ldap):
-				logger.info("Removing opsi objectClasses from object '%s'" % depot.getDn())
-				depot.readFromDirectory(self._ldap)
-				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
-					depot.setAttribute(attr, [])
-				depot.removeObjectClass('opsiDepotserver')
-				depot.removeObjectClass('opsiHost')
-				depot.writeToDirectory(self._ldap)
 		
 	def getOpsiHostKey(self, hostId):
 		hostId = self._preProcessHostId(hostId)
@@ -1047,7 +1066,7 @@ class LDAPBackend(DataBackend):
 		host.readFromDirectory(self._ldap, 'opsiHostKey')
 		try:
 			return host.getAttribute('opsiHostKey')
-		except BackendMissingDataError:
+		except BackendMissingDataError, e:
 			raise BackendMissingDataError("Cannot find opsiHostKey for host '%s': %s" % (hostId, e))
 		
 	def setOpsiHostKey(self, hostId, opsiHostKey):
@@ -1076,7 +1095,16 @@ class LDAPBackend(DataBackend):
 		hostId = self._preProcessHostId(hostId)
 		host = Object( self.getHostDn(hostId) )
 		host.readFromDirectory(self._ldap, self._hostAttributeHardwareAddress)
-		return host.getAttribute(self._hostAttributeHardwareAddress, valuesAsList = True)
+		try:
+			return host.getAttribute(self._hostAttributeHardwareAddress, valuesAsList = True)
+		except BackendMissingDataError:
+			return []
+		
+	def getMacAddress(self, hostId):
+		macs = self.getMacAddresses_list(hostId)
+		if macs:
+			return macs[0]
+		return ''
 		
 	def setMacAddresses(self, hostId, macs=[]):
 		for i in range(len(macs)):
@@ -1427,7 +1455,7 @@ class LDAPBackend(DataBackend):
 		if not objectId:
 			objectId = self.getDepotId()
 		
-		objectId = objectId.lower()
+		objectId = self._preProcessHostId(objectId)
 		
 		objectClass = 'opsiProduct'
 		if (productType == 'localboot'):
@@ -1499,7 +1527,7 @@ class LDAPBackend(DataBackend):
 	
 	def getProductInstallationStatus_hash(self, productId, objectId):
 		productId = productId.lower()
-		objectId = objectId.lower()
+		objectId = self._preProcessHostId(objectId)
 		
 		status = { 
 			'productId':		productId,
@@ -1526,7 +1554,7 @@ class LDAPBackend(DataBackend):
 		productState.readFromDirectory(self._ldap)
 		attributes = productState.getAttributeDict()
 		
-		status['installationStatus'] = attributes.get('opsiProductInstallationStatus', 'not_installed')
+		status['installationStatus'] =  attributes.get('opsiProductInstallationStatus', 'not_installed')
 		status['productVersion'] = 	attributes.get('opsiProductVersion')
 		status['packageVersion'] = 	attributes.get('opsiPackageVersion')
 		status['lastStateChange'] = 	attributes.get('lastStateChange')
@@ -1535,7 +1563,7 @@ class LDAPBackend(DataBackend):
 		return status
 	
 	def getProductInstallationStatus_listOfHashes(self, objectId):
-		objectId = objectId.lower()
+		objectId = self._preProcessHostId(objectId)
 		
 		installationStatus = []
 		
@@ -2637,8 +2665,7 @@ class LDAPBackend(DataBackend):
 			return False
 		search.getObject().deleteFromDirectory(self._ldap)
 		return True
-
-
+	
 
 
 
@@ -3011,7 +3038,7 @@ class LDAPSession:
 			try:
 				result = self._ldap.search_s(baseDn, scope, filter, attributes)
 			except ldap.LDAPError, e:
-				if (e.__str__().lower().find('ldap connection invalid') != -1):
+				if isinstance(e, ldap.SERVER_DOWN) or (e.__str__().lower().find('ldap connection invalid') != -1):
 					# Possibly timed out
 					logger.warning("LDAP connection possibly timed out: %s, trying to reconnect" % e)
 					self.connect()
@@ -3041,7 +3068,7 @@ class LDAPSession:
 			try:
 				self._ldap.delete_s(dn)
 			except ldap.LDAPError, e:
-				if (e.__str__().lower().find('ldap connection invalid') != -1):
+				if isinstance(e, ldap.SERVER_DOWN) or (e.__str__().lower().find('ldap connection invalid') != -1):
 					# Possibly timed out
 					logger.warning("LDAP connection possibly timed out: %s, trying to reconnect" % e)
 					self.connect()
@@ -3068,7 +3095,7 @@ class LDAPSession:
 			try:
 				self._ldap.modify_s(dn,attrs)
 			except ldap.LDAPError, e:
-				if (e.__str__().lower().find('ldap connection invalid') != -1):
+				if isinstance(e, ldap.SERVER_DOWN) or (e.__str__().lower().find('ldap connection invalid') != -1):
 					# Possibly timed out
 					logger.warning("LDAP connection possibly timed out: %s, trying to reconnect" % e)
 					self.connect()
@@ -3093,7 +3120,7 @@ class LDAPSession:
 			try:
 				self._ldap.add_s(dn,attrs)
 			except ldap.LDAPError, e:
-				if (e.__str__().lower().find('ldap connection invalid') != -1):
+				if isinstance(e, ldap.SERVER_DOWN) or (e.__str__().lower().find('ldap connection invalid') != -1):
 					# Possibly timed out
 					logger.warning("LDAP connection possibly timed out: %s, trying to reconnect" % e)
 					self.connect()

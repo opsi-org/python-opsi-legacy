@@ -1,3 +1,16 @@
+python-opsi (3.3.1.7-1) stable; urgency=low
+
+  * File31.py 0.2.9
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 04 May 2009 14:01:27 +0200
+
+python-opsi (3.3.1.6-1) stable; urgency=low
+
+  * LDAP.py 0.9.2
+     reconnect on ldap.SERVER_DOWN
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 04 May 2009 14:01:27 +0200
+
 python-opsi (3.3.1.5-1) stable; urgency=low
 
   * Fixed getSelections on lenny in module UI (snack)
