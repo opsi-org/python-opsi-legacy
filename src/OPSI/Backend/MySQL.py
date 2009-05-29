@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 # Imports
 import MySQLdb, warnings, time
@@ -721,8 +721,10 @@ class MySQLBackend(DataBackend):
 	def getSoftwareInformation_listOfHashes(self):
 		software = []
 		for sw in self.__mysql__.db_getSet('SELECT * FROM `SOFTWARE`'):
-			installationCount = len(self.__mysql__.db_getSet(
-				'SELECT `softwareId` FROM `SOFTWARE_CONFIG` WHERE `audit_state` = 1 AND `softwareId` = "%s"' % sw['softwareId']))
+			installedOn = []
+			for res in self.__mysql__.db_getSet('SELECT `hostId` FROM `SOFTWARE_CONFIG` WHERE `audit_state` = 1 AND `softwareId` = "%s"' % sw['softwareId']):
+				installedOn.append(res['hostId'].encode('utf-8'))
+			
 			for key in ('displayName', 'displayVersion', 'uninstallString', 'binaryName'):
 				if not sw[key]:
 					sw[key] = ''
@@ -730,7 +732,8 @@ class MySQLBackend(DataBackend):
 			if not sw['installSize']:
 				sw['installSize'] = 0
 			sw['windowsSoftwareId'] = sw['softwareId'].encode('utf-8')
-			sw['installationCount'] = installationCount
+			sw['installedOn'] = installedOn
+			sw['installationCount'] = len(installedOn)
 			del sw['softwareId']
 			software.append(sw)
 		return software
@@ -1067,7 +1070,7 @@ class MySQLBackend(DataBackend):
 		if not licenseContractId:
 			i=0
 			while True:
-				licenseContractId = time.strftime('%Y%m%d%H%M%S', time.localtime()) + str(i)
+				licenseContractId = time.strftime('c_%Y-%m-%d_%H:%M:%S_', time.localtime()) + str(i)
 				if not self.__mysql__.db_getRow('SELECT `licenseContractId` FROM `LICENSE_CONTRACT` WHERE `licenseContractId`="%s"' % licenseContractId):
 					break
 				i+=1
@@ -1155,7 +1158,7 @@ class MySQLBackend(DataBackend):
 		if not softwareLicenseId:
 			i=0
 			while True:
-				softwareLicenseId = time.strftime('%Y%m%d%H%M%S', time.localtime()) + str(i)
+				softwareLicenseId = time.strftime('l_%Y-%m-%d_%H:%M:%S_', time.localtime()) + str(i)
 				if not self.__mysql__.db_getRow('SELECT `softwareLicenseId` FROM `SOFTWARE_LICENSE` WHERE `softwareLicenseId`="%s"' % softwareLicenseId):
 					break
 				i+=1
@@ -1169,8 +1172,8 @@ class MySQLBackend(DataBackend):
 		if not licenseType:
 			licenseType = 'OEM'
 			maxInstallations = 1
-		if not maxInstallations:
-			maxInstallations = 1
+		if not maxInstallations or (maxInstallations < 0):
+			maxInstallations = 0
 		if expirationDate:
 			expirationDate = time.strftime('%Y-%m-%d', time.strptime(expirationDate, '%Y-%m-%d'))
 		if not licenseType in SOFTWARE_LICENSE_TYPES:
@@ -1263,7 +1266,7 @@ class MySQLBackend(DataBackend):
 		if not licensePoolId:
 			i=0
 			while True:
-				licensePoolId = time.strftime('%Y%m%d%H%M%S', time.localtime()) + str(i)
+				licensePoolId = time.strftime('p_%Y-%m-%d_%H:%M:%S_', time.localtime()) + str(i)
 				if not self.__mysql__.db_getRow('SELECT `licensePoolId` FROM `LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId):
 					break
 				i+=1
@@ -1324,13 +1327,22 @@ class MySQLBackend(DataBackend):
 			licencePools.append(self.getLicensePool_hash(licensePool['licensePoolId'].encode('utf-8')))
 		return licencePools
 	
-	def deleteLicensePool(self, licensePoolId):
+	def deleteLicensePool(self, licensePoolId, deleteLicenses=False):
 		if not self._licenseManagementEnabled: raise BackendModuleDisabledError("License management module currently disabled")
 		if not re.search(LICENSE_POOL_ID_REGEX, licensePoolId):
 			raise BackendBadValueError("Bad license pool id '%s'" % licensePoolId)
 		
-		if self.__mysql__.db_getRow('SELECT `licensePoolId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId):
-			raise BackendReferentialIntegrityError("Refusing to delete license pool '%s', one ore more licenses/keys refer to pool" % licensePoolId)
+		result = self.__mysql__.db_getSet('SELECT `softwareLicenseId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId)
+		if result:
+			if not deleteLicenses:
+				raise BackendReferentialIntegrityError("Refusing to delete license pool '%s', one ore more licenses/keys refer to pool" % licensePoolId)
+			else:
+				for res in result:
+					softwareLicenseId = res['softwareLicenseId']
+					self.__mysql__.db_delete('LICENSE_USED_BY_HOST', '`softwareLicenseId` = "%s"' % softwareLicenseId)
+					self.__mysql__.db_delete('SOFTWARE_LICENSE_TO_LICENSE_POOL', '`softwareLicenseId` = "%s"' % softwareLicenseId)
+					self.__mysql__.db_delete('SOFTWARE_LICENSE', '`softwareLicenseId` = "%s"' % softwareLicenseId)
+					
 		self.__mysql__.db_delete('PRODUCT_ID_TO_LICENSE_POOL', '`licensePoolId`="%s"' % licensePoolId)
 		self.__mysql__.db_delete('WINDOWS_SOFTWARE_ID_TO_LICENSE_POOL', '`licensePoolId`="%s"' % licensePoolId)
 		self.__mysql__.db_delete('LICENSE_POOL', '`licensePoolId`="%s"' % licensePoolId)
@@ -1419,7 +1431,7 @@ class MySQLBackend(DataBackend):
 		if not softwareLicenseId:
 			# Search an available license
 			for res in result:
-				maxInstallations = 0
+				maxInstallations = -1
 				installations = len(self.__mysql__.db_getSet(	'SELECT * FROM `LICENSE_USED_BY_HOST`' + \
 										' WHERE `softwareLicenseId`="%s"' % res['softwareLicenseId']))
 				sumInstallations += installations
@@ -1428,6 +1440,11 @@ class MySQLBackend(DataBackend):
 											% res['softwareLicenseId'])
 				if lic:
 					maxInstallations = int(lic['maxInstallations'])
+					if (maxInstallations == 0):
+						# 0 = infinite
+						softwareLicenseId = res['softwareLicenseId']
+						licenseKey = res['licenseKey']
+						break
 					sumMaxInstallations += maxInstallations
 				if (installations < maxInstallations):
 					softwareLicenseId = res['softwareLicenseId']
@@ -1439,26 +1456,6 @@ class MySQLBackend(DataBackend):
 		if not softwareLicenseId:
 			raise LicenseMissingError("No license available")
 		return (softwareLicenseId, licenseKey)
-	
-	#def getSoftwareLicenses_listOfHashes(self, licensePoolId=""):
-	#	if not self._licenseManagementEnabled: raise BackendModuleDisabledError("License management module currently disabled")
-	#	licences = []
-	#	
-	#	sql = ''
-	#	if licensePoolId:
-	#		if not licensePoolId in self.getLicensePoolIds_list():
-	#			raise BackendMissingDataError("License pool '%s' does not exist" % licensePoolId)
-	#		sql = 'SELECT * FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `licensePoolId`="%s"' % (licensePoolId)
-	#	else:
-	#		sql = 'SELECT * FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL`'
-	#	
-	#	for licence in self.__mysql__.db_getSet(sql):
-	#		licence['softwareLicenseId'] = licence['softwareLicenseId'].encode('utf-8')
-	#		licence['licensePoolId']     = licence['licensePoolId'].encode('utf-8')
-	#		licence['licenseKey']        = licence['licenseKey'].encode('utf-8')
-	#		licences.append(licence)
-	#		
-	#	return licences
 	
 	def getOrCreateSoftwareLicenseUsage_hash(self, hostId, licensePoolId="", productId="", windowsSoftwareId=""):
 		if not self._licenseManagementEnabled: raise BackendModuleDisabledError("License management module currently disabled")
@@ -1605,41 +1602,57 @@ class MySQLBackend(DataBackend):
 		where = where[:-2]+')'
 		self.__mysql__.db_delete('LICENSE_USED_BY_HOST', where)
 	
-	def getLicenseStatistics_hash(self, licensePoolId):
+	def getLicenseStatistics_hash(self):
 		if not self._licenseManagementEnabled: raise BackendModuleDisabledError("License management module currently disabled")
 		
-		licensePool = self.__mysql__.db_getRow('SELECT * FROM `LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId)
-		if not licensePool:
-			raise BackendMissingDataError("License pool '%s' does not exist" % licensePoolId)
+		result = {}
 		
-		licenses = 0
-		installations = 0
-		maxInstallations = 0
-		remainingInstallations = 0
-		additionalLicensePoolIds = []
-		
-		for res in self.__mysql__.db_getSet('SELECT `softwareLicenseId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId):
-			for res2 in self.__mysql__.db_getSet('SELECT `licensePoolId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `softwareLicenseId`="%s"' % res['softwareLicenseId']):
-				if (res2['licensePoolId'] == licensePoolId):
-					continue
-				if not res2['licensePoolId'] in additionalLicensePoolIds:
-					additionalLicensePoolIds.append(res2['licensePoolId'])
-			licenses += 1
-			maxInstallations += int(self.__mysql__.db_getRow('SELECT `maxInstallations` FROM `SOFTWARE_LICENSE`' + \
-									' WHERE `softwareLicenseId`="%s"' % res['softwareLicenseId']).get('maxInstallations'))
-		
-		installations = len(self.__mysql__.db_getSet('SELECT `licenseKey` FROM `LICENSE_USED_BY_HOST` WHERE `licensePoolId`="%s"' % licensePoolId))
-		
-		remainingInstallations = maxInstallations - installations
-		where = ''
-		for additionalLicensePoolId in additionalLicensePoolIds:
-			if where: where += ' OR '
-			where += '`licensePoolId`="%s"' % additionalLicensePoolId
-			remainingInstallations -= len(self.__mysql__.db_getSet('SELECT `licenseKey` FROM `LICENSE_USED_BY_HOST` WHERE %s' % where))
-			if (remainingInstallations < 1):
-				remainingInstallations = 0
-		
-		return { 'licenses': licenses, 'installations': installations, 'maxInstallations': maxInstallations, 'remainingInstallations': remainingInstallations }
+		for pool in self.__mysql__.db_getSet('SELECT `licensePoolId` FROM `LICENSE_POOL`'):
+			licensePoolId = pool['licensePoolId'].encode('utf-8')
+			
+			licenses = 0
+			installedOn = []
+			maxInstallations = 0
+			remainingInstallations = 0
+			additionalLicensePoolIds = []
+			
+			for res in self.__mysql__.db_getSet('SELECT `softwareLicenseId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `licensePoolId`="%s"' % licensePoolId):
+				for res2 in self.__mysql__.db_getSet('SELECT `licensePoolId` FROM `SOFTWARE_LICENSE_TO_LICENSE_POOL` WHERE `softwareLicenseId`="%s"' % res['softwareLicenseId']):
+					if (res2['licensePoolId'] == licensePoolId):
+						continue
+					if not res2['licensePoolId'] in additionalLicensePoolIds:
+						additionalLicensePoolIds.append(res2['licensePoolId'])
+				licenses += 1
+				mi = int(self.__mysql__.db_getRow('SELECT `maxInstallations` FROM `SOFTWARE_LICENSE`' + \
+										' WHERE `softwareLicenseId`="%s"' % res['softwareLicenseId']).get('maxInstallations'))
+				if (mi == 0):
+					maxInstallations = 'infinite'
+				elif (maxInstallations != 'infinite'):
+					maxInstallations += mi
+			
+			for res in self.__mysql__.db_getSet('SELECT `hostId` FROM `LICENSE_USED_BY_HOST` WHERE `licensePoolId`="%s"' % licensePoolId):
+				installedOn.append(res['hostId'].encode('utf-8'))
+			
+			if (maxInstallations == 'infinite'):
+				remainingInstallations = 'infinite'
+			else:
+				remainingInstallations = maxInstallations - len(installedOn)
+				where = ''
+				for additionalLicensePoolId in additionalLicensePoolIds:
+					if where: where += ' OR '
+					where += '`licensePoolId`="%s"' % additionalLicensePoolId
+					remainingInstallations -= len(self.__mysql__.db_getSet('SELECT `licenseKey` FROM `LICENSE_USED_BY_HOST` WHERE %s' % where))
+					if (remainingInstallations < 1):
+						remainingInstallations = 0
+			
+			result[licensePoolId] = {
+				'licenses': licenses,
+				'installedOn': installedOn,
+				'installationCount': len(installedOn),
+				'maxInstallations': maxInstallations,
+				'remainingInstallations': remainingInstallations }
+			
+		return result
 		
 	# -------------------------------------------------
 	# -     Cleanup                                   -

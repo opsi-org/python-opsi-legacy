@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.8'
+__version__ = '0.9.9'
 
 # Imports
 import json, base64, urllib, httplib, new, stat, socket, random, time
@@ -47,63 +47,37 @@ logger = Logger()
 METHOD_POST = 1
 METHOD_GET = 2
 
-def non_blocking_connect_http(self):
-	''' Non blocking connect, needed for KillableThread '''
-	msg = "getaddrinfo returns an empty list"
-	socket.setdefaulttimeout(10)
-	for res in socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM):
-		af, socktype, proto, canonname, sa = res
-		try:
-			self.sock = socket.socket(af, socktype, proto)
-			self.sock.setblocking(0)
-			while True:
-				try:
-					self.sock.connect(sa)
-				except socket.error, e:
-					if e[0] in (106, 10056):
-						# Transport endpoint is already connected
-						break
-					if e[0] not in (114, 115, 10035):
-						raise
-					time.sleep(0.1)
-		except socket.error, msg:
-			if self.sock:
-				self.sock.close()
-			self.sock = None
-			continue
-		break
-	if not self.sock:
-		raise socket.error, msg
-	else:
-		self.sock.setblocking(1)
-	
-def non_blocking_connect_https(self):
+def non_blocking_connect_http(self, connectTimeout=0):
 	''' Non blocking connect, needed for KillableThread '''
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.setblocking(0)
-	# Nicer implementation but not raising the right exections!?
-	#try:
-	#	sock.connect((self.host, self.port))
-	#except socket.error, e:
-	#	if e[0] not in (115, 10035):
-	#		raise
-	#while True:
-	#	readyToWrite = select.select([], [sock], [], 0.1)[1]
-	#	if readyToWrite and (readyToWrite[0] == sock):
-	#		break
+	started = time.time()
 	while True:
 		try:
+			if (connectTimeout > 0) and ((time.time()-started) >= connectTimeout):
+				raise socket.timeout("Timed out after %d seconds" % connectTimeout)
 			sock.connect((self.host, self.port))
 		except socket.error, e:
 			if e[0] in (106, 10056):
 				# Transport endpoint is already connected
 				break
 			if e[0] not in (114, 115, 10035):
+				if sock:
+					sock.close()
 				raise
 			time.sleep(0.1)
 	sock.setblocking(1)
-	ssl = socket.ssl(sock, self.key_file, self.cert_file)
-	self.sock = httplib.FakeSocket(sock, ssl)
+	self.sock = sock
+	
+def non_blocking_connect_https(self, connectTimeout=0):
+	non_blocking_connect_http(self, connectTimeout)
+	try:
+		import ssl
+		self.sock = ssl.wrap_socket(self.sock, self.key_file, self.cert_file)
+	except ImportError, e:
+		# python < 2.6
+		ssl = socket.ssl(self.sock, self.key_file, self.cert_file)
+		self.sock = httplib.FakeSocket(self.sock, ssl)
 
 # ======================================================================================================
 # =                                   CLASS JSONRPCBACKEND                                             =
@@ -127,6 +101,7 @@ class JSONRPCBackend(DataBackend):
 		self.__protocol = 'https'
 		self.__method = METHOD_POST
 		self.__timeout = None
+		self.__connectTimeout = 30
 		self.__connectOnInit = True
 		self._defaultDomain = None
 		
@@ -141,6 +116,7 @@ class JSONRPCBackend(DataBackend):
 			elif (option.lower() == 'defaultdomain'): 	self._defaultDomain = value
 			elif (option.lower() == 'sessionid'): 		self.__sessionId = value
 			elif (option.lower() == 'timeout'): 		self.__timeout = value
+			elif (option.lower() == 'connecttimeout'): 	self.__connectTimeout = value
 			elif (option.lower() == 'connectoninit'):	self.__connectOnInit = value
 			elif (option.lower() == 'method'):
 				if (value.lower() == 'get'):
@@ -195,11 +171,11 @@ class JSONRPCBackend(DataBackend):
 			if (self.__protocol == 'https'):
 				logger.info("Opening https connection to %s:%s" % (host, port))
 				self.__connection = httplib.HTTPSConnection(host, port)
-				non_blocking_connect_https(self.__connection)
+				non_blocking_connect_https(self.__connection, self.__connectTimeout)
 			else:
 				logger.info("Opening http connection to %s:%s" % (host, port))
 				self.__connection = httplib.HTTPConnection(host, port)
-				non_blocking_connect_http(self.__connection)
+				non_blocking_connect_http(self.__connection, self.__connectTimeout)
 				
 			self.__connection.connect()
 			
@@ -207,9 +183,9 @@ class JSONRPCBackend(DataBackend):
 			if not self.possibleMethods:
 				self.possibleMethods = self._jsonRPC('getPossibleMethods_listOfHashes', retry=False)
 			
-			logger.info( "Successfully connected to '%s:%s'" % (host, port) ) 
+			logger.info( "Successfully connected to '%s:%s'" % (host, port) )
 		except Exception, e:
-			raise BackendIOError("Cannot connect to '%s': %s" % (self.__address, e))
+			raise BackendIOError("Failed to connect to '%s': %s" % (self.__address, e))
 		
 		for method in self.possibleMethods:
 			if (method['name'].lower() == "getpossiblemethods_listofhashes"):

@@ -76,9 +76,9 @@ HARDWARE_CLASSES = (	'UNKNOWN',
 			'HARDDISK' )
 
 SOFTWARE_LICENSE_TYPES = ( 'OEM', 'RETAIL', 'VOLUME' )
-SOFTWARE_LICENSE_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\.\-]+$")
-LICENSE_CONTRACT_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\.\-]+$")
-LICENSE_POOL_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\.\-]+$")
+SOFTWARE_LICENSE_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\:\.\-]+$")
+LICENSE_CONTRACT_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\:\.\-]+$")
+LICENSE_POOL_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\:\.\-]+$")
 GROUP_ID_REGEX = re.compile("^[a-zA-Z0-9\s\_\.\-]+$")
 HOST_NAME_REGEX = re.compile("^[a-zA-Z0-9\_\-]+$")
 CLIENT_NAME_REGEX = HOST_NAME_REGEX
@@ -93,20 +93,30 @@ class genericError(Exception):
 	""" Base class for OPSI Backend exceptions. """
 	
 	ExceptionShortDescription = "OPSI-Backend generic exception"
+	_message = None
+	
 	
 	def __init__(self, message = None):
-		self.message = message
+		self._message = message
 	
 	def __str__(self):
 		#return "<%s: %s>" % (self.__class__.__name__, self.message)
-		return str(self.message)
+		return str(self._message)
+	
+	def message():
+		def get(self):
+			return self._message
+		def set(self, value):
+			self._message = value
+		return property(get, set)
 	
 	def complete_message(self):
 		if self.message:
-			return "%s: %s" % (self.ExceptionShortDescription, self.message)
+			return "%s: %s" % (self.ExceptionShortDescription, self._message)
 		else:
 			return "%s" % self.ExceptionShortDescription
-
+	
+	
 class BackendError(genericError):
 	""" Exception raised if there is an error in the backend. """
 	ExceptionShortDescription = "Backend error"
