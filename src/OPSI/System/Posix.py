@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2'
+__version__ = '1.2.1'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -1163,14 +1163,25 @@ def runDosemu(harddisk = None, todo = ()):
 def getBlockDeviceBusType(device):
 	# Returns either 'IDE', 'SCSI', 'SATA', 'RAID' or None (not found)
 	(devs, type) = ([], None)
+	if os.path.islink(device):
+		d = os.readlink(device)
+		if not d.startswith('/'):
+			d = os.path.join(os.path.dirname(device), d)
+		device = d
+		
 	for line in execute('%s --disk --cdrom' % which('hwinfo')):
-		if not re.search('^\s+', line):
+		if re.search('^\s+$', line):
 			(devs, type) = ([], None)
 			continue
 		
-		match = re.search('^\s+Device Files:(.*)$', line)
+		match = re.search('^\s+Device Files*:(.*)$', line)
 		if match:
-			devs = match.group(1).split(',')
+			if (match.group(1).find(',') != -1):
+				devs = match.group(1).split(',')
+			elif (match.group(1).find('(') != -1):
+				devs = match.group(1).replace(')', ' ').split('(')
+			else:
+				devs = [ match.group(1) ]
 			for i in range(len(devs)):
 				devs[i] = devs[i].strip()
 		
@@ -1178,6 +1189,8 @@ def getBlockDeviceBusType(device):
 		if match:
 			type = match.group(1)
 		
+		#print type, devs, device
+			
 		if devs and device in devs and type:
 			logger.info("Bus type of device '%s' is '%s'" % (device, type))
 			return type

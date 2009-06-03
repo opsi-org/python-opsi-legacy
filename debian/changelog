@@ -1,9 +1,12 @@
-python-opsi (3.4.0.0-a1) unstable; urgency=low
+python-opsi (3.4.0.0-rc1) unstable; urgency=low
 
   * Introducing license management
   * JSONRPC backend: non-blocking connect
+  * Introducing modules file /etc/opsi/modules
+  * Added /usr/share/opsi/opsi-fire-event.py
+  * opsi-admin 1.0
 
- -- Jan Schneider <j.schneider@uib.de>  Wed, 04 Mar 2009 14:04:07 +0100
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 02 Jun 2009 12:49:22 +0200
 
 python-opsi (3.3.1.5-1) stable; urgency=low
 

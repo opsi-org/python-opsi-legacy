@@ -71,10 +71,13 @@ def non_blocking_connect_http(self, connectTimeout=0):
 	
 def non_blocking_connect_https(self, connectTimeout=0):
 	non_blocking_connect_http(self, connectTimeout)
-	import ssl
-	self.sock = ssl.wrap_socket(self.sock, self.key_file, self.cert_file)
-	#ssl = socket.ssl(self.sock, self.key_file, self.cert_file)
-	#self.sock = httplib.FakeSocket(self.sock, ssl)
+	try:
+		import ssl
+		self.sock = ssl.wrap_socket(self.sock, self.key_file, self.cert_file)
+	except ImportError, e:
+		# python < 2.6
+		ssl = socket.ssl(self.sock, self.key_file, self.cert_file)
+		self.sock = httplib.FakeSocket(self.sock, ssl)
 
 # ======================================================================================================
 # =                                   CLASS JSONRPCBACKEND                                             =

@@ -63,6 +63,7 @@ binary-stamp:
 	mkdir -p debian/python-opsi/usr/share/opsi
 	install -m 0755 files/share/init-opsi-mysql-db.py debian/python-opsi/usr/share/opsi/
 	install -m 0755 files/share/register-depot.py debian/python-opsi/usr/share/opsi/
+	install -m 0755 files/share/opsi-fire-event.py debian/python-opsi/usr/share/opsi/
 	echo $(OPSI_VERSION) > debian/python-opsi/etc/opsi/version
 	
 binary-indep: build-indep binary-indep-stamp

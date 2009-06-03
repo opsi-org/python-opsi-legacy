@@ -65,6 +65,7 @@ install -m 0644 files/opsi-standalone.schema $RPM_BUILD_ROOT/etc/openldap/schema
 mkdir -p $RPM_BUILD_ROOT/usr/share/opsi
 install -m 0755 files/share/init-opsi-mysql-db.py $RPM_BUILD_ROOT/usr/share/opsi/
 install -m 0755 files/share/register-depot.py $RPM_BUILD_ROOT/usr/share/opsi/
+install -m 0755 files/share/opsi-fire-event.py $RPM_BUILD_ROOT/usr/share/opsi/
 echo %{version} > $RPM_BUILD_ROOT/etc/opsi/version
 mkdir -p $RPM_BUILD_ROOT/var/lib/opsi
 
@@ -143,6 +144,7 @@ fi
 /usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
 /usr/share/opsi/init-opsi-mysql-db.py
 /usr/share/opsi/register-depot.py
+/usr/share/opsi/opsi-fire-event.py
 
 # directories
 %dir /var/lib/opsi

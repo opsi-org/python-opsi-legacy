@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 # Imports
-import os, stat, types, re, socket, new, base64
+import os, stat, types, re, socket, new, base64, time
 try:
 	from hashlib import md5
 except ImportError:
@@ -1168,10 +1168,7 @@ class BackendManager(DataBackend):
 				(module, state) = line.split('=', 1)
 				module = module.strip().lower()
 				state = state.strip()
-				if (module == 'signature'):
-					modules[module] = state
-					continue
-				if (module == 'customer'):
+				if module in ('signature', 'customer', 'expires'):
 					modules[module] = state
 					continue
 				state = state.lower()
@@ -1186,7 +1183,9 @@ class BackendManager(DataBackend):
 			if not modules.get('customer'):
 				modules = {'valid': False}
 				raise Exception('Customer not found')
-			
+			if (modules.get('expires', '') != 'never') and (time.mktime(time.strptime(modules.get('expires', '2000-01-01'), "%Y-%m-%d")) - time.time() <= 0):
+				modules = {'valid': False}
+				raise Exception('Signature expired')
 			publicKey = keys.getPublicKeyObject(data = base64.decodestring('AAAAB3NzaC1yc2EAAAADAQABAAABAQCAD/I79Jd0eKwwfuVwh5B2z+S8aV0C5suItJa18RrYip+d4P0ogzqoCfOoVWtDojY96FDYv+2d73LsoOckHCnuh55GA0mtuVMWdXNZIE8Avt/RzbEoYGo/H0weuga7I8PuQNC/nyS8w3W8TH4pt+ZCjZZoX8S+IizWCYwfqYoYTMLgB0i+6TCAfJj3mNgCrDZkQ24+rOFS4a8RrjamEz/b81noWl9IntllK1hySkR+LbulfTGALHgHkDUlk0OSu+zBPw/hcDSOMiDQvvHfmR4quGyLPbQ2FOVm1TzE0bQPR+Bhx4V8Eo2kNYstG2eJELrz7J1TJI0rCjpB+FQjYPsP'))
 			data = ''
 			mks = modules.keys()

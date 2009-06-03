@@ -37,7 +37,7 @@ __version__ = '1.0'
 import MySQLdb, sys, os, getpass
 from _mysql_exceptions import *
 
-from OPSI.Backend.MySQL import MySQLBackend
+from OPSI.Backend.MySQL import MySQLBackend, MySQL
 from OPSI.Logger import *
 from OPSI import Tools
 
@@ -140,9 +140,65 @@ try:
 	print >> f, ""
 	f.close()
 	
-	# Create initial database tables
+	tables = {}
+	mysql = MySQL( username = databaseUser, password = databasePass, address = databaseHost, database = databaseName )
+	logger.debug("Current tables:")
+	for i in mysql.db_getSet('SHOW TABLES;'):
+		tableName = i.values()[0]
+		logger.debug(" [ %s ]" % tableName)
+		tables[tableName] = []
+		for j in mysql.db_getSet('SHOW COLUMNS FROM `%s`' % tableName):
+			logger.debug("      %s" % j)
+			tables[tableName].append(j['Field'])
+	
+	if 'HOST' in tables.keys() and 'host_id' in tables['HOST']:
+		logger.notice("Updating database from opsi 3.3 to 3.4")
+		
+		# SOFTWARE_CONFIG
+		mysql.db_query("alter table SOFTWARE_CONFIG add `hostId` varchar(50) NOT NULL;")
+		mysql.db_query("alter table SOFTWARE_CONFIG add `softwareId` varchar(100) NOT NULL;")
+		for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
+			mysql.db_query("update SOFTWARE_CONFIG set `hostId`='%s' where `host_id`=%d;" % (res['hostId'], res['host_id']))
+		for res in mysql.db_getSet("SELECT softwareId,software_id FROM `SOFTWARE` WHERE `softwareId` != ''"):
+			mysql.db_query("update SOFTWARE_CONFIG set `softwareId`='%s' where `software_id`=%d;" % (res['softwareId'], res['software_id']))
+		mysql.db_query("alter table SOFTWARE_CONFIG drop `host_id`;")
+		mysql.db_query("alter table SOFTWARE_CONFIG drop `software_id`;")
+		mysql.db_query("alter table SOFTWARE_CONFIG DEFAULT CHARACTER set utf8;")
+		mysql.db_query("alter table SOFTWARE_CONFIG ENGINE = InnoDB;")
+		
+		# HARDWARE_CONFIG
+		for key in tables.keys():
+			if not key.startswith('HARDWARE_CONFIG'):
+				continue
+			mysql.db_query("alter table %s add `hostId` varchar(50) NOT NULL;" % key)
+			for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
+				mysql.db_query("update %s set `hostId` = '%s' where `host_id` = %d;" % (key, res['hostId'], res['host_id']))
+			mysql.db_query("alter table %s drop `host_id`;" % key)
+			mysql.db_query("alter table %s DEFAULT CHARACTER set utf8;" % key)
+			mysql.db_query("alter table %s ENGINE = InnoDB;" % key)
+		
+		# SOFTWARE
+		mysql.db_query("alter table SOFTWARE drop `software_id`;")
+		mysql.db_query("alter table SOFTWARE add primary key (`softwareId`);")
+		
+		# HOST
+		mysql.db_query("alter table HOST drop `host_id`;")
+		mysql.db_query("alter table HOST add primary key (`hostId`);")
+		mysql.db_query("alter table HOST add `type` varchar(20);")
+		mysql.db_query("alter table HOST add `description` varchar(100);")
+		mysql.db_query("alter table HOST add `notes` varchar(500);")
+		mysql.db_query("alter table HOST add `hardwareAddress` varchar(17);")
+		mysql.db_query("alter table HOST add `lastSeen` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00';")
+		mysql.db_query("alter table HOST DEFAULT CHARACTER set utf8;")
+		mysql.db_query("alter table HOST ENGINE = InnoDB;")
+		
+		mysql.db_query("update HOST set `type` = 'OPSI_CLIENT' where `hostId` != '';")
+	mysql.db_close()
+	
+	## Create initial database tables
 	backend = MySQLBackend( username = databaseUser, password = databasePass, address = databaseHost, args = { 'database': databaseName } )
 	backend.createOpsiBase()
+
 except KeyboardInterrupt:
 	pass
 except Exception, e:
