@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.3'
+__version__ = '0.3.3.1'
 
 # Imports
 import MySQLdb, warnings, time
@@ -102,8 +102,10 @@ class MySQL:
 			colNames += "`%s`, " % key
 			if type(value) in (float, long, int, bool):
 				values += "%s, " % value
-			else:
+			elif type(value) is unicode:
 				values += "\'%s\', " % ('%s' % value).replace("\\", "\\\\").replace("'", "\\\'")
+			else:
+				values += "\'%s\', " % ('%s' % value.decode("utf-8")).replace("\\", "\\\\").replace("'", "\\\'")
 			
 		query = "INSERT INTO `%s` (%s) VALUES (%s);" % (table, colNames[:-2], values[:-2])
 		logger.debug2("db_insert: %s" % query)
@@ -617,6 +619,8 @@ class MySQLBackend(DataBackend):
 			domain = self._defaultDomain
 		
 		hostId = self._preProcessHostId(clientName + '.' + domain)
+		#if hostId in self.getDepotIds_list():
+		#	raise BackendBadValueError("Refusing to create client '%s' which is registered as depot server" % hostId)
 		
 		if self.__mysql__.db_getRow('SELECT `hostId` FROM `HOST` WHERE `hostId`="%s"' % hostId):
 			host = {}
@@ -660,6 +664,9 @@ class MySQLBackend(DataBackend):
 	
 	def deleteClient(self, clientId):
 		clientId = self._preProcessHostId(clientId)
+		#if clientId in self.getDepotIds_list():
+		#	raise BackendBadValueError("Refusing to delete client '%s' which is registered as depot server" % clientId)
+		
 		if self.__mysql__.db_getRow('SELECT `hostId` FROM `HOST` WHERE `hostId`="%s" AND `type`="OPSI_CLIENT"' % clientId):
 			self.__mysql__.db_delete('HOST', '`hostId`="%s"' % clientId)
 	

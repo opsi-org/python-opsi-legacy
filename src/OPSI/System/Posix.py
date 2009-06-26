@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -2007,17 +2007,25 @@ class Harddisk:
 							% (imageFile, self.getPartition(partition)['device']) )
 		try:
 			if pipe:
-				fi = popen2.Popen3(pipe[:-1] + " 2>/dev/null", capturestderr=False)
-				pid = fi.pid
-				head = fi.fromchild.read(128)
-				logger.debug("Read 128 Bytes from pipe '%s': %s" % ('pipe', head))
+				proc = subprocess.Popen(
+					pipe[:-1] + " 2>/dev/null",
+					shell	= True,
+					stdin	= subprocess.PIPE,
+					stdout	= subprocess.PIPE,
+					stderr	= None,
+				)
+				pid = proc.pid
+				
+				head = proc.stdout.read(128)
+				logger.debug("Read 128 Bytes from pipe '%s': %s" % (pipe, head.decode('ascii', 'replace')))
 				if (head.find('ntfsclone-image') != -1):
 					logger.notice("Image type is ntfsclone")
 					imageType = 'ntfsclone'
 				
-				fi.fromchild.close()
+				proc.stdout.close()
+				proc.stdin.close()
 				
-				while( fi.poll() == -1 ):
+				while( proc.poll() == None ):
 					pids = os.listdir("/proc")
 					for p in pids:
 						if not os.path.exists( os.path.join("/proc", p, "status") ):
@@ -2037,7 +2045,7 @@ class Harddisk:
 			else:
 				image = open(imageFile, 'r')
 				head = image.read(128)
-				logger.debug("Read 128 Bytes from file '%s': %s" % (imageFile, head))
+				logger.debug("Read 128 Bytes from file '%s': %s" % (imageFile, head.decode('ascii', 'replace')))
 				if (head.find('ntfsclone-image') != -1):
 					logger.info("Image type is ntfsclone")
 					imageType = 'ntfsclone'

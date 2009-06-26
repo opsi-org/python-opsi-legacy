@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.5'
+__version__ = '0.5.5.1'
 
 # Imports
 import re, socket, time
@@ -430,7 +430,7 @@ class Config(File):
 		if (len(hostBlocks) < 1):
 			raise BackendMissingDataError("Host '%s' not found" % hostname)
 		if (len(hostBlocks) > 1):
-			raise BackendIOError("Host '%s' more than one (%s) times" % len(hostBlocks))
+			raise BackendIOError("Host '%s' more than one (%s) times" % (hostname, len(hostBlocks)))
 		# Return inherited options up to group as hash
 		return hostBlocks[0].getParameters_hash(inherit = 'group')
 		

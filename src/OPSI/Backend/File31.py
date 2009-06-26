@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.4'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -631,6 +631,9 @@ class File31Backend(File, FileBackend):
 		
 		created = False
 		clientId = clientName.lower() + '.' + domain.lower()
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to create client '%s' which is registered as depot server" % clientId)
+		
 		iniFile = self.getClientIniFile(clientId)
 		
 		if os.path.exists(iniFile):
@@ -674,6 +677,9 @@ class File31Backend(File, FileBackend):
 		logger.error("Cannot delete server '%s': Not supported by File31 backend." % serverId)
 	
 	def deleteClient(self, clientId):
+		clientId = self._preProcessHostId(clientId)
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to delete client '%s' which is registered as depot server" % clientId)
 		# Delete client from groups
 		try:
 			ini = self.readIniFile(self.__groupsFile)
@@ -693,6 +699,7 @@ class File31Backend(File, FileBackend):
 			self.deleteFile(iniFile)
 	
 	def setHostLastSeen(self, hostId, timestamp):
+		hostId = self._preProcessHostId(hostId)
 		logger.debug("Setting last-seen timestamp for host '%s' to '%s'" % (hostId, timestamp))
 		
 		if hostId in self.getDepotIds_list():
@@ -776,7 +783,7 @@ class File31Backend(File, FileBackend):
 	
 	def deleteSoftwareInformation(self, hostId):
 		hostId = hostId.lower()
-		swFile = "%s.hw" % os.path.join(self.__auditInfoDir, hostId)
+		swFile = "%s.sw" % os.path.join(self.__auditInfoDir, hostId)
 		if not os.path.exists(swFile):
 			return
 		try:
