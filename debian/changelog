@@ -1,3 +1,9 @@
+python-opsi (3.3.1.8-1) stable; urgency=low
+
+  * File31.py 0.3
+
+ -- Jan Schneider <j.schneider@uib.de>  Thu, 25 Jun 2009 11:00:05 +0200
+
 python-opsi (3.3.1.7-1) stable; urgency=low
 
   * File31.py 0.2.9

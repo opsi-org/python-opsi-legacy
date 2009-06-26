@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.9'
+__version__ = '0.3'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -376,13 +376,16 @@ class File31Backend(File, FileBackend):
 			iniFile = self.__globalConfigFile
 		else:
 			# General config for special host => edit <hostname>.ini
-			ini = self.readIniFile(self.__globalConfigFile)
-			for (key, value) in ini.items('generalconfig'):
-				key = key.lower()
-				if not config.has_key(key):
-					continue
-				if (value == config[key]):
-					del config[key]
+			try:
+				ini = self.readIniFile(self.__globalConfigFile)
+				for (key, value) in ini.items('generalconfig'):
+					key = key.lower()
+					if not config.has_key(key):
+						continue
+					if (value == config[key]):
+						del config[key]
+			except Exception, e:
+				logger.warning(e)
 			iniFile = self.getClientIniFile(objectId)
 		
 		# Read the ini file
@@ -484,11 +487,8 @@ class File31Backend(File, FileBackend):
 						'depotid', 'windomain', 'nextbootservertype', 'nextbootserviceurl' ):
 				logger.error("Unknown networkConfig key '%s'" % key)
 				continue
-			if (key == 'depoturl'):
-				logger.error("networkConfig: Setting key 'depotUrl' is no longer supported, use depotId")
-				continue
-			if key in ('configurl', 'utilsurl'):
-				logger.error("networkConfig: Setting key '%s' is no longer supported" % key)
+			if key in ('depoturl', 'configurl', 'utilsurl'):
+				logger.warning("networkConfig: Setting key '%s' is no longer supported" % key)
 				continue
 			configNew[key] = value
 		config = configNew
@@ -499,13 +499,16 @@ class File31Backend(File, FileBackend):
 			iniFile = self.__globalConfigFile
 		else:
 			# Network config for special host => edit <hostname>.ini
-			ini = self.readIniFile(self.__globalConfigFile)
-			for (key, value) in ini.items('networkconfig'):
-				key = key.lower()
-				if not config.has_key(key):
-					continue
-				if (value == config[key]):
-					del config[key]
+			try:
+				ini = self.readIniFile(self.__globalConfigFile)
+				for (key, value) in ini.items('networkconfig'):
+					key = key.lower()
+					if not config.has_key(key):
+						continue
+					if (value == config[key]):
+						del config[key]
+			except Exception, e:
+				logger.warning(e)
 			iniFile = self.getClientIniFile(objectId)
 		
 		ini = self.readIniFile(iniFile)
@@ -628,6 +631,9 @@ class File31Backend(File, FileBackend):
 		
 		created = False
 		clientId = clientName.lower() + '.' + domain.lower()
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to create client '%s' which is registered as depot server" % clientId)
+		
 		iniFile = self.getClientIniFile(clientId)
 		
 		if os.path.exists(iniFile):
@@ -671,6 +677,9 @@ class File31Backend(File, FileBackend):
 		logger.error("Cannot delete server '%s': Not supported by File31 backend." % serverId)
 	
 	def deleteClient(self, clientId):
+		clientId = self._preProcessHostId(clientId)
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to delete client '%s' which is registered as depot server" % clientId)
 		# Delete client from groups
 		try:
 			ini = self.readIniFile(self.__groupsFile)
@@ -690,6 +699,7 @@ class File31Backend(File, FileBackend):
 			self.deleteFile(iniFile)
 	
 	def setHostLastSeen(self, hostId, timestamp):
+		hostId = self._preProcessHostId(hostId)
 		logger.debug("Setting last-seen timestamp for host '%s' to '%s'" % (hostId, timestamp))
 		
 		if hostId in self.getDepotIds_list():
@@ -773,7 +783,7 @@ class File31Backend(File, FileBackend):
 	
 	def deleteSoftwareInformation(self, hostId):
 		hostId = hostId.lower()
-		swFile = "%s.hw" % os.path.join(self.__auditInfoDir, hostId)
+		swFile = "%s.sw" % os.path.join(self.__auditInfoDir, hostId)
 		if not os.path.exists(swFile):
 			return
 		try:
@@ -929,6 +939,8 @@ class File31Backend(File, FileBackend):
 				raise BackendMissingDataError("Group '%s' does not exist" % groupId)
 			
 			for (key, value) in ini.items(groupId):
+				if (key.lower() == 'parentgroupid'):
+					continue
 				if (value == '0'):
 					logger.notice("Skipping host '%s' in group '%s' (value = 0)" % (key, groupId))
 					continue
@@ -1259,7 +1271,13 @@ class File31Backend(File, FileBackend):
 				if mac and not mac in macs:
 					macs.append(mac.strip().lower())
 		return macs
-		
+	
+	def getMacAddress(self, hostId):
+		macs = self.getMacAddresses_list(hostId)
+		if macs:
+			return macs[0]
+		return ''
+	
 	def setMacAddresses(self, hostId, macs=[]):
 		
 		logger.info("Setting mac addresses for host '%s'" % hostId)
@@ -1606,7 +1624,7 @@ class File31Backend(File, FileBackend):
 			for d in ('localboot', 'netboot'):
 				d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 				if not os.path.isdir(d):
-					logger.warning("Is not a directory: '%s'" % d)
+					logger.debug("Is not a directory: '%s'" % d)
 					continue
 				for f in os.listdir(d):
 					if (f.lower() == productId):
@@ -1710,7 +1728,7 @@ class File31Backend(File, FileBackend):
 			if (not productType or productType == 'localboot'):
 				localbootDir = os.path.join(depotDir, 'localboot')
 				if not os.path.exists(localbootDir):
-					logger.error("Directory '%s' does not exist" % localbootDir)
+					logger.warning("Directory '%s' does not exist" % localbootDir)
 				else:
 					for f in os.listdir(localbootDir):
 						productIds.append(f)
@@ -1718,7 +1736,7 @@ class File31Backend(File, FileBackend):
 			if (not productType or productType == 'netboot'):
 				netbootDir = os.path.join(depotDir, 'netboot')
 				if not os.path.exists(netbootDir):
-					logger.error("Directory '%s' does not exist" % netbootDir)
+					logger.warning("Directory '%s' does not exist" % netbootDir)
 				else:
 					for f in os.listdir(netbootDir):
 						productIds.append(f)
@@ -2209,7 +2227,7 @@ class File31Backend(File, FileBackend):
 			for d in ('localboot', 'netboot'):
 				d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 				if not os.path.isdir(d):
-					logger.warning("Is not a directory: '%s'" % d)
+					logger.debug("Is not a directory: '%s'" % d)
 					continue
 				for f in os.listdir(d):
 					productFiles.append(os.path.join(d, f))
@@ -2245,7 +2263,7 @@ class File31Backend(File, FileBackend):
 			for d in ('localboot', 'netboot'):
 				d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 				if not os.path.isdir(d):
-					logger.warning("Is not a directory: '%s'" % d)
+					logger.debug("Is not a directory: '%s'" % d)
 					continue
 				
 				for f in os.listdir(d):
@@ -2286,7 +2304,7 @@ class File31Backend(File, FileBackend):
 				for d in ('localboot', 'netboot'):
 					d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 					if not os.path.isdir(d):
-						logger.warning("Is not a directory: '%s'" % d)
+						logger.debug("Is not a directory: '%s'" % d)
 						continue
 					for f in os.listdir(d):
 						if (f == productId):
@@ -2334,7 +2352,7 @@ class File31Backend(File, FileBackend):
 				for d in ('localboot', 'netboot'):
 					d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 					if not os.path.isdir(d):
-						logger.warning("Is not a directory: '%s'" % d)
+						logger.debug("Is not a directory: '%s'" % d)
 						continue
 					for f in os.listdir(d):
 						if (f == productId):
@@ -2365,7 +2383,7 @@ class File31Backend(File, FileBackend):
 				for d in ('localboot', 'netboot'):
 					d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 					if not os.path.isdir(d):
-						logger.warning("Is not a directory: '%s'" % d)
+						logger.debug("Is not a directory: '%s'" % d)
 						continue
 					for f in os.listdir(d):
 						if (f == productId):
@@ -2568,7 +2586,7 @@ class File31Backend(File, FileBackend):
 			for d in ('localboot', 'netboot'):
 				d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 				if not os.path.isdir(d):
-					logger.warning("Is not a directory: '%s'" % d)
+					logger.debug("Is not a directory: '%s'" % d)
 					continue
 				for f in os.listdir(d):
 					if not productId or (f == productId):
@@ -2616,7 +2634,7 @@ class File31Backend(File, FileBackend):
 				for d in ('localboot', 'netboot'):
 					d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 					if not os.path.isdir(d):
-						logger.warning("Is not a directory: '%s'" % d)
+						logger.debug("Is not a directory: '%s'" % d)
 						continue
 					for f in os.listdir(d):
 						if (f == productId):
@@ -2655,7 +2673,7 @@ class File31Backend(File, FileBackend):
 				for d in ('localboot', 'netboot'):
 					d = os.path.join(self.__depotConfigDir, depotId, 'products', d)
 					if not os.path.isdir(d):
-						logger.warning("Is not a directory: '%s'" % d)
+						logger.debug("Is not a directory: '%s'" % d)
 						continue
 					for f in os.listdir(d):
 						if (f == productId):
