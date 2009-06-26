@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.5'
+__version__ = '1.0.6'
 
 # Imports
 import os, stat, types, re, socket, new, base64, time
@@ -813,6 +813,8 @@ class BackendManager(DataBackend):
 					defaultValue = p.defaultValue
 					if p.name in defaultProperties.keys():
 						defaultValue = defaultProperties[p.name]
+					
+					if type(defaultValue) is unicode: defaultValue = defaultValue.encode('utf-8')
 					
 					self.createProductPropertyDefinition(
 						p.productId,

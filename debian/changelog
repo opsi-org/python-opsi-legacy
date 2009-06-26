@@ -1,3 +1,11 @@
+python-opsi (3.4.0.0-rc2) unstable; urgency=low
+
+  * Tools.py 1.0.1: replaced popen by subprocess
+  * BackendManager 1.0.6: installPackage() encode defaultValue to utf-8
+  * Bugfix in LDAP.py and File31
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 16 Jun 2009 12:40:10 +0200
+
 python-opsi (3.4.0.0-rc1) unstable; urgency=low
 
   * Introducing license management

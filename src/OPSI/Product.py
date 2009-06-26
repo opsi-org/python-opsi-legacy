@@ -1267,5 +1267,12 @@ class ProductProperty:
 		self.possibleValues = possibleValues
 		self.defaultValue = defaultValue
 		self.value = value
-
+		if type(self.productId) is unicode:    self.productId = self.productId.encode('utf-8')
+		if type(self.name) is unicode:         self.name = self.name.encode('utf-8')
+		if type(self.description) is unicode:  self.description = self.description.encode('utf-8')
+		if type(self.defaultValue) is unicode: self.defaultValue = self.defaultValue.encode('utf-8')
+		if type(self.value) is unicode:        self.value = self.value.encode('utf-8')
+		if self.possibleValues:
+			for i in range(len(self.possibleValues)):
+				if type(self.possibleValues[i]) is unicode: self.possibleValues[i] = self.possibleValues[i].encode('utf-8')
 

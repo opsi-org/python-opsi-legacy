@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.4'
 
 # Imports
 import ldap, ldap.modlist, re, json
@@ -452,7 +452,7 @@ class LDAPBackend(DataBackend):
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
-						cmd = cmd.replace('%name%', clientName.lower())
+						cmd = cmd.replace('%name%', serverName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						
@@ -492,6 +492,8 @@ class LDAPBackend(DataBackend):
 			domain = self._defaultDomain
 		
 		hostId = self._preProcessHostId(clientName + '.' + domain)
+		if hostId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to create client '%s' which is registered as depot server" % hostId)
 		
 		# Create or update client object
 		created = False
@@ -618,6 +620,8 @@ class LDAPBackend(DataBackend):
 		except BackendMissingDataError:
 			pass
 		
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to delete client '%s' which is registered as depot server" % clientId)
 		# Delete product states container
 		productStatesContainer = Object("cn=%s,%s" % (clientId, self._productStatesContainerDn))
 		if productStatesContainer.exists(self._ldap):
@@ -934,7 +938,7 @@ class LDAPBackend(DataBackend):
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
-						cmd = cmd.replace('%name%', clientName.lower())
+						cmd = cmd.replace('%name%', depotName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						

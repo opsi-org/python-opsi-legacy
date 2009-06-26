@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 # Imports
-import time, json, gettext, os, re, random
+import time, json, gettext, os, re, random, subprocess
 try:
 	from hashlib import md5
 except ImportError:
@@ -240,46 +240,44 @@ def createArchive(filename, fileList, format='cpio', dereference = False, chdir=
 	if format not in ['cpio', 'tar']:
 		raise Exception("Unsupported archive format '%s'" % format)
 	
-	fi = None
-	import popen2
-	
+	proc = None
 	if (format == 'cpio'):
 		extraOptions = ''
 		if dereference:
 			extraOptions = '--dereference'
 		logger.debug("Executing: '%s %s --quiet -o -H crc -O \"%s\"'" % (System.which('cpio'), extraOptions, filename) )
-		fi = popen2.Popen3('%s %s --quiet -o -H crc -O "%s"' % (System.which('cpio'), extraOptions, filename), capturestderr=True)
+		proc = subprocess.Popen('%s %s --quiet -o -H crc -O "%s"' % (System.which('cpio'), extraOptions, filename),
+					shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	elif (format == 'tar'):
 		extraOptions = ''
 		if dereference:
 			extraOptions = '--dereference'
 		logger.debug("Executing: '%s %s --no-recursion --create --file \"%s\" -T -" % (System.which('tar'), extraOptions, filename))
-		fi = popen2.Popen3('%s %s --no-recursion --create --file "%s" -T -' % (System.which('tar'), extraOptions, filename), capturestderr=True)
-		
-	flags = fcntl.fcntl(fi.childerr, fcntl.F_GETFL)
-	fcntl.fcntl(fi.childerr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+		proc = subprocess.Popen('%s %s --no-recursion --create --file "%s" -T -' % (System.which('tar'), extraOptions, filename),
+					shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	
+	flags = fcntl.fcntl(proc.stderr, fcntl.F_GETFL)
+	fcntl.fcntl(proc.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 	
 	errors = []
-	
-	ret = -1
+	ret = None
 	for f in fileList:
 		if not f:
 			continue
 		logger.info("Adding file '%s'" % f)
-		fi.tochild.write("%s\n" % f)
+		proc.stdin.write("%s\n" % f)
 		
 		try:
-			error = fi.childerr.readline()
+			error = proc.stderr.readline()
 			logger.error(error)
 			errors.append(error)
 		except:
 			pass
 	
-	fi.tochild.close()
+	proc.stdin.close()
 	
-	ret = fi.poll()
-	while (ret == -1):
-		ret = fi.poll()
+	while ret is None:
+		ret = proc.poll()
 	
 	logger.info("Exit code: %s" % ret)
 	

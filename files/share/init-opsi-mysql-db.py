@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 import MySQLdb, sys, os, getpass
 from _mysql_exceptions import *
@@ -176,6 +176,14 @@ try:
 			mysql.db_query("alter table %s drop `host_id`;" % key)
 			mysql.db_query("alter table %s DEFAULT CHARACTER set utf8;" % key)
 			mysql.db_query("alter table %s ENGINE = InnoDB;" % key)
+		
+		# HARDWARE_INFO
+		mysql.db_query("alter table HARDWARE_INFO add `hostId` varchar(50) NOT NULL;" % key)
+		for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
+			mysql.db_query("update HARDWARE_INFO set `hostId` = '%s' where `host_id` = %d;" % (key, res['hostId'], res['host_id']))
+		mysql.db_query("alter table HARDWARE_INFO drop `host_id`;" % key)
+		mysql.db_query("alter table HARDWARE_INFO DEFAULT CHARACTER set utf8;" % key)
+		mysql.db_query("alter table HARDWARE_INFO ENGINE = InnoDB;" % key)
 		
 		# SOFTWARE
 		mysql.db_query("alter table SOFTWARE drop `software_id`;")
