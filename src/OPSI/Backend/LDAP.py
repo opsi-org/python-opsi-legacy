@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.2'
+__version__ = '0.9.3'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -453,7 +453,7 @@ class LDAPBackend(DataBackend):
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
-						cmd = cmd.replace('%name%', clientName.lower())
+						cmd = cmd.replace('%name%', serverName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						
@@ -493,6 +493,8 @@ class LDAPBackend(DataBackend):
 			domain = self._defaultDomain
 		
 		hostId = self._preProcessHostId(clientName + '.' + domain)
+		if hostId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to create client '%s' which is registered as depot server" % hostId)
 		
 		# Create or update client object
 		created = False
@@ -589,6 +591,8 @@ class LDAPBackend(DataBackend):
 				server.readFromDirectory(self._ldap)
 				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
 					server.setAttribute(attr, [])
+				for attr in ('opsiMaximumBandwidth', 'opsiDepotLocalUrl', 'opsiDepotRemoteUrl', 'opsiRepositoryLocalUrl', 'opsiRepositoryRemoteUrl', 'opsiNetworkAddress'):
+					server.setAttribute(attr, [])
 				server.removeObjectClass('opsiConfigserver')
 				server.removeObjectClass('opsiDepotserver')
 				server.removeObjectClass('opsiHost')
@@ -619,6 +623,8 @@ class LDAPBackend(DataBackend):
 		except BackendMissingDataError:
 			pass
 		
+		if clientId in self.getDepotIds_list():
+			raise BackendBadValueError("Refusing to delete client '%s' which is registered as depot server" % clientId)
 		# Delete product states container
 		productStatesContainer = Object("cn=%s,%s" % (clientId, self._productStatesContainerDn))
 		if productStatesContainer.exists(self._ldap):
@@ -741,7 +747,7 @@ class LDAPBackend(DataBackend):
 					search = ObjectSearch(
 							self._ldap,
 							self._networkConfigsContainerDn,
-							filter='(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s)))' % defaultDepotDn)
+							filter='(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s))(!(opsiDepotserverReference="")))' % defaultDepotDn)
 					for clientId in search.getCns():
 						excludeDns.append( self.getHostDn(clientId) )
 				except BackendMissingDataError:
@@ -863,13 +869,14 @@ class LDAPBackend(DataBackend):
 		infos = []
 		for hostDn in hostDns:
 			host = Object(hostDn)
-			host.readFromDirectory(self._ldap, 'opsiHostId', self._hostAttributeDescription, self._hostAttributeNotes, 'opsiLastSeenTimestamp')
+			host.readFromDirectory(self._ldap, 'opsiHostId', self._hostAttributeDescription, self._hostAttributeNotes, 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp')
 			infos.append( { 
 				'hostId': 	host.getAttribute('opsiHostId', self.getHostId(host.getDn())),
 				'depotId': 	hostDnToDepotId[hostDn],
 				'description':	host.getAttribute(self._hostAttributeDescription, ""),
 				'notes':	host.getAttribute(self._hostAttributeNotes, ""),
-				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', "") } )
+				'lastSeen':	host.getAttribute('opsiLastSeenTimestamp', ""),
+				'created':	host.getAttribute('opsiCreatedTimestamp', "")} )
 		return infos
 	
 	def getClientIds_list(self, serverId = None, depotIds = [], groupId = None, productId = None, installationStatus = None, actionRequest = None, productVersion = None, packageVersion = None):
@@ -893,13 +900,11 @@ class LDAPBackend(DataBackend):
 		return ids
 		
 	def getServerId(self, clientId=None):
-		# Return hostid of localhost
-		serverId = socket.getfqdn()
-		parts = serverId.split('.')
-		if (len(parts) < 3):
-			serverId = parts[0] + '.' + self._defaultDomain
-		return serverId.lower()
-	
+		serverIds = self.getServerIds_list()
+		if not serverIds:
+			return ""
+		return serverIds[0]
+		
 	def createDepot(self, depotName, domain, depotLocalUrl, depotRemoteUrl, repositoryLocalUrl, repositoryRemoteUrl, network, description=None, notes=None, maxBandwidth=0):
 		if not re.search(HOST_NAME_REGEX, depotName):
 			raise BackendBadValueError("Unallowed char in hostname")
@@ -934,7 +939,7 @@ class LDAPBackend(DataBackend):
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
-						cmd = cmd.replace('%name%', clientName.lower())
+						cmd = cmd.replace('%name%', depotName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						
@@ -1038,6 +1043,8 @@ class LDAPBackend(DataBackend):
 				logger.info("Removing opsi objectClasses from object '%s'" % depot.getDn())
 				depot.readFromDirectory(self._ldap)
 				for attr in ('opsiHostId', 'opsiDescription', 'opsiNotes', 'opsiHostKey', 'opsiPcpatchPassword', 'opsiLastSeenTimestamp', 'opsiCreatedTimestamp', 'opsiHardwareAddress', 'opsiIpAddress'):
+					depot.setAttribute(attr, [])
+				for attr in ('opsiMaximumBandwidth', 'opsiDepotLocalUrl', 'opsiDepotRemoteUrl', 'opsiRepositoryLocalUrl', 'opsiRepositoryRemoteUrl', 'opsiNetworkAddress'):
 					depot.setAttribute(attr, [])
 				depot.removeObjectClass('opsiDepotserver')
 				depot.removeObjectClass('opsiHost')
@@ -1582,8 +1589,8 @@ class LDAPBackend(DataBackend):
 		for productId in self.getProductIds_list(None, self.getDepotId(objectId)):
 			installationStatus.append( { 
 					'productId':		productId,
-					'installationStatus':	'undefined',
-					'actionRequest':	'undefined',
+					'installationStatus':	'not_installed',
+					'actionRequest':	'none',
 					'productVersion':	'',
 					'packageVersion':	'',
 					'lastStateChange':	'' 
@@ -1616,6 +1623,7 @@ class LDAPBackend(DataBackend):
 	
 	def setProductState(self, productId, objectId, installationStatus="", actionRequest="", productVersion="", packageVersion="", lastStateChange="", licenseKey=""):
 		productId = productId.lower()
+		objectId = self._preProcessHostId(objectId)
 		
 		if objectId in self.getDepotIds_list():
 			return
@@ -1862,7 +1870,7 @@ class LDAPBackend(DataBackend):
 				continue
 			
 			if (actionRequest == 'undefined'):
-				continue
+				actionRequest = 'none'
 			
 			# An actionRequest is forced
 			product = Object( productState.getAttribute('opsiProductReference') )
@@ -1968,8 +1976,8 @@ class LDAPBackend(DataBackend):
 				
 				for (productId, productInfo) in productInfoCache[depotId].items():
 					state = { 	'productId':		productId, 
-							'installationStatus':	'undefined',
-							'actionRequest':	'undefined',
+							'installationStatus':	'not_installed',
+							'actionRequest':	'none',
 							'productVersion':	'',
 							'packageVersion':	'',
 							'lastStateChange':	'' }
@@ -1978,8 +1986,8 @@ class LDAPBackend(DataBackend):
 						productState = Object("cn=%s,cn=%s,%s"  % (productId, objectId, self._productStatesContainerDn))
 						productState.readFromDirectory(self._ldap)
 						state['actionRequest'] = productState.getAttribute('opsiProductActionRequestForced', 'undefined')
-						state['installationStatus'] = productState.getAttribute('opsiProductInstallationStatus', 'undefined')
-						state['productVersion'] = productState.getAttribute('opsiProductVersion', '')
+						state['actionRequest'] = productState.getAttribute('opsiProductActionRequestForced', 'none')
+						state['installationStatus'] = productState.getAttribute('opsiProductInstallationStatus', 'not_installed')
 						state['packageVersion'] = productState.getAttribute('opsiPackageVersion', '')
 						state['lastStateChange'] = productState.getAttribute('lastStateChange', '')
 						state['deploymentTimestamp'] = productState.getAttribute('opsiProductDeploymentTimestamp', '')
