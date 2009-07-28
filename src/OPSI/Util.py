@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.6'
+__version__ = '0.3.6.1'
 
 # Imports
-import json, threading, re, stat, base64, urllib, os, shutil
+import json, threading, re, stat, base64, urllib, os, shutil, gettext
 try:
 	from hashlib import md5
 except ImportError:

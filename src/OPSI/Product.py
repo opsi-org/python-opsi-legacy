@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 
 # Imports
 import os
@@ -646,12 +646,21 @@ class ProductPackage:
 							% (package, condition, requiredVersion, availableVersion))
 			
 	def deleteClientDataDir(self):
-		if os.path.isdir(self.clientDataDir):
-			logger.notice("Deleting client data dir '%s'" % self.clientDataDir)
-			rmdir(self.clientDataDir, recursive=True)
-		else:
+		dirname = os.path.dirname(self.clientDataDir)
+		basename = os.path.basename(self.clientDataDir)
+		if not os.path.isdir(dirname):
 			logger.warning("Cannot delete client data dir '%s': no such directory." % self.clientDataDir)
-	
+			return
+		
+		for f in os.listdir(dirname):
+			if (f.lower() != basename.lower()):
+				continue
+			clientDataDir = os.path.join(dirname, f)
+			if not os.path.isdir(clientDataDir):
+				continue
+			logger.notice("Deleting client data dir '%s'" % clientDataDir)
+			rmdir(clientDataDir, recursive=True)
+		
 	def readControlFile(self):
 		self.product = Product()
 		self.product.readControlFile(self.controlFile)

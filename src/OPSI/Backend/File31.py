@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.4'
+__version__ = '1.0.6'
 
 # Imports
-import socket, os, time, re, ConfigParser, json, StringIO, stat
+import socket, os, time, re, ConfigParser, json, StringIO, stat, codecs
 
 if os.name == 'nt':
 	# Windows imports for file locking
@@ -316,14 +316,19 @@ class File31Backend(File, FileBackend):
 		
 		if objectId and (objectId.find('/') != -1):
 			raise BackendBadValueError("Bad objectId '%s'" % objectId)
-			
+		
+		if not isinstance(data, unicode):
+			if not isinstance(data, basestring):
+				data = str(data)
+			data = unicode(data, 'utf-8', 'replace')
+		
 		logFile = os.path.join(self.__logDir, type, objectId + '.log')
 		
 		f = None
 		if append:
-			f = open(logFile, 'a+')
+			f = codecs.open(logFile, 'a+', 'utf-8', 'replace')
 		else:
-			f = open(logFile, 'w')
+			f = codecs.open(logFile, 'w', 'utf-8', 'replace')
 		f.write(data)
 		f.close()
 		os.chmod(logFile, 0640)
@@ -2754,4 +2759,35 @@ class File31Backend(File, FileBackend):
 			
 			del product.productDependencies[num]
 			product.writeControlFile(productFile)
+
+
+if (__name__ == "__main__"):
+	logger.setConsoleLevel(LOG_INFO)
+	print "Testing File31 Module"
+	print "Do you want to continue (NO/yes): ",
+	if (sys.stdin.readline().strip() != 'yes'):
+		sys.exit(0)
+	print ""
+	
+	serverId = socket.getfqdn()
+	serverName = serverId.split('.')[0]
+	defaultDomain = '.'.join( serverId.split('.')[1:] )
+	be = File31Backend( args = { "defaultDomain": defaultDomain } )
+	
+	be.writeLog("bootimage", u"---\n\t456\nTest\nÄÖÜaöüß\n---", "test1.uib.local")
+	be.writeLog("bootimage", u"---\n\t456\nTest\nÄÖÜaöüß\n---".encode('utf-8'), "test2.uib.local")
+	be.writeLog("bootimage", u"---\n\t456\nTest\nÄÖÜaöüß\n---".encode('latin-1'), "test3.uib.local")
+	be.writeLog("bootimage", None, "test4.uib.local")
+	be.writeLog("bootimage", u'\ufffd', "test4.uib.local")
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	

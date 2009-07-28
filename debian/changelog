@@ -1,9 +1,15 @@
+python-opsi (3.4.0.0-rc4) unstable; urgency=low
+
+  * LDAP.py 1.0.9
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 28 Jul 2009 11:07:28 +0200
+
 python-opsi (3.4.0.0-rc3) unstable; urgency=low
 
   * Bugfix in File31
   * LDAP 1.0.7
-  
- -- Jan Schneider <schneider@pcbon14.uib.local>  Fri, 26 Jun 2009 16:00:29 +0200
+
+ -- Jan Schneider <j.schneider@uib.de>  Fri, 26 Jun 2009 16:00:29 +0200
 
 python-opsi (3.4.0.0-rc2) unstable; urgency=low
 

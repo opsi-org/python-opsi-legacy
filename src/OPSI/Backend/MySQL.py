@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.3.1'
+__version__ = '0.3.3.2'
 
 # Imports
 import MySQLdb, warnings, time
@@ -68,7 +68,7 @@ class MySQL:
 							use_unicode = True,
 							charset = 'utf8' )
 		except Exception, e:
-			raise BackendIOError("Failed to connect to database '%s' address '%s': %s" % (database, address, e))
+			raise BackendIOError("Failed to connect to database '%s' address '%s': %s" % (self.__database__, self.__address__, e))
 		
 		self.__cursor__ = self.__conn__.cursor(MySQLdb.cursors.DictCursor)
 		
@@ -102,10 +102,10 @@ class MySQL:
 			colNames += "`%s`, " % key
 			if type(value) in (float, long, int, bool):
 				values += "%s, " % value
-			elif type(value) is unicode:
-				values += "\'%s\', " % ('%s' % value).replace("\\", "\\\\").replace("'", "\\\'")
-			else:
+			elif type(value) is str:
 				values += "\'%s\', " % ('%s' % value.decode("utf-8")).replace("\\", "\\\\").replace("'", "\\\'")
+			else:
+				values += "\'%s\', " % ('%s' % value).replace("\\", "\\\\").replace("'", "\\\'")
 			
 		query = "INSERT INTO `%s` (%s) VALUES (%s);" % (table, colNames[:-2], values[:-2])
 		logger.debug2("db_insert: %s" % query)

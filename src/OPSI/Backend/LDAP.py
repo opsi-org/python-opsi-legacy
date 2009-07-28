@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.7'
+__version__ = '1.0.9'
 
 # Imports
 import ldap, ldap.modlist, re, json
@@ -124,6 +124,9 @@ class LDAPBackend(DataBackend):
 			else:
 				logger.warning("Unknown argument '%s' passed to LDAPBackend constructor" % option)
 		
+		if not type(self._hostsContainerDn) is list:
+			self._hostsContainerDn = [ self._hostsContainerDn ]
+		
 		if session:
 			self._ldap = session
 		else:
@@ -146,7 +149,8 @@ class LDAPBackend(DataBackend):
 	def createOpsiBase(self):
 		# Create some containers
 		self.createOrganizationalRole(self._opsiBaseDn)
-		self.createOrganizationalRole(self._hostsContainerDn)
+		for hostContainerDn in self._hostsContainerDn:
+			self.createOrganizationalRole(hostContainerDn)
 		self.createOrganizationalRole(self._generalConfigsContainerDn)
 		self.createOrganizationalRole(self._networkConfigsContainerDn)
 		self.createOrganizationalRole(self._groupsContainerDn)
@@ -155,39 +159,50 @@ class LDAPBackend(DataBackend):
 		self.createOrganizationalRole(self._productStatesContainerDn)
 		self.createOrganizationalRole(self._productPropertiesContainerDn)
 		#self.createOrganizationalRole(self._productLicensesContainerDn)
-		
-	
-	def getHostContainerDn(self, domain = None):
-		if not domain:
-			domain = self._defaultDomain
-		#elif (self._defaultDomain and domain != self._defaultDomain):
-		#	raise NotImplementedError ("Multiple domains not supported yet, domain was '%s', default domain is %s''" 
-		#					% (domain, self._defaultDomain))
-		return self._hostsContainerDn
 	
 	def getHostId(self, hostDn):
 		host = Object(hostDn)
 		host.readFromDirectory(self._ldap, 'opsiHostId')
 		return host.getAttribute('opsiHostId').lower()
 	
+	def _getHostObjects(self, filter):
+		hosts = []
+		for hostContainerDn in self._hostsContainerDn:
+			try:
+				search = ObjectSearch(self._ldap, hostContainerDn, filter=filter)
+				hosts.extend( search.getObjects() )
+			except BackendMissingDataError, e:
+				logger.debug("No hosts found in %s : %s" % (hostContainerDn, e))
+		
+		if not hosts:
+			raise BackendMissingDataError("No hosts found in %s" % self._hostsContainerDn)
+		return hosts
+	
+	def _getHostDns(self, filter):
+		dns = []
+		for host in self._getHostObjects(filter):
+			dns.append(host.getDn())
+		return dns
+	
+	def _getHostObject(self, hostId, filter):
+		hostId = self._preProcessHostId(hostId)
+		host = None
+		for hostContainerDn in self._hostsContainerDn:
+			try:
+				search = ObjectSearch(self._ldap, hostContainerDn, filter=filter)
+				host = search.getObject()
+			except BackendMissingDataError, e:
+				logger.debug("Host '%s' not found in %s : %s" % (hostId, hostContainerDn, e))
+		
+		if not host:
+			raise BackendMissingDataError("Host '%s' not found in %s" % (hostId, self._hostsContainerDn))
+		return host
+	
 	def getHostDn(self, hostId):
 		''' Get a host's DN by host's ID. '''
 		hostId = self._preProcessHostId(hostId)
+		return self._getHostObject(hostId, filter='(&(objectClass=opsiHost)(opsiHostId=%s))' % hostId).getDn()
 		
-		parts = hostId.split('.')
-		if ( len(parts) < 3 ):
-			raise BackendBadValueError("Bad hostId '%s'" % hostId)
-		hostName = parts[0]
-		domain = '.'.join(parts[1:])
-		# Search hostname in host conatiner of the domain
-		try:
-			search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), 
-					filter='(&(objectClass=opsiHost)(opsiHostId=%s))' % hostId)
-			return search.getDn()
-		except BackendMissingDataError, e:
-			raise BackendMissingDataError("Host '%s' does not exist: %s" % (hostId, e))
-			#return "cn=%s,%s" % (hostId, self.getHostContainerDn(domain) )
-	
 	def getObjectDn(self, objectId):
 		''' Get a object's DN by object's ID. '''
 		
@@ -447,21 +462,20 @@ class LDAPBackend(DataBackend):
 				filter = filter.replace('%name%', serverName.lower())
 				filter = filter.replace('%domain%', domain.lower())
 				try:
-					search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-					server = search.getObject()
+					server = self._getHostObject(hostId, filter)
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
 						cmd = cmd.replace('%name%', serverName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
-						
-						search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-						server = search.getObject()
+						# Search again
+						server = self._getHostObject(hostId, filter)
 					else:
 						raise
 			else:
-				server = Object( "cn=%s,%s" % (hostId, self.getHostContainerDn(domain) ) )
+				# TODO: wich container to use?
+				server = Object( "cn=%s,%s" % (hostId, self._hostsContainerDn[0] ) )
 		
 		if server.exists(self._ldap):
 			server.readFromDirectory(self._ldap)
@@ -508,9 +522,9 @@ class LDAPBackend(DataBackend):
 				filter = self._clientObjectSearchFilter
 				filter = filter.replace('%name%', clientName.lower())
 				filter = filter.replace('%domain%', domain.lower())
+				
 				try:
-					search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-					client = search.getObject()
+					client = self._getHostObject(hostId, filter)
 				except BackendMissingDataError, e:
 					if self._createClientCommand:
 						if not hardwareAddress: hardwareAddress = ''
@@ -522,13 +536,13 @@ class LDAPBackend(DataBackend):
 						cmd = cmd.replace('%mac%', hardwareAddress.lower())
 						cmd = cmd.replace('%ip%', ipAddress.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
-						
-						search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-						client = search.getObject()
+						# Search again
+						client = self._getHostObject(hostId, filter)
 					else:
 						raise
 			else:
-				client = Object( "cn=%s,%s" % (hostId, self.getHostContainerDn(domain) ) )
+				# TODO: Choose container for client
+				client = Object( "cn=%s,%s" % (hostId, self._hostsContainerDn[0] ) )
 		
 		if client.exists(self._ldap):
 			client.readFromDirectory(self._ldap)
@@ -746,20 +760,21 @@ class LDAPBackend(DataBackend):
 					search = ObjectSearch(
 							self._ldap,
 							self._networkConfigsContainerDn,
-							filter='(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s))(!(opsiDepotserverReference="")))' % defaultDepotDn)
+							filter='(&(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s)))(opsiDepotserverReference=*))' % defaultDepotDn)
 					for clientId in search.getCns():
 						excludeDns.append( self.getHostDn(clientId) )
 				except BackendMissingDataError:
 					pass
 				
+				dns = []
 				try:
 					# Search all opsiClient objects in host container
-					search = ObjectSearch(self._ldap, self.getHostContainerDn(), filter='(objectClass=opsiClient)')
+					dns = self._getHostDns(filter='(objectClass=opsiClient)')
 				except BackendMissingDataError:
 					# No client found
 					logger.warning("No clients found in LDAP")
 					return []
-				for hostDn in search.getDns():
+				for hostDn in dns:
 					if hostDn in excludeDns:
 						continue
 					hostDns.append(hostDn)
@@ -886,16 +901,12 @@ class LDAPBackend(DataBackend):
 	
 	def getServerIds_list(self):
 		# Search all ldap-objects of type opsiConfigserver in the host container
-		search = None
+		ids = []
 		try:
-			search = ObjectSearch(self._ldap, self.getHostContainerDn(), filter='(objectClass=opsiConfigserver)')
+			for serverDn in self._getHostDns(filter='(objectClass=opsiConfigserver)'):
+				ids.append( self.getHostId(serverDn) )
 		except BackendMissingDataError:
 			return []
-		
-		serverDns = search.getDns()
-		ids = []
-		for serverDn in serverDns:
-			ids.append( self.getHostId(serverDn) )
 		return ids
 		
 	def getServerId(self, clientId=None):
@@ -933,21 +944,19 @@ class LDAPBackend(DataBackend):
 				filter = filter.replace('%name%', depotName.lower())
 				filter = filter.replace('%domain%', domain.lower())
 				try:
-					search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-					depot = search.getObject()
+					depot = self._getHostObject(filter=filter)
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
 						cmd = cmd.replace('%name%', depotName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
-						
-						search = ObjectSearch(self._ldap, self.getHostContainerDn(domain), filter=filter)
-						depot = search.getObject()
+						# Search again
+						depot = self._getHostObject(filter=filter)
 					else:
 						raise
 			else:
-				depot = Object( "cn=%s,%s" % (hostId, self.getHostContainerDn(domain) ) )
+				depot = Object( "cn=%s,%s" % (hostId, self._hostsContainerDn[0] ) )
 		
 		exists = depot.exists(self._ldap)
 		if exists:
@@ -981,16 +990,12 @@ class LDAPBackend(DataBackend):
 		return hostId
 	
 	def getDepotIds_list(self):
-		search = None
+		ids = []
 		try:
-			search = ObjectSearch(self._ldap, self.getHostContainerDn(), filter='(objectClass=opsiDepotserver)')
+			for serverDn in self._getHostDns(filter='(objectClass=opsiDepotserver)'):
+				ids.append( self.getHostId(serverDn) )
 		except BackendMissingDataError:
 			return []
-		
-		serverDns = search.getDns()
-		ids = []
-		for serverDn in serverDns:
-			ids.append( self.getHostId(serverDn) )
 		return ids
 	
 	def getDepotId(self, clientId=None):
@@ -1140,7 +1145,6 @@ class LDAPBackend(DataBackend):
 		
 		group = Object( "cn=%s,%s" % (groupId, containerDn) )
 		group.new('opsiGroup')
-		#search = ObjectSearch(self._ldap, self.getHostContainerDn(), filter='(objectClass=opsiClient)')
 		if ( type(members) != type([]) and type(members) != type(()) ):
 			members = [ members ]
 		for member in members:
@@ -1620,38 +1624,40 @@ class LDAPBackend(DataBackend):
 				} )
 			return installationStatus
 		
+		productIds = []
+		try:
+			productStateSearch = ObjectSearch(
+				self._ldap,
+				'cn=%s,%s' % (objectId, self._productStatesContainerDn),
+				filter = '(objectClass=opsiProductState)' )
+			for productState in productStateSearch.getObjects():
+				productState.readFromDirectory(self._ldap)
+				attributes = productState.getAttributeDict()
+				product = Object( productState.getAttribute('opsiProductReference') )
+				productId = product.getCn()
+				productIds.append(productId)
+				installationStatus.append( 
+						{ 'productId':			productId,
+						  'installationStatus': 	attributes.get('opsiProductInstallationStatus', 'not_installed'),
+						  'productVersion':		attributes.get('opsiProductVersion'),
+						  'packageVersion':		attributes.get('opsiPackageVersion'),
+						  'lastStateChange':		attributes.get('lastStateChange'),
+						  'deploymentTimestamp':	attributes.get('opsiProductDeploymentTimestamp')
+						} )
+		except BackendMissingDataError, e:
+			logger.debug("No product states found for host '%s': %s" % (objectId, e))
+		
 		for productId in self.getProductIds_list(None, self.getDepotId(objectId)):
-			installationStatus.append( { 
+			if not productId in productIds:
+				installationStatus.append( {
 					'productId':		productId,
 					'installationStatus':	'not_installed',
 					'actionRequest':	'none',
 					'productVersion':	'',
 					'packageVersion':	'',
 					'lastStateChange':	'' 
-			} )
+				} )
 		
-		productStateSearch = None
-		try:
-			productStateSearch = ObjectSearch(
-				self._ldap,
-				'cn=%s,%s' % (objectId, self._productStatesContainerDn),
-				filter = '(objectClass=opsiProductState)' )
-		except BackendMissingDataError:
-			return installationStatus
-		
-		for productState in productStateSearch.getObjects():
-			productState.readFromDirectory(self._ldap)
-			attributes = productState.getAttributeDict()
-			product = Object( productState.getAttribute('opsiProductReference') )
-			productId = product.getCn()
-			installationStatus.append( 
-					{ 'productId':			productId,
-					  'installationStatus': 	attributes.get('opsiProductInstallationStatus', 'not_installed'),
-					  'productVersion':		attributes.get('opsiProductVersion'),
-					  'packageVersion':		attributes.get('opsiPackageVersion'),
-					  'lastStateChange':		attributes.get('lastStateChange'),
-					  'deploymentTimestamp':	attributes.get('opsiProductDeploymentTimestamp')
-					} )
 		return installationStatus
 		
 	
@@ -2530,8 +2536,7 @@ class LDAPBackend(DataBackend):
 				#	self.deleteChildlessObject( parent.getDn() )
 	
 	def getProductClassIds_list(self):
-		search = ObjectSearch(self._ldap, self._productClassesContainerDn,
-				      		filter='(objectClass=opsiProductClass)')
+		search = ObjectSearch(self._ldap, self._productClassesContainerDn, filter='(objectClass=opsiProductClass)')
 		return search.getCns()
 	
 	# -------------------------------------------------

@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.5.1'
+__version__ = '0.5.5.2'
 
 # Imports
 import re, socket, time
@@ -231,7 +231,7 @@ class DHCPDBackend(Backend):
 					lf = f.openFile(lockfile, mode = 'w')
 				except BackendIOError:
 					# File missing?
-					f.createFile(lockfile)
+					f.createFile(lockfile, mode = 0666):
 					lf = f.openFile(lockfile, mode = 'w')
 				# File successfuly locked
 				result = System.execute(self._reloadConfigCommand)

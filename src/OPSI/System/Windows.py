@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.8'
+__version__ = '0.1.8.2'
 
 # Imports
-import re, os, time, socket
+import re, os, time, socket, sys
 
 # Win32 imports
 from ctypes import *
@@ -514,7 +514,7 @@ def addUserToWindowStation(winsta, userSid):
 def getPids(process, sessionId = None):
 	#if not sessionId:
 	#	sessionId = getActiveConsoleSessionId()
-	logger.info("Searching pids of process name %s (only in session id: %s)" % (process, sessionId))
+	logger.info("Searching pids of process name %s (session id: %s)" % (process, sessionId))
 	processIds = []
 	CreateToolhelp32Snapshot = windll.kernel32.CreateToolhelp32Snapshot
 	Process32First = windll.kernel32.Process32First
@@ -528,16 +528,22 @@ def getPids(process, sessionId = None):
 		logger.error("Failed to get first process")
 		return
 	while True:
-		logger.debug2("   got process %s" % pe32.szExeFile)
+		pid = pe32.th32ProcessID
+		sid = 'unkown'
+		try:
+			sid = win32ts.ProcessIdToSessionId(pid)
+		except:
+			pass
+		logger.debug2("   got process %s with pid %d in session %s" % (pe32.szExeFile, pid, sid))
 		if (pe32.szExeFile.lower() == process.lower()):
-			sid = win32ts.ProcessIdToSessionId(pe32.th32ProcessID)
-			pid = pe32.th32ProcessID
-			logger.info("Found process %s with pid %d in session %d" % (process, pid, sid))
+			logger.info("Found process %s with matching name (pid %d, session %s)" % (pe32.szExeFile.lower(), pid, sid))
 			if not sessionId or (sid == sessionId):
 				processIds.append(pid)
 		if Process32Next(hProcessSnap, byref(pe32)) == win32con.FALSE:
 			break
 	CloseHandle(hProcessSnap)
+	if not processIds:
+		logger.warning("No process with name %s found (session id: %s)" % (process, sessionId))
 	return processIds
 
 def getPid(process, sessionId = None):
@@ -610,7 +616,10 @@ def getUserToken(sessionId = None, duplicateFrom = "winlogon.exe"):
 	if not type(sessionId) is int or (sessionId < 0):
 		sessionId = getActiveConsoleSessionId()
 	
-	hProcess = win32api.OpenProcess(win32con.MAXIMUM_ALLOWED, False, getPid(process = duplicateFrom, sessionId = sessionId))
+	pid = getPid(process = duplicateFrom, sessionId = sessionId)
+	if not pid:
+		raise Exception("Failed to get user token, pid of '%s' not found in session '%s'" % (duplicateFrom, sessionId))
+	hProcess = win32api.OpenProcess(win32con.MAXIMUM_ALLOWED, False, pid)
 	hPToken = win32security.OpenProcessToken(
 				hProcess,
 				win32con.TOKEN_ADJUST_PRIVILEGES|win32con.TOKEN_QUERY|\
@@ -642,6 +651,9 @@ def runCommandInSession(command, sessionId = None, desktop = "default", duplicat
 	if (desktop.find('\\') == -1):
 		desktop = 'winsta0\\' + desktop
 	
+	if not type(sessionId) is int or (sessionId < 0):
+		sessionId = getActiveConsoleSessionId()
+	
 	userToken = getUserToken(sessionId, duplicateFrom)
 	
 	dwCreationFlags = win32con.NORMAL_PRIORITY_CLASS|win32con.CREATE_NEW_CONSOLE
@@ -650,15 +662,26 @@ def runCommandInSession(command, sessionId = None, desktop = "default", duplicat
 	s.lpDesktop = desktop
 	#s.wShowWindow = win32con.SW_MAXIMIZE
 	
-	logger.notice("Executing: %s" % command)
-	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(userToken,None,command,None,None,0,dwCreationFlags,None,None,s)
-	logger.info("Process startet, pid: %d" % dwProcessId)
-	if not waitForProcessEnding:
-		return (hProcess, hThread, dwProcessId, dwThreadId)
-	logger.info("Waiting for process ending: %d" % dwProcessId)
-	while win32event.WaitForSingleObject(hProcess, 0):
-		time.sleep(0.1)
-	logger.notice("Process ended: %d" % dwProcessId)
+	try:
+		logger.notice("Executing: '%s' in session '%s' on desktop '%s'" % (command, sessionId, desktop))
+		(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(userToken,None,command,None,None,0,dwCreationFlags,None,None,s)
+		logger.info("Process startet, pid: %d" % dwProcessId)
+		if not waitForProcessEnding:
+			return (hProcess, hThread, dwProcessId, dwThreadId)
+		logger.info("Waiting for process ending: %d" % dwProcessId)
+		while win32event.WaitForSingleObject(hProcess, 0):
+			time.sleep(0.1)
+		logger.notice("Process ended: %d" % dwProcessId)
+	except Exception, e:
+		logger.error(e)
+		if (e[0] == 233) and (sys.getwindowsversion()[0] == 5):
+			# No process is on the other end
+			# Problem with pipe \\\\.\\Pipe\\TerminalServer\\SystemExecSrvr\\<sessionid>
+			# After logging off from a session other than 0 csrss.exe does not create this pipe or CreateRemoteProcessW is not able to read the pipe.
+			logger.info("Retrying to run command on winlogon desktop of session 0")
+			return runCommandInSession(command, 0, 'winlogon', duplicateFrom, waitForProcessEnding)
+		else:
+			raise
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                     USER / GROUP HANDLING                                         -
