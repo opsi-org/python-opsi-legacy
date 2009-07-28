@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 
 # Imports
 import ldap, ldap.modlist, re
@@ -747,7 +747,7 @@ class LDAPBackend(DataBackend):
 					search = ObjectSearch(
 							self._ldap,
 							self._networkConfigsContainerDn,
-							filter='(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s))(!(opsiDepotserverReference="")))' % defaultDepotDn)
+							filter='(&(&(objectClass=opsiNetworkConfig)(!(opsiDepotserverReference=%s)))(opsiDepotserverReference=*))' % defaultDepotDn)
 					for clientId in search.getCns():
 						excludeDns.append( self.getHostDn(clientId) )
 				except BackendMissingDataError:

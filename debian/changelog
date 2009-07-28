@@ -1,3 +1,10 @@
+python-opsi (3.3.1.10-1) stable; urgency=high
+
+  * LDAP.py 0.9.4
+      - fixed getNetworkConfig
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 28 Jul 2009 10:30:52 +0200
+
 python-opsi (3.3.1.9-1) stable; urgency=low
 
   * LDAP.py 0.9.3
