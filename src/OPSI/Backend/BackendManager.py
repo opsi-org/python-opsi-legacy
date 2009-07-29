@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.7'
+__version__ = '1.0.8'
 
 # Imports
 import os, stat, types, re, socket, new, base64, time
@@ -987,6 +987,7 @@ class BackendManager(DataBackend):
 			allProductDependencies = {}
 			hostToDepot = {}
 			for hostId in objectIds:
+				hostId = hostId.lower()
 				depotId = self.getDepotId(hostId)
 				hostToDepot[hostId] = depotId
 				if depotId in allProducts.keys():
@@ -998,6 +999,7 @@ class BackendManager(DataBackend):
 					allProductDependencies[depotId][productId] = self.getProductDependencies_listOfHashes(productId = productId, depotId = depotId)
 				
 			for hostId in objectIds:
+				hostId = hostId.lower()
 				products = {}
 				sequence = []
 				for productState in allProductStates[hostId]:

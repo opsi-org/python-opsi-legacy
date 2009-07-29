@@ -231,7 +231,7 @@ class DHCPDBackend(Backend):
 					lf = f.openFile(lockfile, mode = 'w')
 				except BackendIOError:
 					# File missing?
-					f.createFile(lockfile, mode = 0666):
+					f.createFile(lockfile, mode = 0666)
 					lf = f.openFile(lockfile, mode = 'w')
 				# File successfuly locked
 				result = System.execute(self._reloadConfigCommand)
