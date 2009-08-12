@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.3'
+__version__ = '1.2.4'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -747,9 +747,9 @@ def hardwareInventory(ui='default', filename=None, config=None):
 	
 	try:
 		for line in execute("%s -v" % which("lsusb")):
-			line.decode('ISO-8859-15', 'replace').encode('utf-8', 'replace')
 			if not line.strip() or (line.find('** UNAVAILABLE **') != -1):
 				continue
+			line = line.decode('ISO-8859-15', 'replace').encode('utf-8', 'replace')
 			match = re.search(devRegex, line)
 			if match:
 				busId = match.group(1)

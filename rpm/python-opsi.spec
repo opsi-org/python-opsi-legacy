@@ -14,7 +14,7 @@ License:        GPL v2 or later
 Group:          Productivity/Networking/Opsi
 AutoReqProv:    on
 Version:        3.4.0.0
-Release:        rc4
+Release:        rc5
 Summary:        opsi python library
 %define tarname python-opsi
 Source:         %{tarname}-%{version}.tar.bz2
