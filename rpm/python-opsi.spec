@@ -40,10 +40,10 @@ This package contains the OPSI python library.
 %build
 export CFLAGS="$RPM_OPT_FLAGS" 
 python setup.py build
-msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
-msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
-msgfmt -o gettext/opsi_system.mo gettext/opsi_system_fr.po
-msgfmt -o gettext/opsi_fr.mo gettext/opsi_ui_fr.po
+msgfmt -o gettext/opsi_system_de.mo gettext/opsi_system_de.po
+msgfmt -o gettext/opsi_ui_de.mo gettext/opsi_ui_de.po
+msgfmt -o gettext/opsi_system_fr.mo gettext/opsi_system_fr.po
+msgfmt -o gettext/opsi_ui_fr.mo gettext/opsi_ui_fr.po
 
 # ===[ install ]====================================
 %install
