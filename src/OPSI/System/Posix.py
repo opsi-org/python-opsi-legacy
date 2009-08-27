@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.4'
+__version__ = '1.2.5'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -561,16 +561,20 @@ def mount(dev, mountpoint, ui='default', **options):
 	else:
 		raise Exception("Cannot mount unknown fs type '%s'" % dev)
 	
-	optString = ''
+	optString = u''
 	for (key, value) in options.items():
+		if not type(value) is unicode:
+			if not type(value) is str:
+				value = str(value)
+			value = unicode(value, 'utf-8')
 		if value:
-			optString += ',' + key + '=' + value
+			optString += u',' + key + u'=' + value
 		else:
-			optString += ',' + key
+			optString += u',' + key
 	if optString:
-		optString = "-o '%s'" % optString[1:]
+		optString = u"-o '%s'" % optString[1:]
 	
-	cmd = "%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
+	cmd = u"%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
 	try:
 		result = execute(cmd, logLevel = logLevel)
 	except Exception, e:

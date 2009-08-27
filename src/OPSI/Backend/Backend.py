@@ -247,6 +247,10 @@ class DataBackend(Backend):
 		if not lang:
 			lang = 'en_US'
 		
+		if not os.path.exists(os.path.join(OPSI_HW_AUDIT_LOCALE_DIR, lang)):
+			logger.error("No translation file found for language %s, falling back to en_US" % lang)
+			lang = 'en_US'
+		
 		locale = {}
 		try:
 			f = open(os.path.join(OPSI_HW_AUDIT_LOCALE_DIR, lang))
