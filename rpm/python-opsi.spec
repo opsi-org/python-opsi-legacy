@@ -14,7 +14,7 @@ License:        GPL v2 or later
 Group:          Productivity/Networking/Opsi
 AutoReqProv:    on
 Version:        3.4.0.0
-Release:        rc5
+Release:        s1
 Summary:        opsi python library
 %define tarname python-opsi
 Source:         %{tarname}-%{version}.tar.bz2
@@ -42,14 +42,19 @@ export CFLAGS="$RPM_OPT_FLAGS"
 python setup.py build
 msgfmt -o gettext/opsi_system.mo gettext/opsi_system_de.po
 msgfmt -o gettext/opsi_ui.mo gettext/opsi_ui_de.po
+msgfmt -o gettext/opsi_system.mo gettext/opsi_system_fr.po
+msgfmt -o gettext/opsi_fr.mo gettext/opsi_ui_fr.po
 
 # ===[ install ]====================================
 %install
 # install python files and record installed files in INSTALLED_FILES
 python setup.py install --prefix=%{_prefix} --root=$RPM_BUILD_ROOT --record-rpm=INSTALLED_FILES
 mkdir -p $RPM_BUILD_ROOT/usr/share/locale/de/LC_MESSAGES
-install -m 0644 gettext/opsi_system.mo $RPM_BUILD_ROOT/usr/share/locale/de/LC_MESSAGES/
-install -m 0644 gettext/opsi_ui.mo     $RPM_BUILD_ROOT/usr/share/locale/de/LC_MESSAGES/
+mkdir -p $RPM_BUILD_ROOT/usr/share/locale/fr/LC_MESSAGES
+install -m 0644 gettext/opsi_system_de.mo $RPM_BUILD_ROOT/usr/share/locale/de/LC_MESSAGES/opsi_system.mo
+install -m 0644 gettext/opsi_ui_de.mo     $RPM_BUILD_ROOT/usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+install -m 0644 gettext/opsi_system_fr.mo $RPM_BUILD_ROOT/usr/share/locale/fr/LC_MESSAGES/opsi_system.mo
+install -m 0644 gettext/opsi_ui_fr.mo     $RPM_BUILD_ROOT/usr/share/locale/fr/LC_MESSAGES/opsi_ui.mo
 mkdir -p $RPM_BUILD_ROOT/etc/opsi/backendManager.d
 for i in `(cd files/backendManager.d; ls *.conf)`; do install -m 0644 files/backendManager.d/$i $RPM_BUILD_ROOT/etc/opsi/backendManager.d/; done
 cat files/backendManager.d/13_dhcpd.conf \
@@ -142,6 +147,8 @@ fi
 # other files
 /usr/share/locale/de/LC_MESSAGES/opsi_system.mo
 /usr/share/locale/de/LC_MESSAGES/opsi_ui.mo
+/usr/share/locale/fr/LC_MESSAGES/opsi_system.mo
+/usr/share/locale/fr/LC_MESSAGES/opsi_ui.mo
 /usr/share/opsi/init-opsi-mysql-db.py
 /usr/share/opsi/register-depot.py
 /usr/share/opsi/opsi-fire-event.py
