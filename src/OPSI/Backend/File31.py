@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3'
+__version__ = '0.3.1'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, stat
@@ -1943,7 +1943,10 @@ class File31Backend(File, FileBackend):
 			elif (installationStatus == 'undefined') and \
 			     ( (currentInstallationStatus == 'installed') or (currentInstallationStatus == 'uninstalled') or \
 			       (currentInstallationStatus == 'installing') or (currentInstallationStatus == 'failed') ):
-				     productVersion = ini.get('%s-state' % productId, 'productversion', '')
+			     		try:
+			     			productVersion = ini.get('%s-state' % productId, 'productversion')
+			     		except:
+			     			pass
 		
 		if not packageVersion:
 			packageVersion = ''
@@ -1953,7 +1956,10 @@ class File31Backend(File, FileBackend):
 			elif (installationStatus == 'undefined') and \
 			     ( (currentInstallationStatus == 'installed') or (currentInstallationStatus == 'uninstalled') or \
 			       (currentInstallationStatus == 'installing') or (currentInstallationStatus == 'failed') ):
-				     packageVersion = ini.get('%s-state' % productId, 'packageversion', '')
+			     		try:
+			     			packageVersion = ini.get('%s-state' % productId, 'packageversion')
+			     		except:
+			     			pass
 		
 		if (installationStatus == 'undefined') and currentInstallationStatus:
 			installationStatus = currentInstallationStatus
