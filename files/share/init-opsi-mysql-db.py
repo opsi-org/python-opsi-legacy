@@ -178,12 +178,12 @@ try:
 			mysql.db_query("alter table %s ENGINE = InnoDB;" % key)
 		
 		# HARDWARE_INFO
-		mysql.db_query("alter table HARDWARE_INFO add `hostId` varchar(50) NOT NULL;" % key)
+		mysql.db_query("alter table HARDWARE_INFO add `hostId` varchar(50) NOT NULL;")
 		for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
 			mysql.db_query("update HARDWARE_INFO set `hostId` = '%s' where `host_id` = %d;" % (key, res['hostId'], res['host_id']))
-		mysql.db_query("alter table HARDWARE_INFO drop `host_id`;" % key)
-		mysql.db_query("alter table HARDWARE_INFO DEFAULT CHARACTER set utf8;" % key)
-		mysql.db_query("alter table HARDWARE_INFO ENGINE = InnoDB;" % key)
+		mysql.db_query("alter table HARDWARE_INFO drop `host_id`;")
+		mysql.db_query("alter table HARDWARE_INFO DEFAULT CHARACTER set utf8;")
+		mysql.db_query("alter table HARDWARE_INFO ENGINE = InnoDB;")
 		
 		# SOFTWARE
 		mysql.db_query("alter table SOFTWARE drop `software_id`;")

@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.4'
+__version__ = '1.2.6'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -561,16 +561,20 @@ def mount(dev, mountpoint, ui='default', **options):
 	else:
 		raise Exception("Cannot mount unknown fs type '%s'" % dev)
 	
-	optString = ''
+	optString = u''
 	for (key, value) in options.items():
+		if not type(value) is unicode:
+			if not type(value) is str:
+				value = str(value)
+			value = unicode(value, 'utf-8')
 		if value:
-			optString += ',' + key + '=' + value
+			optString += u',' + key + u'=' + value
 		else:
-			optString += ',' + key
+			optString += u',' + key
 	if optString:
-		optString = "-o '%s'" % optString[1:]
+		optString = u"-o '%s'" % optString[1:]
 	
-	cmd = "%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
+	cmd = u"%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
 	try:
 		result = execute(cmd, logLevel = logLevel)
 	except Exception, e:
@@ -1282,6 +1286,7 @@ class Harddisk:
 		f.close()
 	
 	def setPartitionBootable(self, partition, bootable):
+		partition = int(partition)
 		bootable = bool(bootable)
 		if (partition < 1) or (partition > 4):
 			raise Exception("Partition has to be int value between 1 and 4")
@@ -1437,6 +1442,8 @@ class Harddisk:
 		self.partitions = []
 	
 	def shred(self, partition=0, iterations=25, ui='default'):
+		partition = int(partition)
+		iterations = int(iterations)
 		if ui == 'default': ui=userInterface
 		
 		dev = self.device
@@ -1493,12 +1500,15 @@ class Harddisk:
 			raise Exception("Command '%s' failed: %s" % (cmd, error))
 		
 	def zeroFill(self, partition=0, ui='default'):
+		partition = int(partition)
 		fill(partition=partition, ui=ui, infile='/dev/zero')
 	
 	def randomFill(self, partition=0, ui='default'):
+		partition = int(partition)
 		fill(partition=partition, ui=ui, infile='/dev/urandom')
 	
 	def fill(self, partition=0, ui='default', infile=''):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not infile:
 			raise Exception("No input file given")
@@ -1608,6 +1618,7 @@ class Harddisk:
 			raise Exception ("Cannot write mbr: %s" % e)
 	
 	def writePartitionBootRecord(self, partition = 1, fsType = 'auto', ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		
 		if ui: ui.getMessageBox().addText(_("Writing partition boot record (fs: %s) to '%s'.\n") \
@@ -1636,6 +1647,8 @@ class Harddisk:
 			raise Exception ("Cannot write partition boot record: %s" % e)
 	
 	def setNTFSPartitionStartSector(self, partition, sector=0, ui='default'):
+		partition = int(partition)
+		sector = int(sector)
 		if ui == 'default': ui=userInterface
 		if not sector:
 			sector = self.getPartition(partition)['secStart']
@@ -1685,12 +1698,15 @@ class Harddisk:
 		return self.partitions
 	
 	def getPartition(self, number):
+		number = int(number)
 		for part in self.partitions:
-			if (int(part['number']) == int(number)):
+			if (part['number'] == number):
 				return part
 		raise Exception('Partition %s does not exist' % number)
 	
 	def createPartition(self, start, end, fs, type = 'primary', boot = False, lba = False, ui='default'):
+		start = str(start)
+		end = str(end)
 		
 		if ui == 'default': ui=userInterface
 		
@@ -1792,6 +1808,7 @@ class Harddisk:
 	
 	
 	def deletePartition(self, partition, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		
 		if not partition:
@@ -1821,14 +1838,17 @@ class Harddisk:
 		self.readPartitionTable()
 	
 	def mountPartition(self, partition, mountpoint, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		mount(self.getPartition(partition)['device'], mountpoint, ui=ui)
 	
 	def umountPartition(self, partition, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		umount(self.getPartition(partition)['device'], ui=ui)
 	
 	def createFilesystem(self, partition, fs = None, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not fs:
 			fs = self.getPartition(partition)['fs']
@@ -1865,6 +1885,7 @@ class Harddisk:
 		
 		
 	def resizeFilesystem(self, partition, size = 0, fs = None, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not fs:
 			fs = self.getPartition(partition)['fs']
@@ -1884,13 +1905,14 @@ class Harddisk:
 			os.putenv("LD_PRELOAD", self.ldPreload)
 		
 		if (fs.lower() == 'ntfs'):
-			cmd = ( "%s --force --size %s %s" % (which('ntfsresize'), size, self.getPartition(partition)['device']) )
+			cmd = ( "echo 'y' | %s --force --size %s %s" % (which('ntfsresize'), size, self.getPartition(partition)['device']) )
 			execute(cmd)
 		
 		if self.ldPreload:
 			os.unsetenv("LD_PRELOAD")
 		
 	def saveImage(self, partition, imageFile, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		imageType = None
 		image = None
@@ -1995,6 +2017,7 @@ class Harddisk:
 	
 	
 	def restoreImage(self, partition, imageFile, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		imageType = None
 		image = None

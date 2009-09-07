@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.5.2'
+__version__ = '0.5.5.3'
 
 # Imports
 import re, socket, time
@@ -622,7 +622,7 @@ class Parameter(Component):
 				value = 'on'
 			else:
 				value = 'off'
-		elif self.key in ['filename'] or \
+		elif self.key in ['filename', 'ddns-domainname'] or \
 		     re.match('.*[\'/\\\].*', value) or \
 		     re.match('^\w+\.\w+$', value) or \
 		     self.key.endswith('-name'):
