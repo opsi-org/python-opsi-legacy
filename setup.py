@@ -6,7 +6,7 @@ from distutils.core import setup, Extension
 
 setup (
 	name = 'python-opsi',
-	version = '3.3.0.29',
+	version = '3.4.0.0',
 	description = 'opsi python library',
 	long_description = 'opsi python library.',
 	author = "uib GmbH",
@@ -35,4 +35,5 @@ setup (
 	#	('/usr/share/locale/de/LC_MESSAGES opsi_system.mo', ['gettext/opsi_system.mo', 'gettext/opsi_ui.mo'])
 	#]
 )
+
 
