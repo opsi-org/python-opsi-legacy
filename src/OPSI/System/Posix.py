@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.7'
+__version__ = '1.3'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -209,7 +209,7 @@ def execute(cmd, nowait=False, getHandle=False, logLevel=LOG_DEBUG, exitOnErr=Fa
 	return result
 
 def getKernelParams():
-	""" 
+	"""
 	Reads the kernel cmdline and returns a dict
 	containing all key=value pairs.
 	keys are converted to lower case
@@ -235,81 +235,78 @@ def getKernelParams():
 				params[keyValue[0].strip().lower()] = keyValue[1].strip()
 	return params
 
+def getEthernetDevices():
+	devices = []
+	f = open("/proc/net/dev")
+	for line in f.readlines():
+		line = line.strip()
+		if not line or (line.find(':') == -1):
+			continue
+		device = line.split(':')[0].strip()
+		if device.startswith('eth') or device.startswith('tr'):
+			logger.info("Found ethernet device: '%s'" % device)
+			devices.append(device)
+	f.close()
+	return devices
 
-def getDHCPResult(retry=3):
+def getNetworkDeviceConfig(device):
+	if not device:
+		raise Exception("No device given")
+	
+	result = {
+		'hardwareAddress': None,
+		'ipAddress': None,
+		'broadcast': None,
+		'netmask': None
+	}
+	for line in execute("%s %s" % (which('ifconfig'), device)):
+		line = line.lower().strip()
+		match = re.search('hardware.*([\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}).*', line)
+		if match:
+			result['hardwareAddress'] = match.group(1)
+			continue
+		if line.startswith('inet '):
+			parts = line.split(':')
+			if (len(parts) != 4):
+				logger.error("Unexpected ifconfig line '%s'" % line)
+				continue
+			result['ipAddress'] = parts[1].split()[0].strip()
+			result['broadcast'] = parts[2].split()[0].strip()
+			result['netmask']   = parts[3].split()[0].strip()
+	return result
+
+def getDHCPResult(device):
 	"""
 	Reads DHCP result from pump
 	returns possible key/values:
 	ip, netmask, bootserver, nextserver, gateway, bootfile, hostname, domain.
 	keys are converted to lower case
 	"""
-	interfaces = []
-	i = 0
-	while (i < retry):
-		try:
-			if not interfaces:
-				for line in execute(which('ifconfig')):
-					match = re.search('^(eth\d+)\s+', line)
-					if match:
-						logger.info("Found ethernet device: '%s'" % match.group(1))
-						interfaces.append( { 'device': match.group(1) } )
-			
-			if not interfaces:
-				raise Exception('No ethernet interfaces found in ifconfig output')
-			
-			for interface in interfaces:
-				for line in execute( '%s -s -i %s' % (which('pump'), interface['device']) ):
-					line = line.strip()
-					keyValue = line.split(":")
-					if ( len(keyValue) < 2 ):
-						# No ":" in pump output after "boot server" and "next server"
-						if line.lstrip().startswith('Boot server'):
-							keyValue[0] = 'Boot server'
-							keyValue.append(line.split()[2])
-						elif line.lstrip().startswith('Next server'):
-							keyValue[0] = 'Next server'
-							keyValue.append(line.split()[2])
-						else:
-							continue
-					# Some DHCP-Servers are returning multiple domain names seperated by whitespace,
-					# so we split all values at whitespace and take the first element
-					interface[keyValue[0].replace(' ','').lower()] = keyValue[1].strip().split()[0]
-		except Exception, e:
-			logger.warning(e)
-			i += 1
-			# Sleeping 3 seconds for 2 reasons:
-			# 1. Pump failed: Waiting for DHCP server
-			# 2. Pump successful: Pump needs some time to configure interface
-			time.sleep(3)
-			continue
-		break
+	if not device:
+		raise Exception("No device given")
 	
-	useIf = 0
-	if (len(interfaces) > 1):
-		useIf = -1
-		for i in range(len(interfaces)):
-			if interfaces[i].get('ip'):
-				# Interface has been configured by dhcp
-				if (useIf < 0):
-					# No interface selected so far
-					useIf = i
-				elif (interfaces[i].get('bootserver') and not interfaces[useIf].get('bootserver')):
-					# Bootserver found, prefering this interface
-					useIf = i
-					logger.info("Found tftpserver on interface '%s', prefering this interface." \
-							% interfaces[i]['device'] )
-		if (useIf < 0): 
-			useIf = 0
+	dhcpResult = {}
+	try:
+		for line in execute( '%s -s -i %s' % (which('pump'), device) ):
+			line = line.strip()
+			keyValue = line.split(":")
+			if ( len(keyValue) < 2 ):
+				# No ":" in pump output after "boot server" and "next server"
+				if line.lstrip().startswith('Boot server'):
+					keyValue[0] = 'Boot server'
+					keyValue.append(line.split()[2])
+				elif line.lstrip().startswith('Next server'):
+					keyValue[0] = 'Next server'
+					keyValue.append(line.split()[2])
+				else:
+					continue
+			# Some DHCP-Servers are returning multiple domain names seperated by whitespace,
+			# so we split all values at whitespace and take the first element
+			dhcpResult[keyValue[0].replace(' ','').lower()] = keyValue[1].strip().split()[0]
+	except Exception, e:
+		logger.warning(e)
+	return dhcpResult
 	
-	if interfaces[useIf].get('ip'):
-		logger.info("Using interface '%s' with ip '%s'." \
-				% (interfaces[useIf].get('device'), interfaces[useIf].get('ip')) )
-	else:
-		logger.warning("No interface with configured ip address found!")
-		logger.info("Using interface '%s'." % interfaces[useIf].get('device'))
-	
-	return interfaces[useIf]
-
 def ifconfig(device, address, netmask=None):
 	cmd = '%s %s %s' % (which('ifconfig'), device, address)
 	if netmask:
@@ -318,13 +315,13 @@ def ifconfig(device, address, netmask=None):
 	
 def reboot(ui='default', wait=10):
 	if ui == 'default': ui=userInterface
-	if ui: 
+	if ui:
 		ui.getMessageBox().addText( _('System is going down for reboot now.\n') )
 	execute('%s %s; %s -r now' % (which('sleep'), int(wait), which('shutdown')), nowait=True)
 
 def halt(ui='default', wait=10):
 	if ui == 'default': ui=userInterface
-	if ui: 
+	if ui:
 		ui.getMessageBox().addText( _('System is going down for halt now.\n') )
 	execute('%s %s; %s -h now' % (which('sleep'), int(wait), which('shutdown')), nowait=True)
 

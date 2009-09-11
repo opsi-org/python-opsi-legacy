@@ -1,9 +1,11 @@
 python-opsi (3.4.0.2-1) stable; urgency=low
 
-  * Posix 1.2.7
-     - getDHCPResult: retry ifconfig
+  * Posix 1.3
+     - new method getEthernetDevices
+     - new method getNetworkDeviceConfig
+     - rewritten method getDHCPResult
 
- -- Jan Schneider <j.schneider@uib.de>  Fri, 11 Sep 2009 17:05:54 +0200
+ -- Jan Schneider <j.schneider@uib.de>  Fri, 11 Sep 2009 19:03:50 +0200
 
 python-opsi (3.4.0.1-1) stable; urgency=low
 
