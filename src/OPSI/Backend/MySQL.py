@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.3.3'
+__version__ = '0.3.3.4'
 
 # Imports
 import MySQLdb, warnings, time
@@ -1436,14 +1436,14 @@ class MySQLBackend(DataBackend):
 				raise LicenseConfigurationError("No license pool for product id '%s' found" % productId)
 			elif (len(result) > 1):
 				raise LicenseConfigurationError("Multiple license pools for product id '%s' found" % productId)
-			return result[0]['licensePoolId']
+			return result[0]['licensePoolId'].encode('utf-8')
 		elif windowsSoftwareId:
 			result = self.__mysql__.db_getSet('SELECT `licensePoolId` FROM `WINDOWS_SOFTWARE_ID_TO_LICENSE_POOL` WHERE `windowsSoftwareId`="%s"' % windowsSoftwareId)
 			if (len(result) < 1):
 				raise LicenseConfigurationError("No license pool for windows software id '%s' found" % windowsSoftwareId)
 			elif (len(result) > 1):
 				raise LicenseConfigurationError("Multiple license pools for windows software id '%s' found" % windowsSoftwareId)
-			return result[0]['licensePoolId']
+			return result[0]['licensePoolId'].encode('utf-8')
 		else:
 			raise BackendBadValueError("Neither product id nor windows software id given.")
 	

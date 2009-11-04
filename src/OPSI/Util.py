@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.6.1'
+__version__ = '0.3.6.2'
 
 # Imports
 import json, threading, re, stat, base64, urllib, os, shutil, gettext
@@ -465,6 +465,7 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 		self.clients.remove(client)
 		
 	def rpc(self, client, line):
+		line = unicode(line, 'utf-8')
 		logger.info("received line %s" % line)
 		id = None
 		try:
@@ -548,12 +549,16 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 			return
 		logger.info("sending notification '%s' to clients" % name)
 		for client in self.clients:
+			jsonString = ''
 			# json-rpc: notifications have id null
 			if hasattr(json, 'dumps'):
 				# python 2.6 json module
-				client.sendLine( json.dumps( {"id": None, "method": name, "params": params } ) )
+				jsonString = json.dumps( {"id": None, "method": name, "params": params } )
 			else:
-				client.sendLine( json.write( {"id": None, "method": name, "params": params } ) )
+				jsonString = json.write( {"id": None, "method": name, "params": params } )
+			if type(jsonString) is unicode:
+				jsonString = jsonString.encode('utf-8')
+			client.sendLine(jsonString)
 
 
 class NotificationServer(threading.Thread, SubjectsObserver):
@@ -565,7 +570,8 @@ class NotificationServer(threading.Thread, SubjectsObserver):
 		self._port = int(port)
 		self._factory = NotificationServerFactory()
 		self._factory.setSubjects(subjects)
-	
+		self._server = None
+		
 	def getFactory(self):
 		return self._factory
 	
@@ -588,17 +594,19 @@ class NotificationServer(threading.Thread, SubjectsObserver):
 		logger.info("Notification server starting")
 		try:
 			if (self._address == '0.0.0.0'):
-				reactor.listenTCP(self._port, self._factory)
+				self._server = reactor.listenTCP(self._port, self._factory)
 			else:
-				reactor.listenTCP(self._port, self._factory, interface = self._address)
+				self._server = reactor.listenTCP(self._port, self._factory, interface = self._address)
 			
 			if not reactor.running:
 				reactor.run(installSignalHandlers=0)
 		except Exception, e:
 			logger.logException(e)
 	
-	def stop(self):
-		if reactor and reactor.running:
+	def stop(self, stopReactor=True):
+		if self._server:
+			self._server.stopListening()
+		if stopReactor and reactor and reactor.running:
 			try:
 				reactor.stop()
 			except Exception, e:
@@ -698,7 +706,8 @@ class NotificationClient(threading.Thread):
 		self._port = port
 		self._observer = observer
 		self._factory = NotificationClientFactory(self._observer)
-	
+		self._client = None
+		
 	def getFactory(self):
 		return self._factory
 	
@@ -712,8 +721,10 @@ class NotificationClient(threading.Thread):
 		except Exception, e:
 			logger.logException(e)
 	
-	def stop(self):
-		if reactor and reactor.running:
+	def stop(self, stopReactor=True):
+		if self._client:
+			self._client.disconnect()
+		if stopReactor and reactor and reactor.running:
 			reactor.stop()
 	
 	def setSelectedIndex(self, subjectId, choiceIndex):

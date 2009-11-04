@@ -32,10 +32,10 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9'
+__version__ = '0.9.9.1'
 
 # Imports
-import json, base64, urllib, httplib, new, stat, socket, random, time
+import json, base64, urllib, httplib, new, stat, socket, random, time, types
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -229,12 +229,14 @@ class JSONRPCBackend(DataBackend):
 		logger.debug("Options: %s" % options)
 		if options.has_key('params'):
 			ps = options['params']
-			if not isinstance(ps, tuple) and not isinstance(ps, list):
+			if not type(ps) is types.ListType and not type(ps) is types.TupleType:
 				ps = [ ps ]
 			
 			for p in ps:
 				if (p == '__UNDEF__'):
 					p = None
+				if type(p) is types.StringType:
+					p = unicode(p, 'utf-8')
 				logger.debug2("Appending param: %s, type: %s" % (p, type(p)))
 				params.append(p)
 		
@@ -267,8 +269,13 @@ class JSONRPCBackend(DataBackend):
 	def __request(self, baseUrl, query='', retry=True, maxRetrySeconds=5, started=None):
 		''' Do a http request '''
 		
+		now = time.time()
 		if not started:
-			started = time.time()
+			started = now
+		
+		if type(query) is types.StringType:
+			query = unicode(query, 'utf-8')
+		query = query.encode('utf-8')
 		
 		#logger.debug("__request(%s)" % request)
 		response = None
@@ -283,7 +290,7 @@ class JSONRPCBackend(DataBackend):
 				logger.debug("Using method POST")
 				self.__connection.putrequest('POST', baseUrl)
 				self.__connection.putheader('content-type', 'application/json-rpc')
-				self.__connection.putheader('content-length', str(len(query)))
+				self.__connection.putheader('content-length', len(query))
 			
 			# Add some http headers
 			self.__connection.putheader('Accept', 'application/json-rpc')
@@ -312,7 +319,9 @@ class JSONRPCBackend(DataBackend):
 				self.__sessionId = cookie.split(';')[0].strip()
 		
 		except Exception, e:
-			if retry and (time.time()-started < maxRetrySeconds):
+			logger.debug(u"Request to '%s' failed, retry: %s, started: %s, now: %s, maxRetrySeconds: %s" \
+					% (self.__address, retry, started, now, maxRetrySeconds))
+			if retry and (now - started < maxRetrySeconds):
 				logger.warning("Request to '%s' failed: %s, trying to reconnect" % (self.__address, e))
 				self._connect()
 				return self.__request(baseUrl, query=query, retry=retry, maxRetrySeconds=maxRetrySeconds, started=started)

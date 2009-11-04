@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 import sys, os, getpass, socket
 
@@ -98,7 +98,7 @@ try:
 	except:
 		pass
 	
-	print " The subnet this depotserver is resonsible for [%s]: " % network,
+	print " The subnet this depotserver is responsible for [%s]: " % network,
 	uin = sys.stdin.readline().strip()
 	if uin: network = uin
 	

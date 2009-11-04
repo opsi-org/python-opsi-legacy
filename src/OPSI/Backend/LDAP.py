@@ -1125,7 +1125,10 @@ class LDAPBackend(DataBackend):
 		host.readFromDirectory(self._ldap)
 		host.setAttribute(self._hostAttributeHardwareAddress, macs)
 		host.writeToDirectory(self._ldap)
-		
+	
+	def setIpAddress(self, hostId, ipAddress):
+		return
+	
 	def createGroup(self, groupId, members = [], description = "", parentGroupId=""):
 		if not re.search(GROUP_ID_REGEX, groupId):
 			raise BackendBadValueError("Bad group-id: '%s'" % groupId)

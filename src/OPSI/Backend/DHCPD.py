@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.5.2'
+__version__ = '0.5.5.5'
 
 # Imports
 import re, socket, time
@@ -177,7 +177,7 @@ class DHCPDBackend(Backend):
 		conf.addHost(hostname=clientName, hardwareAddress=hardwareAddress, ipAddress=ipAddress, fixedAddress=fixedAddress, parameters = dict(self._defaultClientParameters))
 		conf.writeConfig()
 		self._restartDhcpd()
-		
+	
 	def deleteClient(self, clientId):
 		clientId = self._preProcessHostId(clientId)
 		conf = Config(self._dhcpdConfigFile)
@@ -186,6 +186,30 @@ class DHCPDBackend(Backend):
 		except BackendMissingDataError:
 			# Client does not exists
 			return
+		conf.writeConfig()
+		self._restartDhcpd()
+	
+	def setIpAddress(self, hostId, ipAddress):
+		hostId = self._preProcessHostId(hostId)
+		
+		logger.info("Setting ip address for host '%s'" % hostId)
+		
+		if not ipAddress:
+			raise BackendBadValueError("No ip address given")
+		
+		if not re.search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ipAddress):
+			raise BackendBadValueError("Bad ipaddress '%s'" % ipAddress)
+		
+		conf = Config(self._dhcpdConfigFile)
+		host = conf.getHost( self.getHostname(hostId) )
+		host['fixed-address'] = ipAddress
+		
+		try:
+			conf.modifyHost(hostname = self.getHostname(hostId), parameters = host)
+		except Exception, e:
+			logger.error(e)
+			raise
+		
 		conf.writeConfig()
 		self._restartDhcpd()
 	
@@ -622,7 +646,7 @@ class Parameter(Component):
 				value = 'on'
 			else:
 				value = 'off'
-		elif self.key in ['filename'] or \
+		elif self.key in ['filename', 'ddns-domainname'] or \
 		     re.match('.*[\'/\\\].*', value) or \
 		     re.match('^\w+\.\w+$', value) or \
 		     self.key.endswith('-name'):

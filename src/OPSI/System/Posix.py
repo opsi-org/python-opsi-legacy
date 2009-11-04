@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.2.4'
+__version__ = '1.3.1'
 
 # Imports
 import os, sys, re, shutil, time, gettext, subprocess, select, signal, socket
@@ -209,7 +209,7 @@ def execute(cmd, nowait=False, getHandle=False, logLevel=LOG_DEBUG, exitOnErr=Fa
 	return result
 
 def getKernelParams():
-	""" 
+	"""
 	Reads the kernel cmdline and returns a dict
 	containing all key=value pairs.
 	keys are converted to lower case
@@ -235,84 +235,78 @@ def getKernelParams():
 				params[keyValue[0].strip().lower()] = keyValue[1].strip()
 	return params
 
+def getEthernetDevices():
+	devices = []
+	f = open("/proc/net/dev")
+	for line in f.readlines():
+		line = line.strip()
+		if not line or (line.find(':') == -1):
+			continue
+		device = line.split(':')[0].strip()
+		if device.startswith('eth') or device.startswith('tr'):
+			logger.info("Found ethernet device: '%s'" % device)
+			devices.append(device)
+	f.close()
+	return devices
 
-def getDHCPResult(retry=3):
+def getNetworkDeviceConfig(device):
+	if not device:
+		raise Exception("No device given")
+	
+	result = {
+		'hardwareAddress': None,
+		'ipAddress': None,
+		'broadcast': None,
+		'netmask': None
+	}
+	for line in execute("%s %s" % (which('ifconfig'), device)):
+		line = line.lower().strip()
+		match = re.search('\s([\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}:[\da-f]{2}).*', line)
+		if match:
+			result['hardwareAddress'] = match.group(1)
+			continue
+		if line.startswith('inet '):
+			parts = line.split(':')
+			if (len(parts) != 4):
+				logger.error("Unexpected ifconfig line '%s'" % line)
+				continue
+			result['ipAddress'] = parts[1].split()[0].strip()
+			result['broadcast'] = parts[2].split()[0].strip()
+			result['netmask']   = parts[3].split()[0].strip()
+	return result
+
+def getDHCPResult(device):
 	"""
 	Reads DHCP result from pump
 	returns possible key/values:
 	ip, netmask, bootserver, nextserver, gateway, bootfile, hostname, domain.
 	keys are converted to lower case
 	"""
-	interfaces = []
-	for line in execute(which('ifconfig')):
-		match = re.search('^(eth\d+)\s+', line)
-		if match:
-			logger.info("Found ethernet device: '%s'" % match.group(1))
-			interfaces.append( { 'device': match.group(1) } )
+	if not device:
+		raise Exception("No device given")
 	
-	if not interfaces:
-		raise Exception('No ethernet interfaces found!')
+	dhcpResult = {}
+	try:
+		for line in execute( '%s -s -i %s' % (which('pump'), device) ):
+			line = line.strip()
+			keyValue = line.split(":")
+			if ( len(keyValue) < 2 ):
+				# No ":" in pump output after "boot server" and "next server"
+				if line.lstrip().startswith('Boot server'):
+					keyValue[0] = 'Boot server'
+					keyValue.append(line.split()[2])
+				elif line.lstrip().startswith('Next server'):
+					keyValue[0] = 'Next server'
+					keyValue.append(line.split()[2])
+				else:
+					continue
+			# Some DHCP-Servers are returning multiple domain names seperated by whitespace,
+			# so we split all values at whitespace and take the first element
+			dhcpResult[keyValue[0].replace(' ','').lower()] = keyValue[1].strip().split()[0]
+	except Exception, e:
+		logger.warning(e)
+	return dhcpResult
 	
-	for interface in interfaces:
-		i = 0
-		while (i < retry):
-			try:
-				for line in execute( '%s -s -i %s' % (which('pump'), interface['device']) ):
-					line = line.strip()
-					keyValue = line.split(":")
-					if ( len(keyValue) < 2 ):
-						# No ":" in pump output after "boot server" and "next server"
-						if line.lstrip().startswith('Boot server'):
-							keyValue[0] = 'Boot server'
-							keyValue.append(line.split()[2])
-						elif line.lstrip().startswith('Next server'):
-							keyValue[0] = 'Next server'
-							keyValue.append(line.split()[2])
-						else:
-							continue
-					# Some DHCP-Servers are returning multiple domain names seperated by whitespace,
-					# so we split all values at whitespace and take the first element
-					interface[keyValue[0].replace(' ','').lower()] = keyValue[1].strip().split()[0]
-			except Exception, e:
-				logger.warning("Pump failed: %s" % e)
-				#try:
-				#	execute( '%s -i %s' % (which('pump'), interface['device']) )
-				#except Exception, e:
-				#	logger.warning("Pump failed: %s" % e)
-				i += 1
-			else:
-				i = retry
-			# Sleeping 3 seconds for 2 reasons:
-			# 1. Pump failed: Waiting for DHCP server
-			# 2. Pump successful: Pump needs some time to configure interface
-			time.sleep(3)
-	
-	useIf = 0
-	if (len(interfaces) > 1):
-		useIf = -1
-		for i in range(len(interfaces)):
-			if interfaces[i].get('ip'):
-				# Interface has been configured by dhcp
-				if (useIf < 0):
-					# No interface selected so far
-					useIf = i
-				elif (interfaces[i].get('bootserver') and not interfaces[useIf].get('bootserver')):
-					# Bootserver found, prefering this interface
-					useIf = i
-					logger.info("Found tftpserver on interface '%s', prefering this interface." \
-							% interfaces[i]['device'] )
-		if (useIf < 0): 
-			useIf = 0
-	
-	if interfaces[useIf].get('ip'):
-		logger.info("Using interface '%s' with ip '%s'." \
-				% (interfaces[useIf].get('device'), interfaces[useIf].get('ip')) )
-	else:
-		logger.warning("No interface with configured ip address found!")
-		logger.info("Using interface '%s'." % interfaces[useIf].get('device'))
-	
-	return interfaces[useIf]
-
 def ifconfig(device, address, netmask=None):
 	cmd = '%s %s %s' % (which('ifconfig'), device, address)
 	if netmask:
@@ -321,13 +315,13 @@ def ifconfig(device, address, netmask=None):
 	
 def reboot(ui='default', wait=10):
 	if ui == 'default': ui=userInterface
-	if ui: 
+	if ui:
 		ui.getMessageBox().addText( _('System is going down for reboot now.\n') )
 	execute('%s %s; %s -r now' % (which('sleep'), int(wait), which('shutdown')), nowait=True)
 
 def halt(ui='default', wait=10):
 	if ui == 'default': ui=userInterface
-	if ui: 
+	if ui:
 		ui.getMessageBox().addText( _('System is going down for halt now.\n') )
 	execute('%s %s; %s -h now' % (which('sleep'), int(wait), which('shutdown')), nowait=True)
 
@@ -561,16 +555,20 @@ def mount(dev, mountpoint, ui='default', **options):
 	else:
 		raise Exception("Cannot mount unknown fs type '%s'" % dev)
 	
-	optString = ''
+	optString = u''
 	for (key, value) in options.items():
+		if not type(value) is unicode:
+			if not type(value) is str:
+				value = str(value)
+			value = unicode(value, 'utf-8')
 		if value:
-			optString += ',' + key + '=' + value
+			optString += u',' + key + u'=' + value
 		else:
-			optString += ',' + key
+			optString += u',' + key
 	if optString:
-		optString = "-o '%s'" % optString[1:]
+		optString = u"-o '%s'" % optString[1:]
 	
-	cmd = "%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
+	cmd = u"%s %s %s %s %s" % (which('mount'), fs, optString, dev, mountpoint)
 	try:
 		result = execute(cmd, logLevel = logLevel)
 	except Exception, e:
@@ -1282,6 +1280,7 @@ class Harddisk:
 		f.close()
 	
 	def setPartitionBootable(self, partition, bootable):
+		partition = int(partition)
 		bootable = bool(bootable)
 		if (partition < 1) or (partition > 4):
 			raise Exception("Partition has to be int value between 1 and 4")
@@ -1437,6 +1436,8 @@ class Harddisk:
 		self.partitions = []
 	
 	def shred(self, partition=0, iterations=25, ui='default'):
+		partition = int(partition)
+		iterations = int(iterations)
 		if ui == 'default': ui=userInterface
 		
 		dev = self.device
@@ -1493,12 +1494,15 @@ class Harddisk:
 			raise Exception("Command '%s' failed: %s" % (cmd, error))
 		
 	def zeroFill(self, partition=0, ui='default'):
+		partition = int(partition)
 		fill(partition=partition, ui=ui, infile='/dev/zero')
 	
 	def randomFill(self, partition=0, ui='default'):
+		partition = int(partition)
 		fill(partition=partition, ui=ui, infile='/dev/urandom')
 	
 	def fill(self, partition=0, ui='default', infile=''):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not infile:
 			raise Exception("No input file given")
@@ -1608,6 +1612,7 @@ class Harddisk:
 			raise Exception ("Cannot write mbr: %s" % e)
 	
 	def writePartitionBootRecord(self, partition = 1, fsType = 'auto', ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		
 		if ui: ui.getMessageBox().addText(_("Writing partition boot record (fs: %s) to '%s'.\n") \
@@ -1636,6 +1641,8 @@ class Harddisk:
 			raise Exception ("Cannot write partition boot record: %s" % e)
 	
 	def setNTFSPartitionStartSector(self, partition, sector=0, ui='default'):
+		partition = int(partition)
+		sector = int(sector)
 		if ui == 'default': ui=userInterface
 		if not sector:
 			sector = self.getPartition(partition)['secStart']
@@ -1685,12 +1692,15 @@ class Harddisk:
 		return self.partitions
 	
 	def getPartition(self, number):
+		number = int(number)
 		for part in self.partitions:
-			if (int(part['number']) == int(number)):
+			if (part['number'] == number):
 				return part
 		raise Exception('Partition %s does not exist' % number)
 	
 	def createPartition(self, start, end, fs, type = 'primary', boot = False, lba = False, ui='default'):
+		start = str(start)
+		end = str(end)
 		
 		if ui == 'default': ui=userInterface
 		
@@ -1792,6 +1802,7 @@ class Harddisk:
 	
 	
 	def deletePartition(self, partition, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		
 		if not partition:
@@ -1821,14 +1832,17 @@ class Harddisk:
 		self.readPartitionTable()
 	
 	def mountPartition(self, partition, mountpoint, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		mount(self.getPartition(partition)['device'], mountpoint, ui=ui)
 	
 	def umountPartition(self, partition, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		umount(self.getPartition(partition)['device'], ui=ui)
 	
 	def createFilesystem(self, partition, fs = None, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not fs:
 			fs = self.getPartition(partition)['fs']
@@ -1865,6 +1879,7 @@ class Harddisk:
 		
 		
 	def resizeFilesystem(self, partition, size = 0, fs = None, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		if not fs:
 			fs = self.getPartition(partition)['fs']
@@ -1884,13 +1899,14 @@ class Harddisk:
 			os.putenv("LD_PRELOAD", self.ldPreload)
 		
 		if (fs.lower() == 'ntfs'):
-			cmd = ( "%s --force --size %s %s" % (which('ntfsresize'), size, self.getPartition(partition)['device']) )
+			cmd = ( "echo 'y' | %s --force --size %s %s" % (which('ntfsresize'), size, self.getPartition(partition)['device']) )
 			execute(cmd)
 		
 		if self.ldPreload:
 			os.unsetenv("LD_PRELOAD")
 		
 	def saveImage(self, partition, imageFile, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		imageType = None
 		image = None
@@ -1995,6 +2011,7 @@ class Harddisk:
 	
 	
 	def restoreImage(self, partition, imageFile, ui='default'):
+		partition = int(partition)
 		if ui == 'default': ui=userInterface
 		imageType = None
 		image = None

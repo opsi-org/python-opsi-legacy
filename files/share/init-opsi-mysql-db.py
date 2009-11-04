@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 import MySQLdb, sys, os, getpass
 from _mysql_exceptions import *
@@ -158,9 +158,9 @@ try:
 		mysql.db_query("alter table SOFTWARE_CONFIG add `hostId` varchar(50) NOT NULL;")
 		mysql.db_query("alter table SOFTWARE_CONFIG add `softwareId` varchar(100) NOT NULL;")
 		for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
-			mysql.db_query("update SOFTWARE_CONFIG set `hostId`='%s' where `host_id`=%d;" % (res['hostId'], res['host_id']))
+			mysql.db_query("update SOFTWARE_CONFIG set `hostId`='%s' where `host_id`=%s;" % (res['hostId'], res['host_id']))
 		for res in mysql.db_getSet("SELECT softwareId,software_id FROM `SOFTWARE` WHERE `softwareId` != ''"):
-			mysql.db_query("update SOFTWARE_CONFIG set `softwareId`='%s' where `software_id`=%d;" % (res['softwareId'], res['software_id']))
+			mysql.db_query("update SOFTWARE_CONFIG set `softwareId`='%s' where `software_id`=%s;" % (res['softwareId'], res['software_id']))
 		mysql.db_query("alter table SOFTWARE_CONFIG drop `host_id`;")
 		mysql.db_query("alter table SOFTWARE_CONFIG drop `software_id`;")
 		mysql.db_query("alter table SOFTWARE_CONFIG DEFAULT CHARACTER set utf8;")
@@ -172,18 +172,18 @@ try:
 				continue
 			mysql.db_query("alter table %s add `hostId` varchar(50) NOT NULL;" % key)
 			for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
-				mysql.db_query("update %s set `hostId` = '%s' where `host_id` = %d;" % (key, res['hostId'], res['host_id']))
+				mysql.db_query("update %s set `hostId` = '%s' where `host_id` = %s;" % (key, res['hostId'], res['host_id']))
 			mysql.db_query("alter table %s drop `host_id`;" % key)
 			mysql.db_query("alter table %s DEFAULT CHARACTER set utf8;" % key)
 			mysql.db_query("alter table %s ENGINE = InnoDB;" % key)
 		
 		# HARDWARE_INFO
-		mysql.db_query("alter table HARDWARE_INFO add `hostId` varchar(50) NOT NULL;" % key)
+		mysql.db_query("alter table HARDWARE_INFO add `hostId` varchar(50) NOT NULL;")
 		for res in mysql.db_getSet("SELECT hostId,host_id FROM `HOST` WHERE `hostId` != ''"):
-			mysql.db_query("update HARDWARE_INFO set `hostId` = '%s' where `host_id` = %d;" % (key, res['hostId'], res['host_id']))
-		mysql.db_query("alter table HARDWARE_INFO drop `host_id`;" % key)
-		mysql.db_query("alter table HARDWARE_INFO DEFAULT CHARACTER set utf8;" % key)
-		mysql.db_query("alter table HARDWARE_INFO ENGINE = InnoDB;" % key)
+			mysql.db_query("update HARDWARE_INFO set `hostId` = '%s' where `host_id` = %s;" % (key, res['hostId'], res['host_id']))
+		mysql.db_query("alter table HARDWARE_INFO drop `host_id`;")
+		mysql.db_query("alter table HARDWARE_INFO DEFAULT CHARACTER set utf8;")
+		mysql.db_query("alter table HARDWARE_INFO ENGINE = InnoDB;")
 		
 		# SOFTWARE
 		mysql.db_query("alter table SOFTWARE drop `software_id`;")
