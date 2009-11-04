@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.9'
 
 # Imports
 import time, json, gettext, os, re, random, subprocess
@@ -58,7 +58,7 @@ logger = Logger()
 try:
 	t = gettext.translation('opsi_tools', LOCALE_DIR)
 	def _(string):
-		return t.ugettext(string).encode('utf-8', 'replace')
+		return unicode(t.ugettext(string), 'utf-8', 'replace')
 	
 except Exception, e:
 	logger.info("Locale not found: %s" % e)
@@ -115,10 +115,10 @@ def md5sum(filename):
 	return m.hexdigest()
 
 def randomString(length):
-	string = ''
+	string = u''
 	for i in range(length):
 		string = string + random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	return string
+	return unicode(string)
 
 def compareVersions(v1, condition, v2):
 	
@@ -475,20 +475,20 @@ def findFiles(directory, prefix='', excludeDir=None, excludeFile=None, includeDi
 	return files
 
 def generateOpsiHostKey():
-	key = ''
+	key = u''
 	if (os.name == 'posix'):
-		logger.debug("Opening random device '%s'" % RANDOM_DEVICE)
+		logger.debug(u"Opening random device '%s' to generate opsi host key" % RANDOM_DEVICE)
 		r = open (RANDOM_DEVICE)
 		key = r.read(16)
 		r.close()
 		logger.debug("Random device closed")
+		key = unicode(key.encode("hex"))
 	else:
-		logger.debug("Using random")
+		logger.debug(u"Using python random module to generate opsi host key")
 		while (len(key) < 32):
-			key += random.choice(['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'])
-		return key
-	return key.encode("hex")
-	
+			key += random.choice([u'0',u'1',u'2',u'3',u'4',u'5',u'6',u'7',u'8',u'9',u'a',u'b',u'c',u'd',u'e',u'f'])
+	return key
+
 def blowfishEncrypt(key, cleartext):
 	''' Takes cleartext string, 
 	    returns hex-encoded, blowfish-encrypted string '''
@@ -519,7 +519,7 @@ def blowfishDecrypt(key, crypt):
 	# Remove possible \0-chars
 	if (cleartext.find('\0') != -1):
 		cleartext = cleartext[:cleartext.find('\0')]
-	return cleartext
+	return unicode(cleartext)
 
 def timestamp(secs=0):
 	''' Returns a timestamp of the current system time.

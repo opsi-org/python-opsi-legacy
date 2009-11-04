@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.9.9'
+__version__ = '0.9.9.1'
 
 # Imports
 import json, base64, urllib, httplib, new, stat, socket, random, time
@@ -267,8 +267,9 @@ class JSONRPCBackend(DataBackend):
 	def __request(self, baseUrl, query='', retry=True, maxRetrySeconds=5, started=None):
 		''' Do a http request '''
 		
+		now = time.time()
 		if not started:
-			started = time.time()
+			started = now
 		
 		#logger.debug("__request(%s)" % request)
 		response = None
@@ -312,7 +313,9 @@ class JSONRPCBackend(DataBackend):
 				self.__sessionId = cookie.split(';')[0].strip()
 		
 		except Exception, e:
-			if retry and (time.time()-started < maxRetrySeconds):
+			logger.debug(u"Request to '%s' failed, retry: %s, started: %s, now: %s, maxRetrySeconds: %s" \
+					% (self.__address, retry, started, now, maxRetrySeconds))
+			if retry and (now - started < maxRetrySeconds):
 				logger.warning("Request to '%s' failed: %s, trying to reconnect" % (self.__address, e))
 				self._connect()
 				return self.__request(baseUrl, query=query, retry=retry, maxRetrySeconds=maxRetrySeconds, started=started)

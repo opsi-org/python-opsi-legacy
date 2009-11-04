@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.1.8.2'
+__version__ = '0.2'
 
 # Imports
 import re, os, time, socket, sys
@@ -83,10 +83,11 @@ class PROCESSENTRY32(Structure):
 # -                                               INFO                                                -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def getHostname():
-	hostname = socket.getfqdn().lower().split('.')[0]
-	if (hostname != 'localhost'):
-		return hostname
-	return getRegistryValue(HKEY_LOCAL_MACHINE, 'SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName', 'ComputerName').lower()
+	return win32api.GetComputerName().lower()
+	#hostname = socket.getfqdn().lower().split('.')[0]
+	#if (hostname != 'localhost'):
+	#	return hostname
+	#return getRegistryValue(HKEY_LOCAL_MACHINE, 'SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName', 'ComputerName').lower()
 	
 def getFQDN():
 	fqdn = socket.getfqdn().lower()
@@ -126,11 +127,11 @@ def getSystemDrive():
 
 def copyACL(src, dest):
 	revision = src.GetAclRevision()
-	logger.debug("copyACL: ace count is %s" % src.GetAceCount())
+	logger.debug2("copyACL: ace count is %s" % src.GetAceCount())
 	for i in range(src.GetAceCount()):
-		logger.debug("copyACL: processing ace #%s" % i)
+		logger.debug2("copyACL: processing ace #%s" % i)
 		ace = src.GetAce(i)
-		logger.debug("copyACL: ace: %s" % str(ace))
+		logger.debug2("copyACL: ace: %s" % str(ace))
 		# XXX: Not sure if these are actually correct.
 		# See http://aspn.activestate.com/ASPN/docs/ActivePython/2.4/pywin32/PyACL__GetAce_meth.html
 		if   (ace[0][0] == win32con.ACCESS_ALLOWED_ACE_TYPE):
@@ -225,9 +226,13 @@ def mount(dev, mountpoint, ui='default', **options):
 			raise Exception("Bad smb uri '%s'" % dev)
 		
 		if not 'username' in options:
-			options['username'] = 'guest'
+			options['username'] = None
+		elif options['username'] and (options['username'].find('\\') != -1):
+			# Ensure format <domain>\<username>
+			options['username'] = options['username'].split('\\')[0] + '\\' + options['username'].split('\\')[-1]
+			
 		if not 'password' in options:
-			options['password'] = ''
+			options['password'] = None
 		
 		try:
 			try:
@@ -286,6 +291,49 @@ def getActiveDesktopName():
 	desktop = win32service.OpenInputDesktop(0, True, win32con.MAXIMUM_ALLOWED)
 	return win32service.GetUserObjectInformation(desktop, win32con.UOI_NAME)
 
+
+def getActiveSessionIds():
+	sessionIds = []
+	logger.debug("Getting active sessions")
+	for s in win32ts.WTSEnumerateSessions():
+		logger.debug("   Found session: %s" % s)
+		sessionIds.append(s['SessionId'])
+	return sessionIds
+	
+def getSessionInformation(sessionId):
+	info = {}
+	for infoClass in ('WTSUserName', 'WTSApplicationName', 'WTSClientDirectory', 'WTSClientName', 'WTSDomainName', 'WTSInitialProgram',
+	                  'WTSOEMId', 'WTSUserName', 'WTSWinStationName', 'WTSWorkingDirectory', 'WTSClientProtocolType', 'WTSClientProductId',
+	                  'WTSClientBuildNumber', 'WTSClientHardwareId', 'WTSSessionId', 'WTSConnectState', 'WTSClientDisplay', 'WTSClientAddress'):
+		try:
+			info[infoClass] = win32ts.WTSQuerySessionInformation(None, sessionId, eval('win32ts.%s' % infoClass))
+		except Exception, e:
+			info[infoClass] = None
+			logger.debug(e)
+	return info
+
+def getActiveSessionInformation():
+	info = []
+	for sessionId in getActiveSessionIds():
+		info.append(getSessionInformation(sessionId))
+	return info
+
+def getUserSessionIds(username):
+	sessionIds = []
+	if not username:
+		return sessionIds
+	domain = None
+	logger.debug("Getting sessions of user '%s'" % username)
+	if (username.find('\\') != -1):
+		domain = username.split('\\')[0]
+		username = username.split('\\')[-1]
+	for session in getActiveSessionInformation():
+		if ( session.get('WTSUserName') and (session.get('WTSUserName').lower() == username.lower()) and \
+		     (not domain or (session.get('WTSDomainName') and (session.get('WTSDomainName').lower() == domain.lower()))) ):
+			sessionIds.append(session.get('WTSSessionId'))
+			logger.debug("   Found session id of user '%s': %s" % (username, session.get('WTSSessionId')))
+	return sessionIds
+	
 def logoffCurrentUser():
 	logger.notice("Logging off current user")
 	#win32api.ExitWindows()
@@ -651,8 +699,11 @@ def runCommandInSession(command, sessionId = None, desktop = "default", duplicat
 	if (desktop.find('\\') == -1):
 		desktop = 'winsta0\\' + desktop
 	
-	if not type(sessionId) is int or (sessionId < 0):
+	logger.debug("Session id given: %s" % sessionId)
+	if sessionId is None or (int(sessionId) < 0):
+		logger.debug("No session id given, running in active console session")
 		sessionId = getActiveConsoleSessionId()
+	sessionId = int(sessionId)
 	
 	userToken = getUserToken(sessionId, duplicateFrom)
 	
@@ -662,33 +713,28 @@ def runCommandInSession(command, sessionId = None, desktop = "default", duplicat
 	s.lpDesktop = desktop
 	#s.wShowWindow = win32con.SW_MAXIMIZE
 	
-	try:
-		logger.notice("Executing: '%s' in session '%s' on desktop '%s'" % (command, sessionId, desktop))
-		(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(userToken,None,command,None,None,0,dwCreationFlags,None,None,s)
-		logger.info("Process startet, pid: %d" % dwProcessId)
-		if not waitForProcessEnding:
-			return (hProcess, hThread, dwProcessId, dwThreadId)
-		logger.info("Waiting for process ending: %d" % dwProcessId)
-		while win32event.WaitForSingleObject(hProcess, 0):
-			time.sleep(0.1)
-		logger.notice("Process ended: %d" % dwProcessId)
-	except Exception, e:
-		logger.error(e)
-		if (e[0] == 233) and (sys.getwindowsversion()[0] == 5):
-			# No process is on the other end
-			# Problem with pipe \\\\.\\Pipe\\TerminalServer\\SystemExecSrvr\\<sessionid>
-			# After logging off from a session other than 0 csrss.exe does not create this pipe or CreateRemoteProcessW is not able to read the pipe.
-			logger.info("Retrying to run command on winlogon desktop of session 0")
-			return runCommandInSession(command, 0, 'winlogon', duplicateFrom, waitForProcessEnding)
-		else:
-			raise
+	logger.notice("Executing: '%s' in session '%s' on desktop '%s'" % (command, sessionId, desktop))
+	(hProcess, hThread, dwProcessId, dwThreadId) = win32process.CreateProcessAsUser(userToken,None,command,None,None,0,dwCreationFlags,None,None,s)
+	logger.info("Process startet, pid: %d" % dwProcessId)
+	if not waitForProcessEnding:
+		return (hProcess, hThread, dwProcessId, dwThreadId)
+	logger.info("Waiting for process ending: %d" % dwProcessId)
+	while win32event.WaitForSingleObject(hProcess, 0):
+		time.sleep(0.1)
+	logger.notice("Process ended: %d" % dwProcessId)
+	return (None, None, None, None)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                     USER / GROUP HANDLING                                         -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def createUser(username, password, groups = []):
-	servername = "\\\\" + win32api.GetComputerName()
+	domain = getHostname().upper()
+	if (username.find('\\') != -1):
+		(domain, username) = username.split('\\')
+	domain = domain.upper()
+	if (domain != getHostname().upper()):
+		raise ValueError("Can only handle domain %s" % getHostname().upper())
 	
 	userData = {}
 	userData['name'] = username
@@ -699,29 +745,41 @@ def createUser(username, password, groups = []):
 	userData['home_dir'] = None
 	userData['home_dir_drive'] = None
 	userData['primary_group_id'] = ntsecuritycon.DOMAIN_GROUP_RID_USERS
-	userData['password_expired'] = 1 # User must change password next logon.
+	userData['password_expired'] = 0
 	
-	#win32net.NetUserAdd(serverName, 3, userData)
-	win32net.NetUserAdd(servername, 1, userData)
+	#win32net.NetUserAdd(domain, 3, userData)
+	win32net.NetUserAdd("\\\\" + domain, 1, userData)
 	if not groups:
 		return
-	u = { 'domainandname': username }
+	u = { 'domainandname': domain + '\\' + username }
 	for group in groups:
 		logger.info("Adding user '%s' to group '%s'" % (username, group))
-		win32net.NetLocalGroupAddMembers(servername, group, 3, [ u ])
+		win32net.NetLocalGroupAddMembers("\\\\" + domain, group, 3, [ u ])
 		
 	
 def deleteUser(username):
-	servername = "\\\\" + win32api.GetComputerName()
+	domain = getHostname().upper()
+	if (username.find('\\') != -1):
+		(domain, username) = username.split('\\')
+	domain = domain.upper()
+	if (domain != getHostname().upper()):
+		raise ValueError("Can only handle domain %s" % getHostname().upper())
+	
 	try:
-		win32net.NetUserDel(servername, username)
+		win32net.NetUserDel("\\\\" + domain, username)
 	except win32net.error:
 		pass
 
 def existsUser(username):
-	servername = "\\\\" + win32api.GetComputerName()
-	for user in win32net.NetUserEnum(servername, 0)[0]:
-		if (user.get('name') == username):
+	domain = getHostname().upper()
+	if (username.find('\\') != -1):
+		(domain, username) = username.split('\\')
+	domain = domain.upper()
+	if (domain != getHostname().upper()):
+		raise ValueError("Can only handle domain %s" % getHostname().upper())
+	
+	for user in win32net.NetUserEnum("\\\\" + domain, 0)[0]:
+		if (user.get('name').lower() == username.lower()):
 			return True
 	return False
 
@@ -745,16 +803,20 @@ class Impersonate:
 			raise Exception("Neither username nor user token given")
 		#if username and not existsUser(username):
 		#	raise Exception("User '%s' does not exist" % username)
+		self.domain = getHostname()
 		self.username = username
+		if (self.username.find('\\') != -1):
+			self.domain = self.username.split('\\')[0]
+			self.username = self.username.split('\\')[-1]
+		self.domain = self.domain.upper()
 		self.password = password
 		if not desktop:
 			desktop = "default"
 		if (desktop.find('\\') == -1):
 			desktop = 'winsta0\\' + desktop
 		(self.winsta, self.desktop) = desktop.split('\\', 1)
-		self.domain = win32api.GetComputerName()
 		self.userToken = userToken
-		self.saveWindowStation = None 
+		self.saveWindowStation = None
 		self.saveDesktop = None
 		self.newWindowStation = None
 		self.newDesktop = None
@@ -770,6 +832,8 @@ class Impersonate:
 				raise ValueError("Unhandled logon type '%s'" % logonType)
 			
 			if not self.userToken:
+				# TODO: Use (UPN) format for username <USER>@<DOMAIN> ?
+				logger.debug("Logon user: '%s\\%s'" % (self.domain, self.username))
 				self.userToken = win32security.LogonUser(
 					self.username,
 					self.domain,

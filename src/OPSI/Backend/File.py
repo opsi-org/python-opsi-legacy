@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 # Imports
 import socket, os, time, re, ConfigParser, json, StringIO, codecs
@@ -1246,6 +1246,12 @@ class FileBackend(File, DataBackend):
 					macs.append(mac.lower())
 		return macs
 		#raise BackendMissingDataError("Cannot get mac address for host '%s' from harware-info." % hostId)
+	
+	def getMacAddress(self, hostId):
+		macs = self.getMacAddresses_list(hostId)
+		if macs:
+			return macs[0]
+		return ''
 	
 	def createGroup(self, groupId, members = [], description = "", parentGroupId=""):
 		if not re.search(GROUP_ID_REGEX, groupId):
