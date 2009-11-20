@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.9'
+__version__ = '1.0.10'
 
 # Imports
 import ldap, ldap.modlist, re, json
@@ -944,7 +944,7 @@ class LDAPBackend(DataBackend):
 				filter = filter.replace('%name%', depotName.lower())
 				filter = filter.replace('%domain%', domain.lower())
 				try:
-					depot = self._getHostObject(filter=filter)
+					depot = self._getHostObject(hostId, filter=filter)
 				except BackendMissingDataError, e:
 					if self._createServerCommand:
 						cmd = self._createServerCommand
@@ -952,7 +952,7 @@ class LDAPBackend(DataBackend):
 						cmd = cmd.replace('%domain%', domain.lower())
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						# Search again
-						depot = self._getHostObject(filter=filter)
+						depot = self._getHostObject(hostId, filter=filter)
 					else:
 						raise
 			else:
