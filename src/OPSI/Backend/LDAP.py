@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.11'
+__version__ = '1.0.12'
 
 # Imports
 import ldap, ldap.modlist, re, json
@@ -529,12 +529,16 @@ class LDAPBackend(DataBackend):
 					if self._createClientCommand:
 						if not hardwareAddress: hardwareAddress = ''
 						if not ipAddress: ipAddress = ''
+						if not description: description = ''
+						if not notes: notes = ''
 						
 						cmd = self._createClientCommand
 						cmd = cmd.replace('%name%', clientName.lower())
 						cmd = cmd.replace('%domain%', domain.lower())
 						cmd = cmd.replace('%mac%', hardwareAddress.lower())
 						cmd = cmd.replace('%ip%', ipAddress.lower())
+						cmd = cmd.replace('%description%', description)
+						cmd = cmd.replace('%notes%', notes)
 						System.execute(cmd, logLevel = LOG_CONFIDENTIAL)
 						# Search again
 						client = self._getHostObject(hostId, filter)
@@ -999,7 +1003,8 @@ class LDAPBackend(DataBackend):
 		return ids
 	
 	def getDepotId(self, clientId=None):
-		depotId = self.getServerId()
+		#depotId = self.getServerId()
+		depotId = socket.getfqdn()
 		if clientId:
 			clientId = self._preProcessHostId(clientId)
 			depotId = self.getNetworkConfig_hash(objectId = clientId).get('depotId', self.getServerId())

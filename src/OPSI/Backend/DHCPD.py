@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.5.5.5'
+__version__ = '0.5.5.6'
 
 # Imports
 import re, socket, time
@@ -202,13 +202,8 @@ class DHCPDBackend(Backend):
 		
 		conf = Config(self._dhcpdConfigFile)
 		host = conf.getHost( self.getHostname(hostId) )
-		host['fixed-address'] = ipAddress
-		
-		try:
-			conf.modifyHost(hostname = self.getHostname(hostId), parameters = host)
-		except Exception, e:
-			logger.error(e)
-			raise
+		conf.deleteHost( hostname = self.getHostname(hostId) )
+		conf.addHost(hostname=self.getHostname(hostId), hardwareAddress=host['hardware'].split()[1].lower(), ipAddress=ipAddress, fixedAddress=ipAddress, parameters = dict(self._defaultClientParameters))
 		
 		conf.writeConfig()
 		self._restartDhcpd()

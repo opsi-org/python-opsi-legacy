@@ -16,6 +16,7 @@ CHASSIS = Chassis
 CHASSIS.name = Name
 CHASSIS.chassisType = Chassis type
 CHASSIS.installDate = Installation date
+CHASSIS.serialNumber = Serial number
 BASE_BOARD = Base board
 BASE_BOARD.product = Product
 BIOS = BIOS

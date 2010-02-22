@@ -591,7 +591,7 @@ def getPids(process, sessionId = None):
 			break
 	CloseHandle(hProcessSnap)
 	if not processIds:
-		logger.warning("No process with name %s found (session id: %s)" % (process, sessionId))
+		logger.debug("No process with name %s found (session id: %s)" % (process, sessionId))
 	return processIds
 
 def getPid(process, sessionId = None):

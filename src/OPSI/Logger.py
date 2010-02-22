@@ -127,8 +127,9 @@ class LoggerSubject:
 	def setMessage(self, message, severity = 0):
 		if not type(message) is unicode:
 			if not type(message) is str:
-				message = str(message)
-			message = unicode(message, 'utf-8', 'replace')
+				message = unicode(message)
+			else:
+				message = unicode(message, 'utf-8', 'replace')
 		self._message = message
 		self._severity = severity
 		for o in self._observers:
@@ -190,7 +191,7 @@ class LoggerImplementation:
 	
 	def setConfidentialStrings(self, strings):
 		if not type(strings) in (list, tuple):
-			strings = [ str(strings) ]
+			strings = [ unicode(strings) ]
 		self.__confidentialStrings = []
 		for string in strings:
 			self.addConfidentialString(string)
@@ -198,8 +199,9 @@ class LoggerImplementation:
 	def addConfidentialString(self, string):
 		if not type(string) is unicode:
 			if not type(string) is str:
-				string = str(string)
-			string = unicode(string, 'utf-8', 'replace')
+				string = unicode(string)
+			else:
+				string = unicode(string, 'utf-8', 'replace')
 		if not string:
 			raise ValueError("Cannot use empty string as confidential string")
 		if string in self.__confidentialStrings:
@@ -418,8 +420,9 @@ class LoggerImplementation:
 		
 		if not type(message) is unicode:
 			if not type(message) is str:
-				message = str(message)
-			message = unicode(message, 'utf-8', 'replace')
+				message = unicode(message)
+			else:
+				message = unicode(message, 'utf-8', 'replace')
 		
 		if (level < LOG_CONFIDENTIAL):
 			for string in self.__confidentialStrings:
@@ -483,7 +486,7 @@ class LoggerImplementation:
 			m = unicode(m)
 			m = m.replace('%D', datetime)
 			m = m.replace('%T', threadId)
-			m = m.replace('%l', str(level))
+			m = m.replace('%l', unicode(level))
 			m = m.replace('%L', levelname)
 			m = m.replace('%M', message)
 			m = m.replace('%F', filename)
@@ -498,7 +501,7 @@ class LoggerImplementation:
 			m = unicode(m)
 			m = m.replace('%D', datetime)
 			m = m.replace('%T', threadId)
-			m = m.replace('%l', str(level))
+			m = m.replace('%l', unicode(level))
 			m = m.replace('%L', levelname)
 			m = m.replace('%M', message)
 			m = m.replace('%F', filename)
@@ -527,7 +530,7 @@ class LoggerImplementation:
 				m = unicode(m)
 				m = m.replace('%D', datetime)
 				m = m.replace('%T', threadId)
-				m = m.replace('%l', str(level))
+				m = m.replace('%l', unicode(level))
 				m = m.replace('%L', levelname)
 				m = m.replace('%M', message)
 				m = m.replace('%F', filename)
@@ -580,7 +583,7 @@ class LoggerImplementation:
 			m = unicode(m)
 			m = m.replace('%D', datetime)
 			m = m.replace('%T', threadId)
-			m = m.replace('%l', str(level))
+			m = m.replace('%l', unicode(level))
 			m = m.replace('%L', levelname)
 			m = m.replace('%M', message)
 			m = m.replace('%F', filename)
@@ -617,7 +620,7 @@ class LoggerImplementation:
 			m = unicode(m)
 			m = m.replace('%D', datetime)
 			m = m.replace('%T', threadId)
-			m = m.replace('%l', str(level))
+			m = m.replace('%l', unicode(level))
 			m = m.replace('%L', levelname)
 			m = m.replace('%M', message)
 			m = m.replace('%F', filename)
@@ -692,7 +695,7 @@ class LoggerImplementation:
 		self.log(LOG_CRITICAL, message)
 	
 	def comment( self, message ):
-		''' Log a critical message. '''
+		''' Log a comment message. '''
 		self.log(LOG_COMMENT, message)
 	
 

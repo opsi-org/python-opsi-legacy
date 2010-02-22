@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.6.2'
+__version__ = '0.3.6.3'
 
 # Imports
 import json, threading, re, stat, base64, urllib, os, shutil, gettext
@@ -473,7 +473,7 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 				# python 2.6 json module
 				rpc = json.loads( line )
 			else:
-				rpc = json.read( line )
+				rpc = json.read( line.encode('utf-8') )
 			method = rpc['method']
 			id = rpc['id']
 			params = rpc['params']
