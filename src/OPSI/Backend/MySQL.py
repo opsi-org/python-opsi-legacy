@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.3.3.4'
+__version__ = '0.3.3.5'
 
 # Imports
 import MySQLdb, warnings, time
@@ -836,9 +836,9 @@ class MySQLBackend(DataBackend):
 				confId = current[0]['config_id']
 				# Update config
 				self.__mysql__.db_query("UPDATE `SOFTWARE_CONFIG` SET " + \
-								"`audit_lastseen`='%s', `usageFrequency`=%d, `lastUsed`='%s' WHERE `config_id` = %d;" \
+								"`audit_lastseen`='%s', `usageFrequency`=%s, `lastUsed`='%s' WHERE `config_id` = %d;" \
 								% (	scantime, 
-									softwareConfig.get('usageFrequency', -1),
+									int(softwareConfig.get('usageFrequency', -1)),
 									softwareConfig.get('lastUsed', '0000-00-00 00:00:00'),
 									confId ) )
 			else:
