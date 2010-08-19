@@ -814,11 +814,7 @@ class File31Backend(File, FileBackend):
 			dev = {}
 			for (key, value) in ini.items(section):
 				try:
-					if hasattr(json, 'loads'):
-						# python 2.6 json module
-						dev[key] = json.loads(value)
-					else:
-						dev[key] = json.read(value)
+					dev[key] = json.loads(value)
 				except:
 					dev[key] = ''
 			
@@ -855,17 +851,9 @@ class File31Backend(File, FileBackend):
 				ini.add_section(section)
 				for (opsiName, opsiValue) in value.items():
 					if type(opsiValue) is unicode:
-						if hasattr(json, 'dumps'):
-							# python 2.6 json module
-							ini.set(section, opsiName, json.dumps(opsiValue.encode('utf-8')))
-						else:
-							ini.set(section, opsiName, json.write(opsiValue.encode('utf-8')))
+						ini.set(section, opsiName, json.dumps(opsiValue.encode('utf-8')))
 					else:
-						if hasattr(json, 'dumps'):
-							# python 2.6 json module
-							ini.set(section, opsiName, json.dumps(opsiValue))
-						else:
-							ini.set(section, opsiName, json.write(opsiValue))
+						ini.set(section, opsiName, json.dumps(opsiValue))
 				n += 1
 		
 		self.writeIniFile(iniFile, ini)
@@ -2037,11 +2025,7 @@ class File31Backend(File, FileBackend):
 		
 		ini.set('%s-state' % productId, 'productVersion', productVersion)
 		ini.set('%s-state' % productId, 'packageVersion', packageVersion)
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			ini.set('%s-state' % productId, 'productActionProgress', json.dumps(productActionProgress))
-		else:
-			ini.set('%s-state' % productId, 'productActionProgress', json.write(productActionProgress))
+		ini.set('%s-state' % productId, 'productActionProgress', json.dumps(productActionProgress))
 		ini.set('%s-state' % productId, 'lastStateChange', lastStateChange)
 		
 		self.writeIniFile( self.getClientIniFile(objectId), ini)
@@ -2067,11 +2051,7 @@ class File31Backend(File, FileBackend):
 			self.setProductState(self, productId = productId, objectId = hostId, installationStatus="not_installed", actionRequest="none")
 			ini = self.readIniFile( self.getClientIniFile(hostId) )
 		
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			ini.set('%s-state' % productId, 'productActionProgress', json.dumps(productActionProgress))
-		else:
-			ini.set('%s-state' % productId, 'productActionProgress', json.write(productActionProgress))
+		ini.set('%s-state' % productId, 'productActionProgress', json.dumps(productActionProgress))
 		self.writeIniFile( self.getClientIniFile(hostId), ini)
 		
 	def getPossibleProductActions_list(self, productId=None, depotId=None):
@@ -2219,11 +2199,7 @@ class File31Backend(File, FileBackend):
 							elif (key.lower() == 'productactionprogress'):
 								productActionProgress = value
 								if productActionProgress:
-									if hasattr(json, 'loads'):
-										# python 2.6 json module
-										productActionProgress = json.loads(value)
-									else:
-										productActionProgress = json.read(value)
+									productActionProgress = json.loads(value)
 					
 					states.append( { 	'productId':             productId,
 								'installationStatus':    'undefined',

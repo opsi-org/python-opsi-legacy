@@ -32,12 +32,15 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 # Imports
-
-
-import time, types, new, json
+import time, types, new
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -150,11 +153,7 @@ class OfflineBackend(DataBackend):
 		self.__cachedExecutions = []
 		f = open(self.__cachedExecutionsFile)
 		for line in f.readlines():
-			if hasattr(json, 'loads'):
-				# python 2.6 json module
-				self.__cachedExecutions.append(json.loads(line.strip()))
-			else:
-				self.__cachedExecutions.append(json.read(line.strip()))
+			self.__cachedExecutions.append(json.loads(line.strip()))
 		f.close()
 		
 	def _writeCachedExecutionsFile(self, lastOnly=False):
@@ -172,11 +171,7 @@ class OfflineBackend(DataBackend):
 			f = open(self.__cachedExecutionsFile, 'w')
 			ces = self.__cachedExecutions
 		for ce in ces:
-			if hasattr(json, 'dumps'):
-				# python 2.6 json module
-				f.write(json.dumps(ce) + '\n')
-			else:
-				f.write(json.write(ce) + '\n')
+			f.write(json.dumps(ce) + '\n')
 		f.close()
 		
 	def _addCachedExecution(self, method, params=[]):
@@ -219,12 +214,7 @@ class OfflineBackend(DataBackend):
 				if currentProgressObserver: self.__workReplicator.getCurrentProgressSubject().detachObserver(currentProgressObserver)
 			
 			logger.info("Writing hwaudit conf file '%s'" % self.__hwauditConfFile)
-			hwAuditConf = ''
-			if hasattr(json, 'dumps'):
-				# python 2.6 json module
-				hwAuditConf = json.dumps(self.__remoteBackend.getOpsiHWAuditConf())
-			else:
-				hwAuditConf = json.write(self.__remoteBackend.getOpsiHWAuditConf())
+			hwAuditConf = json.dumps(self.__remoteBackend.getOpsiHWAuditConf())
 			f = open(self.__hwauditConfFile, 'wb')
 			f.write(hwAuditConf)
 			f.close()
@@ -347,11 +337,7 @@ class OfflineBackend(DataBackend):
 		f = open(self.__hwauditConfFile, 'rb')
 		hwAuditConf = f.read()
 		f.close()
-		if hasattr(json, 'loads'):
-			# python 2.6 json module
-			return json.loads(hwAuditConf)
-		else:
-			return json.read(hwAuditConf)
+		return json.loads(hwAuditConf)
 	
 	def getPossibleMethods_listOfHashes(self):
 		if not self.__possibleMethods:

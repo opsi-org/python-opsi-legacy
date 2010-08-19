@@ -9,7 +9,7 @@ Standards-Version: 3.7.2
 Package: python-opsi
 Section: opsi
 Architecture: all
-Depends: python-twisted-web, python-twisted-conch, python-crypto, python-json, python-ldap, python-newt, python-pam, python-pyopenssl, python-support, python-mysqldb, duplicity
+Depends: python-twisted-web, python-twisted-conch, python-crypto, python-simplejson, python-ldap, python-newt, python-pam, python-pyopenssl, python-support, python-mysqldb, duplicity
 Provides: python2.3-opsi, python2.4-opsi, python2.5-opsi
 Description: OPSI python library
  This package contains the OPSI python library..

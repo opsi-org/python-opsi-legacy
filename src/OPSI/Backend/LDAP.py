@@ -35,7 +35,13 @@
 __version__ = '1.0.12'
 
 # Imports
-import ldap, ldap.modlist, re, json
+import ldap, ldap.modlist, re
+
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -1752,11 +1758,7 @@ class LDAPBackend(DataBackend):
 		
 		productState.setAttribute( 'opsiProductActionRequestForced', [ actionRequest ] )
 		productState.setAttribute( 'opsiProductInstallationStatus', [ installationStatus ] )
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			productState.setAttribute( 'opsiProductActionProgress', [ json.dumps(productActionProgress) ] )
-		else:
-			productState.setAttribute( 'opsiProductActionProgress', [ json.write(productActionProgress) ] )
+		productState.setAttribute( 'opsiProductActionProgress', [ json.dumps(productActionProgress) ] )
 		
 		productState.setAttribute( 'opsiHostReference', 	[ self.getHostDn(objectId) ] )
 		productState.setAttribute( 'opsiProductReference', 	[ product.getDn() ] )
@@ -1795,11 +1797,7 @@ class LDAPBackend(DataBackend):
 			self.setProductState(self, productId = productId, objectId = hostId, installationStatus="not_installed", actionRequest="none")
 		
 		productState.readFromDirectory(self._ldap)
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			productState.setAttribute( 'opsiProductActionProgress', [ json.dumps(productActionProgress) ] )
-		else:
-			productState.setAttribute( 'opsiProductActionProgress', [ json.write(productActionProgress) ] )
+		productState.setAttribute( 'opsiProductActionProgress', [ json.dumps(productActionProgress) ] )
 		
 		productState.writeToDirectory(self._ldap)
 		
@@ -2015,11 +2013,7 @@ class LDAPBackend(DataBackend):
 						state['installationStatus'] = productState.getAttribute('opsiProductInstallationStatus', 'not_installed')
 						state['productActionProgress'] = productState.getAttribute( 'opsiProductActionProgress', {} )
 						if state['productActionProgress']:
-							if hasattr(json, 'loads'):
-								# python 2.6 json module
-								state['productActionProgress'] = json.loads( state['productActionProgress'] )
-							else:
-								state['productActionProgress'] = json.read( state['productActionProgress'] )
+							state['productActionProgress'] = json.loads( state['productActionProgress'] )
 						state['productVersion'] = productState.getAttribute('opsiProductVersion', '')
 						state['packageVersion'] = productState.getAttribute('opsiPackageVersion', '')
 						state['lastStateChange'] = productState.getAttribute('lastStateChange', '')

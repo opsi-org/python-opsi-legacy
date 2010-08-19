@@ -35,11 +35,16 @@
 __version__ = '0.3.6.3'
 
 # Imports
-import json, threading, re, stat, base64, urllib, os, shutil, gettext
+import threading, re, stat, base64, urllib, os, shutil, gettext
 try:
 	from hashlib import md5
 except ImportError:
 	from md5 import md5
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 from OPSI.web2 import responsecode
 from OPSI.web2.dav import davxml
 from httplib import HTTPConnection, HTTPSConnection
@@ -469,11 +474,7 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 		logger.info("received line %s" % line)
 		id = None
 		try:
-			if hasattr(json, 'loads'):
-				# python 2.6 json module
-				rpc = json.loads( line )
-			else:
-				rpc = json.read( line.encode('utf-8') )
+			rpc = json.loads( line )
 			method = rpc['method']
 			id = rpc['id']
 			params = rpc['params']
@@ -551,11 +552,7 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 		for client in self.clients:
 			jsonString = ''
 			# json-rpc: notifications have id null
-			if hasattr(json, 'dumps'):
-				# python 2.6 json module
-				jsonString = json.dumps( {"id": None, "method": name, "params": params } )
-			else:
-				jsonString = json.write( {"id": None, "method": name, "params": params } )
+			jsonString = json.dumps( {"id": None, "method": name, "params": params } )
 			if type(jsonString) is unicode:
 				jsonString = jsonString.encode('utf-8')
 			client.sendLine(jsonString)
@@ -660,11 +657,7 @@ class NotificationClientFactory(ClientFactory):
 		logger.debug("received rpc '%s'" % rpc)
 		id = None
 		try:
-			if hasattr(json, 'loads'):
-				# python 2.6 json module
-				rpc = json.loads( rpc )
-			else:
-				rpc = json.read( rpc )
+			rpc = json.loads( rpc )
 			id = rpc['id']
 			if id:
 				# Received rpc answer
@@ -693,11 +686,7 @@ class NotificationClientFactory(ClientFactory):
 			raise Exception("execute timed out after %d seconds" % self._timeout)
 		
 		rpc = {'id': None, "method": method, "params": params }
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			self.sendLine( json.dumps( rpc ) )
-		else:
-			self.sendLine( json.write( rpc ) )
+		self.sendLine( json.dumps( rpc ) )
 
 class NotificationClient(threading.Thread):
 	def __init__(self, address, port, observer):

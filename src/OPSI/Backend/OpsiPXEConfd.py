@@ -36,6 +36,11 @@ __version__ = '0.3.4'
 
 # Imports
 import socket
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 
 # OPSI imports
 from OPSI.Backend.Backend import *
@@ -81,18 +86,10 @@ class OpsiPXEConfdBackend(Backend):
 			isRetry = False
 			try:
 				con = httplib.HTTPSConnection(depotId, 4447)
-				if hasattr(json, 'dumps'):
-					# python 2.6 json module
-					con.putrequest('GET', '/rpc?' + urllib.quote(json.dumps( {"id": 1, "method": "setPXEBootConfiguration", "params": [ hostId, args ] } )))
-				else:
-					con.putrequest('GET', '/rpc?' + urllib.quote(json.write( {"id": 1, "method": "setPXEBootConfiguration", "params": [ hostId, args ] } )))
+				con.putrequest('GET', '/rpc?' + urllib.quote(json.dumps( {"id": 1, "method": "setPXEBootConfiguration", "params": [ hostId, args ] } )))
 				con.putheader('Authorization', 'Basic '+ base64.encodestring(urllib.unquote(depotId + ':' + opsiHostKey)).strip() )
 				con.endheaders()
-				if hasattr(json, 'loads'):
-					# python 2.6 json module
-					res = json.loads( con.getresponse().read() )
-				else:
-					res = json.read( con.getresponse().read() )
+				res = json.loads( con.getresponse().read() )
 			except socket.sslerror:
 				if isRetry:
 					raise BackendIOError("Request on depot '%s' timed out" % depotId)
@@ -135,18 +132,10 @@ class OpsiPXEConfdBackend(Backend):
 			isRetry = False
 			try:
 				con = httplib.HTTPSConnection(depotId, 4447)
-				if hasattr(json, 'dumps'):
-					# python 2.6 json module
-					con.putrequest('GET', '/rpc?' + urllib.quote(json.dumps( {"id": 1, "method": "unsetPXEBootConfiguration", "params": [ hostId ] } )))
-				else:
-					con.putrequest('GET', '/rpc?' + urllib.quote(json.write( {"id": 1, "method": "unsetPXEBootConfiguration", "params": [ hostId ] } )))
+				con.putrequest('GET', '/rpc?' + urllib.quote(json.dumps( {"id": 1, "method": "unsetPXEBootConfiguration", "params": [ hostId ] } )))
 				con.putheader('Authorization', 'Basic '+ base64.encodestring(urllib.unquote(depotId + ':' + opsiHostKey)).strip() )
 				con.endheaders()
-				if hasattr(json, 'loads'):
-					# python 2.6 json module
-					res = json.loads( con.getresponse().read() )
-				else:
-					res = json.read( con.getresponse().read() )
+				res = json.loads( con.getresponse().read() )
 			except socket.sslerror:
 				if isRetry:
 					raise BackendIOError("Request on depot '%s' timed out" % depotId)

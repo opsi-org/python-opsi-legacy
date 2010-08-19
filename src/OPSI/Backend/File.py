@@ -35,7 +35,13 @@
 __version__ = '1.0.3'
 
 # Imports
-import socket, os, time, re, ConfigParser, json, StringIO, codecs
+import socket, os, time, re, ConfigParser, StringIO, codecs
+
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 
 if os.name == 'nt':
 	# Windows imports for file locking
@@ -858,11 +864,7 @@ class FileBackend(File, DataBackend):
 				elif (key.lower() == 'externalconnectorname'):		key = 'externalConnectorName'
 				elif (key.lower() == 'externalconnectortype'):		key = 'externalConnectorType'
 				try:
-					if hasattr(json, 'loads'):
-						# python 2.6 json module
-						info[key] = json.loads(value)
-					else:
-						info[key] = json.read(value)
+					info[key] = json.loads(value)
 				except Exception, e:
 					info[key] = ''
 					logger.warning("File: %s, section: '%s', option '%s': %s" \
@@ -886,11 +888,7 @@ class FileBackend(File, DataBackend):
 			dev = {}
 			for (key, value) in ini.items(section):
 				try:
-					if hasattr(json, 'loads'):
-						# python 2.6 json module
-						dev[key] = json.loads(value)
-					else:
-						dev[key] = json.read(value)
+					dev[key] = json.loads(value)
 				except:
 					dev[key] = ''
 			
@@ -922,17 +920,9 @@ class FileBackend(File, DataBackend):
 				ini.add_section(section)
 				for (opsiName, opsiValue) in value.items():
 					if type(opsiValue) is unicode:
-						if hasattr(json, 'dumps'):
-							# python 2.6 json module
-							ini.set(section, opsiName, json.dumps(opsiValue.encode('utf-8')))
-						else:
-							ini.set(section, opsiName, json.write(opsiValue.encode('utf-8')))
+						ini.set(section, opsiName, json.dumps(opsiValue.encode('utf-8')))
 					else:
-						if hasattr(json, 'dumps'):
-							# python 2.6 json module
-							ini.set(section, opsiName, json.dumps(opsiValue))
-						else:
-							ini.set(section, opsiName, json.write(opsiValue))
+						ini.set(section, opsiName, json.dumps(opsiValue))
 				n += 1
 		
 		self.writeIniFile(iniFile, ini)

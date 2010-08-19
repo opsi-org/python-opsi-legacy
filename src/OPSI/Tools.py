@@ -32,14 +32,20 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = '1.0.9'
+__version__ = '1.0.10'
 
 # Imports
-import time, json, gettext, os, re, random, subprocess
+import time, gettext, os, re, random, subprocess
 try:
 	from hashlib import md5
 except ImportError:
 	from md5 import md5
+
+from sys import version_info
+if (version_info >= (2,6)):
+	import json
+else:
+	import simplejson as json
 
 # OPSI imports
 from Logger import *
@@ -559,11 +565,8 @@ def objectToBeautifiedText(obj, level=0):
 			i+=1
 		text += '\n' + ' '*hspace + '}'
 	else:
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			text+= json.dumps(obj)
-		else:
-			text+= json.write(obj)
+		text+= json.dumps(obj)
+		
 	return text
 
 
@@ -596,11 +599,8 @@ def jsonObjToHtml(jsonObj, level=0):
 			i+=1
 		html += '<br />' + ' '*hspace + '}'
 	else:
-		if hasattr(json, 'dumps'):
-			# python 2.6 json module
-			html += json.dumps(jsonObj).replace('<', '&lt;').replace('>', '&gt;')
-		else:
-			html += json.write(jsonObj).replace('<', '&lt;').replace('>', '&gt;')
+		html += json.dumps(jsonObj).replace('<', '&lt;').replace('>', '&gt;')
+		
 	return html.replace('\\n', '<br />' + ' '*hspace)
 
 
