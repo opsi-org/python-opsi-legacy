@@ -61,7 +61,8 @@ data_files=[('/etc/opsi/backendManager', ['data/backendManager/acl.conf.default'
 	    ('/etc/opsi/', ['data/version']),
 	    ('/etc/opsi/hwaudit/', ['data/hwaudit/opsihwaudit.conf']),
 	    ('/etc/opsi/hwaudit/locales', ['data/hwaudit/locales/de_DE',
-					   'data/hwaudit/locales/en_US'])]
+					   'data/hwaudit/locales/en_US',
+					   'data/hwaudit/locales/fr_FR'])]
 if bool(os.getenv("RPM_BUILD_ROOT")):
 	data_files.append( ('/etc/openldap/schema/', ['data/opsi.schema', 'data/opsi-standalone.schema']) )
 else:

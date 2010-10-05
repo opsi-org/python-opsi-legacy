@@ -1227,6 +1227,7 @@ class DHCPDConf_Option(DHCPDConf_Component):
 			if re.match('.*[\'/\\\].*', value) or \
 			   re.match('^\w+\.\w+$', value) or \
 			   self.key.endswith(u'-name') or \
+			   self.key.endswith(u'-domain') or \
 			   self.key.endswith(u'-identifier'):
 				value = u'"%s"' % value
 			if (i+1 < len(self.value)):

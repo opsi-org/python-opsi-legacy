@@ -131,7 +131,7 @@ def non_blocking_connect_http(self, connectTimeout=0):
 	while True:
 		try:
 			if (connectTimeout > 0) and ((time.time()-started) >= connectTimeout):
-				raise Exception(u"Timed out after %d seconds (%s)" % (connectTimeout, forceUnicode(e)))
+				raise Exception(u"Timed out after %d seconds (%s)" % (connectTimeout, forceUnicode(lastError)))
 			sock.connect((self.host, self.port))
 			break
 		except socket.error, e:
@@ -139,7 +139,8 @@ def non_blocking_connect_http(self, connectTimeout=0):
 			if e[0] in (106, 10056):
 				# Transport endpoint is already connected
 				break
-			lastError = e
+			if e[0] not in (114, ) or not lastError:
+				lastError = e
 			time.sleep(0.5)
 	sock.settimeout(None)
 	self.sock = sock

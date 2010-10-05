@@ -1140,7 +1140,7 @@ class Harddisk:
 						
 						if self.partitions[-1]['device']:
 							logger.debug(u"Waiting for device '%s' to appear" % self.partitions[-1]['device'])
-							timeout = 5
+							timeout = 15
 							while (timeout > 0):
 								if os.path.exists(self.partitions[-1]['device']):
 									break
@@ -1848,9 +1848,6 @@ class Harddisk:
 			if not part:
 				raise Exception(u'Partition %s does not exist' % partition)
 			
-			if (part['fs'] != u'ntfs'):
-				raise Exception(u"Unsupported filesystem '%s'." % part['fs'])
-				
 			if self.ldPreload:
 				os.putenv("LD_PRELOAD", self.ldPreload)
 			
@@ -1859,11 +1856,11 @@ class Harddisk:
 				pipe = imageFile
 				imageFile = u'-'
 			
-			logger.info( u"Saving partition '%s' to ntfsclone-image '%s'" % (part['device'], imageFile) )
+			logger.info( u"Saving partition '%s' to partclone image '%s'" % (part['device'], imageFile) )
 			
 			# "-f" will write images of "dirty" volumes too
 			# Better run chkdsk under windows before saving image!
-			cmd = u'%s --save-image -f --overwrite %s %s %s' % (which('ntfsclone'), imageFile, part['device'], pipe)
+			cmd = u'%s --rescue --clone --force --source %s --overwrite %s %s' % (which('partclone.' + part['fs']), part['device'], imageFile, pipe)
 			
 			if progressSubject:
 				progressSubject.setEnd(100)
@@ -1874,6 +1871,7 @@ class Harddisk:
 			timeout = 0
 			buf = [u'']
 			lastMsg = u''
+			started = False
 			while not done:
 				inp = handle.read(128)
 				
@@ -1888,35 +1886,36 @@ class Harddisk:
 					buf = [ buf[-1] + b[0] ] + b[1:]
 					
 					for i in range( len(buf)-1 ):
-						if ( buf[i].find(u'Syncing') != -1 ):
-							logger.info(u"Save image: Syncing")
-							if progressSubject:
-								progressSubject.setMessage(u"Syncing")
+						try:
+							logger.debug(u" -->>> %s" % buf[i])
+						except:
+							pass
+						if ( buf[i].find(u'Partclone fail') != -1 ):
+							raise Exception(u"Failed: %s" % '\n'.join(buf))
+						if ( buf[i].find(u'Partclone successfully') != -1 ):
 							done = True
-						elif ( buf[i].find(u'Scanning') != -1 ):
-							logger.info(u"Save image: Scanning filesystem")
-							if progressSubject:
-								progressSubject.setMessage(u"Scanning filesystem")
-						elif ( buf[i].find('Saving') != -1 ):
-							logger.info(u"Save image: Writing image")
-							if progressSubject:
-								progressSubject.setMessage(u"Writing image")
-						match = re.search('\s(\d+)\s+MB\s+\((\d+[\.\,]\d+\%)\)\s', buf[i])
-						if match:
-							if progressSubject:
-								progressSubject.setMessage(u"Filesystem usage is %s MB (%s)\n" % (match.group(1), match.group(2)))
-						match = re.search('\s(\d+)[\.\,]\d+\s', buf[i])
-						if match:
-							percent = int(match.group(1))
-							if progressSubject and (percent != progressSubject.getState()):
-								logger.debug(u" -->>> %s" % buf[i])
-								progressSubject.setState(percent)
+						if not started:
+							if ( buf[i].find(u'Calculating bitmap') != -1 ):
+								logger.info(u"Save image: Scanning filesystem")
+								if progressSubject:
+									progressSubject.setMessage(u"Scanning filesystem")
+							elif ( buf[i].count(':') == 1 ) and (buf[i].find('http:') == -1):
+								(k, v) = buf[i].split(':')
+								k = k.strip()
+								v = v.strip()
+								logger.info(u"Save image: %s: %s" % (k, v))
+								if progressSubject:
+									progressSubject.setMessage(u"%s: %s" % (k, v))
+								if (k.lower().find('used') != -1):
+									started = True
+									continue
 						else:
-							try:
-								logger.debug(u" -->>> %s" % buf[i])
-							except:
-								pass
-							
+							match = re.search('Completed:\s*([\d\.]+)%', buf[i])
+							if match:
+								percent = int("%0.f" % float(match.group(1)))
+								if progressSubject and (percent != progressSubject.getState()):
+									logger.debug(u" -->>> %s" % buf[i])
+									progressSubject.setState(percent)
 					lastMsg = buf[-2]
 					buf[:-1] = []
 				
@@ -1956,6 +1955,7 @@ class Harddisk:
 				imageFile = u'-'
 			
 			try:
+				head = u''
 				if pipe:
 					proc = subprocess.Popen(
 						pipe[:-1] + u" 2>/dev/null",
@@ -1968,9 +1968,6 @@ class Harddisk:
 					
 					head = proc.stdout.read(128)
 					logger.debug(u"Read 128 Bytes from pipe '%s': %s" % (pipe, head.decode('ascii', 'replace')))
-					if (head.find('ntfsclone-image') != -1):
-						logger.notice(u"Image type is ntfsclone")
-						imageType = u'ntfsclone'
 					
 					proc.stdout.close()
 					proc.stdin.close()
@@ -1994,80 +1991,158 @@ class Harddisk:
 				else:
 					image = open(imageFile, 'r')
 					head = image.read(128)
-					logger.debug("Read 128 Bytes from file '%s': %s" % (imageFile, head.decode('ascii', 'replace')))
-					if (head.find(u'ntfsclone-image') != -1):
-						logger.info(u"Image type is ntfsclone")
-						imageType = u'ntfsclone'
+					logger.debug(u"Read 128 Bytes from file '%s': %s" % (imageFile, head.decode('ascii', 'replace')))
 					image.close()
+				
+				if   (head.find('ntfsclone-image') != -1):
+					logger.notice(u"Image type is ntfsclone")
+					imageType = u'ntfsclone'
+				elif (head.find('partclone-image') != -1):
+					logger.notice(u"Image type is partclone")
+					imageType = u'partclone'
+				
 			except:
 				if image:
 					image.close()
 				raise
 			
-			if (imageType != u'ntfsclone'):
+			if imageType not in (u'ntfsclone', u'partclone'):
 				raise Exception(u"Unknown image type.")
 			
 			if self.ldPreload:
 				os.putenv("LD_PRELOAD", self.ldPreload)
 			
-			logger.info(u"Restoring ntfsclone-image '%s' to '%s'" % \
+			if (imageType == u'partclone'):
+				logger.info(u"Restoring partclone image '%s' to '%s'" % \
+								(imageFile, self.getPartition(partition)['device']) )
+				
+				cmd = u'%s %s --source %s --overwrite %s' % \
+								(pipe, which('partclone.restore'), imageFile, self.getPartition(partition)['device'])
+				
+				if progressSubject:
+					progressSubject.setEnd(100)
+					progressSubject.setMessage(u"Restoring image")
+					
+				handle = execute(cmd, getHandle = True)
+				done = False
+				
+				timeout = 0
+				buf = [u'']
+				lastMsg = u''
+				started = False
+				while not done:
+					inp = handle.read(128)
+					
+					if inp:
+						inp = inp.decode("latin-1")
+						timeout = 0
+						
+						b = inp.splitlines()
+						if inp.endswith(u'\n') or inp.endswith(u'\r'):
+							b.append(u'')
+						
+						buf = [ buf[-1] + b[0] ] + b[1:]
+						
+						for i in range( len(buf)-1 ):
+							try:
+								logger.debug(u" -->>> %s" % buf[i])
+							except:
+								pass
+							if ( buf[i].find(u'Partclone fail') != -1 ):
+								raise Exception(u"Failed: %s" % '\n'.join(buf))
+							if ( buf[i].find(u'Partclone successfully') != -1 ):
+								done = True
+							if not started:
+								if ( buf[i].count(':') == 1 ) and (buf[i].find('http:') == -1):
+									(k, v) = buf[i].split(':')
+									k = k.strip()
+									v = v.strip()
+									logger.info(u"Save image: %s: %s" % (k, v))
+									if progressSubject:
+										progressSubject.setMessage(u"%s: %s" % (k, v))
+									if (k.lower().find('used') != -1):
+										started = True
+										continue
+							else:
+								match = re.search('Completed:\s*([\d\.]+)%', buf[i])
+								if match:
+									percent = int("%0.f" % float(match.group(1)))
+									if progressSubject and (percent != progressSubject.getState()):
+										logger.debug(u" -->>> %s" % buf[i])
+										progressSubject.setState(percent)
+							
+						lastMsg = buf[-2]
+						buf[:-1] = []
+					
+					elif (timeout >= 100):
+						if progressSubject:
+							progressSubject.setMessage(u"Failed: %s" % lastMsg)
+						raise Exception(u"Failed: %s" % lastMsg)
+					else:
+						timeout += 1
+						continue
+				
+				time.sleep(3)
+				if handle: handle.close()
+			else:
+				logger.info(u"Restoring ntfsclone-image '%s' to '%s'" % \
 							(imageFile, self.getPartition(partition)['device']) )
 			
-			cmd = u'%s %s --restore-image --overwrite %s %s' % \
-							(pipe, which('ntfsclone'), self.getPartition(partition)['device'], imageFile)
-			
-			if progressSubject:
-				progressSubject.setEnd(100)
-				progressSubject.setMessage(u"Restoring image")
+				cmd = u'%s %s --restore-image --overwrite %s %s' % \
+								(pipe, which('ntfsclone'), self.getPartition(partition)['device'], imageFile)
 				
-			handle = execute(cmd, getHandle = True)
-			done = False
-			
-			timeout = 0
-			buf = [u'']
-			lastMsg = u''
-			while not done:
-				inp = handle.read(128)
+				if progressSubject:
+					progressSubject.setEnd(100)
+					progressSubject.setMessage(u"Restoring image")
+					
+				handle = execute(cmd, getHandle = True)
+				done = False
 				
-				if inp:
-					inp = inp.decode("latin-1")
-					timeout = 0
+				timeout = 0
+				buf = [u'']
+				lastMsg = u''
+				while not done:
+					inp = handle.read(128)
 					
-					b = inp.splitlines()
-					if inp.endswith(u'\n') or inp.endswith(u'\r'):
-						b.append(u'')
-					
-					buf = [ buf[-1] + b[0] ] + b[1:]
-					
-					for i in range( len(buf)-1 ):
-						if ( buf[i].find('Syncing') != -1 ):
-							logger.info(u"Restore image: Syncing")
-							if progressSubject:
-								progressSubject.setMessage(u"Syncing")
-							done = True
-						match = re.search('\s(\d+)[\.\,]\d\d\spercent', buf[i])
-						if match:
-							percent = int(match.group(1))
-							if progressSubject and (percent != progressSubject.getState()):
-								logger.debug(u" -->>> %s" % buf[i])
-								progressSubject.setState(percent)
-						else:
-							logger.debug(u" -->>> %s" % buf[i])
+					if inp:
+						inp = inp.decode("latin-1")
+						timeout = 0
 						
-					lastMsg = buf[-2]
-					buf[:-1] = []
+						b = inp.splitlines()
+						if inp.endswith(u'\n') or inp.endswith(u'\r'):
+							b.append(u'')
+						
+						buf = [ buf[-1] + b[0] ] + b[1:]
+						
+						for i in range( len(buf)-1 ):
+							if ( buf[i].find('Syncing') != -1 ):
+								logger.info(u"Restore image: Syncing")
+								if progressSubject:
+									progressSubject.setMessage(u"Syncing")
+								done = True
+							match = re.search('\s(\d+)[\.\,]\d\d\spercent', buf[i])
+							if match:
+								percent = int(match.group(1))
+								if progressSubject and (percent != progressSubject.getState()):
+									logger.debug(u" -->>> %s" % buf[i])
+									progressSubject.setState(percent)
+							else:
+								logger.debug(u" -->>> %s" % buf[i])
+							
+						lastMsg = buf[-2]
+						buf[:-1] = []
+					
+					elif (timeout >= 100):
+						if progressSubject:
+							progressSubject.setMessage(u"Failed: %s" % lastMsg)
+						raise Exception(u"Failed: %s" % lastMsg)
+					else:
+						timeout += 1
+						continue
 				
-				elif (timeout >= 100):
-					if progressSubject:
-						progressSubject.setMessage(u"Failed: %s" % lastMsg)
-					raise Exception(u"Failed: %s" % lastMsg)
-				else:
-					timeout += 1
-					continue
-			
-			time.sleep(3)
-			if handle: handle.close()
-			
+				time.sleep(3)
+				if handle: handle.close()
+				
 			if self.ldPreload:
 				os.unsetenv("LD_PRELOAD")
 			

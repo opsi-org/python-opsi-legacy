@@ -1,3 +1,12 @@
+python-opsi (4.0.0.1-1) stable; urgency=low
+
+  * Added hwaudit locale fr_FR
+  * System/Posix: use partclone for images
+  * Util/File: set "<value>" for DHCPDConf_Option *-domain
+  * opsihwaudit.conf: USB_DEVICE: interfaceClass, interfaceSubClass resized to 200
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 04 Oct 2010 09:48:46 +0200
+
 python-opsi (4.0.0.0-1) stable; urgency=low
 
   * opsi 4.0 stable release

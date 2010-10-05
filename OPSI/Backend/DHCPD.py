@@ -190,7 +190,7 @@ class DHCPDBackend(ConfigDataBackend):
 		try:
 			self._dhcpdConfFile.parse()
 			currentHostParams = self._dhcpdConfFile.getHost(host.id.split('.')[0])
-			if (currentHostParams.get('hardware', ' ').split(' ')[1] == host.hardwareAddress) and (currentHostParams.get('fixed-address') == fixedAddress):
+			if currentHostParams and (currentHostParams.get('hardware', ' ').split(' ')[1] == host.hardwareAddress) and (currentHostParams.get('fixed-address') == fixedAddress):
 				logger.debug(u"DHCPD config of host '%s' unchanged, no need to update config file" % host)
 				self._reloadLock.release()
 				return
