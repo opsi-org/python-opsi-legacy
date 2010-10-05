@@ -1,3 +1,9 @@
+python-opsi (4.0.0.2-1) stable; urgency=low
+
+  * UI: drawRootText: encode to ascii because snack does not support unicode here
+
+ -- Jan Schneider <j.schneider@uib.de>  Tue, 05 Oct 2010 17:25:59 +0200
+
 python-opsi (4.0.0.1-1) stable; urgency=low
 
   * Added hwaudit locale fr_FR

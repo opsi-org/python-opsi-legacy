@@ -232,7 +232,7 @@ class SnackUI(UI):
 		for string in self.confidentialStrings:
 			text = text.replace(string, u'*** confidential ***')
 		try:
-			self._screen.drawRootText(x, y, text)
+			self._screen.drawRootText(x, y, text.encode('ascii', 'replace'))
 			self.refresh()
 		except Exception, e:
 			self.exit()
@@ -980,7 +980,7 @@ class SnackCopyDualProgressBox(SnackDualProgressBox):
 
 if (__name__ == "__main__"):
 	uiTest = UIFactory('snack')
-	uiTest.drawRootText(x = 1, y = 1, text = u'Test root text')
+	uiTest.drawRootText(x = 1, y = 1, text = u'Test ä root text')
 	uiTest.drawRootText(x = 1, y = 2, text = u'Test root text 2')
 	uiTest.drawRootText(x = 5, y = 5, text = u'Test root text 3')
 	time.sleep(1)
