@@ -3,6 +3,7 @@ python-opsi (4.0.0.3-1) stable; urgency=low
   * Types,Logger: forceUnicode try except __unicode__
   * System/Posix: get fs from partclone
   * Backend/File: fix double escape
+  * opsihwaudit.conf: : USB_DEVICE: interfaceClass, interfaceSubClass resized to 500, interfaceProtocol resized to 200
 
  -- Jan Schneider <j.schneider@uib.de>  Thu, 07 Oct 2010 10:47:48 +0200
 

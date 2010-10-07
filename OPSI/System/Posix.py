@@ -1214,6 +1214,7 @@ class Harddisk:
 			if self.ldPreload:
 				os.unsetenv("LD_PRELOAD")
 			self._forceReReadPartionTable()
+			time.sleep(2)
 		except Exception, e:
 			for hook in hooks:
 				hook.error_Harddisk_writePartitionTable(self, e)
