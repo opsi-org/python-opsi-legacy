@@ -2609,7 +2609,7 @@ class AuditHardware(Entity):
 						pass
 					if size and (len(kwargs[attribute]) > size):
 						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
-						kwargs[attribute] = kwargs[attribute][:size]
+						kwargs[attribute] = kwargs[attribute][:size].rstrip()
 				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
@@ -2734,7 +2734,7 @@ class AuditHardwareOnHost(Relationship):
 						pass
 					if size and (len(kwargs[attribute]) > size):
 						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
-						kwargs[attribute] = kwargs[attribute][:size]
+						kwargs[attribute] = kwargs[attribute][:size].rstrip()
 				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
@@ -2749,6 +2749,11 @@ class AuditHardwareOnHost(Relationship):
 						kwargs[attribute] = None
 				else:
 					raise BackendConfigurationError(u"Attribute '%s' of hardware class '%s' has unknown type '%s'" % (attribute, hardwareClass, type))
+		else:
+			for (attribute, value) in kwargs.items():
+				if type(value) is str:
+					kwargs[attribute] = forceUnicode(value)
+		
 		self.__dict__.update(kwargs)
 		if not firstseen is None:
 			self.setFirstseen(firstseen)

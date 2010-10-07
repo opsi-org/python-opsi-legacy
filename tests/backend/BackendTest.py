@@ -18,7 +18,14 @@ class BackendTestCase(TestCase):
 		self.serverId = socket.getfqdn()
 		self.failUnless(self.serverId.count('.') >= 2,
 				u"Failed to get fqdn: %s" % self.serverId)
-
+		
+		
+		self.createBackend()
+		self.hwconf = self.backend.auditHardware_getConfig()
+		AuditHardware.setHardwareConfig(self.hwconf)
+		AuditHardwareOnHost.setHardwareConfig(self.hwconf)
+		
+		
 		self.hosts = []
 		self.configserver1 = OpsiConfigserver(
 			id                  = self.serverId,
@@ -1015,7 +1022,7 @@ class BackendTestCase(TestCase):
 		self.auditHardware5 = AuditHardware(
 			hardwareClass       = 'PROCESSOR',
 			name                = '0',
-			description         = 'processor'
+			description         = 'processor long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long'
 		)
 		
 		self.auditHardware6 = AuditHardware(
@@ -1110,8 +1117,6 @@ class BackendTestCase(TestCase):
 		
 		self.auditHardwareOnHosts = [ self.auditHardwareOnHost1, self.auditHardwareOnHost2, self.auditHardwareOnHost3,
 						self.auditHardwareOnHost4, self.auditHardwareOnHost5, self.auditHardwareOnHost6, self.auditHardwareOnHost7 ]
-	
-		self.createBackend()
 		
 		self.backend.backend_createBase()
 		

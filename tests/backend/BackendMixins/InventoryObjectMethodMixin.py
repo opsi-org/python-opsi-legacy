@@ -116,7 +116,6 @@ class InventoryObjectMethodMixin(object):
 		self.assertEqual(len(auditHardwares), len(self.auditHardwares), u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares), len(auditHardwares)))
 		
 		self.backend.auditHardware_deleteObjects(self.backend.auditHardware_getObjects())
-		os.system('cat /tmp/opsi-file-backend-test/audit/global.hw')
 		self.backend.auditHardware_createObjects(self.auditHardwares)
 		auditHardwares = self.backend.auditHardware_getObjects()
 		self.assertEqual(len(auditHardwares), len(self.auditHardwares), u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares), len(auditHardwares)))
