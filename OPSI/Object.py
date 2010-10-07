@@ -2602,6 +2602,14 @@ class AuditHardware(Entity):
 					continue
 				if attrType.startswith('varchar'):
 					kwargs[attribute] = forceUnicode(value)
+					size = 0
+					try:
+						size = int(attrType.split('(')[1].split(')')[0].strip())
+					except:
+						pass
+					if size and (len(kwargs[attribute]) > size):
+						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
+						kwargs[attribute] = kwargs[attribute][:size]
 				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
@@ -2711,21 +2719,29 @@ class AuditHardwareOnHost(Relationship):
 		
 		if self.hardwareAttributes.get(hardwareClass):
 			for (attribute, value) in kwargs.items():
-				type = self.hardwareAttributes[hardwareClass].get(attribute)
-				if not type:
+				attrType = self.hardwareAttributes[hardwareClass].get(attribute)
+				if not attrType:
 					del kwargs[attribute]
 					continue
 				if value is None:
 					continue
-				if type.startswith('varchar'):
+				if attrType.startswith('varchar'):
 					kwargs[attribute] = forceUnicode(value)
-				elif (type.find('int') != -1):
+					size = 0
+					try:
+						size = int(attrType.split('(')[1].split(')')[0].strip())
+					except:
+						pass
+					if size and (len(kwargs[attribute]) > size):
+						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
+						kwargs[attribute] = kwargs[attribute][:size]
+				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
 					except Exception, e:
 						logger.debug2(e)
 						kwargs[attribute] = None
-				elif (type == 'double'):
+				elif (attrType == 'double'):
 					try:
 						kwargs[attribute] = forceFloat(value)
 					except Exception, e:
