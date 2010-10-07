@@ -1591,7 +1591,7 @@ class FileBackend(ConfigDataBackend):
 		for (attribute, value) in auditSoftware.items():
 			if (value is None) or (attribute == 'type'):
 				continue
-			ini.set(section, attribute, self.__escape(value))
+			ini.set(section, attribute, value)
 		iniFile.generate(ini)
 		
 	def auditSoftware_updateObject(self, auditSoftware):
@@ -1713,7 +1713,6 @@ class FileBackend(ConfigDataBackend):
 			if (auditSoftwareOnClient[attribute] is None):
 				continue
 			auditSoftwareOnClient[attribute] = self.__escape(auditSoftwareOnClient[attribute])
-		
 		newNum = 0
 		removeSection = None
 		for section in ini.sections():
@@ -1746,7 +1745,7 @@ class FileBackend(ConfigDataBackend):
 		for (attribute, value) in auditSoftwareOnClient.items():
 			if (value is None):
 				continue
-			ini.set(section, attribute, self.__escape(value))
+			ini.set(section, attribute, value)
 		iniFile.generate(ini)
 	
 	def auditSoftwareOnClient_updateObject(self, auditSoftwareOnClient):

@@ -1011,7 +1011,20 @@ class BackendTestCase(TestCase):
 			description         = 'A chassis',
 			chassisType         = 'Desktop'
 		)
-		self.auditHardwares = [ self.auditHardware1, self.auditHardware2, self.auditHardware3, self.auditHardware4 ]
+		
+		self.auditHardware5 = AuditHardware(
+			hardwareClass       = 'PROCESSOR',
+			name                = '0',
+			description         = 'processor'
+		)
+		
+		self.auditHardware6 = AuditHardware(
+			hardwareClass       = 'PROCESSOR',
+			name                = '0',
+			description         = None
+		)
+		
+		self.auditHardwares = [ self.auditHardware1, self.auditHardware2, self.auditHardware3, self.auditHardware4, self.auditHardware5, self.auditHardware6 ]
 		
 		# AuditHardwareOnHosts
 		self.auditHardwareOnHost1 = AuditHardwareOnHost(
@@ -1086,7 +1099,17 @@ class BackendTestCase(TestCase):
 			serialNumber        = 'xxxx-asjdks-sll3kf03-132290'
 		)
 		
-		self.auditHardwareOnHosts = [ self.auditHardwareOnHost1, self.auditHardwareOnHost2, self.auditHardwareOnHost3, self.auditHardwareOnHost4, self.auditHardwareOnHost5, self.auditHardwareOnHost6 ]
+		self.auditHardwareOnHost7 = AuditHardwareOnHost(
+			hostId              = self.client3.getId(),
+			hardwareClass       = 'PROCESSOR',
+			name                = self.auditHardware5.name,
+			description         = self.auditHardware5.description,
+			
+			serialNumber        = '4325345325132290'
+		)
+		
+		self.auditHardwareOnHosts = [ self.auditHardwareOnHost1, self.auditHardwareOnHost2, self.auditHardwareOnHost3,
+						self.auditHardwareOnHost4, self.auditHardwareOnHost5, self.auditHardwareOnHost6, self.auditHardwareOnHost7 ]
 	
 		self.createBackend()
 		

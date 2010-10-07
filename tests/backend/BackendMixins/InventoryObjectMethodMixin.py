@@ -103,12 +103,23 @@ class InventoryObjectMethodMixin(object):
 		self.backend.auditHardware_deleteObjects([ self.auditHardware1, self.auditHardware2 ])
 		auditHardwares = self.backend.auditHardware_getObjects()
 		self.assertEqual(len(auditHardwares), len(self.auditHardwares) - 2, u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares)-2, len(auditHardwares)))
+	
+	def test_deleteAllAuditHardware(self):
+		self.backend.auditHardware_deleteObjects(self.backend.auditHardware_getObjects())
+		auditHardwares = self.backend.auditHardware_getObjects()
+		self.assertEqual(len(auditHardwares), 0, u"Expected 0 audit hardware objects, but found %s on backend." % (len(auditHardwares)))
 		
 	def test_createAuditHardware(self):
 		self.backend.auditHardware_deleteObjects([ self.auditHardware1, self.auditHardware2 ])
 		self.backend.auditHardware_createObjects([ self.auditHardware1, self.auditHardware2 ])
 		auditHardwares = self.backend.auditHardware_getObjects()
-		self.assertEqual(len(auditHardwares), len(self.auditHardwares), u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares)-2, len(auditHardwares)))
+		self.assertEqual(len(auditHardwares), len(self.auditHardwares), u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares), len(auditHardwares)))
+		
+		self.backend.auditHardware_deleteObjects(self.backend.auditHardware_getObjects())
+		os.system('cat /tmp/opsi-file-backend-test/audit/global.hw')
+		self.backend.auditHardware_createObjects(self.auditHardwares)
+		auditHardwares = self.backend.auditHardware_getObjects()
+		self.assertEqual(len(auditHardwares), len(self.auditHardwares), u"Expected %s audit hardware objects, but found %s on backend." % (len(self.auditHardwares), len(auditHardwares)))
 		
 	def test_getAuditHardwareOnHost(self):
 		auditHardwareOnHosts = self.backend.auditHardwareOnHost_getObjects()
@@ -154,7 +165,21 @@ class InventoryObjectMethodMixin(object):
 		auditHardwareOnHosts = self.backend.auditHardwareOnHost_getObjects()
 		self.assertEqual(len(auditHardwareOnHosts), len(self.auditHardwareOnHosts), u"Expected %s audit hardware objects on host, but found %s on backend." % (len(self.auditHardwareOnHosts), len(auditHardwareOnHosts)))
 
-	def test_deleteAuditHardwareOnHost(self):	
+	def test_deleteAuditHardwareOnHost(self):
 		self.backend.auditHardwareOnHost_deleteObjects([self.auditHardwareOnHost4, self.auditHardwareOnHost3])
 		auditHardwareOnHosts = self.backend.auditHardwareOnHost_getObjects()
 		self.assertEqual(len(auditHardwareOnHosts), len(self.auditHardwareOnHosts) - 2, u"Expected %s audit hardware objects on host, but found %s on backend." % (len(self.auditHardwareOnHosts)-2, len(auditHardwareOnHosts)))
+	
+	def test_setObsoleteAuditHardwareOnHost(self):
+		self.backend.auditHardwareOnHost_setObsolete(self.client3.id)
+		auditHardwareOnHosts = self.backend.auditHardwareOnHost_getObjects(hostId = self.client3.id)
+		for auditHardwareOnHost in auditHardwareOnHosts:
+			self.assertEqual(auditHardwareOnHost.getState(), 0, u"Expected state 0 in audit hardware on host %s, but found state %s on backend." % (auditHardwareOnHost, auditHardwareOnHost.getState()))
+	
+
+
+
+
+
+
+

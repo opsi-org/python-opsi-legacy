@@ -64,7 +64,10 @@ def forceUnicode(var):
 	if (os.name == 'nt') and type(var) is WindowsError:
 		return u"[Error %s] %s" % (var.args[0], var.args[1].decode(encoding))
 	if hasattr(var, '__unicode__'):
-		return var.__unicode__()
+		try:
+			return var.__unicode__()
+		except:
+			pass
 	try:
 		return unicode(var)
 	except:

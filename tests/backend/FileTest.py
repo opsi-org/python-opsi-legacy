@@ -7,10 +7,12 @@ from OPSI.Object import *
 from BackendTest import BackendTestCase
 from BackendMixins.ObjectMethodsMixin import ObjectMethodsMixin
 from BackendMixins.NonObjectMethodsMixin import NonObjectMethodsMixin
+from BackendMixins.InventoryObjectMethodMixin import InventoryObjectMethodMixin
 
 class FileTestCase(BackendTestCase,
 		   ObjectMethodsMixin,
-		   NonObjectMethodsMixin
+		   NonObjectMethodsMixin,
+		   InventoryObjectMethodMixin
 		   ):
 		
 
