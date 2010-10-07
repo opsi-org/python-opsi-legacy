@@ -2601,7 +2601,7 @@ class AuditHardware(Entity):
 				if value is None:
 					continue
 				if attrType.startswith('varchar'):
-					kwargs[attribute] = forceUnicode(value)
+					kwargs[attribute] = forceUnicode(value).strip()
 					size = 0
 					try:
 						size = int(attrType.split('(')[1].split(')')[0].strip())
@@ -2609,7 +2609,7 @@ class AuditHardware(Entity):
 						pass
 					if size and (len(kwargs[attribute]) > size):
 						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
-						kwargs[attribute] = kwargs[attribute][:size].rstrip()
+						kwargs[attribute] = kwargs[attribute][:size].strip()
 				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
@@ -2627,7 +2627,7 @@ class AuditHardware(Entity):
 		else:
 			for (attribute, value) in kwargs.items():
 				if type(value) is str:
-					kwargs[attribute] = forceUnicode(value)
+					kwargs[attribute] = forceUnicode(value).strip()
 		
 		self.__dict__.update(kwargs)
 		
@@ -2726,7 +2726,7 @@ class AuditHardwareOnHost(Relationship):
 				if value is None:
 					continue
 				if attrType.startswith('varchar'):
-					kwargs[attribute] = forceUnicode(value)
+					kwargs[attribute] = forceUnicode(value).strip()
 					size = 0
 					try:
 						size = int(attrType.split('(')[1].split(')')[0].strip())
@@ -2734,7 +2734,7 @@ class AuditHardwareOnHost(Relationship):
 						pass
 					if size and (len(kwargs[attribute]) > size):
 						logger.warning(u'Truncating value of attribute %s of hardware class %s to length %d' % (attribute, hardwareClass, size))
-						kwargs[attribute] = kwargs[attribute][:size].rstrip()
+						kwargs[attribute] = kwargs[attribute][:size].strip()
 				elif (attrType.find('int') != -1):
 					try:
 						kwargs[attribute] = forceInt(value)
@@ -2752,7 +2752,7 @@ class AuditHardwareOnHost(Relationship):
 		else:
 			for (attribute, value) in kwargs.items():
 				if type(value) is str:
-					kwargs[attribute] = forceUnicode(value)
+					kwargs[attribute] = forceUnicode(value).strip()
 		
 		self.__dict__.update(kwargs)
 		if not firstseen is None:
