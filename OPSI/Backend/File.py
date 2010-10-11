@@ -1935,7 +1935,7 @@ class FileBackend(ConfigDataBackend):
 			ini = iniFile.parse()
 			for section in ini.sections():
 				objHash = {
-				'hostId': hostId
+					'hostId': hostId
 				}
 				for option in ini.options(section):
 					if option.lower() == u'hardwareclass':
@@ -1959,66 +1959,65 @@ class FileBackend(ConfigDataBackend):
 			self.__doAuditHardwareObj(auditHardwareOnHost, mode = 'delete')
 		
 	def __doAuditHardwareObj(self, auditHardwareObj, mode):
-		if (not mode in ('insert', 'update', 'delete')):
-			raise Exception(u"Unknown mode: %s" % (mode))
+		if not mode in ('insert', 'update', 'delete'):
+			raise Exception(u"Unknown mode: %s" % mode)
 		
 		objType = auditHardwareObj.getType()
-		if (not objType in ('AuditHardware', 'AuditHardwareOnHost')):
-			raise Exception(u"Unknown type: %s" % (objType))
+		if not objType in ('AuditHardware', 'AuditHardwareOnHost'):
+			raise Exception(u"Unknown type: %s" % objType)
 		
-		ident = auditHardwareObj.getIdent(returnType = 'dict')
-		filename = self._getConfigFile(objType, ident, 'hw')
+		#if (objType == 'AuditHardwareOnHost') and (auditHardwareObj.getState() == 0):
+		#	mode = 'delete'
 		
-		if (mode == 'insert') and (not os.path.exists(filename)):
-			self._touch(filename)
-		
+		filename = self._getConfigFile(objType, auditHardwareObj.getIdent(returnType = 'dict'), 'hw')
+		self._touch(filename)
 		iniFile = IniFile(filename = filename)
 		ini = iniFile.parse()
 		
-		identLowerKeys = {}
-		for key in ident.keys():
-			identLowerKeys[key.lower()] = ident[key]
+		objHash = {}
+		for (attribute, value) in auditHardwareObj.toHash().items():
+			if attribute.lower() in ('hostid', 'type'):
+				continue
+			if value is None:
+				objHash[attribute.lower()] = u''
+			else:
+				objHash[attribute.lower()] = forceUnicode(value)
 		
 		sectionFound = None
-
 		for section in ini.sections():
-			found = True
-			
-			for key in identLowerKeys:
-				if (objType == 'AuditHardwareOnHost') and (key == 'hostid'):
+			matches = True
+			for (attribute, value) in objHash.items():
+				if attribute in ('firstseen', 'lastseen', 'state'):
 					continue
-				try:
-					if (not ini.has_option(section, key)):
-						raise Exception
-					if (not identLowerKeys[key] == ini.get(section, key)):
-						raise Exception
-				except:
-					found = False
+				if ini.has_option(section, attribute):
+					if (self.__unescape(ini.get(section, attribute)) != value):
+						matches = False
+						break
+				else:
+					matches = False
 					break
-			
-			if not found:
-				continue
-			
-			for option in ini.options(section):
-				if (objType == 'AuditHardwareOnHost') and (option in ('firstseen', 'lastseen', 'state')):
-					continue
-				try:
-					if (not option in identLowerKeys):
-						raise Exception
-					if (not identLowerKeys[option] == ini.get(section, option)):
-						raise Exception
-				except:
-					found = False
-					break
-			
-			if not found:
-				continue
-			
-			sectionFound = section
-			break
+			if matches:
+				logger.debug(u"Found matching section '%s' in audit file '%s' for object %s" % (section, filename, objHash))
+				sectionFound = section
+				break
+		
+		if (mode == 'delete'):
+			if sectionFound:
+				ini.remove_section(sectionFound)
+		
+		if (mode == 'update'):
+			if sectionFound:
+				for (attribute, value) in objHash.items():
+					if attribute in ('firstseen', 'lastseen', 'state') and not value:
+						continue
+					ini.set(sectionFound, attribute, self.__escape(value))
+			else:
+				mode = 'insert'
 		
 		if (mode == 'insert'):
-			if (sectionFound is None):
+			if sectionFound:
+				ini.remove_section(sectionFound)
+			else:
 				nums = []
 				for section in ini.sections():
 					nums.append(int(section[section.rfind('_') + 1:]))
@@ -2026,39 +2025,9 @@ class FileBackend(ConfigDataBackend):
 				while num in nums:
 					num += 1
 				sectionFound = u'hardware_%d' % num
-				ini.add_section(sectionFound)
-			
-			for (key, value) in auditHardwareObj.toHash().items():
-				key = key.lower()
-				if (key in ('hostid', 'type')):
-					continue
-				if (value is None):
-					if (key in ('firstseen', 'lastseen', 'state')):
-						continue
-					value = u''
-				ini.set(sectionFound, key, self.__escape(value))
-			logger.debug2(u"Added section '%s'" % (sectionFound))
-		
-		elif (mode == 'update'):
-			if (sectionFound is None):
-				raise Exception(u"Cannot update AuditHardware '%s': not found" % auditHardwareObj)
-			
-			if (objType == 'AuditHardware'):
-				return #cannot really update: there are only idents
-			for (key, value) in auditHardwareObj.toHash().items():
-				key = key.lower()
-				if (value is None) or (not key in ('firstseen', 'lastseen', 'state')):
-					continue
-				ini.set(sectionFound, key, self.__escape(value))
-			iniFile.generate(ini)
-			logger.debug2(u"Updated section '%s'" % (sectionFound))
-		
-		elif (mode == 'delete'):
-			if (sectionFound is None):
-				return
-			ini.remove_section(sectionFound)
-			logger.debug2(u"Removed section '%s'" % (sectionFound))
-		
+			ini.add_section(sectionFound)
+			for (attribute, value) in objHash.items():
+				ini.set(sectionFound, attribute, self.__escape(value))
 		iniFile.generate(ini)
 	
 	

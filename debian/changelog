@@ -1,3 +1,10 @@
+python-opsi (4.0.0.4-1) stable; urgency=low
+
+  * 30_configed.conf: add method getConfigs
+  * Backend/File: Fix auditHardware/auditHardwareOnHost insert/update/delete
+
+ -- Jan Schneider <j.schneider@uib.de>  Mon, 11 Oct 2010 14:20:23 +0200
+
 python-opsi (4.0.0.3-1) stable; urgency=low
 
   * Types,Logger: forceUnicode try except __unicode__
