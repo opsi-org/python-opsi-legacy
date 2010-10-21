@@ -8,7 +8,7 @@
    This module is part of the desktop management solution opsi
    (open pc server integration) http://www.opsi.org
    
-   Copyright (C) 2006, 2007, 2008 uib GmbH
+   Copyright (C) 2010 uib GmbH
    
    http://www.uib.de/
    
