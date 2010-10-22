@@ -2688,12 +2688,15 @@ class ExtendedConfigDataBackend(ExtendedBackend):
 			#	for (productId, poc) in pocs.items():
 			#		logger.debug2(u"      [%s] %s: %s" % (clientId, productId, poc.toHash()))
 		
-		if not self._options['processProductOnClientSequence']:
+		if not self._options['addProductOnClientDefaults'] and not self._options['processProductOnClientSequence']:
 			return productOnClients
 		
-		logger.debug(u"   * generating productOnClient sequence")
+		if self._options['processProductOnClientSequence']:
+			logger.debug(u"   * generating productOnClient sequence")
+			productOnClients = self.productOnClient_generateSequence(productOnClients)
+		
 		productOnClientsFiltered = []
-		for productOnClient in self.productOnClient_generateSequence(productOnClients):
+		for productOnClient in productOnClients:
 			if self._objectHashMatches(productOnClient.toHash(), **filter):
 				productOnClientsFiltered.append(productOnClient)
 		return productOnClientsFiltered
