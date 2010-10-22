@@ -53,6 +53,7 @@ class NonObjectMethodsMixin(object):
 	def test_hostIdents(self):
 		self.test_createDepotServer()
 		self.test_createClient()
+		numHosts = len(self.hosts)
 		
 		selfIdents = []
 		for host in self.hosts:
@@ -93,7 +94,7 @@ class NonObjectMethodsMixin(object):
 			
 		for config in self.configs:
 			selfIdents.append(config.getIdent(returnType = 'dict'))
-		selfIds = map((lambda set: set['id']), selfIdents)	
+		selfIds = map((lambda set: set['id']), selfIdents)
 		
 		ids = self.backend.config_getIdents()
 		self.assertEqual(len(ids), len(selfIdents), u"Expected %s idents, but found '%s' on backend." % (len(selfIdents), len(ids)))
@@ -104,11 +105,17 @@ class NonObjectMethodsMixin(object):
 		for configState in self.configStates:
 			selfIdents.append(configState.getIdent(returnType = 'dict'))
 		
+		self.backend.backend_setOptions({"addConfigStateDefaults": False})
 		ids = self.backend.configState_getIdents()
 		self.assertEqual(len(ids), len(selfIdents), u"Expected %s idents, but found '%s' on backend." % (len(selfIdents), len(ids)))
 		for ident in ids:
 			id = dict(zip(('configId', 'objectId'), tuple(ident.split(";"))))
 			self.assertIn(id, selfIdents, u"'%s' not in '%s'" % (ident, selfIdents))
+		
+		expect = len(self.backend.host_getObjects()) * len(self.configs)
+		self.backend.backend_setOptions({"addConfigStateDefaults": True})
+		ids = self.backend.configState_getIdents()
+		self.assertEqual(expect, len(ids), u"Expected %s idents, but found '%s' on backend." % (expect, len(ids)))
 		
 	def test_noException(self):
 		try:

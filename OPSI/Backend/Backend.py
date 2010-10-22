@@ -1430,12 +1430,26 @@ class ExtendedConfigDataBackend(ExtendedBackend):
 						objectFilter = objectFilterNew
 						
 						logger.debug(u"Executing: this.%s_getIdents(returnType = 'list', %s)" % (getBackendMethodPrefix(oc), objectFilter))
-						res = {
-							"objectClass":         objectClass,
-							"foreignIdAttributes": getForeignIdAttributes(oc),
-							"identAttributes":     getIdentAttributes(oc),
-							"identValues":         eval("this.%s_getIdents(returnType = 'list', **objectFilter)" % getBackendMethodPrefix(oc))
-						}
+						addProductOnClientDefaults = self._options.get('addProductOnClientDefaults', False)
+						addConfigStateDefaults = self._options.get('addConfigStateDefaults', False)
+						addProductPropertyStateDefaults = self._options.get('addProductPropertyStateDefaults', False)
+						if (objectClass == 'ProductOnClient'):
+							self._options['addProductOnClientDefaults'] = True
+						elif (objectClass == 'ConfigState'):
+							self._options['addConfigStateDefaults'] = True
+						elif (objectClass == 'ProductPropertyState'):
+							self._options['addProductPropertyStateDefaults'] = True
+						try:
+							res = {
+								"objectClass":         objectClass,
+								"foreignIdAttributes": getForeignIdAttributes(oc),
+								"identAttributes":     getIdentAttributes(oc),
+								"identValues":         eval("this.%s_getIdents(returnType = 'list', **objectFilter)" % getBackendMethodPrefix(oc))
+							}
+						finally:
+							self._options['addProductOnClientDefaults'] = addProductOnClientDefaults
+							self._options['addConfigStateDefaults'] = addConfigStateDefaults
+							self._options['addProductPropertyStateDefaults'] = addProductPropertyStateDefaults
 						if (level == 0):
 							result = combineResults(result, res, operator)
 						else:
@@ -1464,127 +1478,127 @@ class ExtendedConfigDataBackend(ExtendedBackend):
 	
 	def host_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for host in self._backend.host_getObjects(attributes = ['id'], **filter):
+		for host in self.host_getObjects(attributes = ['id'], **filter):
 			result.append(host.getIdent(returnType))
 		return result
 	
 	def config_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for config in self._backend.config_getObjects(attributes = ['id'], **filter):
+		for config in self.config_getObjects(attributes = ['id'], **filter):
 			result.append(config.getIdent(returnType))
 		return result
 	
 	def configState_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for configState in self._backend.configState_getObjects(attributes = ['configId', 'objectId'], **filter):
+		for configState in self.configState_getObjects(attributes = ['configId', 'objectId'], **filter):
 			result.append(configState.getIdent(returnType))
 		return result
 	
 	def product_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for product in self._backend.product_getObjects(attributes = ['id'], **filter):
+		for product in self.product_getObjects(attributes = ['id'], **filter):
 			result.append(product.getIdent(returnType))
 		return result
 	
 	def productProperty_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for productProperty in self._backend.productProperty_getObjects(attributes = ['productId', 'productVersion', 'packageVersion', 'propertyId'], **filter):
+		for productProperty in self.productProperty_getObjects(attributes = ['productId', 'productVersion', 'packageVersion', 'propertyId'], **filter):
 			result.append(productProperty.getIdent(returnType))
 		return result
 	
 	def productDependency_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for productDependency in self._backend.productDependency_getObjects(attributes = ['productId', 'productVersion', 'packageVersion', 'productAction', 'requiredProductId'], **filter):
+		for productDependency in self.productDependency_getObjects(attributes = ['productId', 'productVersion', 'packageVersion', 'productAction', 'requiredProductId'], **filter):
 			result.append(productDependency.getIdent(returnType))
 		return result
 	
 	def productOnDepot_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for productOnDepot in self._backend.productOnDepot_getObjects(attributes = ['productId', 'productType', 'depotId'], **filter):
+		for productOnDepot in self.productOnDepot_getObjects(attributes = ['productId', 'productType', 'depotId'], **filter):
 			result.append(productOnDepot.getIdent(returnType))
 		return result
 	
 	def productOnClient_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for productOnClient in self._backend.productOnClient_getObjects(attributes = ['productId', 'productType', 'clientId'], **filter):
+		for productOnClient in self.productOnClient_getObjects(attributes = ['productId', 'productType', 'clientId'], **filter):
 			result.append(productOnClient.getIdent(returnType))
 		return result
 	
 	def productPropertyState_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for productPropertyState in self._backend.productPropertyState_getObjects(attributes = ['productId', 'propertyId', 'objectId'], **filter):
+		for productPropertyState in self.productPropertyState_getObjects(attributes = ['productId', 'propertyId', 'objectId'], **filter):
 			result.append(productPropertyState.getIdent(returnType))
 		return result
 	
 	def group_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for group in self._backend.group_getObjects(attributes = ['id'], **filter):
+		for group in self.group_getObjects(attributes = ['id'], **filter):
 			result.append(group.getIdent(returnType))
 		return result
 	
 	def objectToGroup_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for objectToGroup in self._backend.objectToGroup_getObjects(attributes = ['groupType', 'groupId', 'objectId'], **filter):
+		for objectToGroup in self.objectToGroup_getObjects(attributes = ['groupType', 'groupId', 'objectId'], **filter):
 			result.append(objectToGroup.getIdent(returnType))
 		return result
 	
 	def licenseContract_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for licenseContract in self._backend.licenseContract_getObjects(attributes = ['id'], **filter):
+		for licenseContract in self.licenseContract_getObjects(attributes = ['id'], **filter):
 			result.append(licenseContract.getIdent(returnType))
 		return result
 	
 	def softwareLicense_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for softwareLicense in self._backend.softwareLicense_getObjects(attributes = ['id', 'licenseContractId'], **filter):
+		for softwareLicense in self.softwareLicense_getObjects(attributes = ['id', 'licenseContractId'], **filter):
 			result.append(softwareLicense.getIdent(returnType))
 		return result
 	
 	def licensePool_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for licensePool in self._backend.licensePool_getObjects(attributes = ['id'], **filter):
+		for licensePool in self.licensePool_getObjects(attributes = ['id'], **filter):
 			result.append(licensePool.getIdent(returnType))
 		return result
 	
 	def softwareLicenseToLicensePool_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for softwareLicenseToLicensePool in self._backend.softwareLicenseToLicensePool_getObjects(attributes = ['softwareLicenseId', 'licensePoolId'], **filter):
+		for softwareLicenseToLicensePool in self.softwareLicenseToLicensePool_getObjects(attributes = ['softwareLicenseId', 'licensePoolId'], **filter):
 			result.append(softwareLicenseToLicensePool.getIdent(returnType))
 		return result
 	
 	def licenseOnClient_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for licenseOnClient in self._backend.licenseOnClient_getObjects(attributes = ['softwareLicenseId', 'licensePoolId', 'clientId'], **filter):
+		for licenseOnClient in self.licenseOnClient_getObjects(attributes = ['softwareLicenseId', 'licensePoolId', 'clientId'], **filter):
 			result.append(licenseOnClient.getIdent(returnType))
 		return result
 	
 	def auditSoftware_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for auditSoftware in self._backend.auditSoftware_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture'], **filter):
+		for auditSoftware in self.auditSoftware_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture'], **filter):
 			result.append(auditSoftware.getIdent(returnType))
 		return result
 	
 	def auditSoftwareToLicensePool_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for auditSoftwareToLicensePool in self._backend.auditSoftwareToLicensePool_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture', 'licensePoolId'], **filter):
+		for auditSoftwareToLicensePool in self.auditSoftwareToLicensePool_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture', 'licensePoolId'], **filter):
 			result.append(auditSoftwareToLicensePool.getIdent(returnType))
 		return result
 	
 	def auditSoftwareOnClient_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for auditSoftwareOnClient in self._backend.auditSoftwareOnClient_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture', 'clientId'], **filter):
+		for auditSoftwareOnClient in self.auditSoftwareOnClient_getObjects(attributes = ['name', 'version', 'subVersion', 'language', 'architecture', 'clientId'], **filter):
 			result.append(auditSoftwareOnClient.getIdent(returnType))
 		return result
 	
 	def auditHardware_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for auditHardware in self._backend.auditHardware_getObjects(**filter):
+		for auditHardware in self.auditHardware_getObjects(**filter):
 			result.append(auditHardware.getIdent(returnType))
 		return result
 	
 	def auditHardwareOnHost_getIdents(self, returnType='unicode', **filter):
 		result = []
-		for auditHardwareOnHost in self._backend.auditHardwareOnHost_getObjects(**filter):
+		for auditHardwareOnHost in self.auditHardwareOnHost_getObjects(**filter):
 			result.append(auditHardwareOnHost.getIdent(returnType))
 		return result
 	
@@ -1900,15 +1914,15 @@ class ExtendedConfigDataBackend(ExtendedBackend):
 		
 		# Create data structure for config states to find missing ones
 		css = {}
-		for cs in self.configState_getIdents(
+		for cs in self._backend.configState_getObjects(
+						attributes = ['objectId', 'configId'],
 						objectId   = filter.get('objectId', []),
-						configId   = filter.get('configId', []),
-						returnType = 'dict'):
-			if not css.has_key(cs['objectId']):
-				css[cs['objectId']] = []
-			css[cs['objectId']].append(cs['configId'])
+						configId   = filter.get('configId', [])):
+			if not css.has_key(cs.objectId):
+				css[cs.objectId] = []
+			css[cs.objectId].append(cs.configId)
 		
-		clientIds = self.host_getIdents(type = 'OpsiClient', id = filter.get('objectId'), returnType = 'unicode')
+		clientIds = self.host_getIdents(id = filter.get('objectId'), returnType = 'unicode')
 		# Create missing config states
 		for config in self._backend.config_getObjects(id = filter.get('configId')):
 			logger.debug(u"Default values for '%s': %s" % (config.id, config.defaultValues))
@@ -2841,16 +2855,16 @@ class ExtendedConfigDataBackend(ExtendedBackend):
 		
 		# Create data structure for product property states to find missing ones
 		ppss = {}
-		for pps in self.productPropertyState_getIdents(
+		for pps in self._backend.productPropertyState_getObjects(
+						attributes = ['objectId', 'productId', 'propertyId'],
 						objectId   = filter.get('objectId', []),
 						productId  = filter.get('productId', []),
-						propertyId = filter.get('propertyId', []),
-						returnType = 'dict'):
-			if not ppss.has_key(pps['objectId']):
-				ppss[pps['objectId']] = {}
-			if not ppss[pps['objectId']].has_key(pps['productId']):
-				ppss[pps['objectId']][pps['productId']] = []
-			ppss[pps['objectId']][pps['productId']].append(pps['propertyId'])
+						propertyId = filter.get('propertyId', [])):
+			if not ppss.has_key(pps.objectId):
+				ppss[pps.objectId] = {}
+			if not ppss[pps.objectId].has_key(pps.productId):
+				ppss[pps.objectId][pps.productId] = []
+			ppss[pps.objectId][pps.productId].append(pps.propertyId)
 		
 		# Create missing product property states
 		for (depotId, clientIds) in depotToClients.items():

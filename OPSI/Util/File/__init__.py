@@ -32,7 +32,7 @@
    @license: GNU General Public License version 2
 """
 
-__version__ = "4.0.1"
+__version__ = "4.0.2"
 
 import os, codecs, re, ConfigParser, StringIO, locale
 
@@ -358,7 +358,11 @@ class ChangelogFile(TextFile):
 			self.writelines()
 			self.close()
 		finally:
-			locale.setlocale(locale.LC_ALL, loc)
+			if loc:
+				try:
+					locale.setlocale(locale.LC_ALL, loc)
+				except:
+					pass
 		
 	def getEntries(self):
 		if not self._parsed:

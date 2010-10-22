@@ -1,3 +1,10 @@
+python-opsi (4.0.0.9-1) stable; urgency=low
+
+  * Util/File: try/except setting locale
+  * BAckend/Backend: fix backend_searchIdents for ProductOnClient, ProductPropertyState, ConfigState objects
+
+ -- Jan Schneider <j.schneider@uib.de>  Fri, 22 Oct 2010 12:17:57 +0200
+
 python-opsi (4.0.0.8-1) stable; urgency=low
 
   * Added SQLite backend
