@@ -920,23 +920,36 @@ class WebDAVRepository(HTTPRepository):
 		
 		src = None
 		conn = None
+		response = None
 		try:
 			headers = self._headers()
 			headers['content-length'] = size
 			
-			conn = self._connectionPool.getConnection()
-			conn.putrequest('PUT', destination)
-			for (k, v) in headers.items():
-				conn.putheader(k, v)
-			conn.endheaders()
-			conn.sock.settimeout(self._socketTimeout)
+			now = time.time()
+			while True:
+				conn = self._connectionPool.getConnection()
+				conn.putrequest('PUT', destination)
+				for (k, v) in headers.items():
+					conn.putheader(k, v)
+				conn.endheaders()
+				conn.sock.settimeout(self._socketTimeout)
+				
+				try:
+					src = open(source, 'rb')
+					self._transferUp(src, conn, progressSubject)
+				except Exception, e:
+					src.close()
+					if (time.time() - now > 3):
+						raise
+					logger.info(u"Error '%s' occured while uploading, retrying" % e)
+					conn = None
+					self._connectionPool.endConnection(conn)
+					continue
+				src.close()
+				response = self._connectionPool.endConnection(conn)
+				conn = None
+				break
 			
-			src = open(source, 'rb')
-			self._transferUp(src, conn, progressSubject)
-			src.close()
-			
-			response = self._connectionPool.endConnection(conn)
-			conn = None
 			self._processResponseHeaders(response)
 			if (response.status != responsecode.CREATED) and (response.status != responsecode.NO_CONTENT):
 				raise Exception(response.status)
