@@ -1,3 +1,9 @@
+python-opsi (4.0.0.16-1) testing; urgency=low
+
+  * Fix LDAP.py: Don't delete HostObject on ucs-Servers, if deleteCommand is not set.
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Tue, 30 Nov 2010 13:33:26 +0000
+
 python-opsi (4.0.0.15-2) stable; urgency=low
 
   * new package version for build service

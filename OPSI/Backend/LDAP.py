@@ -834,33 +834,31 @@ class LDAPBackend(ConfigDataBackend):
 						deleteCommand = deleteCommand.replace(u'%password%',        self._password)
 						System.execute(deleteCommand)
 					else:
-						ldapObj.deleteFromDirectory(self._ldap, recursive = True)
-				else:
-					ldapObj.readFromDirectory(self._ldap)
-					delete = False
-					for (attribute, values) in ldapObj.getAttributeDict(valuesAsList = True).items():
-						if (attribute == 'objectClass'):
-							for oc in ('opsiHost', 'opsiClient', 'opsiDepotserver', 'opsiConfigserver'):
-								if oc in values:
-									values.remove(oc)
-							if not values:
-								# No objectclasses left
-								delete = True
-								break
-						elif attribute in (	'opsiDescription', 'opsiNotes', 'opsiHardwareAddress', 'opsiIpAddress', 'opsiInventoryNumber', \
-									'opsiHostId', 'opsiCreatedTimestamp', 'opsiLastSeenTimestamp', 'opsiHostKey', \
-									'opsiDepotLocalUrl', 'opsiDepotRemoteUrl', 'opsiDepotWebdavUrl', 'opsiRepositoryLocalUrl', 'opsiRepositoryRemoteUrl', \
-									'opsiNetworkAddress', 'opsiMaximumBandwidth', 'opsiHostKey', 'opsiIsMasterDepot', 'opsiMasterDepotId'):
-							values = []
+						ldapObj.readFromDirectory(self._ldap)
+						delete = False
+						for (attribute, values) in ldapObj.getAttributeDict(valuesAsList = True).items():
+							if (attribute == 'objectClass'):
+								for oc in ('opsiHost', 'opsiClient', 'opsiDepotserver', 'opsiConfigserver'):
+									if oc in values:
+										values.remove(oc)
+								if not values:
+									# No objectclasses left
+									delete = True
+									break
+							elif attribute in (	'opsiDescription', 'opsiNotes', 'opsiHardwareAddress', 'opsiIpAddress', 'opsiInventoryNumber', \
+										'opsiHostId', 'opsiCreatedTimestamp', 'opsiLastSeenTimestamp', 'opsiHostKey', \
+										'opsiDepotLocalUrl', 'opsiDepotRemoteUrl', 'opsiDepotWebdavUrl', 'opsiRepositoryLocalUrl', 'opsiRepositoryRemoteUrl', \
+										'opsiNetworkAddress', 'opsiMaximumBandwidth', 'opsiHostKey', 'opsiIsMasterDepot', 'opsiMasterDepotId'):
+								values = []
+							else:
+								continue
+							logger.error("attribute: %s, value: %s" % (attribute, values))
+							ldapObj.setAttribute(attribute, values)
+						if delete:
+							ldapObj.deleteFromDirectory(self._ldap, recursive = True)
 						else:
-							continue
-						logger.error("attribute: %s, value: %s" % (attribute, values))
-						ldapObj.setAttribute(attribute, values)
-					if delete:
-						ldapObj.deleteFromDirectory(self._ldap, recursive = True)
-					else:
-						ldapObj.writeToDirectory(self._ldap)
-					
+							ldapObj.writeToDirectory(self._ldap)
+						
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# -   Configs                                                                                   -
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
