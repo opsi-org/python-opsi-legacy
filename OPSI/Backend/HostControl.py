@@ -308,6 +308,11 @@ class HostControlBackend(ExtendedBackend):
 			time.sleep(0.1)
 		return result
 	
+	def hostControl_execute(self, command, hostIds=[], waitForEnding=True, captureStderr=True, encoding=None, timeout=300):
+		comamnd = forceUnicode(command)
+		hostIds = self._context.host_getIdents(id = hostIds, returnType = 'unicode')
+		return self._opsiclientdRpc(hostIds = hostIds, method = 'execute', params = [command,waitForEnding,captureStderr,encoding,timeout])
+	
 	
 	
 	
