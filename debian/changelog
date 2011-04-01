@@ -1,3 +1,9 @@
+python-opsi (4.0.1-18monitoring) experimental; urgency=low
+
+  * hostControl_execute implemented.
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Fri, 01 Apr 2011 15:13:26 +0200
+
 python-opsi (4.0.1-18) testing; urgency=low
 
   * move server verification into HTTP module
