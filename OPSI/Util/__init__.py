@@ -29,10 +29,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 @copyright:	uib GmbH <info@uib.de>
 @author: Jan Schneider <j.schneider@uib.de>
+@author: Erol Ueluekmen <e.ueluekmen@uib.de>
 @license: GNU General Public License version 2
 """
 
-__version__ = '4.0.2.7'
+__version__ = '4.0.4.3'
 
 import base64
 import codecs
@@ -292,7 +293,7 @@ def objectToBeautifiedText(obj,level=0):
 		text = u'%s%s{ \n' % (text, u' '*hspace)
 		i = 0
 		for (key, value) in obj.items():
-			text = u'%s%s%s" : ' % (text, u' '*hspace, key)
+			text = u'%s%s"%s" : ' % (text, u' '*hspace, key)
 			if type(value) in (types.DictType, types.ListType):
 				text = u'%s\n' % text
 			text = u'%s%s' % (text, objectToBeautifiedText(value, level+1))
