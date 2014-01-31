@@ -1228,114 +1228,17 @@ class SQLBackend(ConfigDataBackend):
 			self._sql.insert('PRODUCT_PROPERTY', data)
 
 		if not possibleValues is None:
-			(conn, cursor) = self._sql.connect()
-			myTransactionSuccess = False
-			myMaxRetryTransaction = 10
-			myRetryTransactionCounter = 0
-			while (not myTransactionSuccess) and (myRetryTransactionCounter < myMaxRetryTransaction):
-				try:
-					myRetryTransactionCounter += 1
-					# transaction
-					cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-					self._sql.doCommit = False
-					conn.begin()
-					logger.notice(u'Start Transaction: delete from ppv %d' % myRetryTransactionCounter)
-
-					self._sql.delete('PRODUCT_PROPERTY_VALUE', where, conn, cursor)
-					conn.commit()
-					myTransactionSuccess = True
-				except Exception as e:
-					logger.debug(u"Execute error: %s" % e)
-					if (e.args[0] == 1213):
-						# 1213: 'Deadlock found when trying to get lock; try restarting transaction'
-						# 1213: May be table locked because of concurrent access - retrying
-						myTransactionSuccess = False
-						if (myRetryTransactionCounter >= myMaxRetryTransaction):
-							logger.error(u'Table locked (Code 2013) - giving up after %d retries' % myRetryTransactionCounter)
-							raise
-						else:
-							logger.notice(u'Table locked (Code 2013) - restarting Transaction')
-							time.sleep(0.1)
-					else:
-						logger.error(u'Unknown DB Error: %s' % str(e))
-						raise
-
-				logger.notice(u'End Transaction')
-				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
-			self._sql.close(conn,cursor)
-
-		(conn, cursor) = self._sql.connect()
+			self._sql.delete('PRODUCT_PROPERTY_VALUE', where)
 		for value in possibleValues:
-			try:
-				# transform arguments for sql
-				# from uniqueCondition
-				if (value in defaultValues):
-					myPPVdefault = u"`isDefault` = 1"
-				else:
-					myPPVdefault = u"`isDefault` = 0"
-
-				if type(value) is bool:
-					if value:
-						myPPVvalue = u"`value` = 1"
-					else:
-						myPPVvalue = u"`value` = 0"
-				elif type(value) in (float, long, int):
-					myPPVvalue = u"`value` = %s" % (value)
-				else:
-					myPPVvalue = u"`value` = '%s'" % (self._sql.escapeApostrophe(self._sql.escapeBackslash(value)))
-				myPPVselect = u"select * from PRODUCT_PROPERTY_VALUE where " \
-					+ u"`propertyId` = '%s' AND `productId` = '%s' AND `productVersion` = '%s' AND `packageVersion` = '%s'" \
-					% (data['propertyId'], data['productId'], str(data['productVersion']), str(data['packageVersion'])) \
-					+ u" AND "+myPPVvalue+u" AND "+myPPVdefault
-				myTransactionSuccess = False
-				myMaxRetryTransaction = 10
-				myRetryTransactionCounter = 0
-				while (not myTransactionSuccess) and (myRetryTransactionCounter < myMaxRetryTransaction):
-					try:
-						myRetryTransactionCounter += 1
-						# transaction
-						cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-						self._sql.doCommit = False
-						conn.begin()
-						logger.notice(u'Start Transaction: insert to ppv %d' % myRetryTransactionCounter)
-						if not self._sql.getRow(myPPVselect , conn, cursor):
-							#self._sql.doCommit = True
-							logger.notice(u'doCommit set to true')
-							self._sql.insert('PRODUCT_PROPERTY_VALUE', {
-								'productId': data['productId'],
-								'productVersion': data['productVersion'],
-								'packageVersion': data['packageVersion'],
-								'propertyId': data['propertyId'],
-								'value': value,
-								'isDefault': (value in defaultValues)
-								}, conn, cursor)
-							conn.commit()
-						else:
-							conn.rollback()
-						myTransactionSuccess = True
-					except Exception as e:
-						logger.debug(u"Execute error: %s" % e)
-						if (e.args[0] == 1213):
-							# 1213: 'Deadlock found when trying to get lock; try restarting transaction'
-							# 1213: May be table locked because of concurrent access - retrying
-							myTransactionSuccess = False
-							if (myRetryTransactionCounter >= myMaxRetryTransaction):
-								logger.error(u'Table locked (Code 2013) - giving up after %d retries' % myRetryTransactionCounter)
-								raise
-							else:
-								logger.notice(u'Table locked (Code 2013) - restarting Transaction')
-								time.sleep(0.1)
-						else:
-							logger.error(u'Unknown DB Error: %s' % str(e))
-							raise
-
-				logger.notice(u'End Transaction')
-			finally:
-				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
-		self._sql.close(conn,cursor)
-
+			self._sql.insert('PRODUCT_PROPERTY_VALUE', {
+					'productId': data['productId'],
+					'productVersion': data['productVersion'],
+					'packageVersion': data['packageVersion'],
+					'propertyId': data['propertyId'],
+					'value': value,
+					'isDefault': (value in defaultValues)
+					})
+	
 	def productProperty_updateObject(self, productProperty):
 		if not self._sqlBackendModule:
 			raise Exception(u"SQL backend module disabled")
@@ -1357,26 +1260,15 @@ class SQLBackend(ConfigDataBackend):
 			self._sql.delete('PRODUCT_PROPERTY_VALUE', where)
 
 		for value in possibleValues:
-			try:
-				self._sql.doCommit = False
-				logger.notice(u'doCommit set to false')
-				if not self._sql.getRow(u"select * from PRODUCT_PROPERTY_VALUE where " \
-						+ u"`propertyId` = '%s' AND `productId` = '%s' AND `productVersion` = '%s' AND `packageVersion` = '%s' AND `value` = '%s' AND `isDefault` = %s" \
-						% (data['propertyId'], data['productId'], str(data['productVersion']), str(data['packageVersion']), value, str(value in defaultValues))):
-					self._sql.doCommit = True
-					logger.notice(u'doCommit set to true')
-					self._sql.insert('PRODUCT_PROPERTY_VALUE', {
-					        'productId': data['productId'],
-					        'productVersion': data['productVersion'],
-					        'packageVersion': data['packageVersion'],
-					        'propertyId': data['propertyId'],
-					        'value': value,
-					        'isDefault': (value in defaultValues)
-					        })
-			finally:
-				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
-
+			self._sql.insert('PRODUCT_PROPERTY_VALUE', {
+					'productId': data['productId'],
+					'productVersion': data['productVersion'],
+					'packageVersion': data['packageVersion'],
+					'propertyId': data['propertyId'],
+					'value': value,
+					'isDefault': (value in defaultValues)
+					})
+	
 	def productProperty_getObjects(self, attributes=[], **filter):
 		if not self._sqlBackendModule:
 			raise Exception(u"SQL backend module disabled")

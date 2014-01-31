@@ -1,39 +1,36 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-   = = = = = = = = = = = = = = = = = = =
-   =   opsi python library - Windows   =
-   = = = = = = = = = = = = = = = = = = =
+opsi python library - Windows
 
-   This module is part of the desktop management solution opsi
-   (open pc server integration) http://www.opsi.org
+This module is part of the desktop management solution opsi
+(open pc server integration) http://www.opsi.org
 
-   Copyright (C) 2010 uib GmbH
+Copyright (C) 2013 uib GmbH
 
-   http://www.uib.de/
+http://www.uib.de/
 
-   All rights reserved.
+All rights reserved.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License version 2 as
-   published by the Free Software Foundation.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License, version 3
+as published by the Free Software Foundation.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Affero General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   @copyright:	uib GmbH <info@uib.de>
-   @author: Jan Schneider <j.schneider@uib.de>
-   @author: Erol Ueluekmen <e.ueluekmen@uib.de>
-   @license: GNU General Public License version 2
+@copyright: uib GmbH <info@uib.de>
+@author: Jan Schneider <j.schneider@uib.de>
+@author: Erol Ueluekmen <e.ueluekmen@uib.de>
+@license: GNU Affero GPL version 3
 """
 
-__version__ = '4.0.3.3'
+__version__ = '4.0.4.4'
 
 # Imports
 import re, os, time, socket, sys, locale, subprocess, difflib, threading
@@ -161,8 +158,11 @@ def getOpsiHotfixName(helper = None):
 	elif (major == 6):
 		lang = u'glb'
 		if helper:
-			result = execute(helper, shell=False)
-			minor = result[0].split(".")[1]
+			try:
+				result = execute(helper, shell=False)
+				minor = int(result[0].split(".")[1])
+			except:
+				logger.warning(u"MSHotfix fix for Windows 8.1 don't work. Fallback to normal mode.")
 		if (minor == 0):
 			os = u'vista-win2008'
 		elif (minor == 1):
