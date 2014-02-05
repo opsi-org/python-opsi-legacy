@@ -1,4 +1,4 @@
-python-opsi (4.0.4.4-1) UNRELEASED; urgency=low
+python-opsi (4.0.4.4-1) stable; urgency=low
 
   * added geo_override patch for older bios (opsi-linux-bootimage)
   * removed debug outputs from repository.py
