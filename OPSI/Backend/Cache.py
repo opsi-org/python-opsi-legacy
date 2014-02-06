@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 @copyright:	uib GmbH <info@uib.de>
 @author: Jan Schneider <j.schneider@uib.de>
+@author: Erol Ueluekmen <e.ueluekmen@uib.de>
 @license: GNU General Public License version 2
 """
 
@@ -38,7 +39,7 @@ import time
 from OPSI.Logger import LOG_NOTICE, Logger
 from OPSI.Types import forceHostId
 from OPSI.Object import *
-from OPSI.Backend.Backend import ConfigDataBackend, ModificationTrackingBackend
+from OPSI.Backend.Backend import *
 from OPSI.Backend.Replicator import BackendReplicator
 from OPSI.Util import blowfishDecrypt
 
