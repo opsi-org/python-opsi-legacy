@@ -37,7 +37,7 @@ import shutil
 import os
 
 from OPSI.Logger import Logger
-from OPSI.Types *
+from OPSI.Types import *
 from OPSI.Object import ProductOnDepot, ProductPropertyState
 from OPSI.Backend.Backend import *
 from OPSI.System import getDiskSpaceUsage
