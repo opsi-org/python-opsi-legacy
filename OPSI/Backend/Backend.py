@@ -51,7 +51,7 @@ if (os.name == 'posix'):
 		from ldaptor.protocols import pureldap
 		from ldaptor import ldapfilter
 
-from OPSI.Logger import Logger
+from OPSI.Logger import *
 from OPSI.Types import *
 from OPSI.Object import *
 from OPSI.Util import timestamp, compareVersions, blowfishDecrypt, blowfishEncrypt, getfqdn

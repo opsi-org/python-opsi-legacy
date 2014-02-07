@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU Affero General Public License version 3
 """
 
-__version__ = '4.0.2'
+__version__ = '4.0.4.5'
 
 import base64
 import json
@@ -44,11 +44,11 @@ from Queue import Queue, Empty
 from twisted.conch.ssh import keys
 from sys import version_info
 
-from OPSI.Logger import Logger, LOG_INFO
-from OPSI.Types import (forceBool, forceFilename, forceFloat, forceInt,
-						forceList, forceUnicode)
+from OPSI.Logger import *
+from OPSI.Types import *
+
 from Backend import *
-from OPSI.Util import serialize, deserialize
+from OPSI.Util import serialize, deserialize, encryptWithPublicKeyFromX509CertificatePEMFile, randomString
 from OPSI.Util.HTTP import urlsplit, getSharedConnectionPool
 
 

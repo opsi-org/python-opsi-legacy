@@ -1,13 +1,10 @@
-python-opsi (4.0.4.3-1) UNRELEASED; urgency=low
+python-opsi (4.0.4.5-1) stable; urgency=low
 
-  * New module: OPSI.Util.Task.CleanupBackend
-  * Suppressing DeprecationWarning from ldaptor.
-  * Bugfix in HTTPRepository. 
-  * Workarround for Windows 8.1 detection.
+  * set of small fixes.
 
- -- Niko Wenselowski <n.wenselowski@uib.de>  Thu, 19 Dec 2013 12:05:36 +0100
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Fri, 07 Feb 2014 02:10:23 +0100
 
-python-opsi (4.0.4.2-1) testing; urgency=low
+python-opsi (4.0.4.4-1) testing; urgency=low
 
   * added geo_override patch for older bios (opsi-linux-bootimage)
   * removed debug outputs from repository.py
@@ -21,14 +18,24 @@ python-opsi (4.0.4.2-1) testing; urgency=low
   * Removed workarounds for Python versions prior to 2.6
   * New depot selection alogrith: Select the depot with lowest latency that
     either is or belongs to the master depot the client is attached to.
+  * New module: OPSI.Util.Task.CleanupBackend
+  * Suppressing DeprecationWarning from ldaptor.
+  * Bugfix in HTTPRepository.
+  * Workarround for Windows 8.1 detection.
 
- -- Erol Ueluekmen <e.ueluekmen@uib.de>  Wed, 06 Nov 2013 13:22:18 +0100
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Wed, 29 Jan 2014 01:22:18 +0100
+ 
+python-opsi (4.0.4.3-1) testing; urgency=low
 
-python-opsi (4.0.4.1-2) testing; urgency=low
+  * Small bugfix for objectToBeautifiedText Method.
 
-  * modify version for buildservice
+ -- Erol Ueluekmen <e.ueluekmen@uib.>  Fri, 20 Dec 2013 18:11:37 +0100
+ 
+python-opsi (4.0.4.2-1) testing; urgency=low
 
- -- Erol Ueluekmen <e.ueluekmen@uib.de>  Tue, 05 Nov 2013 15:12:38 +0100
+  * objectToBeautifiedText optimization.
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Wed, 11 Dec 2013 11:02:06 +0100
 
 python-opsi (4.0.4.1-1) testing; urgency=low
 

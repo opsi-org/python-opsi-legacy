@@ -1239,7 +1239,7 @@ class SQLBackend(ConfigDataBackend):
 					cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE")
 					self._sql.doCommit = False
 					conn.begin()
-					logger.notice(u'Start Transaction: delete from ppv %d' % myRetryTransactionCounter)
+					logger.debug(u'Start Transaction: delete from ppv %d' % myRetryTransactionCounter)
 
 					self._sql.delete('PRODUCT_PROPERTY_VALUE', where, conn, cursor)
 					conn.commit()
@@ -1254,15 +1254,15 @@ class SQLBackend(ConfigDataBackend):
 							logger.error(u'Table locked (Code 2013) - giving up after %d retries' % myRetryTransactionCounter)
 							raise
 						else:
-							logger.notice(u'Table locked (Code 2013) - restarting Transaction')
+							logger.debug(u'Table locked (Code 2013) - restarting Transaction')
 							time.sleep(0.1)
 					else:
 						logger.error(u'Unknown DB Error: %s' % str(e))
 						raise
 
-				logger.notice(u'End Transaction')
+				logger.debug(u'End Transaction')
 				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
+				logger.debug(u'doCommit set to true')
 			self._sql.close(conn,cursor)
 
 		(conn, cursor) = self._sql.connect()
@@ -1298,10 +1298,10 @@ class SQLBackend(ConfigDataBackend):
 						cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE")
 						self._sql.doCommit = False
 						conn.begin()
-						logger.notice(u'Start Transaction: insert to ppv %d' % myRetryTransactionCounter)
+						logger.debug(u'Start Transaction: insert to ppv %d' % myRetryTransactionCounter)
 						if not self._sql.getRow(myPPVselect , conn, cursor):
 							#self._sql.doCommit = True
-							logger.notice(u'doCommit set to true')
+							logger.debug(u'doCommit set to true')
 							self._sql.insert('PRODUCT_PROPERTY_VALUE', {
 								'productId': data['productId'],
 								'productVersion': data['productVersion'],
@@ -1324,16 +1324,16 @@ class SQLBackend(ConfigDataBackend):
 								logger.error(u'Table locked (Code 2013) - giving up after %d retries' % myRetryTransactionCounter)
 								raise
 							else:
-								logger.notice(u'Table locked (Code 2013) - restarting Transaction')
+								logger.debug(u'Table locked (Code 2013) - restarting Transaction')
 								time.sleep(0.1)
 						else:
 							logger.error(u'Unknown DB Error: %s' % str(e))
 							raise
 
-				logger.notice(u'End Transaction')
+				logger.debug(u'End Transaction')
 			finally:
 				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
+				logger.debug(u'doCommit set to true')
 		self._sql.close(conn,cursor)
 
 	def productProperty_updateObject(self, productProperty):
@@ -1359,12 +1359,12 @@ class SQLBackend(ConfigDataBackend):
 		for value in possibleValues:
 			try:
 				self._sql.doCommit = False
-				logger.notice(u'doCommit set to false')
+				logger.debug(u'doCommit set to false')
 				if not self._sql.getRow(u"select * from PRODUCT_PROPERTY_VALUE where " \
 						+ u"`propertyId` = '%s' AND `productId` = '%s' AND `productVersion` = '%s' AND `packageVersion` = '%s' AND `value` = '%s' AND `isDefault` = %s" \
 						% (data['propertyId'], data['productId'], str(data['productVersion']), str(data['packageVersion']), value, str(value in defaultValues))):
 					self._sql.doCommit = True
-					logger.notice(u'doCommit set to true')
+					logger.debug(u'doCommit set to true')
 					self._sql.insert('PRODUCT_PROPERTY_VALUE', {
 					        'productId': data['productId'],
 					        'productVersion': data['productVersion'],
@@ -1375,7 +1375,7 @@ class SQLBackend(ConfigDataBackend):
 					        })
 			finally:
 				self._sql.doCommit = True
-				logger.notice(u'doCommit set to true')
+				logger.debug(u'doCommit set to true')
 
 	def productProperty_getObjects(self, attributes=[], **filter):
 		if not self._sqlBackendModule:
