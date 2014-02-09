@@ -6,50 +6,38 @@ opsi python library - Object
 This module is part of the desktop management solution opsi
 (open pc server integration) http://www.opsi.org
 
-Copyright (C) 2006-2013 uib GmbH
+Copyright (C) 2006-2014 uib GmbH
 
 http://www.uib.de/
 
 All rights reserved.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @copyright:	uib GmbH <info@uib.de>
 @author: Jan Schneider <j.schneider@uib.de>
-@license: GNU General Public License version 2
+@author: Erol Ueluekmen <e.ueluekmen@uib.de>
+@license: GNU Affero General Public License version 3
 """
 
-__version__ = '4.0'
+__version__ = '4.0.4.5'
 
 import inspect
 import types
 
 from OPSI.Logger import Logger
-from OPSI.Types import BackendBadValueError, BackendConfigurationError
-from OPSI.Types import (forceActionProgress, forceActionRequest,
-	forceActionResult, forceArchitecture, forceAuditState, forceBool,
-	forceBoolList, forceBootConfigurationPriority, forceConfigId, forceDict,
-	forceFilename, forceFloat, forceGroupId, forceGroupType,
-	forceHardwareAddress, forceHardwareDeviceId, forceHardwareVendorId,
-	forceHostId, forceInstallationStatus, forceInt, forceIPAddress,
-	forceLanguageCode,	forceLicenseContractId,	forceLicensePoolId,
-	forceList, forceNetworkAddress, forceObjectId,	forceOpsiHostKey,
-	forceOpsiTimestamp, forcePackageVersion, forceProductId,
-	forceProductIdList, forceProductPriority, forceProductPropertyId,
-	forceProductTargetConfiguration, forceProductType, forceProductVersion,
-	forceRequirementType, forceSoftwareLicenseId, forceUnicode,
-	forceUnicodeList, forceUnicodeLower, forceUnsignedInt, forceUrl)
+from OPSI.Types import *
 from OPSI.Util import fromJson, toJson, generateOpsiHostKey, timestamp
 
 logger = Logger()
@@ -215,6 +203,9 @@ class BaseObject(object):
 
 	def isGeneratedDefault(self):
 		return self._isGeneratedDefault
+	
+	def __unicode__(self):
+		return u"<%s>" % self.getType()
 
 	def toHash(self):
 		# FIXME: Do we need deepcopy here? slow!
@@ -2990,14 +2981,14 @@ class AuditHardwareOnHost(Relationship):
 		additional = []
 		hardwareClass = self.getHardwareClass()
 		if hardwareClass:
-			additional.append(u"hardwareClass='{0}'".format(hardwareClass))
+			additional.append(u"hardwareClass '{0}'".format(hardwareClass))
 		if hasattr(self, 'name'):
-			additional.append(u"name='{0}'".format(self.name))
+			additional.append(u"name '{0}'".format(self.name))
 
 		return u"<{type} hostId='{host}'{additional}>".format(
 			type=self.getType(),
 			host=self.hostId,
-			additional=' {0}'.format(', '.join(additional)) if additional else ''
+			additional=', {0}'.format(', '.join(additional)) if additional else ''
 		)
 
 
