@@ -2985,10 +2985,10 @@ class AuditHardwareOnHost(Relationship):
 		if hasattr(self, 'name'):
 			additional.append(u"name '{0}'".format(self.name))
 
-		return u"<{type} hostId='{host}'{additional}>".format(
+		return u"<{type} hostId '{host}'{additional}>".format(
 			type=self.getType(),
 			host=self.hostId,
-			additional=', {0}'.format(', '.join(additional)) if additional else ''
+			additional=u', {0}'.format(u', '.join(additional)) if additional else u''
 		)
 
 
