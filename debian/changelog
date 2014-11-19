@@ -1,4 +1,4 @@
-python-opsi (4.0.5.15-1) experimental; urgency=low
+python-opsi (4.0.5.15-1) stable; urgency=low
 
   * Patching sudoers: allow using service when no TTY present
 
