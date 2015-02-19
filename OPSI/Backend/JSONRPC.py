@@ -28,10 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @copyright: uib GmbH <info@uib.de>
 @author: Jan Schneider <j.schneider@uib.de>
 @author: Niko Wenselowski <n.wenselowski@uib.de>
+@author: Erol Ueluekmen <e.ueluekmen@uib.de>
 @license: GNU Affero General Public License version 3
 """
 
-__version__ = '4.0.2'
+__version__ = '4.0.5'
 
 import base64
 import json
@@ -665,7 +666,7 @@ class JSONRPCBackend(Backend):
 		headers['content-length'] = len(data)
 
 		auth = (self._username + u':' + self._password).encode('latin-1')
-		headers['Authorization'] = 'Basic ' + base64.encodestring(auth).strip()
+		headers['Authorization'] = 'Basic ' + base64.encodestring(auth).strip().replace('\n','')
 
 		if self._sessionId:
 			headers['Cookie'] = self._sessionId

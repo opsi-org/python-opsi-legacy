@@ -1,3 +1,9 @@
+python-opsi (4.0.5.16-1) stable; urgency=low
+
+  * JSONRPCBackend: Fix build long authorization headers.
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Thu, 19 Feb 2015 13:23:19 +0100
+
 python-opsi (4.0.5.15-1) stable; urgency=low
 
   * Patching sudoers: allow using service when no TTY present
