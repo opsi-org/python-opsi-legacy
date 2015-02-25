@@ -1,3 +1,9 @@
+python-opsi (4.0.5.17-1) testing; urgency=medium
+
+  * Small bugfix in ConfigureBackend Task.
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Wed, 25 Feb 2015 14:33:25 +0100
+
 python-opsi (4.0.5.16-1) stable; urgency=low
 
   * JSONRPCBackend: Fix build long authorization headers.

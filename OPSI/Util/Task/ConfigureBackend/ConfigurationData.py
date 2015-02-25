@@ -19,9 +19,10 @@
 """
 Configuration data for the backend.
 
-.. versionadded:: 4.0.5.1
+.. versionadded:: 4.0.5.2
 
 :author: Niko Wenselowski <n.wenselowski@uib.de>
+:author: Erol Ueluekmen <e.ueluekmen@uib.de>
 :license: GNU Affero General Public License version 3
 """
 import codecs
@@ -75,7 +76,7 @@ default. Supply this if ``clientconfig.configserver.url`` or \
 			depotuser = u'pcpatch'
 			depotdomain = readWindowsDomainFromSambaConfig(pathToSMBConf)
 			if depotdomain:
-				depotuser = r'\\'.join((depotdomain, depotuser))
+				depotuser = '\\'.join((depotdomain, depotuser))
 
 			configs.append(
 				oobject.UnicodeConfig(
