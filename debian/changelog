@@ -1,3 +1,9 @@
+python-opsi (4.0.5.18-1) testing; urgency=low
+
+  * opsihwaudit.conf: Added COMPUTER_SYSTEM.sku (on Windows > Vista/Win7) 
+
+ -- Erol Ueluekmen <ueluekmen@bonifax.uib.local>  Fri, 08 May 2015 01:01:37 +0200
+
 python-opsi (4.0.5.17-1) testing; urgency=medium
 
   * Small bugfix in ConfigureBackend Task.
