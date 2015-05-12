@@ -1,4 +1,4 @@
-python-opsi (4.0.5.18-1) testing; urgency=low
+python-opsi (4.0.5.18-1) stable; urgency=low
 
   * opsihwaudit.conf: Added COMPUTER_SYSTEM.sku (on Windows > Vista/Win7) 
 
