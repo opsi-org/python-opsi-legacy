@@ -1,3 +1,9 @@
+python-opsi (4.0.5.18-2) testing; urgency=low
+
+  * source/format file removed from debian packaging
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Thu, 21 May 2015 15:34:20 +0200
+
 python-opsi (4.0.5.18-1) stable; urgency=low
 
   * opsihwaudit.conf: Added COMPUTER_SYSTEM.sku (on Windows > Vista/Win7) 
