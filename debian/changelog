@@ -1,3 +1,10 @@
+python-opsi (4.0.5.19-1) testing; urgency=medium
+
+  * Workarround for newer python version, which implements PEP0476
+  * Fixing Certificate creation on Debian 8
+
+ -- Erol Ueluekmen <e.ueluekmen@uib.de>  Wed, 27 May 2015 02:38:52 +0200
+
 python-opsi (4.0.5.18-2) testing; urgency=low
 
   * source/format file removed from debian packaging

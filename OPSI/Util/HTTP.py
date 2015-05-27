@@ -58,6 +58,9 @@ totalRequests = 0
 # This could be an import - but support for pycurl is currently not fully implrement
 pycurl = None
 
+if hasattr(ssl_module, '_create_unverified_context'):
+      ssl_module._create_default_https_context = ssl_module._create_unverified_context
+
 
 def hybi10Encode(data):
 	# Code stolen from http://lemmingzshadow.net/files/2011/09/Connection.php.txt

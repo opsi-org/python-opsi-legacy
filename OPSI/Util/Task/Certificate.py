@@ -190,7 +190,7 @@ If not given will use a default.
 	cert.set_version(2)
 
 	LOGGER.notice("Signing Certificate")
-	cert.sign(k, 'sha1')
+	cert.sign(k, str('sha1'))
 
 	certcontext = "".join(
 		(
