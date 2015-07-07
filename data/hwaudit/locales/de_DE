@@ -10,6 +10,7 @@ HARDWARE_DEVICE.vendor = Hersteller
 HARDWARE_DEVICE.model = Modell
 HARDWARE_DEVICE.serialNumber = Seriennummer
 COMPUTER_SYSTEM = Computer
+COMPUTER_SYSTEM.sku = Artikelnummer
 COMPUTER_SYSTEM.systemType = Typ
 COMPUTER_SYSTEM.totalPhysicalMemory = Arbeitsspeicher
 COMPUTER_SYSTEM.dellexpresscode = Dell Expresscode

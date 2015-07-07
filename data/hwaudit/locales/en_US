@@ -10,6 +10,7 @@ HARDWARE_DEVICE.vendor = Vendor
 HARDWARE_DEVICE.model = Model
 HARDWARE_DEVICE.serialNumber = Serial number
 COMPUTER_SYSTEM = Computer
+COMPUTER_SYSTEM.sku = Stock Keeping Unit
 COMPUTER_SYSTEM.systemType = Type
 COMPUTER_SYSTEM.totalPhysicalMemory = Physical Memory
 COMPUTER_SYSTEM.dellexpresscode = Dell Expresscode

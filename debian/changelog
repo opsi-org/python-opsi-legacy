@@ -1,3 +1,9 @@
+python-opsi (4.0.5.20-1) experimental; urgency=medium
+
+  * hwaudit: Added translations for COMPUTER_SYSTEM.sku
+
+ -- Niko Wenselowski <n.wenselowski@uib.de>  Tue, 07 Jul 2015 17:04:11 +0200
+
 python-opsi (4.0.5.19-1) testing; urgency=medium
 
   * Workarround for newer python version, which implements PEP0476
