@@ -1,3 +1,9 @@
+python-opsi (4.0.5.20-2) testing; urgency=medium
+
+  * Depend on dh-python to fix lintian errors on Debian 8.
+
+ -- Niko Wenselowski <n.wenselowski@uib.de>  Mon, 10 Aug 2015 14:49:25 +0200
+
 python-opsi (4.0.5.20-1) experimental; urgency=medium
 
   * hwaudit: Added translations for COMPUTER_SYSTEM.sku
