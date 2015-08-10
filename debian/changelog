@@ -1,3 +1,9 @@
+python-opsi (4.0.5.20-3) testing; urgency=medium
+
+  * Debian/Ubuntu: Do not require python-support.
+
+ -- Niko Wenselowski <n.wenselowski@uib.de>  Mon, 10 Aug 2015 14:59:02 +0200
+
 python-opsi (4.0.5.20-2) testing; urgency=medium
 
   * Depend on dh-python to fix lintian errors on Debian 8.

@@ -9,7 +9,7 @@ Standards-Version: 3.8.4
 Package: python-opsi
 Section: opsi
 Architecture: all
-Depends: lsb-release, python-twisted-web, python-twisted-conch, python-magic, python-crypto, python-ldap, python-newt, python-pam, python-openssl | python-pyopenssl, dh-python | python-support, python-mysqldb, python-sqlalchemy, iproute, duplicity, python-m2crypto, lshw, python(>=2.6), python-ldaptor, ${misc:Depends}, ${python:Depends}
+Depends: lsb-release, python-twisted-web, python-twisted-conch, python-magic, python-crypto, python-ldap, python-newt, python-pam, python-openssl | python-pyopenssl, python-mysqldb, python-sqlalchemy, iproute, duplicity, python-m2crypto, lshw, python(>=2.6), python-ldaptor, ${misc:Depends}, ${python:Depends}
 Recommends: cabextract
 Provides: ${python:Provides}
 Description: opsi python library
