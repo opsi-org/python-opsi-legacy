@@ -59,10 +59,10 @@ Url:            http://www.opsi.org
 License:        AGPL-3.0+
 Group:          Productivity/Networking/Opsi
 AutoReqProv:    on
-Version:        4.0.7.49
+Version:        4.1.1.19
 Release:        1
 Summary:        Python library for the client management solution opsi
-Source:         python-opsi_4.0.7.49-1.tar.gz
+Source:         python-opsi_4.1.1.19-1.tar.gz
 #Source2:        setup.py
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 # python noarch modules are only working on openSUSE 11.2 or higher
@@ -75,7 +75,7 @@ BuildRequires:  gettext
 %else
 BuildRequires:  gettext-runtime
 %endif
-%if 0%{?leap_version} == 420300
+%if 0%{?suse_version} == 1315 || 0%{?is_opensuse}
 # Workaround for missing dependency at python-cryptography
 # See https://bugzilla.opensuse.org/show_bug.cgi?id=1052927
 Requires: python-setuptools

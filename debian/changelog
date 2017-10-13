@@ -1,3 +1,9 @@
+python-opsi (4.1.1.19-1) stable; urgency=medium
+
+  * spec: added python-setuptools workaround for sles12 + Leap
+
+ -- Mathias Radtke <m.radtke@uib.de>  Fri, 13 Oct 2017 13:53:02 +0200
+
 python-opsi (4.1.1.18-1) stable; urgency=medium
 
   * 45_deprecated.conf: Removed methods isLegacyOpsi, isOpsi35 and isOpsi4
