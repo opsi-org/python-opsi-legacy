@@ -13,12 +13,11 @@ import re
 from collections import namedtuple
 from typing import List
 
-from opsicommon.logging import get_logger
-
 import OPSI.Backend.BackendManager as bm
 from OPSI.Object import BoolConfig, Config, OpsiConfigserver, UnicodeConfig
 from OPSI.System import Posix
 from OPSI.Util.Task.Samba import SMB_CONF
+from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
 
@@ -277,19 +276,6 @@ def create_default_configs(  # pylint: disable=too-many-branches,too-many-statem
 				defaultValues=["software-on-demand"],
 				editable=True,
 				multiValue=True,
-			)
-		)
-
-	if "product_sort_algorithm" not in configIdents:
-		logger.debug("Missing product_sort_algorithm - adding it.")
-		configs.append(
-			UnicodeConfig(
-				id="product_sort_algorithm",
-				description="Product sorting algorithm",
-				possibleValues=["algorithm1", "algorithm2"],
-				defaultValues=["algorithm1"],
-				editable=False,
-				multiValue=False,
 			)
 		)
 

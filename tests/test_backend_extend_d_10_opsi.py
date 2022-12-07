@@ -452,16 +452,3 @@ def testSetProductActionRequestWithDependenciesHandlingMissingProductOnDepot(bac
 			assert poc.actionRequest == 'setup'
 		else:
 			raise RuntimeError("Unexpected product: %s" % poc)
-
-
-@pytest.mark.parametrize("sortalgorithm", [None, 'algorithm1', 'algorithm2', 'unknown-algo'])
-def testGetProductOrdering(prefilledBackendManager, sortalgorithm):
-	ordering = prefilledBackendManager.getProductOrdering('depotserver1.some.test', sortalgorithm)
-	print("Result after ordering: {0!r}".format(ordering))
-
-	sortedProducts = ordering['sorted']
-	unsortedProducts = ordering['not_sorted']
-
-	assert sortedProducts
-	assert unsortedProducts
-	assert len(sortedProducts) == len(unsortedProducts)

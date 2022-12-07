@@ -15,11 +15,10 @@ Algorithms to get a product order for an installation.
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
-from opsicommon.logging import get_logger
-
 from OPSI.Exceptions import BackendUnaccomplishableError, OpsiProductOrderingError
 from OPSI.Object import Product, ProductDependency, ProductOnClient
 from OPSI.Types import forceBool, forceInt
+from opsicommon.logging import get_logger
 
 BOTTOM = -100
 
@@ -681,13 +680,6 @@ def generateProductSequenceFromRequPairs_algorithm1(availableProducts: List[Prod
 	return generateProductSequenceFromRequPairs_algorithm2(xProducts, setupRequirements)
 
 
-def generateProductSequence_algorithm2(availableProducts: List[Product], productDependencies: List[ProductDependency]) -> List[Product]:
-	logger.info("Generating product sequence by algorithm 2:")
-	setupRequirements = getSetupRequirements(productDependencies)
-
-	return generateProductSequenceFromRequPairs_algorithm2(availableProducts, setupRequirements)
-
-
 def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 	availableProducts: List[Product], setupRequirements: List[Any]
 ) -> List[Product]:
@@ -801,18 +793,6 @@ def generateProductOnClientSequence_algorithm1(
 
 	setupRequirements = getSetupRequirements(productDependencies)
 	sortedProductList = generateProductSequenceFromRequPairs_algorithm1(availableProducts, setupRequirements)
-
-	productOnClients = generateProductOnClientSequence(productOnClients, sortedProductList)
-	return productOnClients
-
-
-def generateProductOnClientSequence_algorithm2(
-	productOnClients: List[ProductOnClient], availableProducts: List[Product], productDependencies: List[ProductDependency]
-) -> List[ProductOnClient]:
-	logger.info("Generating productOnClient sequence with algorithm 2.")
-
-	setupRequirements = getSetupRequirements(productDependencies)
-	sortedProductList = generateProductSequenceFromRequPairs_algorithm2(availableProducts, setupRequirements)
 
 	productOnClients = generateProductOnClientSequence(productOnClients, sortedProductList)
 	return productOnClients

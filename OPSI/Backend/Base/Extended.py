@@ -26,14 +26,13 @@ from typing import Generator  # pylint: disable=unused-import
 from typing import List  # pylint: disable=unused-import
 from typing import Union  # pylint: disable=unused-import
 
-import opsicommon  # this is needed for dynamic loading # pylint: disable=unused-import
-from opsicommon.logging import get_logger
-
 import OPSI.SharedAlgorithm
+import opsicommon  # this is needed for dynamic loading # pylint: disable=unused-import
 from OPSI.Exceptions import *  # this is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import
 from OPSI.Object import *  # this is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import
 from OPSI.Types import *  # this is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import
 from OPSI.Util import timestamp
+from opsicommon.logging import get_logger
 
 from .Backend import Backend
 
@@ -1569,20 +1568,8 @@ into the IDs of these depots are to be found in the list behind \
 		return productOnClients
 
 	def productOnClient_generateSequence(self, productOnClients):
-		configs = self._context.config_getObjects(id="product_sort_algorithm")  # pylint: disable=maybe-no-member
-		try:
-			defaults = configs[0].getDefaultValues()
-		except IndexError:
-			defaults = []
-
-		if "algorithm2" in defaults:
-			logger.info("Generating productOnClient sequence with algorithm 2")
-			genProductOnClientSequence = OPSI.SharedAlgorithm.generateProductOnClientSequence_algorithm2
-		else:
-			logger.info("Generating productOnClient sequence with algorithm 1")
-			genProductOnClientSequence = OPSI.SharedAlgorithm.generateProductOnClientSequence_algorithm1
-
-		return self._productOnClient_processWithFunction(productOnClients, genProductOnClientSequence)
+		logger.info("Generating productOnClient sequence")
+		return self._productOnClient_processWithFunction(productOnClients, OPSI.SharedAlgorithm.generateProductOnClientSequence_algorithm1)
 
 	def productOnClient_addDependencies(self, productOnClients):
 		return self._productOnClient_processWithFunction(productOnClients, OPSI.SharedAlgorithm.addDependentProductOnClients)
