@@ -1149,7 +1149,8 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 				"default": prop.getDefaultValues()
 			}
 			properties_list.append({key: value for key, value in property_dict.items() if value is not None})
-		data_dict["ProductProperty"] = properties_list
+		if properties_list:
+			data_dict["ProductProperty"] = properties_list
 
 		dependencies_list = []
 		for dep in self._productDependencies:  # Do not use getPackageDependencies() as it requires parsing
@@ -1163,7 +1164,8 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 				"requiredStatus": dep.getRequiredInstallationStatus()
 			}
 			dependencies_list.append({key: value for key, value in dependency_dict.items() if value is not None})
-		data_dict["ProductDependency"] = dependencies_list
+		if dependencies_list:
+			data_dict["ProductDependency"] = dependencies_list
 
 		changelog = self._product.getChangelog().strip()
 		if changelog is not None:
