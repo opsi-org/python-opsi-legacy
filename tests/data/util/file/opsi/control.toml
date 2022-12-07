@@ -1,0 +1,66 @@
+[Package]
+version = 1
+# depends =
+incremental = false  # lowercase f!
+
+[Product]
+type = "localboot"
+id = "prod-1750"
+name = "Control file with path"
+description = """This is some test description
+spanning over multiple lines.
+
+# Some markdown
+
+* this
+* is
+* a
+* list
+
+and this is a [link](https://www.uib.de/)
+"""
+advice = ""
+version = "1.0"
+priority = 0
+licenseRequired = false
+# productClasses =
+setupScript = "setup.ins"
+# uninstallScript =
+# updateScript =
+# alwaysScript =
+# onceScript =
+# customScript =
+# userLoginScript =
+
+[[ProductProperty]]
+type = "unicode"
+name = "target_path"
+multivalue = false
+editable = true
+description = "The target path"
+values = ["C:\\temp\\my_target"]
+default = ["C:\\temp\\my_target"]
+
+[[ProductProperty]]
+type = "unicode"
+name = "adminaccounts"
+multivalue = false
+editable = true
+description = "Windows account(s) to provision as administrators."
+values = ["Administrator", "domain.local\\Administrator", "BUILTIN\\ADMINISTRATORS"]
+default = ["Administrator"]
+
+[[ProductDependency]}
+action = "setup"
+requiredProduct = "l-system-update"
+requiredAction = "setup"
+requirementType = "before"
+
+[Changelog]
+changelog = """
+prod-1750 (1.0-1) testing; urgency=low
+
+  * Initial package
+
+ -- Test User <unknown@example.test>  Sat, 27 May 2017 18:38:48 +0000
+"""
