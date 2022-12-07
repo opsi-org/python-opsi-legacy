@@ -41,6 +41,7 @@ sqlalchemy = "^1.4"
 twisted = {extras = ["tls"], version = "^22.1"}
 wmi = {platform = "win32", version = "^1.5"}
 packaging = "^21.3"
+tomlkit = "^0.11.6"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0"
