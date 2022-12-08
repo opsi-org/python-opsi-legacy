@@ -984,12 +984,10 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 		logger.info("Writing opsi package control file '%s'", self._filename)
 		if self._filename.endswith(".toml"):
 			self.generate_toml()
-			self.generate_old(self._filename.removesuffix(".toml"))
 		else:
-			self.generate_toml(self._filename + ".toml")
 			self.generate_old()
 
-	def generate_old(self, control_file_path: str = None):  # pylint: disable=too-many-branches,too-many-statements
+	def generate_old(self):  # pylint: disable=too-many-branches,too-many-statements
 		self._lines = ['[Package]']
 		self._lines.append(f'version: {self._product.getPackageVersion()}')
 		depends = ''
@@ -1100,15 +1098,15 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 
 		old_path = self._filename
 		try:
-			if control_file_path:
-				self._filename = control_file_path
+			if self._filename.endswith(".toml"):
+				self._filename = self._filename.removesuffix(".toml")
 			self.open("w")
 			self.writelines()
 		finally:
 			self.close()
 			self._filename = old_path
 
-	def generate_toml(self, control_file_path: str = None):
+	def generate_toml(self):
 		data_dict = tomlkit.document()
 		data_dict['Package'] = {
 			"version": self._product.getPackageVersion(),
@@ -1175,8 +1173,8 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 
 		old_path = self._filename
 		try:
-			if control_file_path:
-				self._filename = control_file_path
+			if not self._filename.endswith(".toml"):
+				self._filename = self._filename + ".toml"
 			self.open("w")
 			self.write(tomlkit.dumps(data_dict))
 		finally:
