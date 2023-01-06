@@ -1304,7 +1304,12 @@ def getBlockDeviceContollerInfo(device, lshwoutput=None):  # pylint: disable=too
 			for hwPath in storageControllers:  # pylint: disable=consider-using-dict-items
 				return storageControllers[hwPath]
 		else:
-			match = re.search(r"\s+storage\s+.*\s+\[([a-fA-F0-9]{1,4}):([a-fA-F0-9]{1,4})\]$", line)
+			# Quick Hack: for entry like this:
+			# /0/100/1f.2              storage        82801 SATA Controller [RAID mode] [8086:2822]
+			# This Quick hack is for Bios-Generations, that will only
+			# have a choice for "RAID + AHCI", this devices will be shown as
+			# RAID mode-Devices
+			match = re.search(r"^(/\S+)\s+storage\s+(\S+.*[Rr][Aa][Ii][Dd].*)\s\[([a-fA-F0-9]{1,4}):([a-fA-F0-9]{1,4})\]$", line)
 			if match:
 				vendorId = match.group(3)
 				while len(vendorId) < 4:
