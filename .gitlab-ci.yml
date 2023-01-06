@@ -28,7 +28,7 @@ pylint-pytest:
     # cloning opsi-server for data directory
     rm -rf ../opsi-server
     rm -rf data
-    git clone -b master https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.uib.gmbh/uib/opsi-server.git ../opsi-server
+    git clone -b v4.2 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.uib.gmbh/uib/opsi-server.git ../opsi-server
     ln -s ../opsi-server/opsi-server_data/etc data
     cp tests/Backends/config.py.gitlabci tests/Backends/config.py
     apt-get update

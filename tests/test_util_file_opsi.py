@@ -276,17 +276,17 @@ def testGeneratingProductControlFileToml(tomlControlFile):
 def testConvertingControlFile(tomlControlFile):
 	pcf_orig = PackageControlFile(tomlControlFile)
 	pcf_orig.parse()
-	pcf_orig.generate()  # this also generates control file in old format
+	pcf_orig.generate_old()  # this generates control file in old format
 
 	# with open(tomlControlFile, "r", encoding="utf-8") as infile:
 	# 	print("".join(infile.readlines()))
 
-	pcf_generated = PackageControlFile(tomlControlFile.replace(".toml", ""))
+	pcf_generated = PackageControlFile(tomlControlFile.removesuffix(".toml"))
 	assert pcf_generated.getProduct() == pcf_orig.getProduct()
 	assert pcf_generated.getProductProperties() == pcf_orig.getProductProperties()
 	assert pcf_generated.getProductDependencies() == pcf_orig.getProductDependencies()
 	pcf_orig.close()
-	pcf_generated.generate()  # this also generates control file in toml format
+	pcf_generated.generate_toml()  # this generates control file in toml format
 
 	# with open(tomlControlFile.replace(".toml", ""), "r", encoding="utf-8") as infile:
 	# 	print("".join(infile.readlines()))

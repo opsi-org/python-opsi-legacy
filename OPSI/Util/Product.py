@@ -158,8 +158,8 @@ class ProductPackageFile:
 			if newProductId:
 				self.getMetaData()
 				product = self.packageControlFile.getProduct()
-				if self.packageControlFile._filename.endswith("control.yml"):  # pylint: disable=protected-access
-					control_filename = "control.yml"
+				if self.packageControlFile._filename.endswith("control.toml"):  # pylint: disable=protected-access
+					control_filename = "control.toml"
 				else:
 					control_filename = "control"
 				for scriptName in ("setupScript", "uninstallScript", "updateScript", "alwaysScript", "onceScript", "customScript"):
@@ -225,7 +225,7 @@ class ProductPackageFile:
 			if output_dir is not None:
 				return  # to work on the whole extracted metadata directory
 
-			packageControlFile = os.path.join(metaDataTmpDir, "control.yml")
+			packageControlFile = os.path.join(metaDataTmpDir, "control.toml")
 			if not os.path.exists(packageControlFile):
 				packageControlFile = os.path.join(metaDataTmpDir, "control")
 			if not os.path.exists(packageControlFile):
@@ -516,11 +516,11 @@ class ProductPackageSource:  # pylint: disable=too-many-instance-attributes
 			raise IOError(f"Package destination directory '{packageFileDestDir}' not found")
 
 		if customName:
-			packageControlFile = os.path.join(self.packageSourceDir, f"OPSI.{customName}", "control.yml")
+			packageControlFile = os.path.join(self.packageSourceDir, f"OPSI.{customName}", "control.toml")
 			if not os.path.exists(packageControlFile):
 				packageControlFile = os.path.join(self.packageSourceDir, f"OPSI.{customName}", "control")
 		if not customName or not os.path.exists(packageControlFile):
-			packageControlFile = os.path.join(self.packageSourceDir, "OPSI", "control.yml")
+			packageControlFile = os.path.join(self.packageSourceDir, "OPSI", "control.toml")
 			if not os.path.exists(packageControlFile):
 				packageControlFile = os.path.join(self.packageSourceDir, "OPSI", "control")
 		if not os.path.exists(packageControlFile):
