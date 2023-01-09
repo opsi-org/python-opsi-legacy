@@ -2046,8 +2046,6 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 			else:
 				fsType = f"--{fsType}"
 
-			time.sleep(10)
-
 			cmd = f"{which('ms-sys')} -p {fsType} {self.getPartition(partition)['device']}"
 			try:
 				sp_env = {}
