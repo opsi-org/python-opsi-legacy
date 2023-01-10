@@ -777,7 +777,7 @@ def getNetworkConfiguration(ipAddress=None):  # pylint: disable=too-many-branche
 				break
 
 	if not networkConfig["ipAddress"]:
-		logger.warning("Failed to get a valid ip address for fqdn %r: %s", fqdn, err)
+		logger.warning("Failed to get a valid ip address for fqdn %r", fqdn)
 		return networkConfig
 
 	if not networkConfig.get("netmask"):
