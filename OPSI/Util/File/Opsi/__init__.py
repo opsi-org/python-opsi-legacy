@@ -1131,7 +1131,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 			"userLoginScript": self._product.getUserLoginScript() or None,
 			"windowsSoftwareIds": self._product.getWindowsSoftwareIds()
 		}
-		if product_dict['type'] == "netboot":
+		if product_dict['type'] in ("netboot", "NetbootProduct"):
 			product_dict['pxeConfigTemplate'] = self._product.getPxeConfigTemplate()
 		data_dict['Product'] = {key: value for key, value in product_dict.items() if value is not None}
 
