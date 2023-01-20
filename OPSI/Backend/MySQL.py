@@ -249,7 +249,7 @@ class MySQLBackend(SQLBackend):
 				`description` varchar(100),
 				`notes` varchar(500),
 				`hardwareAddress` varchar(17),
-				`ipAddress` varchar(15),
+				`ipAddress` varchar(255),
 				`inventoryNumber` varchar(64),
 				`created` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 				`lastSeen` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
