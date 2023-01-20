@@ -43,7 +43,7 @@ class DatabaseMigrationUnfinishedError(BackendUpdateError):
 	"""
 
 
-def updateMySQLBackend(backendConfigFile="/etc/opsi/backends/mysql.conf", additionalBackendConfiguration=None):
+def updateMySQLBackend(backendConfigFile="/etc/opsi/backends/mysql.conf", additionalBackendConfiguration=None, force=False):
 	"""
 	Applies migrations to the MySQL backend.
 
@@ -76,7 +76,7 @@ read from `backendConfigFile`.
 				_processOpsi40migrations(mysql, session)
 			schema_version = readSchemaVersion(mysql, session)
 
-		if schema_version < DATABASE_SCHEMA_VERSION:
+		if schema_version < DATABASE_SCHEMA_VERSION or force:
 			with updateSchemaVersion(mysql, session, version=DATABASE_SCHEMA_VERSION):
 				_process_opsi42_migrations(mysql, session)
 
@@ -154,6 +154,8 @@ def updateSchemaVersion(database, session, version):
 	information about the end time written to the database.
 	"""
 	logger.notice("Migrating to schema version %s...", version)
+	query = "DELETE FROM OPSI_SCHEMA WHERE `version` = '{version}';".format(version=version)
+	database.execute(session, query)
 	query = "INSERT INTO OPSI_SCHEMA(`version`) VALUES({version});".format(version=version)
 	database.execute(session, query)
 	yield
