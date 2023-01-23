@@ -26,10 +26,8 @@ from hashlib import sha1
 from io import BytesIO, StringIO
 from operator import itemgetter
 
-import tomlkit
-from opsicommon.logging import get_logger
-
 import OPSI.System
+import tomlkit
 from OPSI import __version__ as LIBRARY_VERSION
 from OPSI.Exceptions import (
 	OpsiBackupBackendNotFound,
@@ -71,6 +69,7 @@ from OPSI.Types import (
 )
 from OPSI.Util import fromJson, md5sum, toJson
 from OPSI.Util.File import ConfigFile, IniFile, TextFile, requiresParsing
+from opsicommon.logging import get_logger
 
 if os.name == 'posix':
 	import fcntl
@@ -1185,7 +1184,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 class OpsiConfFile(IniFile):
 
 	sectionRegex = re.compile(r'^\s*\[([^\]]+)\]\s*$')
-	optionRegex = re.compile(r'^([^\:]+)\s*\=\s*(.*)$')
+	optionRegex = re.compile(r'^([^\=]+)\s*\=\s*(.*)$')
 
 	def __init__(self, filename='/etc/opsi/opsi.conf', lockFailTimeout=2000):  # pylint: disable=super-init-not-called
 		ConfigFile.__init__(self, filename, lockFailTimeout, commentChars=[';', '#'])  # pylint: disable=non-parent-init-called
