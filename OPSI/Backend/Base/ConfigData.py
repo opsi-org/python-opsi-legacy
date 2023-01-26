@@ -17,14 +17,8 @@ import os
 import re
 import shutil
 import time
+from datetime import datetime
 from functools import lru_cache
-
-from opsicommon.license import (
-	OPSI_MODULE_IDS,
-	OPSI_OBSOLETE_MODULE_IDS,
-	get_default_opsi_license_pool,
-)
-from opsicommon.logging import get_logger, secret_filter
 
 from OPSI.Config import OPSI_ADMIN_GROUP
 from OPSI.Exceptions import (
@@ -75,6 +69,12 @@ from OPSI.Types import (
 from OPSI.Util import blowfishDecrypt, blowfishEncrypt, getfqdn
 from OPSI.Util.File import ConfigFile
 from OPSI.Util.Log import truncateLogData
+from opsicommon.license import (
+	OPSI_MODULE_IDS,
+	OPSI_OBSOLETE_MODULE_IDS,
+	get_default_opsi_license_pool,
+)
+from opsicommon.logging import get_logger, secret_filter
 
 from .Backend import Backend
 
@@ -208,16 +208,28 @@ containing the localisation of the hardware audit.
 		if module not in self.backend_getLicensingInfo()["available_modules"]:
 			raise BackendModuleDisabledError(f"Module {module!r} not available")
 
-	def _get_client_info(self):
+	def _get_client_info(self) -> dict[str, int]:
 		logger.info("%s fetching client info", self)
-		_all = len(self.host_getObjects(attributes=["id"], type="OpsiClient"))
-		macos = len(
-			self.productOnClient_getObjects(attributes=["clientId"], installationStatus="installed", productId="opsi-mac-client-agent")
-		)
-		linux = len(
-			self.productOnClient_getObjects(attributes=["clientId"], installationStatus="installed", productId="opsi-linux-client-agent")
-		)
-		return {"macos": macos, "linux": linux, "windows": _all - macos - linux}
+		now = datetime.now()
+		client_ids = [
+			host.id
+			for host in self.host_getObjects(attributes=["id", "lastSeen"], type="OpsiClient")
+			if host.lastSeen and (now - datetime.fromisoformat(host.lastSeen)).days < 365
+		]
+		macos = 0
+		linux = 0
+		if client_ids:
+			macos = len(
+				self.productOnClient_getObjects(
+					attributes=["clientId"], installationStatus="installed", productId="opsi-mac-client-agent", clientId=client_ids
+				)
+			)
+			linux = len(
+				self.productOnClient_getObjects(
+					attributes=["clientId"], installationStatus="installed", productId="opsi-linux-client-agent", clientId=client_ids
+				)
+			)
+		return {"macos": macos, "linux": linux, "windows": len(client_ids) - macos - linux}
 
 	@lru_cache(maxsize=10)
 	def _get_licensing_info(self, licenses: bool = False, legacy_modules: bool = False, dates: bool = False, ttl_hash: int = 0):
@@ -237,7 +249,8 @@ containing the localisation of the hardware audit.
 
 		try:
 			disable_warning_for_modules = [
-				m for m in self._context.config_getObjects(id="licensing.disable_warning_for_modules")[0].getDefaultValues()
+				m
+				for m in self._context.config_getObjects(id="licensing.disable_warning_for_modules")[0].getDefaultValues()
 				if m in OPSI_MODULE_IDS
 			]
 		except Exception as err:  # pylint: disable=broad-except
@@ -264,8 +277,8 @@ containing the localisation of the hardware audit.
 				"client_limit_warning_percent": pool.client_limit_warning_percent,
 				"client_limit_warning_absolute": pool.client_limit_warning_absolute,
 				"client_limit_warning_days": client_limit_warning_days,
-				"disable_warning_for_modules": disable_warning_for_modules
-			}
+				"disable_warning_for_modules": disable_warning_for_modules,
+			},
 		}
 		if licenses:
 			licenses = pool.get_licenses()
