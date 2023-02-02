@@ -214,7 +214,7 @@ containing the localisation of the hardware audit.
 		inactive = 0
 		client_ids = []
 		for host in self.host_getObjects(attributes=["id", "lastSeen"], type="OpsiClient"):
-			if host.lastSeen and (now - datetime.fromisoformat(host.lastSeen)).days < OPSI_CLIENT_INACTIVE_AFTER:
+			if host.lastSeen and (now - datetime.fromisoformat(host.lastSeen)).days < 365:
 				client_ids.append(host.id)
 			else:
 				inactive += 1
