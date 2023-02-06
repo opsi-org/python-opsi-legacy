@@ -16,7 +16,7 @@ from opsicommon.logging import get_logger
 from twisted.internet import defer, threads
 from twisted.python.failure import Failure
 
-from OPSI.Exceptions import OpsiAuthenticationError, OpsiBadRpcError
+from OPSI.Exceptions import OpsiServiceAuthenticationError, OpsiBadRpcError
 from OPSI.Service.JsonRpc import JsonRpc
 from OPSI.Types import forceList, forceUnicode
 from OPSI.Util import fromJson, objectToHtml, serialize, toJson
@@ -229,8 +229,9 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 		deferred = defer.Deferred()
 		deferred.addCallback(self._getSession)
 		deferred.addCallback(self._authenticate)
-		deferred.addCallback(self._getQuery)
-		deferred.addCallback(self._processQuery)
+		if self.request.method != b"HEAD":
+			deferred.addCallback(self._getQuery)
+			deferred.addCallback(self._processQuery)
 		deferred.addCallback(self._setCookie)
 		deferred.addCallback(self._setResponse)
 		deferred.addCallback(self._finishRequest)
@@ -257,7 +258,7 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 
 		try:
 			failure.raiseException()
-		except OpsiAuthenticationError as err:
+		except OpsiServiceAuthenticationError as err:
 			logger.warning(err, exc_info=True)
 			self.request.setResponseCode(401)
 			self.request.setHeader("www-authenticate", f"basic realm={self.authRealm}")
@@ -369,9 +370,7 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 		if sessionId == self.session.uid:
 			logger.info("Reusing session for client '%s', application '%s'", request_ip, userAgent)
 		elif sessionId:
-			logger.notice(
-				"Application '%s' on client '%s' supplied non existing session id: %s", userAgent, request_ip, sessionId
-			)
+			logger.notice("Application '%s' on client '%s' supplied non existing session id: %s", userAgent, request_ip, sessionId)
 
 		if sessionHandler and self.session.ip and (self.session.ip != request_ip):
 			logger.critical(
@@ -395,9 +394,7 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 			)
 		self.session.userAgent = userAgent
 
-		logger.confidential(
-			"Session id is %s for client %s, application %s", self.session.uid, request_ip, self.session.userAgent
-		)
+		logger.confidential("Session id is %s for client %s, application %s", self.session.uid, request_ip, self.session.userAgent)
 
 		logger.confidential("Session content: %s", self.session.__dict__)
 		return result
@@ -427,7 +424,7 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 			logger.info(err, exc_info=True)
 			self._freeSession(result)
 			self._getSessionHandler().deleteSession(self.session.uid)
-			raise OpsiAuthenticationError(f"Forbidden: {err}") from err
+			raise OpsiServiceAuthenticationError(f"Forbidden: {err}") from err
 
 		return result
 
