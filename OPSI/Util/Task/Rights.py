@@ -17,6 +17,9 @@ import stat
 from dataclasses import dataclass
 from functools import lru_cache
 
+from opsicommon.logging import get_logger
+from opsicommon.utils import Singleton
+
 from OPSI.Backend.Base.ConfigData import OPSI_PASSWD_FILE
 from OPSI.Config import (
 	DEFAULT_DEPOT_USER,
@@ -25,9 +28,7 @@ from OPSI.Config import (
 	OPSI_ADMIN_GROUP,
 	OPSICONFD_USER,
 )
-from OPSI.System.Posix import getLocalFqdn, isCentOS, isOpenSUSE, isRHEL, isSLES, isUCS
-from opsicommon.logging import get_logger
-from opsicommon.utils import Singleton
+from OPSI.System.Posix import getLocalFqdn, isOpenSUSE, isSLES
 
 _HAS_ROOT_RIGHTS = os.geteuid() == 0
 
