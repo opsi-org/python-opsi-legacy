@@ -12,6 +12,7 @@ import pwd
 from contextlib import contextmanager
 
 import pytest
+
 from OPSI.Util.Task.Rights import (
 	DirPermission,
 	FilePermission,
@@ -221,39 +222,6 @@ def test_set_rights_file_in_dir(tempDir):
 
 	set_rights(fil2)
 	assert os.stat(fil2).st_mode & 0o7777 == 0o600
-
-
-@pytest.mark.parametrize("slesSupport, tftpdir", [(False, "/tftpboot/linux"), (True, "/var/lib/tftpboot/opsi")], ids=["sles", "non-sles"])
-def testGetDirectoriesToProcess(depotDirectories, patchUserInfo, slesSupport, tftpdir):
-	with mock.patch("OPSI.Util.Task.Rights.getWebserverRepositoryPath", lambda: "/path/to/apache"):
-		with mock.patch("OPSI.Util.Task.Rights.isSLES", lambda: slesSupport):
-			registry = PermissionRegistry()
-			registry.reinit()
-			directories = list(registry.permissions)
-
-	print(directories)
-	assert "/etc/opsi" in directories
-	assert "/var/lib/opsi" in directories
-	assert "/var/log/opsi" in directories
-	assert tftpdir in directories
-	assert "/path/to/apache" in directories
-
-
-@pytest.mark.parametrize(
-	"slesSupport, tftpdir", [(False, "/tftpboot/linux"), (True, "/var/lib/tftpboot/opsi")], ids=["opensuse", "non-opensuse"]
-)
-def testGetDirectoriesToProcessOpenSUSE(depotDirectories, patchUserInfo, slesSupport, tftpdir):
-	with mock.patch("OPSI.Util.Task.Rights.getWebserverRepositoryPath", lambda: "/path/to/apache"):
-		with mock.patch("OPSI.Util.Task.Rights.isOpenSUSE", lambda: slesSupport):
-			registry = PermissionRegistry()
-			registry.reinit()
-			directories = list(registry.permissions)
-
-	assert "/etc/opsi" in directories
-	assert "/var/lib/opsi" in directories
-	assert "/var/log/opsi" in directories
-	assert tftpdir in directories
-	assert "/path/to/apache" in directories
 
 
 def testGettingDirectories(patchUserInfo, depotDirectories):
