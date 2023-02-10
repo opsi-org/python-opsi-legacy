@@ -17,9 +17,6 @@ import stat
 from dataclasses import dataclass
 from functools import lru_cache
 
-from opsicommon.logging import get_logger
-from opsicommon.utils import Singleton
-
 from OPSI.Backend.Base.ConfigData import OPSI_PASSWD_FILE
 from OPSI.Config import (
 	DEFAULT_DEPOT_USER,
@@ -29,6 +26,8 @@ from OPSI.Config import (
 	OPSICONFD_USER,
 )
 from OPSI.System.Posix import getLocalFqdn, isCentOS, isOpenSUSE, isRHEL, isSLES, isUCS
+from opsicommon.logging import get_logger
+from opsicommon.utils import Singleton
 
 _HAS_ROOT_RIGHTS = os.geteuid() == 0
 
@@ -173,11 +172,6 @@ class PermissionRegistry(metaclass=Singleton):
 		pxe_dir = getPxeDirectory()
 		if pxe_dir:
 			self.register_permission(DirPermission(pxe_dir, OPSICONFD_USER, FILE_ADMIN_GROUP, 0o664, 0o775))
-
-		webserver_dir = getWebserverRepositoryPath()
-		if webserver_dir:
-			username, groupname = getWebserverUsernameAndGroupname()
-			self.register_permission(DirPermission(webserver_dir, username, groupname, 0o664, 0o775))
 
 		ssh_dir = _get_default_depot_user_ssh_dir()
 		self.register_permission(
@@ -328,30 +322,3 @@ def getPxeDirectory():
 	if isSLES() or isOpenSUSE():
 		return "/var/lib/tftpboot/opsi"
 	return "/tftpboot/linux"
-
-
-def getWebserverRepositoryPath():
-	"""
-	Returns the path to the directory where packages for Linux netboot installations may be.
-
-	On an unsuported distribution or without the relevant folder
-	existing `None` will be returned.
-	"""
-	if isUCS():
-		return "/var/www/opsi"
-	if isOpenSUSE() or isSLES():
-		return "/srv/www/htdocs/opsi"
-	return "/var/www/html/opsi"
-
-
-def getWebserverUsernameAndGroupname():
-	"""
-	Returns the name of the user and group belonging to the webserver in the default configuration.
-
-	:raises RuntimeError: If running on an Unsupported distribution.
-	"""
-	if isOpenSUSE() or isSLES():
-		return "wwwrun", "www"
-	if isCentOS() or isRHEL():
-		return "apache", "apache"
-	return "www-data", "www-data"
