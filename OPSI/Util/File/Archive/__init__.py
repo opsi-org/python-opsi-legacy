@@ -311,7 +311,12 @@ class TarArchive(BaseArchive):
 				else:
 					options += ' --exclude="%s"' % filename
 
-			command = '%s %s --directory "%s" --extract --verbose --file "%s"' % (System.which("tar"), options, targetPath, self._filename)
+			command = '%s %s --directory "%s" --extract --no-same-owner --verbose --file "%s"' % (
+				System.which("tar"),
+				options,
+				targetPath,
+				self._filename,
+			)
 			self._extract(command, fileCount)
 		except Exception as err:  # pylint: disable=broad-except
 			raise RuntimeError(f"Failed to extract archive '{self._filename}': {err}") from err
