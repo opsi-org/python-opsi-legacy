@@ -42,6 +42,7 @@ twisted = {extras = ["tls"], version = "^22.1"}
 wmi = {platform = "win32", version = "^1.5"}
 packaging = "^21.3"
 tomlkit = "^0.11.6"
+passlib = "^1.7.4"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0"
