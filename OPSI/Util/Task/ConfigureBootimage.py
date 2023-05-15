@@ -7,12 +7,20 @@ This writes the opsi configserver URL into the default.menu file
 """
 
 import os
+import passlib.hash
 import re
 
 from OPSI.Exceptions import BackendMissingDataError
 
 __all__ = ("patchServiceUrlInDefaultConfigs",)
 
+def encodePassword(clearPassword):
+	while True:
+		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
+		if not pwhash or "." in pwhash:
+			print("Invalid password hashlib, retrying")
+		else:
+			return pwhash
 
 def patchServiceUrlInDefaultConfigs(backend):
 	"""
@@ -32,6 +40,27 @@ def patchServiceUrlInDefaultConfigs(backend):
 		patchMenuFile(defaultMenu, "append", configServer)
 		patchMenuFile(grubMenu, "linux", configServer)
 
+def patchRootPasswordInDefaultConfigs(backend)
+	"""
+	Patches the opsi-linux-bootimage.append password into the default.menu/grub.cfg
+
+	:param backend: The backend used to read the configuration
+	:type backend: ConfigDataBackend
+	"""
+	try:
+		appendParameter = backend.config_getObjects(attributes=["defaultValues"], id="opsi-linux-bootimage.append")[0]
+	except IndexError:
+			raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from IndexError
+	
+	if appendParameter:
+		for element in appendParameter:
+			if "bootimageRootPassword" in element:
+				clearRootPassword = element.split("=")[1]
+				endcodedRootPassword = encodePassword(clearRootPassword)
+				pwhEntry = f"pwh={encodedPasword}"
+				defaultMenu, grubMenu = getMenuFiles()
+				patchMenuFile(defaultMenu, "append", pwhEntry)
+				patchMenuFile(grubMenu, "linux", pwhEntry)
 
 def getMenuFiles():
 	"""
@@ -72,7 +101,8 @@ into the file.
 			if line.strip().startswith(searchString):
 				if "service=" in line:
 					line = re.sub(r"service=\S+", "", line.rstrip())
-				newlines.append("{} service={}\n".format(line.rstrip(), configServer))
+				
+				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + configServer))
 				continue
 
 			newlines.append(line)
