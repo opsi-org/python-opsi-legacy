@@ -40,7 +40,7 @@ def patchServiceUrlInDefaultConfigs(backend):
 		patchMenuFile(defaultMenu, "append", configServer)
 		patchMenuFile(grubMenu, "linux", configServer)
 
-def patchRootPasswordInDefaultConfigs(backend)
+def patchRootPasswordInDefaultConfigs(backend):
 	"""
 	Patches the opsi-linux-bootimage.append password into the default.menu/grub.cfg
 
@@ -81,9 +81,9 @@ default.menu and second grub.cfg.
 	return defaultMenu, grubMenu
 
 
-def patchMenuFile(menufile, searchString, configServer):
+def patchMenuFile(menufile, searchString, placement):
 	"""
-	Patch the address to the `configServer` into `menufile`.
+	Patch the address to the `placement` into `menufile`.
 
 	To find out where to patch we look for lines that starts with the
 	given `searchString` (excluding preceding whitespace).
@@ -92,9 +92,9 @@ def patchMenuFile(menufile, searchString, configServer):
 	:type menufile: str
 	:param searchString: Patches only lines starting with this string.
 	:type searchString: str
-	:param configServer: The address of the OpsiConfigserver to patch \
+	:param placement: The configServer address or password hash to patch \
 into the file.
-	:type configServer: str
+	:type placement: str
 	"""
 	newlines = []
 	with open(menufile, "r", encoding="utf-8") as readMenu:
@@ -105,7 +105,10 @@ into the file.
 				if "pwh=" in line:
 					line = re.sub(r"pwh=\S+", "", line.rstrip())
 				
-				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + configServer))
+				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
+				if "pwh=" in placement:
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+
 				continue
 
 			newlines.append(line)
