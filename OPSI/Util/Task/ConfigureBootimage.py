@@ -105,10 +105,10 @@ into the file.
 				if "pwh=" in line:
 					line = re.sub(r"pwh=\S+", "", line.rstrip())
 				
-				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
-
+				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement.rstrip()))
+				
 				if "pwh=" in placement:
-					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement.rstrip() + " "))
 
 				continue
 
