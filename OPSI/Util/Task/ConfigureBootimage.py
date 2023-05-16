@@ -62,6 +62,7 @@ def patchRootPasswordInDefaultConfigs(backend)
 				patchMenuFile(defaultMenu, "append", pwhEntry)
 				patchMenuFile(grubMenu, "linux", pwhEntry)
 
+
 def getMenuFiles():
 	"""
 	Returns the paths for for the default.menu and grub.cfg files.
@@ -101,6 +102,8 @@ into the file.
 			if line.strip().startswith(searchString):
 				if "service=" in line:
 					line = re.sub(r"service=\S+", "", line.rstrip())
+				if "pwh=" in line:
+					line = re.sub(r"pwh=\S+", "", line.rstrip())
 				
 				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + configServer))
 				continue
