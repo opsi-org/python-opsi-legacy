@@ -14,7 +14,7 @@ from OPSI.Exceptions import BackendMissingDataError
 
 __all__ = ("patchServiceUrlInDefaultConfigs",)
 
-def encodePassword(clearPassword):
+def encodedPassword(clearPassword):
 	while True:
 		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
 		if not pwhash or "." in pwhash:
@@ -50,14 +50,14 @@ def patchRootPasswordInDefaultConfigs(backend):
 	try:
 		appendParameter = backend.config_getObjects(attributes=["defaultValues"], id="opsi-linux-bootimage.append")[0]
 	except IndexError:
-			raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from IndexError
+		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from IndexError
 	
 	if appendParameter:
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
-				endcodedRootPassword = encodePassword(clearRootPassword)
-				pwhEntry = f"pwh={encodedPasword}"
+				endcodedRootPassword = encodedPassword(clearRootPassword)
+				pwhEntry = f"pwh={endcodedRootPassword}"
 				defaultMenu, grubMenu = getMenuFiles()
 				patchMenuFile(defaultMenu, "append", pwhEntry)
 				patchMenuFile(grubMenu, "linux", pwhEntry)
