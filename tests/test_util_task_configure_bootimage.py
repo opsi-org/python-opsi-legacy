@@ -53,7 +53,7 @@ def testPatchMenuFile(tempDir):
 		'				 Start opsi linux bootimage from tftp server.\n',
 		'  endtext\n',
 		'  kernel install\n',
-		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc \n',
 		'\n'
 	]
 
@@ -72,7 +72,7 @@ def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 		writefile.write('				 Start opsi linux bootimage from tftp server.\n')
 		writefile.write('  endtext\n')
 		writefile.write('  kernel install\n')
-		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.159.2.2/rpc\n')
+		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.159.2.2/rpc \n')
 		writefile.write('\n')
 
 	configServer = u'https://192.168.1.14:4447/rpc'
@@ -85,7 +85,7 @@ def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 		'				 Start opsi linux bootimage from tftp server.\n',
 		'  endtext\n',
 		'  kernel install\n',
-		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc \n',
 		'\n'
 	]
 
