@@ -104,9 +104,9 @@ into the file.
 		for line in readMenu:
 			if line.strip().startswith(searchString):
 				if "service=" in line:
-					line = re.sub(r"service=\S+", "", line.rstrip())
+					line = re.sub(r"\s?service=\S+", "", line)
 				if "pwh=" in line:
-					line = re.sub(r"pwh=\S+", "", line.rstrip())
+					line = re.sub(r"\s?pwh=\S+", "", line)
 				
 				if "https://" in placement:
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
