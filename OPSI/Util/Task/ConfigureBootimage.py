@@ -108,7 +108,7 @@ into the file.
 				if "pwh=" in line:
 					line = re.sub(r"pwh=\S+", "", line.rstrip())
 				
-				if "https://" in placenent:
+				if "https://" in placement:
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				
 				if "pwh=" in placement:
