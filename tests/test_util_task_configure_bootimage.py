@@ -62,6 +62,37 @@ def testPatchMenuFile(tempDir):
 
 	assert patchedDefault == expectedDefault
 
+def testPatchPwhInMenuFile(tempDir):
+	filename = os.path.join(tempDir, 'default.menu')
+	with open(filename, 'w') as writefile:
+		writefile.write('label install\n')
+		writefile.write('  menu label Start ^opsi bootimage\n')
+		writefile.write('  text help\n')
+		writefile.write('				 Start opsi linux bootimage from tftp server.\n')
+		writefile.write('  endtext\n')
+		writefile.write('  kernel install\n')
+		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0\n')
+		writefile.write('\n')
+
+	configServer = u'$6$salt$passwordhash'
+	ConfigureBootimage.patchMenuFile(filename, 'append', configServer)
+
+	expectedDefault = [
+		'label install\n',
+		'  menu label Start ^opsi bootimage\n',
+		'  text help\n',
+		'				 Start opsi linux bootimage from tftp server.\n',
+		'  endtext\n',
+		'  kernel install\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 $6$salt$passwordhash\n',
+		'\n'
+	]
+
+	with open(filename) as patchedFile:
+		patchedDefault = patchedFile.readlines()
+
+	assert patchedDefault == expectedDefault
+
 
 def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 	filename = os.path.join(tempDir, 'default.menu')
@@ -93,6 +124,7 @@ def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 		patchedDefault = patchedFile.readlines()
 
 	#assert patchedDefault == expectedDefault
+
 
 
 def testPatchServiceUrlInDefaultConfigs(backendManager, tempDir):
