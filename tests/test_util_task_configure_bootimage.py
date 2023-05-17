@@ -74,7 +74,7 @@ def testPatchPwhInMenuFile(tempDir):
 		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0\n')
 		writefile.write('\n')
 
-	pwh = u'$6$salt$passwordhash'
+	pwh = u'pwh=$6$salt$passwordhash'
 	ConfigureBootimage.patchMenuFile(filename, 'append', pwh)
 
 	expectedDefault = [
