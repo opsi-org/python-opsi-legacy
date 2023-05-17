@@ -84,7 +84,7 @@ def testPatchPwhInMenuFile(tempDir):
 		'				 Start opsi linux bootimage from tftp server.\n',
 		'  endtext\n',
 		'  kernel install\n',
-		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 $6$salt$passwordhash\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 pwh=$6$salt$passwordhash\n',
 		'\n'
 	]
 
