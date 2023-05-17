@@ -100,7 +100,6 @@ into the file.
 	:type placement: str
 	"""
 	newlines = []
-	print(f"placement is '{placement}'")
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
