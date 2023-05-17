@@ -112,7 +112,9 @@ into the file.
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				
 				if "pwh=" in placement:
+					print(f"line before replacement: {line}")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+					print(f"line after replacement: {line.replace('console=ttyS0', 'console=ttyS0 ' + placement)}")
 
 				continue
 
