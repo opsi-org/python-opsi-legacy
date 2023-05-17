@@ -8,7 +8,6 @@ python-versions = ">=3.7.2"
 
 [package.dependencies]
 lazy-object-proxy = ">=1.4.0"
-typing-extensions = {version = ">=3.10", markers = "python_version < \"3.10\""}
 wrapt = {version = ">=1.11,<2", markers = "python_version < \"3.11\""}
 
 [package.source]
@@ -745,7 +744,6 @@ mccabe = ">=0.6,<0.8"
 platformdirs = ">=2.2.0"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 tomlkit = ">=0.10.1"
-typing-extensions = {version = ">=3.10.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 spelling = ["pyenchant (>=3.2,<4.0)"]
@@ -758,14 +756,14 @@ reference = "uibpypi"
 
 [[package]]
 name = "pyopenssl"
-version = "22.1.0"
+version = "23.1.1"
 description = "Python wrapper module around the OpenSSL library"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-cryptography = ">=38.0.0,<39"
+cryptography = ">=38.0.0,<41"
 
 [package.extras]
 docs = ["sphinx (!=5.2.0,!=5.2.0.post0)", "sphinx-rtd-theme"]
@@ -858,11 +856,11 @@ reference = "uibpypi"
 
 [[package]]
 name = "python-opsi-common"
-version = "4.2.0.298"
+version = "4.2.0.304"
 description = "The opsi python common library"
 category = "main"
 optional = false
-python-versions = ">=3.8,<3.11"
+python-versions = ">=3.10,<=3.11"
 
 [package.dependencies]
 colorlog = ">=6.6,<7.0"
@@ -870,9 +868,10 @@ distro = ">=1.6,<2.0"
 lz4 = ">=4.0,<5.0"
 msgpack = ">=1.0,<2.0"
 orjson = ">=3.8.0,<4.0.0"
+packaging = ">=21.0,<=23.0"
 psutil = ">=5.8,<6.0"
 pycryptodome = ">=3.10,<4.0"
-pyopenssl = ">=22.0,<23.0"
+pyopenssl = ">=23.0,<24.0"
 pywin32 = {version = ">=303,<304", markers = "sys_platform == \"win32\""}
 requests = ">=2.26,<3.0"
 websocket-client = ">=1.4.0,<2.0.0"
@@ -1059,7 +1058,6 @@ mypy-extensions = ">=0.4.3"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
 tomli = {version = ">=1.1.0", markers = "python_full_version < \"3.11.0a7\""}
-typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
@@ -1262,8 +1260,8 @@ reference = "uibpypi"
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.8,<3.11"
-content-hash = "ceedfaab83dd7e0093fdaaab4576a432eb3ebff4bbb40b3461f854e0486d5da7"
+python-versions = ">=3.10,<3.11"
+content-hash = "28275c7efd15c49271cd3dc5cf00aa9a0e86724fd0e188154e35b9c540963451"
 
 [metadata.files]
 astroid = [
@@ -1855,8 +1853,8 @@ pylint = [
     {file = "pylint-2.15.5.tar.gz", hash = "sha256:3b120505e5af1d06a5ad76b55d8660d44bf0f2fc3c59c2bdd94e39188ee3a4df"},
 ]
 pyopenssl = [
-    {file = "pyOpenSSL-22.1.0-py3-none-any.whl", hash = "sha256:b28437c9773bb6c6958628cf9c3bebe585de661dba6f63df17111966363dd15e"},
-    {file = "pyOpenSSL-22.1.0.tar.gz", hash = "sha256:7a83b7b272dd595222d672f5ce29aa030f1fb837630ef229f62e72e395ce8968"},
+    {file = "pyOpenSSL-23.1.1-py3-none-any.whl", hash = "sha256:9e0c526404a210df9d2b18cd33364beadb0dc858a739b885677bc65e105d4a4c"},
+    {file = "pyOpenSSL-23.1.1.tar.gz", hash = "sha256:841498b9bec61623b1b6c47ebbc02367c07d60e0e195f19790817f10cc8db0b7"},
 ]
 pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
@@ -1876,8 +1874,8 @@ pytest-cov = [
     {file = "pytest_cov-3.0.0-py3-none-any.whl", hash = "sha256:578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6"},
 ]
 python-opsi-common = [
-    {file = "python-opsi-common-4.2.0.298.tar.gz", hash = "sha256:0643b8d7be0fe1cac67ea8ccc0f58908d627721da777b5ea0fd4ec5ce4c6df26"},
-    {file = "python_opsi_common-4.2.0.298-py3-none-any.whl", hash = "sha256:3b972c7d6cf20552b54b1a81bc832263bee1c0a2e945cada08c6e27a01c13bb3"},
+    {file = "python_opsi_common-4.2.0.304-py3-none-any.whl", hash = "sha256:65e10863792846aad7204316ee859c7b372e266f8ffb25d708529fc69e6f4cf9"},
+    {file = "python_opsi_common-4.2.0.304.tar.gz", hash = "sha256:271ccbf0c6c230d80482a6ef8fea16dd26b88ea0ba23f1b517dfb427ad6204f9"},
 ]
 python-pam = [
     {file = "python-pam-2.0.2.tar.gz", hash = "sha256:97235235ba9b82dbae8068d1099508455949b275f77273ca22fdbd8b1fb5d950"},

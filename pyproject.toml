@@ -18,7 +18,7 @@ name = "uibpypi"
 url = "https://pypi.uib.gmbh/simple"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.10,<3.11"
 attrs = "^21.2"
 colorlog = "^6.6"
 distro = {platform = "linux", version = "^1.5"}
@@ -31,7 +31,7 @@ pexpect = "^4.8"
 psutil = "^5.8"
 pyasn1 = "^0.4"
 pycryptodome = "^3.10"
-pyopenssl = "^22.0"
+pyopenssl = "^23.0"
 python-opsi-common = ">=4.2.0.294, <4.3"
 python-pam = "^2.0"
 pywin32 = {platform = "win32", version = "^303"}
