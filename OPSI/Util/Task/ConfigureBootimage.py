@@ -18,7 +18,7 @@ def encodedPassword(clearPassword):
 	while True:
 		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
 		if not pwhash or "." in pwhash:
-			print("Invalid password hashlib, retrying")
+			print("Invalid hash, retrying")
 		else:
 			return pwhash
 
@@ -58,6 +58,9 @@ def patchRootPasswordInDefaultConfigs(backend):
 				clearRootPassword = element.split("=")[1]
 				endcodedRootPassword = encodedPassword(clearRootPassword)
 				pwhEntry = f"pwh={endcodedRootPassword}"
+			if "pwh=" in element:
+				pwhEntry = element
+			if pwhEntry:
 				defaultMenu, grubMenu = getMenuFiles()
 				patchMenuFile(defaultMenu, "append", pwhEntry)
 				patchMenuFile(grubMenu, "linux", pwhEntry)
@@ -97,6 +100,7 @@ into the file.
 	:type placement: str
 	"""
 	newlines = []
+	print(f"placement is '{placement}'")
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
@@ -105,10 +109,10 @@ into the file.
 				if "pwh=" in line:
 					line = re.sub(r"pwh=\S+", "", line.rstrip())
 				
-				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement.rstrip()))
+				newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				
 				if "pwh=" in placement:
-					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement.rstrip()))
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 
 				continue
 
