@@ -12,6 +12,19 @@ import re
 
 from OPSI.Exceptions import BackendMissingDataError
 
+from opsicommon.logging import (
+	DEFAULT_COLORED_FORMAT,
+	LOG_CONFIDENTIAL,
+	LOG_CRITICAL,
+	LOG_DEBUG,
+	LOG_NOTICE,
+	OPSI_LEVEL_TO_LEVEL,
+	init_logging,
+	logger,
+	logging_config,
+	secret_filter,
+)
+
 __all__ = ("patchServiceUrlInDefaultConfigs",)
 
 def encodedPassword(clearPassword):
