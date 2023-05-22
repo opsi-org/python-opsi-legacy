@@ -109,9 +109,9 @@ into the file.
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
-				if "service=" in line:
+				if "service=" in line and "https://" in placement:
 					line = re.sub(r"\s?service=\S+", "", line)
-				if "pwh=" in line:
+				if "pwh=" in line and "pwh=" in placement:
 					line = re.sub(r"\s?pwh=\S+", "", line)
 				print("patching line: %s", line)
 				if placement.startswith("https"):
