@@ -101,10 +101,6 @@ into the file.
 	:type placement: str
 	"""
 	newlines = []
-	if "https" in placement:
-		print("setting configserver URL to: %s", placement)
-	if "pwh=" in placement:
-		print("setting root password to: %s", placement)
 	
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
@@ -113,13 +109,10 @@ into the file.
 					line = re.sub(r"\s?service=\S+", "", line)
 				if "pwh=" in line and "pwh=" in placement:
 					line = re.sub(r"\s?pwh=\S+", "", line)
-				print("patching line: %s", line)
 				if placement.startswith("https"):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
-					print("line after adding configserver service address: %s", line)
 				if placement.startswith("pwh="):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
-					print("line after adding root password: %s", line)
 
 				continue
 
