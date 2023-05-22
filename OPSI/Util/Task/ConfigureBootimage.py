@@ -49,6 +49,7 @@ def patchRootPasswordInDefaultConfigs(backend):
 	"""
 	try:
 		appendParameter = backend.config_getObjects(attributes=["defaultValues"], id="opsi-linux-bootimage.append")[0]
+		appendParameter = appendParameter.defaultValues
 	except IndexError:
 		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from IndexError
 	
