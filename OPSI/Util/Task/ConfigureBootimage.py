@@ -114,11 +114,11 @@ into the file.
 				if "pwh=" in line:
 					line = re.sub(r"\s?pwh=\S+", "", line)
 				logger.debug("patching line: %s", line")
-				if "https" in placement:
+				if placement.startswith("https"):
 					logger.debug("line before adding configserver service address: %s", line)
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 					logger.debug("line after adding configserver service address: %s", line)
-				if "pwh=" in placement:
+				if placement.startswith("pwh="):
 					logger.debug("line before adding root password: %s", line)
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 					logger.debug("line after adding root password: %s", line)
