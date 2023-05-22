@@ -25,7 +25,7 @@ from opsicommon.logging import (
 	secret_filter,
 )
 
-__all__ = ("patchServiceUrlInDefaultConfigs",)
+__all__ = ("patchServiceUrlInDefaultConfigs", "patchRootPasswordInDefaultConfigs")
 
 def encodedPassword(clearPassword):
 	while True:
