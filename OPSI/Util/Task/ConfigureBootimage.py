@@ -101,6 +101,11 @@ into the file.
 	:type placement: str
 	"""
 	newlines = []
+	if "https" in placement:
+		logger.notice("setting configserver URL to: %s", placement)
+	if "pwh=" in placement:
+		logger.debug("setting root password to: %s", placement)
+	
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
@@ -108,14 +113,15 @@ into the file.
 					line = re.sub(r"\s?service=\S+", "", line)
 				if "pwh=" in line:
 					line = re.sub(r"\s?pwh=\S+", "", line)
-				
-				if "https://" in placement:
+				logger.debug("patching line: %s", line")
+				if "https" in placement:
+					logger.debug("line before adding configserver service address: %s", line)
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
-				
+					logger.debug("line after adding configserver service address: %s", line)
 				if "pwh=" in placement:
-					print(f"line before replacement: {line}")
+					logger.debug("line before adding root password: %s", line)
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
-					print(f"line after replacement: {line.replace('console=ttyS0', 'console=ttyS0 ' + placement)}")
+					logger.debug("line after adding root password: %s", line)
 
 				continue
 
