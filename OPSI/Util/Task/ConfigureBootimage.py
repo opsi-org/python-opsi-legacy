@@ -113,7 +113,7 @@ into the file.
 					line = re.sub(r"\s?service=\S+", "", line)
 				if "pwh=" in line:
 					line = re.sub(r"\s?pwh=\S+", "", line)
-				logger.debug("patching line: %s", line")
+				logger.debug("patching line: %s", line)
 				if placement.startswith("https"):
 					logger.debug("line before adding configserver service address: %s", line)
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
