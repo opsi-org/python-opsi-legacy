@@ -14,11 +14,11 @@ from OPSI.Exceptions import BackendMissingDataError
 
 __all__ = ("patchServiceUrlInDefaultConfigs", "patchRootPasswordInDefaultConfigs")
 
-def encodedPassword(clearPassword):
+def encodePassword(clearPassword):
 	while True:
 		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
 		if not pwhash or "." in pwhash:
-			print("Invalid hash, retrying")
+			logger.debug("Invalid hash, retrying")
 		else:
 			return pwhash
 
@@ -50,14 +50,14 @@ def patchRootPasswordInDefaultConfigs(backend):
 	try:
 		appendParameter = backend.config_getObjects(attributes=["defaultValues"], id="opsi-linux-bootimage.append")[0]
 		appendParameter = appendParameter.defaultValues
-	except IndexError:
-		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from IndexError
+	except IndexError as err:
+		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from err
 	
 	if appendParameter:
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
-				endcodedRootPassword = encodedPassword(clearRootPassword)
+				endcodedRootPassword = encodePassword(clearRootPassword)
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
 				pwhEntry = element
