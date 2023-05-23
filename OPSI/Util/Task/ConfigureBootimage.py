@@ -10,9 +10,13 @@ import os
 import passlib.hash
 import re
 
+from opsicommon.logging import get_logger
+
 from OPSI.Exceptions import BackendMissingDataError
 
 __all__ = ("patchServiceUrlInDefaultConfigs", "patchRootPasswordInDefaultConfigs")
+
+logger = get_logger("opsi.general")
 
 def encodePassword(clearPassword):
 	while True:
