@@ -169,7 +169,7 @@ class SQL:  # pylint: disable=too-many-public-methods
 		result = session.execute(text(query)).fetchall()  # pylint: disable=no-member
 		if not result:
 			return []
-		return [dict(row._mapping) for row in result if row is not None]
+		return [dict(row._mapping) for row in result if row is not None] # pylint: disable=protected-access
 
 	def getRows(self, session: Any, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
 		"""
