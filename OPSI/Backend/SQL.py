@@ -18,6 +18,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Tuple
 
+from sqlalchemy import text
+
 from opsicommon.logging import get_logger
 
 from OPSI.Backend.Base import Backend, BackendModificationListener, ConfigDataBackend
@@ -156,7 +158,7 @@ class SQL:  # pylint: disable=too-many-public-methods
 		logger.warning("Method 'close' is deprecated")
 
 	def execute(self, session: Any, query: str) -> None:  # pylint: disable=no-self-use
-		session.execute(query)  # pylint: disable=no-member
+		session.execute(text(query))  # pylint: disable=no-member
 
 	def getSet(self, session: Any, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
 		"""
@@ -164,10 +166,10 @@ class SQL:  # pylint: disable=too-many-public-methods
 		"""
 		logger.trace("getSet: %s", query)
 		onlyAllowSelect(query)
-		result = session.execute(query).fetchall()  # pylint: disable=no-member
+		result = session.execute(text(query)).fetchall()  # pylint: disable=no-member
 		if not result:
 			return []
-		return [dict(row) for row in result if row is not None]
+		return [dict(row._mapping) for row in result if row is not None]
 
 	def getRows(self, session: Any, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
 		"""
@@ -175,7 +177,7 @@ class SQL:  # pylint: disable=too-many-public-methods
 		"""
 		logger.trace("getRows: %s", query)
 		onlyAllowSelect(query)
-		result = session.execute(query).fetchall()  # pylint: disable=no-member
+		result = session.execute(text(query)).fetchall()  # pylint: disable=no-member
 		if not result:
 			return []
 		return [list(row) for row in result if row is not None]
@@ -186,7 +188,7 @@ class SQL:  # pylint: disable=too-many-public-methods
 		"""
 		logger.trace("getRow: %s", query)
 		onlyAllowSelect(query)
-		result = session.execute(query).fetchone()  # pylint: disable=no-member
+		result = session.execute(text(query)).fetchone()  # pylint: disable=no-member
 		if not result:
 			return []
 		return list(result)
@@ -199,7 +201,7 @@ class SQL:  # pylint: disable=too-many-public-methods
 		bind_names = [f":{col_name}" for col_name in list(valueHash)]
 		query = f"INSERT INTO `{table}` ({','.join(col_names)}) VALUES ({','.join(bind_names)})"
 		logger.trace("insert: %s - %s", query, valueHash)
-		result = session.execute(query, valueHash)  # pylint: disable=no-member
+		result = session.execute(text(query), valueHash)  # pylint: disable=no-member
 		return result.lastrowid
 
 	def update(self, session: Any, table: str, where: str, valueHash: Any, updateWhereNone: bool = False) -> int:  # pylint: disable=no-self-use,too-many-arguments
@@ -215,13 +217,13 @@ class SQL:  # pylint: disable=too-many-public-methods
 		query = f"UPDATE `{table}` SET {','.join(updates)} WHERE {where}"
 
 		logger.trace("update: %s - %s", query, valueHash)
-		result = session.execute(query, valueHash)  # pylint: disable=no-member
+		result = session.execute(text(query), valueHash)  # pylint: disable=no-member
 		return result.rowcount
 
 	def delete(self, session: Any, table: str, where: str) -> int:  # pylint: disable=no-self-use
 		query = f"DELETE FROM `{table}` WHERE {where}"
 		logger.trace("delete: %s", query)
-		result = session.execute(query)  # pylint: disable=no-member
+		result = session.execute(text(query))  # pylint: disable=no-member
 		return result.rowcount
 
 	def getTables(self, session: Any) -> Dict:  # pylint: disable=unused-argument,no-self-use
