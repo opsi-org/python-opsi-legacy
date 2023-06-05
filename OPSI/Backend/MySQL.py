@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List
 from urllib.parse import quote, urlencode
 
 from opsicommon.logging import get_logger, secret_filter
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.event import listen
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -100,7 +100,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 
 	@staticmethod
 	def on_engine_connect(conn, branch) -> None:  # pylint: disable=unused-argument
-		conn.execute("""
+		conn.execute(text("""
 			SET SESSION sql_mode=(SELECT
 				REPLACE(
 					REPLACE(
@@ -114,8 +114,8 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 			);
 			SET SESSION group_concat_max_len = 1000000;
 			SET SESSION lock_wait_timeout = 60;
-		""")
-		conn.execute("SET SESSION group_concat_max_len = 1000000;")
+		"""))
+		conn.execute(text("SET SESSION group_concat_max_len = 1000000;"))
 		# conn.execute("SHOW VARIABLES LIKE 'sql_mode';").fetchone()
 
 	def init_connection(self) -> None:
