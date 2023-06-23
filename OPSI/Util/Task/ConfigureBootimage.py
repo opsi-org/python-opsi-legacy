@@ -56,8 +56,9 @@ def patchRootPasswordInDefaultConfigs(backend):
 		appendParameter = appendParameter.defaultValues
 	except IndexError as err:
 		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from err
-	
+
 	if appendParameter:
+		pwhEntry = None
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
@@ -65,10 +66,10 @@ def patchRootPasswordInDefaultConfigs(backend):
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
 				pwhEntry = element
-			if pwhEntry:
-				defaultMenu, grubMenu = getMenuFiles()
-				patchMenuFile(defaultMenu, "append", pwhEntry)
-				patchMenuFile(grubMenu, "linux", pwhEntry)
+		if pwhEntry:
+			defaultMenu, grubMenu = getMenuFiles()
+			patchMenuFile(defaultMenu, "append", pwhEntry)
+			patchMenuFile(grubMenu, "linux", pwhEntry)
 
 
 def getMenuFiles():
@@ -105,7 +106,7 @@ into the file.
 	:type placement: str
 	"""
 	newlines = []
-	
+
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
