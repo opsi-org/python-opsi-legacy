@@ -69,6 +69,7 @@ def patchRootPasswordInDefaultConfigs(backend):
 		if pwhEntry:
 			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
+			pwhEntry = pwhEntry.replace("$", r"\$")
 			patchMenuFile(grubMenu, "linux", pwhEntry)
 
 
