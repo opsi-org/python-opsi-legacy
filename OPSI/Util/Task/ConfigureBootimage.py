@@ -69,6 +69,7 @@ def patchRootPasswordInDefaultConfigs(backend):
 		if pwhEntry:
 			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
+			pwhEntry = pwhEntry.replace("$", r"\$")
 			patchMenuFile(grubMenu, "linux", pwhEntry)
 
 
@@ -112,7 +113,7 @@ into the file.
 			if line.strip().startswith(searchString):
 				if "service=" in line and "https://" in placement:
 					line = re.sub(r"\s?service=\S+", "", line)
-				if "pwh=" in line and "pwh=" in placement:
+				if "pwh=" in line:
 					line = re.sub(r"\s?pwh=\S+", "", line)
 				if placement.startswith("https"):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
