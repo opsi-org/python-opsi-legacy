@@ -59,6 +59,7 @@ def patchRootPasswordInDefaultConfigs(backend):
 
 	if appendParameter:
 		pwhEntry = None
+		langEntry= None
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
@@ -66,11 +67,17 @@ def patchRootPasswordInDefaultConfigs(backend):
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
 				pwhEntry = element
+			if "lang=" in element:
+				langEntry = element
 		if pwhEntry:
 			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
 			pwhEntry = pwhEntry.replace("$", r"\$")
 			patchMenuFile(grubMenu, "linux", pwhEntry)
+		if langEntry:
+			defaultMenu, grubMenu = getMenuFiles()
+			patchMenuFile(defaultMenu, "append", langEntry)
+			patchMenuFile(grubMenu, "linux", langEntry)
 
 
 def getMenuFiles():
@@ -117,7 +124,7 @@ into the file.
 					line = re.sub(r"\s?pwh=\S+", "", line)
 				if placement.startswith("https"):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
-				if placement.startswith("pwh="):
+				if placement.startswith("pwh=") or placement.startswith("lang="):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 
 				continue
