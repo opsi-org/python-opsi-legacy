@@ -122,6 +122,8 @@ into the file.
 					line = re.sub(r"\s?service=\S+", "", line)
 				if "pwh=" in line:
 					line = re.sub(r"\s?pwh=\S+", "", line)
+				if "lang=" in line:
+					line = re.sub(r"\s?lang=\S+", "", line)
 				if placement.startswith("https"):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				if placement.startswith("pwh=") or placement.startswith("lang="):
