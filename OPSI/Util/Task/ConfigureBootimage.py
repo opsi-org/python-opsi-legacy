@@ -68,9 +68,9 @@ def patchRootPasswordInDefaultConfigs(backend):
 				endcodedRootPassword = encodePassword(clearRootPassword)
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
-				pwhEntry = element
+				pwhEntry = element # pylint: disable=invalid-name
 			if "lang=" in element:
-				langEntry = element
+				langEntry = element # pylint: disable=invalid-name
 		if pwhEntry:
 			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
