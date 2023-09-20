@@ -18,6 +18,9 @@ __all__ = ("patchServiceUrlInDefaultConfigs", "patchRootPasswordInDefaultConfigs
 
 logger = get_logger("opsi.general")
 
+pwhEntry = None
+langEntry= None
+
 def encodePassword(clearPassword):
 	while True:
 		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
@@ -40,6 +43,7 @@ def patchServiceUrlInDefaultConfigs(backend):
 		raise BackendMissingDataError("Unable to get clientconfig.configserver.url") from IndexError
 
 	if configServer:
+		logger.debug("Patching configserver URL %s", configServer)
 		defaultMenu, grubMenu = getMenuFiles()
 		patchMenuFile(defaultMenu, "append", configServer)
 		patchMenuFile(grubMenu, "linux", configServer)
@@ -58,8 +62,6 @@ def patchRootPasswordInDefaultConfigs(backend):
 		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from err
 
 	if appendParameter:
-		pwhEntry = None
-		langEntry= None
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
@@ -120,14 +122,14 @@ into the file.
 			if line.strip().startswith(searchString):
 				if "service=" in line and "https://" in placement:
 					line = re.sub(r"\s?service=\S+", "", line)
-				if "pwh=" in line:
+				if "pwh=" in line and not pwhEntry:
 					line = re.sub(r"\s?pwh=\S+", "", line)
-				if "lang=" in line:
+				if "lang=" in line and not langEntry:
 					line = re.sub(r"\s?lang=\S+", "", line)
-				if placement.startswith("https"):
-					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				if placement.startswith("pwh=") or placement.startswith("lang="):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+				if placement.startswith("https"):
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 
 				continue
 
