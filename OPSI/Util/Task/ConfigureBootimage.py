@@ -18,9 +18,6 @@ __all__ = ("patchServiceUrlInDefaultConfigs", "patchRootPasswordInDefaultConfigs
 
 logger = get_logger("opsi.general")
 
-pwhEntry = None
-langEntry= None
-
 def encodePassword(clearPassword):
 	while True:
 		pwhash = passlib.hash.sha512_crypt.using(rounds=5000).hash(clearPassword)
