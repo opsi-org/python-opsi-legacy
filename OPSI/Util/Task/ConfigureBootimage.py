@@ -68,16 +68,18 @@ def patchRootPasswordInDefaultConfigs(backend):
 				endcodedRootPassword = encodePassword(clearRootPassword)
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
-				pwhEntry = element # pylint: disable=invalid-name
+				pwhEntry = element
 			if "lang=" in element:
-				langEntry = element # pylint: disable=invalid-name
+				langEntry = element
+
+		defaultMenu, grubMenu = getMenuFiles()
+		clearMenuFile(defaultMenu, "append")
+		clearMenuFile(grubMenu, "linux")
 		if pwhEntry:
-			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
 			pwhEntry = pwhEntry.replace("$", r"\$")
 			patchMenuFile(grubMenu, "linux", pwhEntry)
 		if langEntry:
-			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", langEntry)
 			patchMenuFile(grubMenu, "linux", langEntry)
 
@@ -98,6 +100,36 @@ default.menu and second grub.cfg.
 		grubMenu = "/var/lib/tftpboot/grub/grub.cfg"
 
 	return defaultMenu, grubMenu
+
+def clearMenuFile(menufile, searchString):
+	"""
+	remove existing special entries from menu files
+
+	:param menufile: Path to the file to patch
+	:type menufile: str
+	:param searchString: Patches only lines starting with this string.
+	:type searchString: str
+	:param placement: The configServer address or password hash to patch \
+into the file.
+	:type placement: str
+	"""
+	newlines = []
+	with open(menufile, "r", encoding="utf-8") as readMenu:
+		for line in readMenu:
+			if line.strip().startswith(searchString):
+				if "service=" in line:
+					line = re.sub(r"\s?service=\S+", "", line)
+				if "pwh=" in line:
+					line = re.sub(r"\s?pwh=\S+", "", line)
+				if "lang=" in line:
+					line = re.sub(r"\s?lang=\S+", "", line)
+
+				continue
+
+			newlines.append(line)
+
+	with open(menufile, "w", encoding="utf-8") as writeMenu:
+		writeMenu.writelines(newlines)
 
 
 def patchMenuFile(menufile, searchString, placement):
@@ -120,13 +152,9 @@ into the file.
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
-				if "service=" in line and "https://" in placement:
-					line = re.sub(r"\s?service=\S+", "", line)
-				if "pwh=" in line and not pwhEntry:
-					line = re.sub(r"\s?pwh=\S+", "", line)
-				if "lang=" in line and not langEntry:
-					line = re.sub(r"\s?lang=\S+", "", line)
-				if placement.startswith("pwh=") or placement.startswith("lang="):
+				if placement.startswith("pwh="):
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+				if placement.startswith("lang="):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 				if placement.startswith("https"):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
