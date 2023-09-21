@@ -128,8 +128,6 @@ into the file.
 					line = re.sub(r"\s?lang=\S+", "", line)
 					print(line)
 
-				continue
-
 			newlines.append(line)
 
 	with open(menufile, "w", encoding="utf-8") as writeMenu:
