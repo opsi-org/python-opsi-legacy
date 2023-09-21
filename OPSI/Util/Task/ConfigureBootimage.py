@@ -58,6 +58,10 @@ def patchRootPasswordInDefaultConfigs(backend):
 	except IndexError as err:
 		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from err
 
+	defaultMenu, grubMenu = getMenuFiles()
+	clearMenuFile(defaultMenu, "append")
+	clearMenuFile(grubMenu, "linux")
+
 	if appendParameter:
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
@@ -69,9 +73,6 @@ def patchRootPasswordInDefaultConfigs(backend):
 			if "lang=" in element:
 				langEntry = element
 
-		defaultMenu, grubMenu = getMenuFiles()
-		clearMenuFile(defaultMenu, "append")
-		clearMenuFile(grubMenu, "linux")
 		if pwhEntry:
 			patchMenuFile(defaultMenu, "append", pwhEntry)
 			pwhEntry = pwhEntry.replace("$", r"\$")
@@ -113,26 +114,14 @@ into the file.
 	newlines = []
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
-			print(line)
 			if line.strip().startswith(searchString):
 				if "service=" in line:
-					print("replacing service:")
 					line = re.sub(r"\s?service=\S+", "", line)
-					print(line)
 				if "pwh=" in line:
-					print("replacing pwh:")
 					line = re.sub(r"\s?pwh=\S+", "", line)
-					print(line)
 				if "lang=" in line:
-					print("replacing lang:")
 					line = re.sub(r"\s?lang=\S+", "", line)
-					print(line)
-			print("final line: %s" % line)
 			newlines.append(line)
-
-	print("newlines:")
-	for line in newlines:
-		print(line)
 
 	with open(menufile, "w", encoding="utf-8") as writeMenu:
 		writeMenu.writelines(newlines)
@@ -159,25 +148,15 @@ into the file.
 		for line in readMenu:
 			if line.strip().startswith(searchString):
 				if placement.startswith("pwh="):
-					print("patching pwh")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
-					print(newlines[-1])
 				if placement.startswith("lang="):
-					print("patching lang")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
-					print(newlines[-1])
 				if placement.startswith("https"):
-					print("patching service")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
-					print(newlines[-1])
 
 				continue
 
 			newlines.append(line)
-
-	print("newlines:")
-	for line in newlines:
-		print(line)
 
 	with open(menufile, "w", encoding="utf-8") as writeMenu:
 		writeMenu.writelines(newlines)
