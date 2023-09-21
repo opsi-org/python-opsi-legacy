@@ -62,6 +62,9 @@ def patchRootPasswordInDefaultConfigs(backend):
 	clearMenuFile(defaultMenu, "append")
 	clearMenuFile(grubMenu, "linux")
 
+	langEntry = None
+	pwhEntry = None
+
 	if appendParameter:
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
