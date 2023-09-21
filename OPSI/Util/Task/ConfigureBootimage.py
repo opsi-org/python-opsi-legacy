@@ -127,8 +127,12 @@ into the file.
 					print("replacing lang:")
 					line = re.sub(r"\s?lang=\S+", "", line)
 					print(line)
-
+			print("final line: %s" % line)
 			newlines.append(line)
+
+	print("newlines:")
+	for line in newlines:
+		print(line)
 
 	with open(menufile, "w", encoding="utf-8") as writeMenu:
 		writeMenu.writelines(newlines)
