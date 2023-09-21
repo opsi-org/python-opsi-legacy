@@ -179,6 +179,11 @@ def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 		'\n'
 	]
 
+	with open(filename) as patchedFile:
+		patchedDefault = patchedFile.readlines()
+
+	assert patchedDefault != expectedDefault
+
 def testPatchMenuFileAddLangPhw(tempDir):
 	filename = os.path.join(tempDir, 'default.menu')
 	with open(filename, 'w') as writefile:
