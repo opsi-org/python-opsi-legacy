@@ -152,7 +152,6 @@ def testClearMenuFile(tempDir):
 		patchedDefault = patchedFile.readlines()
 
 	assert patchedDefault == expectedDefault
-xs
 
 def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 	filename = os.path.join(tempDir, 'default.menu')
