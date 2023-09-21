@@ -40,6 +40,7 @@ def patchServiceUrlInDefaultConfigs(backend):
 		raise BackendMissingDataError("Unable to get clientconfig.configserver.url") from IndexError
 
 	if configServer:
+		logger.debug("Patching configserver URL %s", configServer)
 		defaultMenu, grubMenu = getMenuFiles()
 		patchMenuFile(defaultMenu, "append", configServer)
 		patchMenuFile(grubMenu, "linux", configServer)
@@ -57,8 +58,11 @@ def patchRootPasswordInDefaultConfigs(backend):
 	except IndexError as err:
 		raise BackendMissingDataError("Unable to get opsi-linux-bootimage.append") from err
 
+	defaultMenu, grubMenu = getMenuFiles()
+	clearMenuFile(defaultMenu, "append")
+	clearMenuFile(grubMenu, "linux")
+
 	if appendParameter:
-		pwhEntry = None
 		for element in appendParameter:
 			if "bootimageRootPassword" in element:
 				clearRootPassword = element.split("=")[1]
@@ -66,11 +70,16 @@ def patchRootPasswordInDefaultConfigs(backend):
 				pwhEntry = f"pwh={endcodedRootPassword}"
 			if "pwh=" in element:
 				pwhEntry = element
+			if "lang=" in element:
+				langEntry = element
+
 		if pwhEntry:
-			defaultMenu, grubMenu = getMenuFiles()
 			patchMenuFile(defaultMenu, "append", pwhEntry)
 			pwhEntry = pwhEntry.replace("$", r"\$")
 			patchMenuFile(grubMenu, "linux", pwhEntry)
+		if langEntry:
+			patchMenuFile(defaultMenu, "append", langEntry)
+			patchMenuFile(grubMenu, "linux", langEntry)
 
 
 def getMenuFiles():
@@ -89,6 +98,33 @@ default.menu and second grub.cfg.
 		grubMenu = "/var/lib/tftpboot/grub/grub.cfg"
 
 	return defaultMenu, grubMenu
+
+def clearMenuFile(menufile, searchString):
+	"""
+	remove existing special entries from menu files
+
+	:param menufile: Path to the file to patch
+	:type menufile: str
+	:param searchString: Patches only lines starting with this string.
+	:type searchString: str
+	:param placement: The configServer address or password hash to patch \
+into the file.
+	:type placement: str
+	"""
+	newlines = []
+	with open(menufile, "r", encoding="utf-8") as readMenu:
+		for line in readMenu:
+			if line.strip().startswith(searchString):
+				if "service=" in line:
+					line = re.sub(r"\s?service=\S+", "", line)
+				if "pwh=" in line:
+					line = re.sub(r"\s?pwh=\S+", "", line)
+				if "lang=" in line:
+					line = re.sub(r"\s?lang=\S+", "", line)
+			newlines.append(line)
+
+	with open(menufile, "w", encoding="utf-8") as writeMenu:
+		writeMenu.writelines(newlines)
 
 
 def patchMenuFile(menufile, searchString, placement):
@@ -111,14 +147,12 @@ into the file.
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
 			if line.strip().startswith(searchString):
-				if "service=" in line and "https://" in placement:
-					line = re.sub(r"\s?service=\S+", "", line)
-				if "pwh=" in line:
-					line = re.sub(r"\s?pwh=\S+", "", line)
-				if placement.startswith("https"):
-					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 				if placement.startswith("pwh="):
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+				if placement.startswith("lang="):
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+				if placement.startswith("https"):
+					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 
 				continue
 
