@@ -161,12 +161,15 @@ into the file.
 				if placement.startswith("pwh="):
 					print("patching pwh")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+					print(newlines[-1])
 				if placement.startswith("lang="):
 					print("patching lang")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
+					print(newlines[-1])
 				if placement.startswith("https"):
 					print("patching service")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
+					print(newlines[-1])
 
 				continue
 
