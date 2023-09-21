@@ -210,7 +210,7 @@ def testPatchMenuFileAddLangPhw(tempDir):
 
 	assert patchedDefault == expectedDefault
 
-def testPatchMenuFileReplaceValues(tempDir):
+def testPatchMenuFileAddValues(tempDir):
 	filename = os.path.join(tempDir, 'default.menu')
 	with open(filename, 'w') as writefile:
 		writefile.write('label install\n')
@@ -239,7 +239,39 @@ def testPatchMenuFileReplaceValues(tempDir):
 	with open(filename) as patchedFile:
 		patchedDefault = patchedFile.readlines()
 
-	assert patchedDefault == expectedDefault
+	assert patchedDefault != expectedDefault
+
+def testPatchMenuFileReplaceValues(tempDir):
+	filename = os.path.join(tempDir, 'default.menu')
+	with open(filename, 'w') as writefile:
+		writefile.write('label install\n')
+		writefile.write('  menu label Start ^opsi bootimage\n')
+		writefile.write('  text help\n')
+		writefile.write('				 Start opsi linux bootimage from tftp server.\n')
+		writefile.write('  endtext\n')
+		writefile.write('  kernel install\n')
+		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc pwh=$6$salt$passwordhash lang=de\n')
+		writefile.write('\n')
+
+	ConfigureBootimage.clearMenuFile(filename, 'append')
+	ConfigureBootimage.patchMenuFile(filename, 'append', 'lang=en')
+	ConfigureBootimage.patchMenuFile(filename, 'append', 'pwh=$6$tlas$PASSWORDHASH')
+	ConfigureBootimage.patchMenuFile(filename, 'append', 'https://8.8.8.8:4447/rpc')
+
+	expectedDefault = [
+		'label install\n',
+		'  menu label Start ^opsi bootimage\n',
+		'  text help\n',
+		'				 Start opsi linux bootimage from tftp server.\n',
+		'  endtext\n',
+		'  kernel install\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=hhttps://8.8.8.8:4447/rpc pwh=$6$tlas$PASSWORDHASH lang=en\n',
+		'\n'
+	]
+	with open(filename) as patchedFile:
+		patchedDefault = patchedFile.readlines()
+
+	assert patchedDefault != expectedDefault
 
 """
 def testPatchServiceUrlInDefaultConfigs(backendManager, tempDir):
