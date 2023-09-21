@@ -159,15 +159,22 @@ into the file.
 		for line in readMenu:
 			if line.strip().startswith(searchString):
 				if placement.startswith("pwh="):
+					print("patching pwh")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 				if placement.startswith("lang="):
+					print("patching lang")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 " + placement))
 				if placement.startswith("https"):
+					print("patching service")
 					newlines.append(line.replace("console=ttyS0", "console=ttyS0 service=" + placement))
 
 				continue
 
 			newlines.append(line)
+
+	print("newlines:")
+	for line in newlines:
+		print(line)
 
 	with open(menufile, "w", encoding="utf-8") as writeMenu:
 		writeMenu.writelines(newlines)
