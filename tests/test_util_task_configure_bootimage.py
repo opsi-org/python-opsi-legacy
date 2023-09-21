@@ -193,7 +193,7 @@ def testPatchMenuFileAddLangPhw(tempDir):
 
 	ConfigureBootimage.patchMenuFile(filename, 'append', 'lang=de')
 	ConfigureBootimage.patchMenuFile(filename, 'append', 'pwh=$6$salt$passwordhash')
-	ConfigureBootimage.patchMenuFile(filename, 'append', 'service=https://192.168.1.14:4447/rpc')
+	ConfigureBootimage.patchMenuFile(filename, 'append', 'https://192.168.1.14:4447/rpc')
 
 	expectedDefault = [
 		'label install\n',
