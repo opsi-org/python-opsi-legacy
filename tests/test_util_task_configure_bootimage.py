@@ -124,6 +124,35 @@ def testPatchLangInMenuFile(tempDir):
 
 	assert patchedDefault == expectedDefault
 
+def testClearMenuFile(tempDir):
+	filename = os.path.join(tempDir, 'default.menu')
+	with open(filename, 'w') as writefile:
+		writefile.write('label install\n')
+		writefile.write('  menu label Start ^opsi bootimage\n')
+		writefile.write('  text help\n')
+		writefile.write('				 Start opsi linux bootimage from tftp server.\n')
+		writefile.write('  endtext\n')
+		writefile.write('  kernel install\n')
+		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc pwh=$6$salt$passwordhash lang=de\n')
+		writefile.write('\n')
+	
+	ConfigureBootimage.clearMenuFile(filename, 'append')
+
+	expectedDefault = [
+		'label install\n',
+		'  menu label Start ^opsi bootimage\n',
+		'  text help\n',
+		'				 Start opsi linux bootimage from tftp server.\n',
+		'  endtext\n',
+		'  kernel install\n',
+		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 \n',
+		'\n'
+	]
+	with open(filename) as patchedFile:
+		patchedDefault = patchedFile.readlines()
+
+	assert patchedDefault == expectedDefault
+xs
 
 def testPatchMenuFileReplacesExistingServiceConfiguration(tempDir):
 	filename = os.path.join(tempDir, 'default.menu')
@@ -175,35 +204,6 @@ def testPatchMenuFileAddLangPhw(tempDir):
 		'  endtext\n',
 		'  kernel install\n',
 		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc pwh=$6$salt$passwordhash lang=de \n',
-		'\n'
-	]
-	with open(filename) as patchedFile:
-		patchedDefault = patchedFile.readlines()
-
-	assert patchedDefault == expectedDefault
-
-def testClearMenuFile(tempDir):
-	filename = os.path.join(tempDir, 'default.menu')
-	with open(filename, 'w') as writefile:
-		writefile.write('label install\n')
-		writefile.write('  menu label Start ^opsi bootimage\n')
-		writefile.write('  text help\n')
-		writefile.write('				 Start opsi linux bootimage from tftp server.\n')
-		writefile.write('  endtext\n')
-		writefile.write('  kernel install\n')
-		writefile.write('  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0 service=https://192.168.1.14:4447/rpc pwh=$6$salt$passwordhash lang=de\n')
-		writefile.write('\n')
-	
-	ConfigureBootimage.clearMenuFile(filename, 'append')
-
-	expectedDefault = [
-		'label install\n',
-		'  menu label Start ^opsi bootimage\n',
-		'  text help\n',
-		'				 Start opsi linux bootimage from tftp server.\n',
-		'  endtext\n',
-		'  kernel install\n',
-		'  append initrd=miniroot.bz2 video=vesa:ywrap,mtrr vga=791 quiet splash --no-log console=tty1 console=ttyS0\n',
 		'\n'
 	]
 	with open(filename) as patchedFile:

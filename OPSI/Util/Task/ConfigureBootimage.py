@@ -113,13 +113,20 @@ into the file.
 	newlines = []
 	with open(menufile, "r", encoding="utf-8") as readMenu:
 		for line in readMenu:
+			print(line)
 			if line.strip().startswith(searchString):
 				if "service=" in line:
+					print("replacing service:")
 					line = re.sub(r"\s?service=\S+", "", line)
+					print(line)
 				if "pwh=" in line:
+					print("replacing pwh:")
 					line = re.sub(r"\s?pwh=\S+", "", line)
+					print(line)
 				if "lang=" in line:
+					print("replacing lang:")
 					line = re.sub(r"\s?lang=\S+", "", line)
+					print(line)
 
 				continue
 
