@@ -483,7 +483,7 @@ def Archive(filename, format=None, compression=None, progressSubject=None):  # p
 			Class = TarArchive
 		elif "cpio" in fileType.lower():
 			Class = CpioArchive
-		elif filename.lower().endswith(("tar", "tar.gz", "tar.zst")):
+		elif filename.lower().endswith(("tar", "tar.gz", "tar.zst", "tar.zstd")):
 			Class = TarArchive
 		elif filename.lower().endswith(("cpio", "cpio.gz")):
 			Class = CpioArchive

@@ -143,6 +143,8 @@ class ProductPackageFile:
 					archiveName = file[:-5]
 				elif file.endswith(".tar.gz"):
 					archiveName = file[:-7]
+				elif file.endswith(".tar.zstd"):
+					archiveName = file[:-9]
 				elif file.endswith(".tar"):
 					archiveName = file[:-4]
 				elif file.startswith("OPSI"):
@@ -202,7 +204,7 @@ class ProductPackageFile:
 
 			metadataArchives = []
 			for file in os.listdir(metaDataTmpDir):
-				if not file.endswith((".cpio.gz", ".tar.gz", ".cpio", ".tar")):
+				if not file.endswith((".cpio.gz", ".tar.gz", ".cpio", ".tar", ".tar.zstd")):
 					logger.warning("Unknown content in archive: %s", file)
 					continue
 				logger.debug("Metadata archive found: %s", file)
@@ -264,7 +266,7 @@ class ProductPackageFile:
 				if file.startswith("OPSI"):
 					continue
 
-				if not file.endswith((".cpio.gz", ".tar.gz", ".cpio", ".tar")):
+				if not file.endswith((".cpio.gz", ".tar.gz", ".cpio", ".tar", ".tar.zstd")):
 					logger.warning("Unknown content in archive: %s", file)
 					continue
 

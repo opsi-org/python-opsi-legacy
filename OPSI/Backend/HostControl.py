@@ -310,7 +310,7 @@ class HostControlBackend(ExtendedBackend):
 					networks.append(ip_network)
 
 			if len(networks) > 1:
-				# Take bets matching network by prefix length
+				# Take best matching network by prefix length
 				networks = [sorted(networks, key=lambda x: x.prefixlen, reverse=True)[0]]
 			elif not networks:
 				logger.debug("No matching ip network found for host address '%s', using all broadcasts", ip_address.compressed)
