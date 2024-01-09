@@ -1,0 +1,52 @@
+[Package]
+version = "1337"
+depends = [{ package="mshotfix", condition=">=", version="202301-1" }, { package="hwaudit" }]
+
+[Product]
+type = "LocalbootProduct"
+id = "localboot_new"
+name = "localboot new"
+description = """this is a localboot new test package"""
+advice = """use the new one"""
+version = "42.0"
+priority = 0
+licenseRequired = false
+productClasses = []
+setupScript = "setup.opsiscript"
+uninstallScript = "uninstall.opsiscript"
+updateScript = "update.opsiscript"
+alwaysScript = "always.opsiscript"
+onceScript = "once.opsiscript"
+customScript = "custom.opsiscript"
+userLoginScript = "userlogin.opsiscript"
+windowsSoftwareIds = []
+
+[[ProductProperty]]
+type = "UnicodeProductProperty"
+name = "propname"
+multivalue = false
+editable = true
+description = "this is a dummy property"
+values = ["a", "b"]
+default = ["a"]
+
+[[ProductProperty]]
+type = "BoolProductProperty"
+name = "boolprop"
+multivalue = false
+editable = false
+description = "this is a bool property"
+values = [false, true]
+default = [false]
+
+[[ProductDependency]]
+requiredProduct = "hwaudit"
+action = "setup"
+requirementType = "before"
+requiredStatus = "installed"
+
+[[ProductDependency]]
+requiredProduct = "swaudit"
+action = "setup"
+requirementType = "after"
+requiredAction = "setup"

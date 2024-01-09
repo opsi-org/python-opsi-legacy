@@ -235,6 +235,57 @@ def tomlControlFile(test_data_path):
 		yield newFilePath
 
 
+def testLoadControlToml(test_data_path) -> None:
+	filePath = os.path.join(test_data_path, "package_control_file", "control.toml")
+	pcf = PackageControlFile(filePath)
+	pcf.parse()
+
+	product = pcf.getProduct()
+	assert product.id == "localboot_new"
+	assert product.name == "localboot new"
+	assert product.description == "this is a localboot new test package"
+	assert product.advice == "use the new one"
+	assert product.productVersion == "42.0"
+	assert product.packageVersion == "1337"
+	assert not product.licenseRequired
+	assert product.priority == 0
+
+	product_properties = pcf.getProductProperties()
+	assert len(product_properties) == 2
+	for prop in product_properties:
+		if prop.propertyId == "propname":
+			assert prop.description == "this is a dummy property"
+			assert prop.multiValue is False
+			assert prop.editable is True
+			assert prop.defaultValues == ["a"]
+			assert prop.possibleValues
+			assert set(prop.possibleValues) == {"a", "b"}
+		elif prop.propertyId == "boolprop":
+			assert prop.description == "this is a bool property"
+			assert prop.multiValue is False
+			assert prop.editable is False
+			assert prop.defaultValues == [False]
+			assert prop.possibleValues
+			assert set(prop.possibleValues) == {True, False}
+		else:
+			raise ValueError(f"Did not expect propertyId {prop.propertyId}")
+
+	product_dependencies = pcf.getProductDependencies()
+	assert len(product_dependencies) == 2
+
+	assert product_dependencies[0].productAction == "setup"
+	assert product_dependencies[0].requiredProductId == "hwaudit"
+	assert product_dependencies[0].requiredInstallationStatus == "installed"
+	assert product_dependencies[0].requirementType == "before"
+	assert product_dependencies[0].requiredAction is None
+
+	assert product_dependencies[1].productAction == "setup"
+	assert product_dependencies[1].requiredProductId == "swaudit"
+	assert product_dependencies[1].requiredInstallationStatus is None
+	assert product_dependencies[1].requirementType == "after"
+	assert product_dependencies[1].requiredAction == "setup"
+
+
 def testGeneratingProductControlFileToml(tomlControlFile):
 	pcf = PackageControlFile(tomlControlFile)
 	pcf.parse()

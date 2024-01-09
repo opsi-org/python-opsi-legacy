@@ -869,11 +869,11 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 
 		dep_list = []
 		for dep in data_dict.get("ProductDependency", []):
-			req_prod_vers = forceProductVersion(dep.get('required_product_version')) if dep.get('required_product_version') else None
-			req_pack_vers = forcePackageVersion(dep.get('required_package_version')) if dep.get('required_package_version') else None
-			req_act = forceActionRequest(dep.get("required_action", "setup"))
-			req_inst_stat = forceInstallationStatus(dep.get("required_status", "installed"))
-			req_type = forceRequirementType(dep.get("requirement_type", "before"))
+			req_prod_vers = forceProductVersion(dep.get('requiredProductVersion')) if dep.get('requiredProductVersion') else None
+			req_pack_vers = forcePackageVersion(dep.get('requiredPackageVersion')) if dep.get('requiredPackageVersion') else None
+			req_act = forceActionRequest(dep.get("requiredAction")) if dep.get("requiredAction") else None
+			req_inst_stat = forceInstallationStatus(dep.get("requiredStatus")) if dep.get("requiredStatus") else None
+			req_type = forceRequirementType(dep.get("requirementType")) if dep.get("requirementType") else None
 			dependency = ProductDependency(
 				forceProductId(product_dict["id"]),
 				forceProductVersion(product_dict["version"]),
@@ -966,8 +966,8 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 				raise ValueError(f"No package given: {packageDependency}")
 
 			if not packageDependency.get('version'):
-				packageDependency['version'] = None
-				packageDependency['condition'] = None
+				packageDependency['version'] = ""
+				packageDependency['condition'] = ""
 			else:
 				if not packageDependency.get('condition'):
 					packageDependency['condition'] = '='
