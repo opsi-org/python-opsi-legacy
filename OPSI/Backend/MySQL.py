@@ -307,6 +307,7 @@ class MySQLBackend(SQLBackend):
 			)
 
 	def _get_client_info(self) -> dict[str, int]:
+		result = {"macos": 0, "linux": 0, "windows": 0, "inactive": 0}
 		with self._sql.session() as session:
 			res = self._sql.getSet(session, """
 				SELECT
@@ -326,7 +327,9 @@ class MySQLBackend(SQLBackend):
 					ON l.clientId = h.hostId AND l.productId = "opsi-linux-client-agent" AND l.installationStatus = "installed"
 				) AS c
 			""")
-			return {k: int(v) for k, v in res[0].items()}
+			if res:
+				result.update({k: int(v or 0) for k, v in res[0].items()})
+		return result
 
 	# Overwriting product_getObjects to use JOIN for speedup
 	def product_getObjects(self, attributes: List = None, **filter) -> List[Product]:  # pylint: disable=redefined-builtin,dangerous-default-value
