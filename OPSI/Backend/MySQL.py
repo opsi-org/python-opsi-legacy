@@ -306,6 +306,28 @@ class MySQLBackend(SQLBackend):
 				'CREATE INDEX `index_software_config_nvsla` on `SOFTWARE_CONFIG` (`name`, `version`, `subVersion`, `language`, `architecture`);'
 			)
 
+	def _get_client_info(self) -> dict[str, int]:
+		with self._sql.session() as session:
+			res = self._sql.getSet(session, """
+				SELECT
+					SUM(NOT c.`active`) AS `inactive`,
+					SUM(c.`active` AND c.macos) AS macos,
+					SUM(c.`active` AND c.linux) AS linux,
+					SUM(c.`active` AND NOT c.macos AND NOT c.linux) AS windows
+				FROM (
+					SELECT
+						IFNULL(DATEDIFF(NOW(), h.lastSeen) < 365, 0) AS `active`,
+						(m.productId IS NOT NULL) AS macos,
+						(l.productId IS NOT NULL) AS linux
+					FROM HOST AS h
+					LEFT JOIN PRODUCT_ON_CLIENT AS m
+					ON m.clientId = h.hostId AND m.productId = "opsi-mac-client-agent" AND m.installationStatus = "installed"
+					LEFT JOIN PRODUCT_ON_CLIENT AS l
+					ON l.clientId = h.hostId AND l.productId = "opsi-linux-client-agent" AND l.installationStatus = "installed"
+				) AS c
+			""")
+			return {k: int(v) for k, v in res[0].items()}
+
 	# Overwriting product_getObjects to use JOIN for speedup
 	def product_getObjects(self, attributes: List = None, **filter) -> List[Product]:  # pylint: disable=redefined-builtin,dangerous-default-value
 		attributes = attributes or []

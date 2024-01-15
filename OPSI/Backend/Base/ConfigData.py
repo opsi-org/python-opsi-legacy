@@ -208,7 +208,7 @@ containing the localisation of the hardware audit.
 		if module not in self.backend_getLicensingInfo()["available_modules"]:
 			raise BackendModuleDisabledError(f"Module {module!r} not available")
 
-	def __get_client_info(self) -> dict[str, int]:
+	def _get_client_info(self) -> dict[str, int]:
 		logger.info("%s fetching client info", self)
 		now = datetime.now()
 		inactive = 0
@@ -232,15 +232,6 @@ containing the localisation of the hardware audit.
 				)
 			)
 		return {"macos": macos, "linux": linux, "windows": len(client_ids) - macos - linux, "inactive": inactive}
-
-	def _get_client_info(self) -> dict[str, int]:
-		try:
-			return self.__get_client_info()
-		except Exception as err:  # pylint: disable=broad-except
-			logger.warning("Failed to fetch client info: %s, retrying in once second", err)
-			# Retry once
-			time.sleep(1)
-			return self.__get_client_info()
 
 	@lru_cache(maxsize=10)
 	def _get_licensing_info(self, licenses: bool = False, legacy_modules: bool = False, dates: bool = False, ttl_hash: int = 0):
