@@ -5,7 +5,6 @@
 """
 MySQL-Backend
 """
-
 import re
 import time
 from typing import Any, Callable, Dict, List
@@ -47,19 +46,21 @@ def retry_on_deadlock(func: Callable) -> Callable:
 
 
 def retry_on_server_gone(func: Callable) -> Callable:
-	def wrapper(*args, **kwargs):
+	def wrapper(self: Any, session: scoped_session, query: str):
 		trynum = 0
 		while True:
 			trynum += 1
 			try:
-				return func(*args, **kwargs)
+				return func(self, session, query)
 			except Exception as err:  # pylint: disable=broad-except
-				if trynum >= 5:
+				if trynum >= 10:
 					raise
 				str_err_short = str(err)[:4096].lower()
 				if "server has gone away" not in str_err_short:
 					raise
-				time.sleep(0.1)
+				logger.info("Server has gone away attempt %d", trynum)
+				session.rollback()
+				time.sleep(0.5)
 	return wrapper
 
 
@@ -203,8 +204,16 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 		return f"<{self.__class__.__name__}(address={self._address})>"
 
 	@retry_on_server_gone
-	def getSet(self, session: Any, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
+	def getSet(self, session: scoped_session, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
 		return super().getSet(session, query)
+
+	@retry_on_server_gone
+	def getRows(self, session: scoped_session, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
+		return super().getRows(session, query)
+
+	@retry_on_server_gone
+	def getRow(self, session: scoped_session, query: str) -> List[Any]:  # pylint: disable=no-self-use
+		return super().getRow(session, query)
 
 	@retry_on_deadlock
 	def insert(self, session: scoped_session, table: str, valueHash: Any) -> Any:
