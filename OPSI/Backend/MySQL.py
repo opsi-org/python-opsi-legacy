@@ -19,7 +19,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from OPSI.Backend.Base import ConfigDataBackend
 from OPSI.Backend.SQL import SQL, SQLBackend, SQLBackendObjectModificationTracker
 from OPSI.Object import Product, ProductProperty
-from OPSI.Types import forceHostIdList, forceInt, forceUnicode
+from OPSI.Types import forceHostIdList, forceInt, forceUnicode, forceBool
 from OPSI.Util import compareVersions
 
 __all__ = (
@@ -29,7 +29,7 @@ __all__ = (
 logger = get_logger("opsi.general")
 
 
-def retry_on_deadlock(func: Callable) -> Callable:
+def retry_mysql(func: Callable) -> Callable:
 	def wrapper(*args, **kwargs):
 		trynum = 0
 		while True:
@@ -37,7 +37,10 @@ def retry_on_deadlock(func: Callable) -> Callable:
 			try:
 				return func(*args, **kwargs)
 			except Exception as err:  # pylint: disable=broad-except
-				if trynum >= 10 or "deadlock" not in str(err).lower():
+				if trynum >= 10:
+					raise
+				str_err_short = str(err).lower()[:4096]
+				if "server has gone away" not in str_err_short and "deadlock" not in str_err_short:
 					raise
 				time.sleep(0.1)
 	return wrapper
@@ -62,6 +65,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 		self._connectionPoolMaxOverflow = 10
 		self._connectionPoolTimeout = 30
 		self._connectionPoolRecyclingSeconds = -1
+		self._connectionPoolPrePing = True
 
 		# Parse arguments
 		for (option, value) in kwargs.items():
@@ -86,6 +90,8 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 			# self._connectionPoolTimeout = forceInt(value)
 			elif option == 'connectionpoolrecycling':
 				self._connectionPoolRecyclingSeconds = forceInt(value)
+			elif option == 'connectionpoolpreping':
+				self._connectionPoolPrePing = forceBool(value)
 
 		secret_filter.add_secrets(self._password)
 
@@ -141,7 +147,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 
 		self.engine = create_engine(
 			uri,
-			pool_pre_ping=True,  # auto reconnect
+			pool_pre_ping=self._connectionPoolPrePing,  # auto reconnect
 			encoding=self._databaseCharset,
 			pool_size=self._connectionPoolSize,
 			max_overflow=self._connectionPoolMaxOverflow,
@@ -179,15 +185,27 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 	def __repr__(self) -> str:
 		return f"<{self.__class__.__name__}(address={self._address})>"
 
-	@retry_on_deadlock
+	@retry_mysql
+	def getSet(self, session: Any, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
+		return super().getSet(session, query)
+
+	@retry_mysql
+	def getRows(self, session: Any, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
+		return super().getRows(session, query)
+
+	@retry_mysql
+	def getRow(self, session: Any, query: str) -> List[Any]:  # pylint: disable=no-self-use
+		return super().getRow(session, query)
+
+	@retry_mysql
 	def insert(self, session: scoped_session, table: str, valueHash: Any) -> Any:
 		return super().insert(session, table, valueHash)
 
-	@retry_on_deadlock
+	@retry_mysql
 	def update(self, session: scoped_session, table: str, where: str, valueHash: Any, updateWhereNone: bool = False) -> Any:  # pylint: disable=too-many-arguments
 		return super().update(session, table, where, valueHash, updateWhereNone)
 
-	@retry_on_deadlock
+	@retry_mysql
 	def delete(self, session: scoped_session, table: str, where: str) -> Any:
 		return super().delete(session, table, where)
 
