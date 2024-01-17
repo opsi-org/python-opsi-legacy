@@ -29,7 +29,7 @@ __all__ = (
 logger = get_logger("opsi.general")
 
 
-def retry_mysql(func: Callable) -> Callable:
+def retry_on_deadlock(func: Callable) -> Callable:
 	def wrapper(*args, **kwargs):
 		trynum = 0
 		while True:
@@ -40,7 +40,24 @@ def retry_mysql(func: Callable) -> Callable:
 				if trynum >= 10:
 					raise
 				str_err_short = str(err).lower()[:4096]
-				if "server has gone away" not in str_err_short and "deadlock" not in str_err_short:
+				if "deadlock" not in str_err_short:
+					raise
+				time.sleep(0.1)
+	return wrapper
+
+
+def retry_on_server_gone(func: Callable) -> Callable:
+	def wrapper(*args, **kwargs):
+		trynum = 0
+		while True:
+			trynum += 1
+			try:
+				return func(*args, **kwargs)
+			except Exception as err:  # pylint: disable=broad-except
+				if trynum >= 5:
+					raise
+				str_err_short = str(err).lower()[:4096]
+				if "server has gone away" not in str_err_short:
 					raise
 				time.sleep(0.1)
 	return wrapper
@@ -185,27 +202,27 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 	def __repr__(self) -> str:
 		return f"<{self.__class__.__name__}(address={self._address})>"
 
-	@retry_mysql
+	@retry_on_server_gone
 	def getSet(self, session: Any, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
 		return super().getSet(session, query)
 
-	@retry_mysql
+	@retry_on_server_gone
 	def getRows(self, session: Any, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
 		return super().getRows(session, query)
 
-	@retry_mysql
+	@retry_on_server_gone
 	def getRow(self, session: Any, query: str) -> List[Any]:  # pylint: disable=no-self-use
 		return super().getRow(session, query)
 
-	@retry_mysql
+	@retry_on_deadlock
 	def insert(self, session: scoped_session, table: str, valueHash: Any) -> Any:
 		return super().insert(session, table, valueHash)
 
-	@retry_mysql
+	@retry_on_deadlock
 	def update(self, session: scoped_session, table: str, where: str, valueHash: Any, updateWhereNone: bool = False) -> Any:  # pylint: disable=too-many-arguments
 		return super().update(session, table, where, valueHash, updateWhereNone)
 
-	@retry_mysql
+	@retry_on_deadlock
 	def delete(self, session: scoped_session, table: str, where: str) -> Any:
 		return super().delete(session, table, where)
 
