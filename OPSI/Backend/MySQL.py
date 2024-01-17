@@ -39,7 +39,7 @@ def retry_on_deadlock(func: Callable) -> Callable:
 			except Exception as err:  # pylint: disable=broad-except
 				if trynum >= 10:
 					raise
-				str_err_short = str(err).lower()[:4096]
+				str_err_short = str(err)[:4096].lower()
 				if "deadlock" not in str_err_short:
 					raise
 				time.sleep(0.1)
@@ -56,7 +56,7 @@ def retry_on_server_gone(func: Callable) -> Callable:
 			except Exception as err:  # pylint: disable=broad-except
 				if trynum >= 5:
 					raise
-				str_err_short = str(err).lower()[:4096]
+				str_err_short = str(err)[:4096].lower()
 				if "server has gone away" not in str_err_short:
 					raise
 				time.sleep(0.1)
@@ -205,14 +205,6 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 	@retry_on_server_gone
 	def getSet(self, session: Any, query: str) -> List[Dict[str, Any]]:  # pylint: disable=no-self-use
 		return super().getSet(session, query)
-
-	@retry_on_server_gone
-	def getRows(self, session: Any, query: str) -> List[List[Any]]:  # pylint: disable=no-self-use
-		return super().getRows(session, query)
-
-	@retry_on_server_gone
-	def getRow(self, session: Any, query: str) -> List[Any]:  # pylint: disable=no-self-use
-		return super().getRow(session, query)
 
 	@retry_on_deadlock
 	def insert(self, session: scoped_session, table: str, valueHash: Any) -> Any:
