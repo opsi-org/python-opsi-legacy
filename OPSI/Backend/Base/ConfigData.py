@@ -26,6 +26,7 @@ from OPSI.Exceptions import (
 	BackendMissingDataError,
 	BackendModuleDisabledError,
 	BackendReferentialIntegrityError,
+	BackendPermissionDeniedError
 )
 from OPSI.Object import (
 	AuditHardware,
@@ -165,6 +166,8 @@ containing the localisation of the hardware audit.
 				raise BackendBadValueError(f"Class {Class} has no attribute '{attribute}'")
 
 		for attribute in filter:
+			if attribute in ("opsiHostKey", "oneTimePassword"):
+				raise BackendPermissionDeniedError(f"Attribute '{attribute}' not available for filter")
 			if attribute not in possibleAttributes:
 				raise BackendBadValueError(f"Class {Class} has no attribute '{attribute}'")
 
