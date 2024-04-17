@@ -165,9 +165,14 @@ containing the localisation of the hardware audit.
 			if attribute not in possibleAttributes:
 				raise BackendBadValueError(f"Class {Class} has no attribute '{attribute}'")
 
-		for attribute in filter:
+		for attribute, value in filter.items():
 			if attribute in ("opsiHostKey", "oneTimePassword"):
-				raise BackendPermissionDeniedError(f"Attribute '{attribute}' not available for filter")
+				for val in forceUnicodeList(value):
+					if (
+						attribute == "opsiHostKey" and not re.search(r"^[a-f0-9]{32}$", val)
+						or attribute == "oneTimePassword" and ("?" in val or "*" in val)
+					):
+						raise BackendPermissionDeniedError(f"Attribute '{attribute}' not available for filter")
 			if attribute not in possibleAttributes:
 				raise BackendBadValueError(f"Class {Class} has no attribute '{attribute}'")
 
