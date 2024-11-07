@@ -9,6 +9,7 @@ opsi python library - Windows
 
 import difflib
 import os
+import platform
 import re
 import shutil
 import socket
@@ -16,10 +17,6 @@ import subprocess
 import sys
 import threading
 import time
-
-# Win32 imports
-# pyright: reportMissingImports=false
-from typing import Literal
 import winreg  # pylint: disable=import-error
 from ctypes import (
 	POINTER,
@@ -35,6 +32,10 @@ from ctypes import (
 )
 from datetime import datetime
 from functools import lru_cache
+
+# Win32 imports
+# pyright: reportMissingImports=false
+from typing import Literal
 
 import ntsecuritycon  # pylint: disable=import-error
 import pefile
@@ -779,12 +780,17 @@ def adjustPrivilege(priv, enable=1):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                             REGISTRY                                              -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-def getRegistryValue(key, subKey, valueName, view: Literal["32bit", "64bit"] | None = None):
+def getRegistryValue(
+	key, subKey, valueName, view: Literal["32bit", "64bit", "sysnative"] = "sysnative"
+):
 	"""
 	Get the value of a registry key.
 	A view can be specified to explicitly read from the 32bit or 64bit registry view.
 	If no view is specified, a WOW process will be redirected to the corresponding registration view.
 	"""
+	if view == "sysnative":
+		view = "64bit" if "64" in platform.architecture()[0] else "32bit"
+
 	flags = winreg.KEY_READ
 	if view == "32bit":
 		flags |= winreg.KEY_WOW64_32KEY
@@ -795,12 +801,21 @@ def getRegistryValue(key, subKey, valueName, view: Literal["32bit", "64bit"] | N
 		return winreg.QueryValueEx(hkey, valueName)[0]
 
 
-def setRegistryValue(key, subKey, valueName, value, view: Literal["32bit", "64bit"] | None = None):
+def setRegistryValue(
+	key,
+	subKey,
+	valueName,
+	value,
+	view: Literal["32bit", "64bit", "sysnative"] = "sysnative",
+):
 	"""
 	Set the value of a registry key.
 	A view can be specified to explicitly write to the 32bit or 64bit registry view.
-	If no view is specified, a WOW process will be redirected to the corresponding registration view.
+	IF sysnative is specified, the view will be choosen based on the architecture of the operating system.
 	"""
+	if view == "sysnative":
+		view = "64bit" if "64" in platform.architecture()[0] else "32bit"
+
 	flags = winreg.KEY_WRITE
 	if view == "32bit":
 		flags |= winreg.KEY_WOW64_32KEY
