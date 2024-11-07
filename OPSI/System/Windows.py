@@ -19,6 +19,7 @@ import time
 
 # Win32 imports
 # pyright: reportMissingImports=false
+from typing import Literal
 import winreg  # pylint: disable=import-error
 from ctypes import (
 	POINTER,
@@ -778,25 +779,35 @@ def adjustPrivilege(priv, enable=1):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                             REGISTRY                                              -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-def getRegistryValue(key, subKey, valueName, reflection=True):
-	hkey = winreg.OpenKey(key, subKey)
-	try:
-		if not reflection and (getArchitecture() == "x64"):
-			winreg.DisableReflectionKey(hkey)
+def getRegistryValue(key, subKey, valueName, view: Literal["32bit", "64bit"] | None = None):
+	"""
+	Get the value of a registry key.
+	A view can be specified to explicitly read from the 32bit or 64bit registry view.
+	If no view is specified, a WOW process will be redirected to the corresponding registration view.
+	"""
+	flags = winreg.KEY_READ
+	if view == "32bit":
+		flags |= winreg.KEY_WOW64_32KEY
+	elif view == "64bit":
+		flags |= winreg.KEY_WOW64_64KEY
 
-		(value, _type) = winreg.QueryValueEx(hkey, valueName)
-		if (getArchitecture() == "x64") and not reflection:
-			if winreg.QueryReflectionKey(hkey):
-				winreg.EnableReflectionKey(hkey)
-	finally:
-		winreg.CloseKey(hkey)
-	return value
+	with winreg.OpenKeyEx(key, subKey, 0, flags) as hkey:
+		return winreg.QueryValueEx(hkey, valueName)[0]
 
 
-def setRegistryValue(key, subKey, valueName, value):
-	winreg.CreateKey(key, subKey)
-	hkey = winreg.OpenKey(key, subKey, 0, winreg.KEY_WRITE)
-	try:
+def setRegistryValue(key, subKey, valueName, value, view: Literal["32bit", "64bit"] | None = None):
+	"""
+	Set the value of a registry key.
+	A view can be specified to explicitly write to the 32bit or 64bit registry view.
+	If no view is specified, a WOW process will be redirected to the corresponding registration view.
+	"""
+	flags = winreg.KEY_WRITE
+	if view == "32bit":
+		flags |= winreg.KEY_WOW64_32KEY
+	elif view == "64bit":
+		flags |= winreg.KEY_WOW64_64KEY
+
+	with winreg.CreateKeyEx(key, subKey, 0, flags) as hkey:
 		if isinstance(value, int):
 			winreg.SetValueEx(
 				hkey,
@@ -807,8 +818,6 @@ def setRegistryValue(key, subKey, valueName, value):
 			)
 		else:
 			winreg.SetValueEx(hkey, valueName, 0, winreg.REG_SZ, value)
-	finally:
-		winreg.CloseKey(hkey)
 
 
 def createRegistryKey(key, subKey):
