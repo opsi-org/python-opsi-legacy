@@ -35,7 +35,9 @@ def configureSamba(config=SMB_CONF):
 	if lines != newlines:
 		_writeConfig(newlines, config)
 		_reloadSamba()
-		logger.notice("Samba configuration finished. You may want to restart your Samba daemon.")
+		logger.notice(
+			"Samba configuration finished. You may want to restart your Samba daemon."
+		)
 
 
 def _readConfig(config):
@@ -77,7 +79,9 @@ def _processConfig(lines):  # pylint: disable=too-many-locals,too-many-branches,
 		newlines.append(line)
 
 	if optPcbinShareFound:
-		logger.warning("Share opt_pcbin configuration found. You should use opsi_depot_rw instead, if you need a writeable depot-Share.")
+		logger.warning(
+			"Share opt_pcbin configuration found. You should use opsi_depot_rw instead, if you need a writeable depot-Share."
+		)
 
 	if not depotShareFound:
 		logger.notice("   Adding share [opsi_depot]")
@@ -92,7 +96,9 @@ def _processConfig(lines):  # pylint: disable=too-many-locals,too-many-branches,
 			newlines.append("   acl allow execute always = true\n")
 		newlines.append("\n")
 	elif samba4:
-		logger.notice("   Share opsi_depot found and samba 4 is detected. Setting executable fix on opsi_depot share")
+		logger.notice(
+			"   Share opsi_depot found and samba 4 is detected. Setting executable fix on opsi_depot share"
+		)
 		tmp_lines = []
 		in_opsi_depot_section = False
 		for i, line in enumerate(newlines):

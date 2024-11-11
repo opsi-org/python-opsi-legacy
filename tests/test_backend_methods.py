@@ -25,8 +25,8 @@ def test_getting_signature_for_method_with_one_positional_argument():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert sig == '(bar)'
-	assert args == 'bar=bar'
+	assert sig == "(bar)"
+	assert args == "bar=bar"
 
 
 def test_getting_signature_for_method_with_multiple_positional_arguments():
@@ -35,8 +35,8 @@ def test_getting_signature_for_method_with_multiple_positional_arguments():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert sig == '(bar, baz)'
-	assert args == 'bar=bar, baz=baz'
+	assert sig == "(bar, baz)"
+	assert args == "bar=bar, baz=baz"
 
 
 def test_getting_signature_for_method_with_keyword_argument_only():
@@ -45,8 +45,8 @@ def test_getting_signature_for_method_with_keyword_argument_only():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert '(bar=None)' == sig
-	assert 'bar=bar' == args
+	assert "(bar=None)" == sig
+	assert "bar=bar" == args
 
 
 def test_getting_signature_for_method_with_multiple_keyword_arguments_only():
@@ -55,8 +55,8 @@ def test_getting_signature_for_method_with_multiple_keyword_arguments_only():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert sig == '(bar=None, baz=None)'
-	assert args == 'bar=bar, baz=baz'
+	assert sig == "(bar=None, baz=None)"
+	assert args == "bar=bar, baz=baz"
 
 
 def test_getting_signature_for_method_with_mixed_arguments():
@@ -65,8 +65,8 @@ def test_getting_signature_for_method_with_mixed_arguments():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert sig == '(bar, baz=None)'
-	assert args == 'bar=bar, baz=baz'
+	assert sig == "(bar, baz=None)"
+	assert args == "bar=bar, baz=baz"
 
 
 def test_self_as_first_argument_is_ignored():
@@ -75,18 +75,18 @@ def test_self_as_first_argument_is_ignored():
 
 	sig, args = get_function_signature_and_args(foo)
 
-	assert sig == '(bar=None)'
-	assert args == 'bar=bar'
+	assert sig == "(bar=None)"
+	assert args == "bar=bar"
 
 
 def test_argument_with_string_default():
-	def foo(bar='baz'):
+	def foo(bar="baz"):
 		pass
 
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(bar='baz')"
-	assert args == 'bar=bar'
+	assert args == "bar=bar"
 
 
 def test_argument_with_variable_argument_count():
@@ -96,7 +96,7 @@ def test_argument_with_variable_argument_count():
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(*bar)"
-	assert args == '*bar'
+	assert args == "*bar"
 
 
 def test_argument_with_positional_argument_and_variable_argument_count():
@@ -106,7 +106,7 @@ def test_argument_with_positional_argument_and_variable_argument_count():
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(bar, *baz)"
-	assert args == 'bar=bar, *baz'
+	assert args == "bar=bar, *baz"
 
 
 def test_variable_keyword_arguments():
@@ -116,7 +116,7 @@ def test_variable_keyword_arguments():
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(**bar)"
-	assert args == '**bar'
+	assert args == "**bar"
 
 
 def test_method_with_all_types_of_arguments():
@@ -126,7 +126,8 @@ def test_method_with_all_types_of_arguments():
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(ironman, blackWidow=True, *hulk, **deadpool)"
-	assert args == 'ironman=ironman, blackWidow=blackWidow, *hulk, **deadpool'
+	assert args == "ironman=ironman, blackWidow=blackWidow, *hulk, **deadpool"
+
 
 def test_method_with_all_types_of_arguments_and_annotations():
 	def foo(self, ironman, blackWidow: bool = True, *hulk, **deadpool) -> int:
@@ -135,4 +136,4 @@ def test_method_with_all_types_of_arguments_and_annotations():
 	sig, args = get_function_signature_and_args(foo)
 
 	assert sig == "(ironman, blackWidow: bool = True, *hulk, **deadpool) -> int"
-	assert args == 'ironman=ironman, blackWidow=blackWidow, *hulk, **deadpool'
+	assert args == "ironman=ironman, blackWidow=blackWidow, *hulk, **deadpool"

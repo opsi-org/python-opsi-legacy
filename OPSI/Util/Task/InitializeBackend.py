@@ -54,7 +54,9 @@ def initializeBackends(ipAddress=None, backendManagerConfig=None):
 
 		logger.info("Trying to find a Configserver...")
 		configServer = backend.host_getObjects(type="OpsiConfigserver")  # pylint: disable=no-member
-		if not configServer and not backend.host_getIdents(type="OpsiConfigserver", id=fqdn):  # pylint: disable=no-member
+		if not configServer and not backend.host_getIdents(
+			type="OpsiConfigserver", id=fqdn
+		):  # pylint: disable=no-member
 			depot = backend.host_getObjects(type="OpsiDepotserver", id=fqdn)  # pylint: disable=no-member
 			if not depot:
 				logger.notice("Creating config server '%s'", fqdn)

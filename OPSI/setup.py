@@ -9,7 +9,6 @@ setup tasks
 import grp
 import pwd
 import subprocess
-from typing import Dict
 
 from opsicommon.logging import get_logger
 
@@ -32,41 +31,51 @@ def create_group(groupname: str, system: bool = False) -> None:
 		cmd.append("--system")
 	cmd.append(groupname)
 	logger.info("Running command: %s", cmd)
-	subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment())
+	subprocess.check_output(
+		cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment()
+	)
 
 
-def create_user(username: str, primary_groupname: str, home: str, shell: str, system: bool = False) -> None:
+def create_user(
+	username: str, primary_groupname: str, home: str, shell: str, system: bool = False
+) -> None:
 	logger.notice("Creating user: %s", username)
 	cmd = ["useradd", "-g", primary_groupname, "-d", home, "-s", shell]
 	if system:
 		cmd.append("--system")
 	cmd.append(username)
 	logger.info("Running command: %s", cmd)
-	subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment())
+	subprocess.check_output(
+		cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment()
+	)
 
 
 def add_user_to_group(username: str, groupname: str) -> None:
 	logger.notice("Adding user '%s' to group '%s'", username, groupname)
 	cmd = ["usermod", "-a", "-G", groupname, username]
 	logger.info("Running command: %s", cmd)
-	subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment())
+	subprocess.check_output(
+		cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment()
+	)
 
 
 def set_primary_group(username: str, groupname: str) -> None:
 	logger.notice("Setting primary group of user '%s' to '%s'", username, groupname)
 	cmd = ["usermod", "-g", groupname, username]
 	logger.info("Running command: %s", cmd)
-	subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment())
+	subprocess.check_output(
+		cmd, stderr=subprocess.STDOUT, env=get_subprocess_environment()
+	)
 
 
-def get_groups() -> Dict[str, grp.struct_group]:
+def get_groups() -> dict[str, grp.struct_group]:
 	groups = {}
 	for group in grp.getgrall():
 		groups[group.gr_name] = group
 	return groups
 
 
-def get_users() -> Dict[str, pwd.struct_passwd]:
+def get_users() -> dict[str, pwd.struct_passwd]:
 	users = {}
 	for user in pwd.getpwall():
 		users[user.pw_name] = user

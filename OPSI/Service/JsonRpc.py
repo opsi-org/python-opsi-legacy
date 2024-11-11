@@ -91,7 +91,7 @@ class JsonRpc:  # pylint: disable=too-many-instance-attributes
 					if not isinstance(kwargs, dict):
 						raise TypeError(f"kwargs param is not a dict: {params[-1]}")
 
-					for (key, value) in kwargs.items():
+					for key, value in kwargs.items():
 						keywords[str(key)] = deserialize(value)
 
 				del parameterCount
@@ -138,7 +138,10 @@ class JsonRpc:  # pylint: disable=too-many-instance-attributes
 			response["method"] = self.method
 			if self.exception:
 				response["type"] = "exception"
-				response["message"] = {"class": self.exception.__class__.__name__, "message": forceUnicode(self.exception)}
+				response["message"] = {
+					"class": self.exception.__class__.__name__,
+					"message": forceUnicode(self.exception),
+				}
 				response["where"] = self.traceback
 			else:
 				response["type"] = "rpc"
@@ -161,7 +164,10 @@ class JsonRpc:  # pylint: disable=too-many-instance-attributes
 						"data": {"class": self.exception.__class__.__name__},
 					}
 				else:
-					response["error"] = {"class": self.exception.__class__.__name__, "message": forceUnicode(self.exception)}
+					response["error"] = {
+						"class": self.exception.__class__.__name__,
+						"message": forceUnicode(self.exception),
+					}
 
 				if self.rpcVersion != "2.0":
 					response["result"] = None

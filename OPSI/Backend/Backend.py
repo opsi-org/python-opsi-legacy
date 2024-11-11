@@ -23,10 +23,15 @@ from .Base import (
 )
 
 __all__ = (
-	'describeInterface', 'temporaryBackendOptions',
-	'DeferredCall', 'Backend', 'ExtendedBackend', 'ConfigDataBackend',
-	'ExtendedConfigDataBackend',
-	'ModificationTrackingBackend', 'BackendModificationListener'
+	"describeInterface",
+	"temporaryBackendOptions",
+	"DeferredCall",
+	"Backend",
+	"ExtendedBackend",
+	"ConfigDataBackend",
+	"ExtendedConfigDataBackend",
+	"ModificationTrackingBackend",
+	"BackendModificationListener",
 )
 
 

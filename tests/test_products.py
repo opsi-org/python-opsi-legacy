@@ -13,9 +13,19 @@ import pytest
 from OPSI.Backend.Backend import temporaryBackendOptions
 from OPSI.Exceptions import BackendBadValueError
 from OPSI.Object import (
-	BoolProductProperty, LocalbootProduct, NetbootProduct, OpsiClient,
-	OpsiDepotserver, Product, ProductDependency, ProductOnClient,
-	ProductOnDepot, ProductPropertyState, UnicodeConfig, UnicodeProductProperty)
+	BoolProductProperty,
+	LocalbootProduct,
+	NetbootProduct,
+	OpsiClient,
+	OpsiDepotserver,
+	Product,
+	ProductDependency,
+	ProductOnClient,
+	ProductOnDepot,
+	ProductPropertyState,
+	UnicodeConfig,
+	UnicodeProductProperty,
+)
 from OPSI.Types import forceHostId
 from OPSI.Util import getfqdn
 
@@ -28,9 +38,9 @@ def getProducts():
 
 def getNetbootProduct():
 	netbootProduct = NetbootProduct(
-		id='product1',
-		name=u'Product 1',
-		productVersion='1.0',
+		id="product1",
+		name="Product 1",
+		productVersion="1.0",
 		packageVersion=1,
 		licenseRequired=True,
 		setupScript="setup.py",
@@ -38,13 +48,12 @@ def getNetbootProduct():
 		updateScript="update.py",
 		alwaysScript=None,
 		onceScript=None,
-		priority='100',
+		priority="100",
 		description="Nothing",
-		advice=u"No advice",
+		advice="No advice",
 		productClassIds=[],
-		windowsSoftwareIds=[
-			'{be21bd07-eb19-44e4-893a-fa4e44e5f806}', 'product1'],
-		pxeConfigTemplate='special'
+		windowsSoftwareIds=["{be21bd07-eb19-44e4-893a-fa4e44e5f806}", "product1"],
+		pxeConfigTemplate="special",
 	)
 
 	return netbootProduct
@@ -52,13 +61,13 @@ def getNetbootProduct():
 
 def getLocalbootProducts():
 	product2 = LocalbootProduct(
-		id='product2',
-		name=u'Product 2',
-		productVersion='2.0',
-		packageVersion='test',
+		id="product2",
+		name="Product 2",
+		productVersion="2.0",
+		packageVersion="test",
 		licenseRequired=False,
 		setupScript="setup.ins",
-		uninstallScript=u"uninstall.ins",
+		uninstallScript="uninstall.ins",
 		updateScript="update.ins",
 		alwaysScript=None,
 		onceScript=None,
@@ -66,12 +75,12 @@ def getLocalbootProducts():
 		description=None,
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=['{98723-7898adf2-287aab}', 'xxxxxxxx']
+		windowsSoftwareIds=["{98723-7898adf2-287aab}", "xxxxxxxx"],
 	)
 
 	product3 = LocalbootProduct(
-		id='product3',
-		name=u'Product 3',
+		id="product3",
+		name="Product 3",
 		productVersion=3,
 		packageVersion=1,
 		licenseRequired=True,
@@ -84,12 +93,12 @@ def getLocalbootProducts():
 		description="---",
 		advice="---",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product4 = LocalbootProduct(
-		id='product4',
-		name=u'Product 4',
+		id="product4",
+		name="Product 4",
 		productVersion="3.0",
 		packageVersion=24,
 		licenseRequired=False,
@@ -102,12 +111,12 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product5 = LocalbootProduct(
-		id='product4',
-		name=u'Product 4',
+		id="product4",
+		name="Product 4",
 		productVersion="3.0",
 		packageVersion=25,
 		licenseRequired=False,
@@ -120,12 +129,12 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product6 = LocalbootProduct(
-		id='product6',
-		name=u'Product 6',
+		id="product6",
+		name="Product 6",
 		productVersion="1.0",
 		packageVersion=1,
 		licenseRequired=False,
@@ -138,12 +147,12 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product7 = LocalbootProduct(
-		id='product7',
-		name=u'Product 7',
+		id="product7",
+		name="Product 7",
 		productVersion="1.0",
 		packageVersion=1,
 		licenseRequired=False,
@@ -156,12 +165,12 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product8 = LocalbootProduct(
-		id='product8',
-		name=u'Product 8',
+		id="product8",
+		name="Product 8",
 		productVersion="1.0",
 		packageVersion=2,
 		licenseRequired=False,
@@ -175,14 +184,16 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
 	product9 = LocalbootProduct(
-		id='product9',
-		name=(u'This is a very long name with 128 characters to test the '
-			  u'creation of long product names that should work now but '
-			  u'were limited b4'),
+		id="product9",
+		name=(
+			"This is a very long name with 128 characters to test the "
+			"creation of long product names that should work now but "
+			"were limited b4"
+		),
 		productVersion="1.0",
 		packageVersion=2,
 		licenseRequired=False,
@@ -196,11 +207,19 @@ def getLocalbootProducts():
 		description="",
 		advice="",
 		productClassIds=[],
-		windowsSoftwareIds=[]
+		windowsSoftwareIds=[],
 	)
 
-	return (product2, product3, product4, product5, product6, product7,
-			product8, product9)
+	return (
+		product2,
+		product3,
+		product4,
+		product5,
+		product6,
+		product7,
+		product8,
+		product9,
+	)
 
 
 def getProductDepdencies(products):
@@ -209,55 +228,60 @@ def getProductDepdencies(products):
 		productId=product2.id,
 		productVersion=product2.productVersion,
 		packageVersion=product2.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product3.id,
 		requiredProductVersion=product3.productVersion,
 		requiredPackageVersion=product3.packageVersion,
-		requiredAction='setup',
+		requiredAction="setup",
 		requiredInstallationStatus=None,
-		requirementType='before'
+		requirementType="before",
 	)
 
 	productDependency2 = ProductDependency(
 		productId=product2.id,
 		productVersion=product2.productVersion,
 		packageVersion=product2.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product4.id,
 		requiredProductVersion=None,
 		requiredPackageVersion=None,
 		requiredAction=None,
-		requiredInstallationStatus='installed',
-		requirementType='after'
+		requiredInstallationStatus="installed",
+		requirementType="after",
 	)
 
 	productDependency3 = ProductDependency(
 		productId=product6.id,
 		productVersion=product6.productVersion,
 		packageVersion=product6.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product7.id,
 		requiredProductVersion=product7.productVersion,
 		requiredPackageVersion=product7.packageVersion,
 		requiredAction=None,
-		requiredInstallationStatus='installed',
-		requirementType='after'
+		requiredInstallationStatus="installed",
+		requirementType="after",
 	)
 
 	productDependency4 = ProductDependency(
 		productId=product7.id,
 		productVersion=product7.productVersion,
 		packageVersion=product7.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product9.id,
 		requiredProductVersion=None,
 		requiredPackageVersion=None,
 		requiredAction=None,
-		requiredInstallationStatus='installed',
-		requirementType='after'
+		requiredInstallationStatus="installed",
+		requirementType="after",
 	)
 
-	return (productDependency1, productDependency2, productDependency3, productDependency4)
+	return (
+		productDependency1,
+		productDependency2,
+		productDependency3,
+		productDependency4,
+	)
 
 
 def getProductProperties(products):
@@ -268,11 +292,11 @@ def getProductProperties(products):
 		productVersion=product1.productVersion,
 		packageVersion=product1.packageVersion,
 		propertyId="productProperty1",
-		description='Test product property (unicode)',
-		possibleValues=['unicode1', 'unicode2', 'unicode3'],
-		defaultValues=['unicode1', 'unicode3'],
+		description="Test product property (unicode)",
+		possibleValues=["unicode1", "unicode2", "unicode3"],
+		defaultValues=["unicode1", "unicode3"],
 		editable=True,
-		multiValue=True
+		multiValue=True,
 	)
 
 	productProperty2 = BoolProductProperty(
@@ -280,36 +304,46 @@ def getProductProperties(products):
 		productVersion=product1.productVersion,
 		packageVersion=product1.packageVersion,
 		propertyId="productProperty2",
-		description='Test product property 2 (bool)',
-		defaultValues=True
+		description="Test product property 2 (bool)",
+		defaultValues=True,
 	)
 
 	productProperty3 = BoolProductProperty(
 		productId=product3.id,
 		productVersion=product3.productVersion,
 		packageVersion=product3.packageVersion,
-		propertyId=u"productProperty3",
-		description=u'Test product property 3 (bool)',
-		defaultValues=False
+		propertyId="productProperty3",
+		description="Test product property 3 (bool)",
+		defaultValues=False,
 	)
 
 	productProperty4 = UnicodeProductProperty(
 		productId=product1.id,
 		productVersion=product1.productVersion,
 		packageVersion=product1.packageVersion,
-		propertyId=u"i386_dir",
-		description=u'i386 dir to use as installation source',
+		propertyId="i386_dir",
+		description="i386 dir to use as installation source",
 		possibleValues=["i386"],
 		defaultValues=["i386"],
 		editable=True,
-		multiValue=False
+		multiValue=False,
 	)
 
 	return productProperty1, productProperty2, productProperty3, productProperty4
 
 
 def getProductsOnDepot(products, configServer, depotServer):
-	product1, product2, product3, _, product5, product6, product7, product8, product9 = products[:9]
+	(
+		product1,
+		product2,
+		product3,
+		_,
+		product5,
+		product6,
+		product7,
+		product8,
+		product9,
+	) = products[:9]
 	depotserver1, depotserver2 = depotServer[:2]
 
 	productOnDepot1 = ProductOnDepot(
@@ -318,7 +352,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product1.getProductVersion(),
 		packageVersion=product1.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot2 = ProductOnDepot(
@@ -327,7 +361,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product2.getProductVersion(),
 		packageVersion=product2.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot3 = ProductOnDepot(
@@ -336,7 +370,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product3.getProductVersion(),
 		packageVersion=product3.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot4 = ProductOnDepot(
@@ -345,7 +379,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product3.getProductVersion(),
 		packageVersion=product3.getPackageVersion(),
 		depotId=configServer.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot5 = ProductOnDepot(
@@ -354,7 +388,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product5.getProductVersion(),
 		packageVersion=product5.getPackageVersion(),
 		depotId=configServer.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot6 = ProductOnDepot(
@@ -363,7 +397,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product6.getProductVersion(),
 		packageVersion=product6.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot7 = ProductOnDepot(
@@ -372,7 +406,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product6.getProductVersion(),
 		packageVersion=product6.getPackageVersion(),
 		depotId=depotserver2.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot8 = ProductOnDepot(
@@ -381,7 +415,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product7.getProductVersion(),
 		packageVersion=product7.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot9 = ProductOnDepot(
@@ -390,7 +424,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product8.getProductVersion(),
 		packageVersion=product8.getPackageVersion(),
 		depotId=depotserver2.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot10 = ProductOnDepot(
@@ -399,7 +433,7 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product9.getProductVersion(),
 		packageVersion=product9.getPackageVersion(),
 		depotId=depotserver1.getId(),
-		locked=False
+		locked=False,
 	)
 
 	productOnDepot11 = ProductOnDepot(
@@ -408,12 +442,22 @@ def getProductsOnDepot(products, configServer, depotServer):
 		productVersion=product9.getProductVersion(),
 		packageVersion=product9.getPackageVersion(),
 		depotId=depotserver2.getId(),
-		locked=False
+		locked=False,
 	)
 
-	return (productOnDepot1, productOnDepot2, productOnDepot3, productOnDepot4,
-			productOnDepot5, productOnDepot6, productOnDepot7, productOnDepot8,
-			productOnDepot9, productOnDepot10, productOnDepot11)
+	return (
+		productOnDepot1,
+		productOnDepot2,
+		productOnDepot3,
+		productOnDepot4,
+		productOnDepot5,
+		productOnDepot6,
+		productOnDepot7,
+		productOnDepot8,
+		productOnDepot9,
+		productOnDepot10,
+		productOnDepot11,
+	)
 
 
 def getProductsOnClients(products, clients):
@@ -424,48 +468,48 @@ def getProductsOnClients(products, clients):
 		productId=product1.getId(),
 		productType=product1.getType(),
 		clientId=client1.getId(),
-		installationStatus='installed',
-		actionRequest='setup',
-		actionProgress='',
+		installationStatus="installed",
+		actionRequest="setup",
+		actionProgress="",
 		productVersion=product1.getProductVersion(),
 		packageVersion=product1.getPackageVersion(),
-		modificationTime='2009-07-01 12:00:00'
+		modificationTime="2009-07-01 12:00:00",
 	)
 
 	productOnClient2 = ProductOnClient(
 		productId=product2.getId(),
 		productType=product2.getType(),
 		clientId=client1.getId(),
-		installationStatus='installed',
-		actionRequest='uninstall',
-		actionProgress='',
+		installationStatus="installed",
+		actionRequest="uninstall",
+		actionProgress="",
 		productVersion=product2.getProductVersion(),
-		packageVersion=product2.getPackageVersion()
+		packageVersion=product2.getPackageVersion(),
 	)
 
 	productOnClient3 = ProductOnClient(
 		productId=product2.getId(),
 		productType=product2.getType(),
 		clientId=client3.getId(),
-		installationStatus='installed',
-		actionRequest='setup',
-		actionProgress='running',
+		installationStatus="installed",
+		actionRequest="setup",
+		actionProgress="running",
 		productVersion=product2.getProductVersion(),
-		packageVersion=product2.getPackageVersion()
+		packageVersion=product2.getPackageVersion(),
 	)
 
 	productOnClient4 = ProductOnClient(
 		productId=product1.getId(),
 		productType=product1.getType(),
 		clientId=client3.getId(),
-		targetConfiguration='installed',
-		installationStatus='installed',
-		actionRequest='none',
-		lastAction='setup',
-		actionProgress='',
-		actionResult='successful',
+		targetConfiguration="installed",
+		installationStatus="installed",
+		actionRequest="none",
+		lastAction="setup",
+		actionProgress="",
+		actionResult="successful",
 		productVersion=product1.getProductVersion(),
-		packageVersion=product1.getPackageVersion()
+		packageVersion=product1.getPackageVersion(),
 	)
 
 	return productOnClient1, productOnClient2, productOnClient3, productOnClient4
@@ -480,54 +524,63 @@ def getProductPropertyStates(productProperties, depotServer, clients):
 		productId=productProperty1.getProductId(),
 		propertyId=productProperty1.getPropertyId(),
 		objectId=depotserver1.getId(),
-		values='unicode-depot-default'
+		values="unicode-depot-default",
 	)
 
 	productPropertyState2 = ProductPropertyState(
 		productId=productProperty2.getProductId(),
 		propertyId=productProperty2.getPropertyId(),
 		objectId=depotserver1.getId(),
-		values=[True]
+		values=[True],
 	)
 
 	productPropertyState3 = ProductPropertyState(
 		productId=productProperty2.getProductId(),
 		propertyId=productProperty2.getPropertyId(),
 		objectId=depotserver2.getId(),
-		values=False
+		values=False,
 	)
 
 	productPropertyState4 = ProductPropertyState(
 		productId=productProperty1.getProductId(),
 		propertyId=productProperty1.getPropertyId(),
 		objectId=client1.getId(),
-		values='unicode1'
+		values="unicode1",
 	)
 
 	productPropertyState5 = ProductPropertyState(
 		productId=productProperty2.getProductId(),
 		propertyId=productProperty2.getPropertyId(),
 		objectId=client1.getId(),
-		values=[False]
+		values=[False],
 	)
 
 	productPropertyState6 = ProductPropertyState(
 		productId=productProperty2.getProductId(),
 		propertyId=productProperty2.getPropertyId(),
 		objectId=client2.getId(),
-		values=True
+		values=True,
 	)
 
-	return (productPropertyState1, productPropertyState2, productPropertyState3,
-			productPropertyState4, productPropertyState5, productPropertyState6)
+	return (
+		productPropertyState1,
+		productPropertyState2,
+		productPropertyState3,
+		productPropertyState4,
+		productPropertyState5,
+		productPropertyState6,
+	)
 
 
-@pytest.mark.parametrize("prodFilter, prodClass", (
-	(None, object),
-	("Product", Product),
-	("LocalbootProduct", LocalbootProduct),
-	("NetbootProduct", NetbootProduct)
-))
+@pytest.mark.parametrize(
+	"prodFilter, prodClass",
+	(
+		(None, object),
+		("Product", Product),
+		("LocalbootProduct", LocalbootProduct),
+		("NetbootProduct", NetbootProduct),
+	),
+)
 def testGetProductsByType(extendedConfigDataBackend, prodFilter, prodClass):
 	origProds = getProducts()
 	extendedConfigDataBackend.product_createObjects(origProds)
@@ -536,7 +589,7 @@ def testGetProductsByType(extendedConfigDataBackend, prodFilter, prodClass):
 
 	pFilter = {}
 	if prodFilter:
-		pFilter['type'] = prodFilter
+		pFilter["type"] = prodFilter
 
 	products = extendedConfigDataBackend.product_getObjects(**pFilter)
 	assert len(products) == len(expectedProducts)
@@ -545,7 +598,11 @@ def testGetProductsByType(extendedConfigDataBackend, prodFilter, prodClass):
 		assert product in expectedProducts
 
 		for p in expectedProducts:
-			if (product.id == p.id) and (product.productVersion == p.productVersion) and (product.packageVersion == p.packageVersion):
+			if (
+				(product.id == p.id)
+				and (product.productVersion == p.productVersion)
+				and (product.packageVersion == p.packageVersion)
+			):
 				assert product == p
 
 
@@ -555,7 +612,9 @@ def test_verifyProducts(extendedConfigDataBackend):
 	origProds = [netbootProducts] + list(localProducts)
 	extendedConfigDataBackend.product_createObjects(origProds)
 
-	products = extendedConfigDataBackend.product_getObjects(type=localProducts[0].getType())
+	products = extendedConfigDataBackend.product_getObjects(
+		type=localProducts[0].getType()
+	)
 	assert len(products) == len(localProducts)
 
 	productIds = set(product.getId() for product in products)
@@ -564,11 +623,15 @@ def test_verifyProducts(extendedConfigDataBackend):
 
 	for product in products:
 		for p in origProds:
-			if product.id == p.id and product.productVersion == p.productVersion and product.packageVersion == p.packageVersion:
+			if (
+				product.id == p.id
+				and product.productVersion == p.productVersion
+				and product.packageVersion == p.packageVersion
+			):
 				product = product.toHash()
 				p = p.toHash()
 				for attribute, value in p.items():
-					if attribute == 'productClassIds':
+					if attribute == "productClassIds":
 						continue
 
 					if value is not None:
@@ -585,13 +648,15 @@ def testUpdatingProduct(extendedConfigDataBackend):
 	extendedConfigDataBackend.product_createObjects(origProds)
 
 	product2 = origProds[1]
-	product2.setName(u'Product 2 updated')
+	product2.setName("Product 2 updated")
 	product2.setPriority(60)
 
 	products = extendedConfigDataBackend.product_updateObject(product2)
-	products = extendedConfigDataBackend.product_getObjects(attributes=['name', 'priority'], id=product2.id)
+	products = extendedConfigDataBackend.product_getObjects(
+		attributes=["name", "priority"], id=product2.id
+	)
 	assert len(products) == 1
-	assert products[0].getName() == u'Product 2 updated'
+	assert products[0].getName() == "Product 2 updated"
 	assert products[0].getPriority() == 60
 
 
@@ -600,16 +665,13 @@ def testLongProductName(extendedConfigDataBackend):
 	Can the backend handle product names of 128 characters length?
 	"""
 	product = LocalbootProduct(
-		id='new_prod',
-		name='New Product for Tests',
-		productVersion=1,
-		packageVersion=1
+		id="new_prod", name="New Product for Tests", productVersion=1, packageVersion=1
 	)
 
 	newName = (
-		u'This is a very long name with 128 characters to test the '
-		u'creation of long product names that should work now but '
-		u'were limited b4'
+		"This is a very long name with 128 characters to test the "
+		"creation of long product names that should work now but "
+		"were limited b4"
 	)
 	assert len(newName) == 128
 
@@ -624,30 +686,27 @@ def testLongProductName(extendedConfigDataBackend):
 	assert newName == backendProduct.name
 
 
-@pytest.fixture(
-	scope='session',
-	params=[False, True],
-	ids=['ascii', 'unicode'])
+@pytest.fixture(scope="session", params=[False, True], ids=["ascii", "unicode"])
 def changelog(request):
 	if request.param:
 		# unicode
-		changelog = u'''opsi-winst/opsi-script (4.11.5.13) stable; urgency=low
+		changelog = """opsi-winst/opsi-script (4.11.5.13) stable; urgency=low
 
 * do not try to run non existing external sub sections
 * Jetzt ausf\xfchren oder sp\xe4ter
 
 -- Detlef Oertel <d.oertel@uib.de>  Thu,  21 Aug 2015:15:00:00 +0200
 
-'''
+"""
 	else:
 		# ASCII
-		changelog = '''opsi-winst/opsi-script (4.11.5.13) stable; urgency=low
+		changelog = """opsi-winst/opsi-script (4.11.5.13) stable; urgency=low
 
 * do not try to run non existing external sub sections
 
 -- Detlef Oertel <d.oertel@uib.de>  Thu,  21 Aug 2015:15:00:00 +0200
 
-'''
+"""
 
 	changelog = changelog * 555
 
@@ -657,7 +716,7 @@ def changelog(request):
 
 
 def testLongChangelogOnProductCanBeHandled(extendedConfigDataBackend, changelog):
-	product = LocalbootProduct(id='freiheit', productVersion=1, packageVersion=1)
+	product = LocalbootProduct(id="freiheit", productVersion=1, packageVersion=1)
 	product.setChangelog(changelog)
 	assert product.getChangelog() == changelog
 
@@ -682,15 +741,18 @@ def testGettingProductProperties(extendedConfigDataBackend):
 	assert len(productProperties) == len(prodPropertiesOrig)
 
 	matching = 0
-	for productProperty, originalProperty in iterproduct(productProperties, prodPropertiesOrig):
-		if (productProperty.productId == originalProperty.productId and
-			productProperty.propertyId == originalProperty.propertyId and
-			productProperty.productVersion == originalProperty.productVersion and
-			productProperty.packageVersion == originalProperty.packageVersion):
-
+	for productProperty, originalProperty in iterproduct(
+		productProperties, prodPropertiesOrig
+	):
+		if (
+			productProperty.productId == originalProperty.productId
+			and productProperty.propertyId == originalProperty.propertyId
+			and productProperty.productVersion == originalProperty.productVersion
+			and productProperty.packageVersion == originalProperty.packageVersion
+		):
 			productProperty = productProperty.toHash()
 			originalProperty = originalProperty.toHash()
-			for (attribute, value) in originalProperty.items():
+			for attribute, value in originalProperty.items():
 				if value is not None:
 					if isinstance(value, list):
 						for v in value:
@@ -710,12 +772,14 @@ def testUpdatingProductProperty(extendedConfigDataBackend):
 	extendedConfigDataBackend.productProperty_createObjects(prodPropertiesOrig)
 
 	productProperty2 = prodPropertiesOrig[1]
-	productProperty2.setDescription(u'updatedfortest')
+	productProperty2.setDescription("updatedfortest")
 	extendedConfigDataBackend.productProperty_updateObject(productProperty2)
-	productProperties = extendedConfigDataBackend.productProperty_getObjects(attributes=[], description=u'updatedfortest')
+	productProperties = extendedConfigDataBackend.productProperty_getObjects(
+		attributes=[], description="updatedfortest"
+	)
 
 	assert len(productProperties) == 1
-	assert productProperties[0].getDescription() == u'updatedfortest'
+	assert productProperties[0].getDescription() == "updatedfortest"
 
 
 def testDeletingProductProperty(extendedConfigDataBackend):
@@ -739,22 +803,30 @@ def testCreateDuplicateProductProperies(extendedConfigDataBackend):
 
 	productProperty1 = prodPropertiesOrig[0]
 	productProperty4 = prodPropertiesOrig[3]
-	extendedConfigDataBackend.productProperty_createObjects([productProperty1,
-															productProperty4,
-															productProperty4,
-															productProperty4,
-															productProperty4])
+	extendedConfigDataBackend.productProperty_createObjects(
+		[
+			productProperty1,
+			productProperty4,
+			productProperty4,
+			productProperty4,
+			productProperty4,
+		]
+	)
 	productProperties = extendedConfigDataBackend.productProperty_getObjects()
 	assert len(productProperties) == len(prodPropertiesOrig)
 
 
-def testGettingErrorMessageWhenAttributeInFilterIsNotAtObject(extendedConfigDataBackend):
+def testGettingErrorMessageWhenAttributeInFilterIsNotAtObject(
+	extendedConfigDataBackend,
+):
 	try:
-		extendedConfigDataBackend.productPropertyState_getObjects(unknownAttribute='foobar')
+		extendedConfigDataBackend.productPropertyState_getObjects(
+			unknownAttribute="foobar"
+		)
 		assert False, "We should not get here."
 	except BackendBadValueError as bbve:
-		assert 'has no attribute' in str(bbve)
-		assert 'unknownAttribute' in str(bbve)
+		assert "has no attribute" in str(bbve)
+		assert "unknownAttribute" in str(bbve)
 
 
 def testProductAndPropertyWithSameName(extendedConfigDataBackend):
@@ -762,14 +834,14 @@ def testProductAndPropertyWithSameName(extendedConfigDataBackend):
 	Product and property may have the same name.
 	"""
 	product1 = LocalbootProduct(
-		id='cbk',
-		name=u'Comeback Kid',
-		productVersion='1.0',
+		id="cbk",
+		name="Comeback Kid",
+		productVersion="1.0",
 		packageVersion="2",
 	)
 
 	productProperty1 = BoolProductProperty(
-		productId='cbk',
+		productId="cbk",
 		productVersion=product1.productVersion,
 		packageVersion=product1.packageVersion,
 		propertyId="dep",
@@ -780,9 +852,9 @@ def testProductAndPropertyWithSameName(extendedConfigDataBackend):
 	extendedConfigDataBackend.productProperty_createObjects([productProperty1])
 
 	product2 = LocalbootProduct(
-		id='dep',
-		name=u'The Dillinger Escape Plan',
-		productVersion='11.1',
+		id="dep",
+		name="The Dillinger Escape Plan",
+		productVersion="11.1",
 		packageVersion=2,
 	)
 
@@ -797,7 +869,7 @@ def testProductAndPropertyWithSameName(extendedConfigDataBackend):
 	extendedConfigDataBackend.product_createObjects([product2])
 	extendedConfigDataBackend.productProperty_createObjects([productProperty2])
 
-	properties = extendedConfigDataBackend.productProperty_getObjects(productId='cbk')
+	properties = extendedConfigDataBackend.productProperty_getObjects(productId="cbk")
 
 	assert 1 == len(properties)
 	prop = properties[0]
@@ -810,7 +882,7 @@ def testProductAndPropertyWithSameName(extendedConfigDataBackend):
 
 
 def testProductPropertyStatesMustReferValidObjectId(extendedConfigDataBackend):
-	product = LocalbootProduct('p1', productVersion=1, packageVersion=1)
+	product = LocalbootProduct("p1", productVersion=1, packageVersion=1)
 	productProp = BoolProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
@@ -825,7 +897,7 @@ def testProductPropertyStatesMustReferValidObjectId(extendedConfigDataBackend):
 	pps0 = ProductPropertyState(
 		productId=productProp.getProductId(),
 		propertyId=productProp.getPropertyId(),
-		objectId='kaputtesdepot.dom.local'
+		objectId="kaputtesdepot.dom.local",
 	)
 
 	with pytest.raises(Exception):
@@ -872,7 +944,7 @@ the name of the product equals the name of a product property.
 		"packageVersion": "1",
 		"type": "UnicodeProductProperty",
 		"propertyId": "flag_explorer",
-		"productId": "config-win-base"
+		"productId": "config-win-base",
 	}
 
 	productProperty2 = {
@@ -883,7 +955,7 @@ the name of the product equals the name of a product property.
 		"packageVersion": "3",
 		"type": "UnicodeProductProperty",
 		"propertyId": "config-win-base",
-		"productId": "clientprodukte"
+		"productId": "clientprodukte",
 	}
 
 	pps1 = {
@@ -891,7 +963,7 @@ the name of the product equals the name of a product property.
 		"values": ["1"],
 		"type": "ProductPropertyState",
 		"propertyId": "flag_explorer",
-		"productId": "config-win-base"
+		"productId": "config-win-base",
 	}
 
 	pps2 = {
@@ -899,39 +971,57 @@ the name of the product equals the name of a product property.
 		"values": ["ja"],
 		"type": "ProductPropertyState",
 		"propertyId": "config-win-base",
-		"productId": "clientprodukte"
+		"productId": "clientprodukte",
 	}
 
 	extendedConfigDataBackend.product_createObjects([product1, product2])
-	extendedConfigDataBackend.productProperty_createObjects([productProperty1, productProperty2])
+	extendedConfigDataBackend.productProperty_createObjects(
+		[productProperty1, productProperty2]
+	)
 	extendedConfigDataBackend.host_createObjects(depotserver1)
 	extendedConfigDataBackend.productPropertyState_createObjects([pps1])
 
-	product1Properties = extendedConfigDataBackend.productProperty_getObjects(productId=product1['id'])
+	product1Properties = extendedConfigDataBackend.productProperty_getObjects(
+		productId=product1["id"]
+	)
 	assert product1Properties
-	product2Properties = extendedConfigDataBackend.productProperty_getObjects(productId=product2['id'])
+	product2Properties = extendedConfigDataBackend.productProperty_getObjects(
+		productId=product2["id"]
+	)
 	assert product2Properties
 
 	# Only one productPropertyState
-	property1States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product1['id'])
+	property1States = extendedConfigDataBackend.productPropertyState_getObjects(
+		productId=product1["id"]
+	)
 	assert property1States
 
 	# Upping the game by inserting another productPropertyState
 	extendedConfigDataBackend.productPropertyState_createObjects([pps2])
 
-	property1States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product1['id'])
+	property1States = extendedConfigDataBackend.productPropertyState_getObjects(
+		productId=product1["id"]
+	)
 	assert property1States
 	assert len(property1States) == 1
-	property2States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product2['id'])
+	property2States = extendedConfigDataBackend.productPropertyState_getObjects(
+		productId=product2["id"]
+	)
 	assert property2States
 	assert len(property2States) == 1
-	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(objectId=depotserver1['id'], productId=product1['id'])
+	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(
+		objectId=depotserver1["id"], productId=product1["id"]
+	)
 	assert propertyStatesForServer
 	assert len(property2States) == 1
-	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(objectId=depotserver1['id'], productId=product2['id'])
+	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(
+		objectId=depotserver1["id"], productId=product2["id"]
+	)
 	assert propertyStatesForServer
 	assert len(property2States) == 1
-	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(objectId=depotserver1['id'])
+	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(
+		objectId=depotserver1["id"]
+	)
 	assert propertyStatesForServer
 	assert len(propertyStatesForServer) == 2
 
@@ -976,8 +1066,8 @@ def testDeletingProductPropertyStateFromBackend(extendedConfigDataBackend):
 
 
 def testInsertProductPropertyState(extendedConfigDataBackend):
-	client = OpsiClient(id='someclient.test.invalid')
-	product = LocalbootProduct('p1', productVersion=1, packageVersion=1)
+	client = OpsiClient(id="someclient.test.invalid")
+	product = LocalbootProduct("p1", productVersion=1, packageVersion=1)
 	productProp = BoolProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
@@ -988,7 +1078,7 @@ def testInsertProductPropertyState(extendedConfigDataBackend):
 	pps = ProductPropertyState(
 		productId=productProp.getProductId(),
 		propertyId=productProp.getPropertyId(),
-		objectId=client.id
+		objectId=client.id,
 	)
 
 	extendedConfigDataBackend.host_createObjects(client)
@@ -1002,33 +1092,33 @@ def testInsertProductPropertyState(extendedConfigDataBackend):
 
 
 def test_getProductDependenciesFromBackendSmallExample(extendedConfigDataBackend):
-	prod1 = LocalbootProduct('bla', 1, 1)
-	prod2 = LocalbootProduct('foo', 2, 2)
-	prod3 = LocalbootProduct('zulu', 3, 3)
+	prod1 = LocalbootProduct("bla", 1, 1)
+	prod2 = LocalbootProduct("foo", 2, 2)
+	prod3 = LocalbootProduct("zulu", 3, 3)
 
 	dep1 = ProductDependency(
 		productId=prod1.id,
 		productVersion=prod1.productVersion,
 		packageVersion=prod1.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=prod2.id,
 		requiredProductVersion=prod2.productVersion,
 		requiredPackageVersion=prod2.packageVersion,
-		requiredAction='setup',
+		requiredAction="setup",
 		requiredInstallationStatus=None,
-		requirementType='before'
+		requirementType="before",
 	)
 	dep2 = ProductDependency(
 		productId=prod1.id,
 		productVersion=prod1.productVersion,
 		packageVersion=prod1.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=prod3.id,
 		requiredProductVersion=prod3.productVersion,
 		requiredPackageVersion=prod3.packageVersion,
-		requiredAction='setup',
+		requiredAction="setup",
 		requiredInstallationStatus=None,
-		requirementType='before'
+		requirementType="before",
 	)
 
 	extendedConfigDataBackend.product_createObjects([prod1, prod2, prod3])
@@ -1071,8 +1161,8 @@ def testUpdateProductDependencies(extendedConfigDataBackend):
 	assert len(productDependencies) == len(productDependenciesOrig)
 	for productDependency in productDependencies:
 		if productDependency.getIdent() == productDependency2.getIdent():
-			assert productDependency.getRequiredProductVersion() == u"2.0"
-			assert productDependency.getRequirementType() == 'after'
+			assert productDependency.getRequiredProductVersion() == "2.0"
+			assert productDependency.getRequirementType() == "after"
 
 
 def testDeletingProductDependency(extendedConfigDataBackend):
@@ -1101,7 +1191,7 @@ def testNotCreatingDuplicateProductDependency(extendedConfigDataBackend):
 
 
 def testLockingProducts(extendedConfigDataBackend):
-	prod = LocalbootProduct('Ruhe', 1, 1)
+	prod = LocalbootProduct("Ruhe", 1, 1)
 	depotserver = getConfigServer()  # A configserver always is also a depot.
 	pod = ProductOnDepot(
 		productId=prod.id,
@@ -1109,20 +1199,24 @@ def testLockingProducts(extendedConfigDataBackend):
 		productVersion=prod.productVersion,
 		packageVersion=prod.packageVersion,
 		depotId=depotserver.id,
-		locked=False
+		locked=False,
 	)
 
 	extendedConfigDataBackend.host_createObjects(depotserver)
 	extendedConfigDataBackend.product_createObjects(prod)
 	extendedConfigDataBackend.productOnDepot_createObjects(pod)
 
-	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(productId=prod.id)[0]
+	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(
+		productId=prod.id
+	)[0]
 	assert not podFromBackend.locked
 
 	podFromBackend.locked = True
 	extendedConfigDataBackend.productOnDepot_updateObjects(podFromBackend)
 
-	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(productId=prod.id)[0]
+	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(
+		productId=prod.id
+	)[0]
 	assert podFromBackend.locked
 
 
@@ -1136,7 +1230,9 @@ def testGettingProductOnDepotsFromBackend(extendedConfigDataBackend):
 	extendedConfigDataBackend.product_createObjects(products)
 	extendedConfigDataBackend.productOnDepot_createObjects(productsOnDepotOrig)
 
-	productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(attributes=['productId'])
+	productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(
+		attributes=["productId"]
+	)
 	assert len(productOnDepots) == len(productsOnDepotOrig)
 
 
@@ -1185,12 +1281,14 @@ def testNotManuallyUpdatingModificationTimeOnProductOnClient(extendedConfigDataB
 
 	productOnClient2 = pocs[1]
 
-	modTime = '2010-01-01 05:55:55'
+	modTime = "2010-01-01 05:55:55"
 	productOnClient2.setModificationTime(modTime)
 	backend.productOnClient_updateObject(productOnClient2)
-	productOnClients = backend.productOnClient_getObjects(modificationTime='2010-01-01 05:55:55')
+	productOnClients = backend.productOnClient_getObjects(
+		modificationTime="2010-01-01 05:55:55"
+	)
 	assert not productOnClients
-	productOnClients = backend.productOnClient_getObjects(modificationTime='2010-*')
+	productOnClients = backend.productOnClient_getObjects(modificationTime="2010-*")
 	assert not productOnClients
 
 
@@ -1220,10 +1318,15 @@ def testGettingProductOnClientWithFilter(extendedConfigDataBackend):
 	extendedConfigDataBackend.productOnClient_createObjects(pocs)
 
 	client1 = clients[0]
-	client1ProductOnClients = [productOnClient for productOnClient in pocs
-							   if productOnClient.getClientId() == client1.id]
+	client1ProductOnClients = [
+		productOnClient
+		for productOnClient in pocs
+		if productOnClient.getClientId() == client1.id
+	]
 
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(clientId=client1.getId())
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		clientId=client1.getId()
+	)
 	for productOnClient in productOnClients:
 		assert productOnClient.getClientId() == client1.getId()
 
@@ -1242,7 +1345,9 @@ def testGettingProductOnClientByClientAndProduct(extendedConfigDataBackend):
 	client1 = clients[0]
 	product2 = products[1]
 
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(clientId=client1.getId(), productId=product2.getId())
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		clientId=client1.getId(), productId=product2.getId()
+	)
 	assert 1 == len(productOnClients)
 	poc = productOnClients[0]
 	assert poc.getProductId() == product2.getId()
@@ -1263,8 +1368,7 @@ def testGettingProductOnClientByClientAndProductType(extendedConfigDataBackend):
 	productOnClient2 = pocs[1]
 
 	productOnClients = backend.productOnClient_getObjects(
-		productType=productOnClient2.productType,
-		clientId=productOnClient2.clientId
+		productType=productOnClient2.productType, clientId=productOnClient2.clientId
 	)
 	assert len(productOnClients) >= 1
 	assert productOnClient2 in productOnClients
@@ -1280,37 +1384,49 @@ def testUpdatingProductsOnClients(extendedConfigDataBackend):
 	extendedConfigDataBackend.productOnClient_createObjects(pocs)
 
 	productOnClient2 = pocs[1]
-	productOnClient2.setTargetConfiguration('forbidden')
+	productOnClient2.setTargetConfiguration("forbidden")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(targetConfiguration='forbidden')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		targetConfiguration="forbidden"
+	)
 	assert productOnClient2 in productOnClients
 
-	productOnClient2.setInstallationStatus('unknown')
+	productOnClient2.setInstallationStatus("unknown")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(installationStatus='unknown')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		installationStatus="unknown"
+	)
 	assert len(productOnClients) == 1
 
-	productOnClient2.setActionRequest('custom')
+	productOnClient2.setActionRequest("custom")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionRequest='custom')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		actionRequest="custom"
+	)
 	assert len(productOnClients) == 1
 	assert productOnClients[0] == productOnClient2
 
-	productOnClient2.setLastAction('once')
+	productOnClient2.setLastAction("once")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(lastAction='once')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		lastAction="once"
+	)
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
-	productOnClient2.setActionProgress('aUniqueProgress')
+	productOnClient2.setActionProgress("aUniqueProgress")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionProgress='aUniqueProgress')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		actionProgress="aUniqueProgress"
+	)
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
-	productOnClient2.setActionResult('failed')
+	productOnClient2.setActionResult("failed")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionResult='failed')
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
+		actionResult="failed"
+	)
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
@@ -1355,59 +1471,73 @@ def testProductOnClientDependencies(extendedConfigDataBackend):
 	# product7_1.0-1: setup requires product9
 
 	backend.productOnClient_create(
-		productId='product6',
-		productType='LocalbootProduct',
-		clientId='client1.test.invalid',
-		installationStatus='not_installed',
-		actionRequest='setup')
+		productId="product6",
+		productType="LocalbootProduct",
+		clientId="client1.test.invalid",
+		installationStatus="not_installed",
+		actionRequest="setup",
+	)
 
 	backend.productOnClient_delete(
-		productId='product7',
-		clientId='client1.test.invalid')
+		productId="product7", clientId="client1.test.invalid"
+	)
 
 	backend.productOnClient_delete(
-		productId='product9',
-		clientId='client1.test.invalid')
+		productId="product9", clientId="client1.test.invalid"
+	)
 
 	productOnClients = backend.productOnClient_getObjects(
-		clientId='client1.test.invalid')
-	setup = [productOnClient.productId for productOnClient in productOnClients if productOnClient.actionRequest == 'setup']
-	assert 'product6' in setup
-	assert 'product7' not in setup
-	assert 'product9' not in setup
+		clientId="client1.test.invalid"
+	)
+	setup = [
+		productOnClient.productId
+		for productOnClient in productOnClients
+		if productOnClient.actionRequest == "setup"
+	]
+	assert "product6" in setup
+	assert "product7" not in setup
+	assert "product9" not in setup
 
 	productOnClients = backend.productOnClient_getObjects(
-		clientId='client1.test.invalid', productId=['product6', 'product7'])
+		clientId="client1.test.invalid", productId=["product6", "product7"]
+	)
 	for productOnClient in productOnClients:
-		print(u"Got productOnClient: %s" % productOnClient)
-		assert productOnClient.productId in ('product6', 'product7')
+		print("Got productOnClient: %s" % productOnClient)
+		assert productOnClient.productId in ("product6", "product7")
 
 	productOnClients = backend.productOnClient_getObjects(
-		clientId='client1.test.invalid', productId=['*6*'])
+		clientId="client1.test.invalid", productId=["*6*"]
+	)
 	for productOnClient in productOnClients:
-		print(u"Got productOnClient: %s" % productOnClient)
-		assert productOnClient.productId == 'product6'
+		print("Got productOnClient: %s" % productOnClient)
+		assert productOnClient.productId == "product6"
 
 	backend.productOnClient_create(
-		productId='product6',
-		productType='LocalbootProduct',
-		clientId='client5.test.invalid',
-		installationStatus='not_installed',
-		actionRequest='setup')
+		productId="product6",
+		productType="LocalbootProduct",
+		clientId="client5.test.invalid",
+		installationStatus="not_installed",
+		actionRequest="setup",
+	)
 
 	backend.productOnClient_delete(
-		productId='product7',
-		clientId='client5.test.invalid')
+		productId="product7", clientId="client5.test.invalid"
+	)
 
 	backend.productOnClient_delete(
-		productId='product9',
-		clientId='client5.test.invalid')
+		productId="product9", clientId="client5.test.invalid"
+	)
 
 	productOnClients = backend.productOnClient_getObjects(
-		clientId='client5.test.invalid')
-	setup = [productOnClient.productId for productOnClient in productOnClients if productOnClient.actionRequest == 'setup']
-	assert 'product7' not in setup
-	assert 'product9' not in setup
+		clientId="client5.test.invalid"
+	)
+	setup = [
+		productOnClient.productId
+		for productOnClient in productOnClients
+		if productOnClient.actionRequest == "setup"
+	]
+	assert "product7" not in setup
+	assert "product9" not in setup
 
 
 def test_processProductOnClientSequence(extendedConfigDataBackend):
@@ -1430,22 +1560,22 @@ def test_processProductOnClientSequence(extendedConfigDataBackend):
 	clients = getClients()
 	client1 = clients[0]
 
-	depot = OpsiDepotserver(id='depotserver1.some.test')
+	depot = OpsiDepotserver(id="depotserver1.some.test")
 
 	backend.host_createObjects([client1, depot])
 
 	clientConfigDepotId = UnicodeConfig(
-		id=u'clientconfig.depot.id',
-		description=u'Depotserver to use',
+		id="clientconfig.depot.id",
+		description="Depotserver to use",
 		possibleValues=[],
-		defaultValues=[depot.id]
+		defaultValues=[depot.id],
 	)
 	backend.config_createObjects(clientConfigDepotId)
 
-	product2 = LocalbootProduct('two', 2, 2)
-	product3 = LocalbootProduct('three', 3, 3)
-	product4 = LocalbootProduct('four', 4, 4)
-	product5 = LocalbootProduct('five', 5, 5)
+	product2 = LocalbootProduct("two", 2, 2)
+	product3 = LocalbootProduct("three", 3, 3)
+	product4 = LocalbootProduct("four", 4, 4)
+	product5 = LocalbootProduct("five", 5, 5)
 	prods = [product2, product3, product4, product5]
 	backend.product_createObjects(prods)
 
@@ -1456,7 +1586,7 @@ def test_processProductOnClientSequence(extendedConfigDataBackend):
 			productVersion=prod.productVersion,
 			packageVersion=prod.packageVersion,
 			depotId=depot.getId(),
-			locked=False
+			locked=False,
 		)
 		backend.productOnDepot_createObjects(pod)
 
@@ -1464,43 +1594,47 @@ def test_processProductOnClientSequence(extendedConfigDataBackend):
 		productId=product2.id,
 		productVersion=product2.productVersion,
 		packageVersion=product2.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product3.id,
-		requiredAction='setup',
-		requirementType='before'
+		requiredAction="setup",
+		requirementType="before",
 	)
 
 	prodDependency2 = ProductDependency(
 		productId=product2.id,
 		productVersion=product2.productVersion,
 		packageVersion=product2.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product4.id,
-		requiredInstallationStatus='installed',
-		requirementType='before'
+		requiredInstallationStatus="installed",
+		requirementType="before",
 	)
 
 	prodDependency3 = ProductDependency(
 		productId=product4.id,
 		productVersion=product4.productVersion,
 		packageVersion=product4.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=product5.id,
-		requiredAction='setup',
-		requiredInstallationStatus='installed',
-		requirementType='before'
+		requiredAction="setup",
+		requiredInstallationStatus="installed",
+		requirementType="before",
 	)
-	backend.productDependency_createObjects([prodDependency1, prodDependency2, prodDependency3])
+	backend.productDependency_createObjects(
+		[prodDependency1, prodDependency2, prodDependency3]
+	)
 
 	productOnClient1 = ProductOnClient(
 		productId=product2.getId(),
 		productType=product2.getType(),
 		clientId=client1.getId(),
-		installationStatus='not_installed',
-		actionRequest='setup'
+		installationStatus="not_installed",
+		actionRequest="setup",
 	)
 
-	with temporaryBackendOptions(backend, processProductOnClientSequence=True, addDependentProductOnClients=True):
+	with temporaryBackendOptions(
+		backend, processProductOnClientSequence=True, addDependentProductOnClients=True
+	):
 		backend.productOnClient_createObjects([productOnClient1])
 		productOnClients = backend.productOnClient_getObjects(clientId=client1.id)
 
@@ -1516,17 +1650,19 @@ def test_processProductOnClientSequence(extendedConfigDataBackend):
 		elif productOnClient.productId == product5.getId():
 			posProduct5 = productOnClient.actionSequence
 
-	if any(pos == undefined for pos in (posProduct2, posProduct3, posProduct4, posProduct5)):
+	if any(
+		pos == undefined for pos in (posProduct2, posProduct3, posProduct4, posProduct5)
+	):
 		print("Positions are: ")
 		for poc in productOnClients:
 			print("{0}: {1}".format(poc.productId, poc.actionSequence))
 
-		raise Exception(u"Processing of product on client sequence failed")
+		raise Exception("Processing of product on client sequence failed")
 
-	assert posProduct2 > posProduct3, u"Wrong sequence: product3 not before product2"
-	assert posProduct2 > posProduct4, u"Wrong sequence: product4 not before product2"
-	assert posProduct2 > posProduct5, u"Wrong sequence: product5 not before product2"
-	assert posProduct4 > posProduct5, u"Wrong sequence: product5 not before product4"
+	assert posProduct2 > posProduct3, "Wrong sequence: product3 not before product2"
+	assert posProduct2 > posProduct4, "Wrong sequence: product4 not before product2"
+	assert posProduct2 > posProduct5, "Wrong sequence: product5 not before product2"
+	assert posProduct4 > posProduct5, "Wrong sequence: product5 not before product4"
 
 
 def testGettingPxeConfigTemplate(backendManager):
@@ -1534,15 +1670,17 @@ def testGettingPxeConfigTemplate(backendManager):
 	Test getting a NetbootProduct and limiting the attributes to pxeConfigTemplate.
 	"""
 	product = NetbootProduct(
-		id='product1',
-		productVersion='1.0',
+		id="product1",
+		productVersion="1.0",
 		packageVersion=1,
-		pxeConfigTemplate='special'
+		pxeConfigTemplate="special",
 	)
 
 	backendManager.product_insertObject(product)
 
-	prodFromBackend = backendManager.product_getObjects(attributes=['id', 'pxeConfigTemplate'], id=product.id)
+	prodFromBackend = backendManager.product_getObjects(
+		attributes=["id", "pxeConfigTemplate"], id=product.id
+	)
 	assert len(prodFromBackend) == 1
 	prodFromBackend = prodFromBackend[0]
 
@@ -1557,15 +1695,17 @@ def testGettingUserloginScript(backendManager):
 	Test getting a LocalbootProduct and limiting the attributes to userLoginScript.
 	"""
 	product = LocalbootProduct(
-		id='product1',
-		productVersion='1.0',
+		id="product1",
+		productVersion="1.0",
 		packageVersion=1,
-		userLoginScript='iloveyou'
+		userLoginScript="iloveyou",
 	)
 
 	backendManager.product_insertObject(product)
 
-	prodFromBackend = backendManager.product_getObjects(attributes=['id', 'userLoginScript'], id=product.id)
+	prodFromBackend = backendManager.product_getObjects(
+		attributes=["id", "userLoginScript"], id=product.id
+	)
 	assert len(prodFromBackend) == 1
 	prodFromBackend = prodFromBackend[0]
 
@@ -1577,7 +1717,7 @@ def testGettingUserloginScript(backendManager):
 
 def testVersionOnProduct():
 	for product in getProducts():
-		version = '{}-{}'.format(product.productVersion, product.packageVersion)
+		version = "{}-{}".format(product.productVersion, product.packageVersion)
 		assert version == product.version
 
 
@@ -1586,7 +1726,7 @@ def testVersionOnProductOnClients():
 	products = getLocalbootProducts()
 
 	for poc in getProductsOnClients(products, clients):
-		version = '{}-{}'.format(poc.productVersion, poc.packageVersion)
+		version = "{}-{}".format(poc.productVersion, poc.packageVersion)
 		assert version == poc.version
 
 
@@ -1596,7 +1736,7 @@ def testVersionOnProductOnDepots():
 	depots = getDepotServers()
 
 	for pod in getProductsOnDepot(products, configServer, depots):
-		version = '{}-{}'.format(pod.productVersion, pod.packageVersion)
+		version = "{}-{}".format(pod.productVersion, pod.packageVersion)
 		assert version == pod.version
 
 
@@ -1612,12 +1752,12 @@ def testUpdatingProductPropertyHashes(extendedConfigDataBackend):
 	assert ppFromBackend
 	ppFromBackend = [pp.toHash() for pp in ppFromBackend]
 	for pp in ppFromBackend:
-		pp['description'] = u"Das ist auch dein Zuhause!"
+		pp["description"] = "Das ist auch dein Zuhause!"
 
 	backend.productProperty_updateObjects(ppFromBackend)
 
 	for pp in backend.productProperty_getObjects():
-		assert pp.getDescription() == u"Das ist auch dein Zuhause!"
+		assert pp.getDescription() == "Das ist auch dein Zuhause!"
 
 
 def testUpdatingMultipleProductProperties(extendedConfigDataBackend):
@@ -1641,7 +1781,7 @@ def testUpdatingMultipleProductProperties(extendedConfigDataBackend):
 	else:
 		raise RuntimeError("No UnicodeProductProperty found!")
 
-	newText = u'Eat my shorts!'
+	newText = "Eat my shorts!"
 	changedProperty.setDescription(newText)
 	changedProperty.setEditable(not changedProperty.getEditable())
 	properties[index] == changedProperty
@@ -1651,7 +1791,7 @@ def testUpdatingMultipleProductProperties(extendedConfigDataBackend):
 		productId=changedProperty.productId,
 		productVersion=changedProperty.productVersion,
 		packageVersion=changedProperty.packageVersion,
-		propertyId=changedProperty.propertyId
+		propertyId=changedProperty.propertyId,
 	)
 	assert len(props) == 1
 	updatedProp = props[0]

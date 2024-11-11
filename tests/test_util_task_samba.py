@@ -48,7 +48,9 @@ def testCheckForSambaVersionWithoutSMBD(emptyoutput):
 			assert not Samba.isSamba4()
 
 
-@pytest.mark.parametrize("versionString, expectedSamba4", [("version 4.0.3", True), ("version 3.1", False)])
+@pytest.mark.parametrize(
+	"versionString, expectedSamba4", [("version 4.0.3", True), ("version 3.1", False)]
+)
 def testCheckForSamba4DependsOnVersion(versionString, expectedSamba4):
 	with mock.patch("OPSI.Util.Task.Samba.execute", lambda cmd: [versionString]):
 		with mock.patch("OPSI.Util.Task.Samba.which", lambda cmd: cmd):
@@ -111,7 +113,9 @@ def testAdminUsersAreRemovedExistingOpsiDepotShare(isSamba4, disableDirCreation)
 
 	result = Samba._processConfig(config)
 
-	assert not any("admin users" in line for line in result), "admin users left in share opsi_depot"
+	assert not any(
+		"admin users" in line for line in result
+	), "admin users left in share opsi_depot"
 
 
 def testCorrectOpsiDepotShareWithoutFixForSamba4(isSamba4, disableDirCreation):
@@ -141,7 +145,9 @@ def testCorrectOpsiDepotShareWithoutFixForSamba4(isSamba4, disableDirCreation):
 		if in_opsi_depot_section and line.strip() == "acl allow execute always = true":
 			return
 
-	raise RuntimeError('Did not find "acl allow execute always = true" in opsi_depot share')
+	raise RuntimeError(
+		'Did not find "acl allow execute always = true" in opsi_depot share'
+	)
 
 
 def testCorrectOpsiDepotShareWithSamba4Fix(isSamba4, disableDirCreation):

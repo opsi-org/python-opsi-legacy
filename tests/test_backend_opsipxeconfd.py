@@ -68,11 +68,21 @@ def testCacheDataCollectionWithPxeConfigTemplate(backendManager, client, depot):
 				possibleValues=["https://%s:4447/rpc" % depot.id],
 				defaultValues=["https://%s:4447/rpc" % depot.id],
 			),
-			UnicodeConfig(id="clientconfig.depot.id", description="Depotserver to use", possibleValues=[], defaultValues=[depot.id]),
+			UnicodeConfig(
+				id="clientconfig.depot.id",
+				description="Depotserver to use",
+				possibleValues=[],
+				defaultValues=[depot.id],
+			),
 		]
 	)
 
-	product = NetbootProduct("mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="scaredOfNothing")
+	product = NetbootProduct(
+		"mytest86",
+		productVersion=1,
+		packageVersion=1,
+		pxeConfigTemplate="scaredOfNothing",
+	)
 	backendManager.product_insertObject(product)
 
 	productOnDepot = ProductOnDepot(
@@ -84,7 +94,9 @@ def testCacheDataCollectionWithPxeConfigTemplate(backendManager, client, depot):
 	)
 	backendManager.productOnDepot_createObjects([productOnDepot])
 
-	poc = ProductOnClient(product.id, product.getType(), client.id, actionRequest="setup")
+	poc = ProductOnClient(
+		product.id, product.getType(), client.id, actionRequest="setup"
+	)
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):
@@ -124,14 +136,24 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 				possibleValues=["https://%s:4447/rpc" % depot.id],
 				defaultValues=["https://%s:4447/rpc" % depot.id],
 			),
-			UnicodeConfig(id="clientconfig.depot.id", description="Depotserver to use", possibleValues=[], defaultValues=[depot.id]),
+			UnicodeConfig(
+				id="clientconfig.depot.id",
+				description="Depotserver to use",
+				possibleValues=[],
+				defaultValues=[depot.id],
+			),
 		]
 	)
 
-	oldProduct = NetbootProduct("mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old")
+	oldProduct = NetbootProduct(
+		"mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old"
+	)
 	backendManager.product_insertObject(oldProduct)
 	newProduct = NetbootProduct(
-		oldProduct.id, productVersion=oldProduct.productVersion, packageVersion=int(oldProduct.packageVersion) + 1, pxeConfigTemplate="new"
+		oldProduct.id,
+		productVersion=oldProduct.productVersion,
+		packageVersion=int(oldProduct.packageVersion) + 1,
+		pxeConfigTemplate="new",
 	)
 	backendManager.product_insertObject(newProduct)
 
@@ -153,7 +175,9 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 		depotId=depot.id,
 	)
 
-	poc = ProductOnClient(oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup")
+	poc = ProductOnClient(
+		oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup"
+	)
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):
@@ -169,7 +193,9 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 		assert data["product"]["pxeConfigTemplate"] == newProduct.pxeConfigTemplate
 
 
-def testCacheDataCollectionWithMultiplePxeConfigTemplates(backendManager, client, depot):
+def testCacheDataCollectionWithMultiplePxeConfigTemplates(
+	backendManager, client, depot
+):
 	"""
 	Testing what happens if each product version has a different pxe template.
 	"""
@@ -198,20 +224,33 @@ def testCacheDataCollectionWithMultiplePxeConfigTemplates(backendManager, client
 				possibleValues=["https://%s:4447/rpc" % depot.id],
 				defaultValues=["https://%s:4447/rpc" % depot.id],
 			),
-			UnicodeConfig(id="clientconfig.depot.id", description="Depotserver to use", possibleValues=[], defaultValues=[depot.id]),
+			UnicodeConfig(
+				id="clientconfig.depot.id",
+				description="Depotserver to use",
+				possibleValues=[],
+				defaultValues=[depot.id],
+			),
 		]
 	)
 
-	oldProduct = NetbootProduct("mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old")
+	oldProduct = NetbootProduct(
+		"mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old"
+	)
 	backendManager.product_insertObject(oldProduct)
 	newProduct = NetbootProduct(
-		oldProduct.id, productVersion=oldProduct.productVersion, packageVersion=int(oldProduct.packageVersion) + 1, pxeConfigTemplate="new"
+		oldProduct.id,
+		productVersion=oldProduct.productVersion,
+		packageVersion=int(oldProduct.packageVersion) + 1,
+		pxeConfigTemplate="new",
 	)
 	backendManager.product_insertObject(newProduct)
 
 	# The following product exists but is not available on the depot.
 	newerProduct = NetbootProduct(
-		oldProduct.id, productVersion=oldProduct.productVersion, packageVersion=int(oldProduct.packageVersion) + 2, pxeConfigTemplate="new"
+		oldProduct.id,
+		productVersion=oldProduct.productVersion,
+		packageVersion=int(oldProduct.packageVersion) + 2,
+		pxeConfigTemplate="new",
 	)
 	backendManager.product_insertObject(newerProduct)
 
@@ -224,7 +263,9 @@ def testCacheDataCollectionWithMultiplePxeConfigTemplates(backendManager, client
 	)
 	backendManager.productOnDepot_createObjects([productOnDepot])
 
-	poc = ProductOnClient(oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup")
+	poc = ProductOnClient(
+		oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup"
+	)
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):

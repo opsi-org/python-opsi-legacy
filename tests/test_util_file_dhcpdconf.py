@@ -17,7 +17,7 @@ from .helpers import createTemporaryTestfile
 
 
 def testParsingExampleDHCPDConf(test_data_path):
-	testExample = os.path.join(test_data_path, 'util', 'dhcpd', 'dhcpd_1.conf')
+	testExample = os.path.join(test_data_path, "util", "dhcpd", "dhcpd_1.conf")
 
 	with createTemporaryTestfile(testExample) as fileName:
 		confFile = DHCPDConfFile(fileName)
@@ -29,7 +29,7 @@ def dhcpdConf(tempDir):
 	"""Mixin for an DHCPD backend.
 	Manages a subnet 192.168.99.0/24"""
 
-	testData = '''
+	testData = """
 ddns-update-style none;
 default-lease-time 68400;
 # max-lease-time 68400;
@@ -63,11 +63,11 @@ host out-of-subnet {
 	hardware ethernet 1a:25:31:11:23:21;
 	fixed-address out-of-subnet.domain.local;
 }
-'''
+"""
 
-	dhcpdConfFile = os.path.join(tempDir, 'dhcpd.conf')
+	dhcpdConfFile = os.path.join(tempDir, "dhcpd.conf")
 
-	with codecs.open(dhcpdConfFile, 'w', 'utf-8') as f:
+	with codecs.open(dhcpdConfFile, "w", "utf-8") as f:
 		f.write(testData)
 
 	yield DHCPDConfFile(dhcpdConfFile)
@@ -82,18 +82,34 @@ def testAddingHostsToConfig(dhcpdConf):
 	"""
 	dhcpdConf.parse()
 
-	dhcpdConf.addHost('TestclienT', '0001-21-21:00:00', '192.168.99.112', '192.168.99.112', None)
-	dhcpdConf.addHost('TestclienT2', '00:01:09:08:99:11', '192.168.99.113', '192.168.99.113', {"next-server": "192.168.99.2", "filename": "linux/pxelinux.0/xxx?{}"})
+	dhcpdConf.addHost(
+		"TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None
+	)
+	dhcpdConf.addHost(
+		"TestclienT2",
+		"00:01:09:08:99:11",
+		"192.168.99.113",
+		"192.168.99.113",
+		{"next-server": "192.168.99.2", "filename": "linux/pxelinux.0/xxx?{}"},
+	)
 
-	assert dhcpdConf.getHost('TestclienT2') is not None
-	assert dhcpdConf.getHost('notthere') is None
+	assert dhcpdConf.getHost("TestclienT2") is not None
+	assert dhcpdConf.getHost("notthere") is None
 
 
 def testGeneratingConfig(dhcpdConf):
 	dhcpdConf.parse()
 
-	dhcpdConf.addHost('TestclienT', '0001-21-21:00:00', '192.168.99.112', '192.168.99.112', None)
-	dhcpdConf.addHost('TestclienT2', '00:01:09:08:99:11', '192.168.99.113', '192.168.99.113', {"next-server": "192.168.99.2", "filename": "linux/pxelinux.0/xxx?{}"})
+	dhcpdConf.addHost(
+		"TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None
+	)
+	dhcpdConf.addHost(
+		"TestclienT2",
+		"00:01:09:08:99:11",
+		"192.168.99.113",
+		"192.168.99.113",
+		{"next-server": "192.168.99.2", "filename": "linux/pxelinux.0/xxx?{}"},
+	)
 
 	dhcpdConf.generate()
 	# TODO: check generated file

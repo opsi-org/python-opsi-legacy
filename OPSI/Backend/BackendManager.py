@@ -17,6 +17,9 @@ from .Manager.Dispatcher import BackendDispatcher
 from .Manager.Extender import BackendExtender
 
 __all__ = (
-	'BackendManager', 'BackendDispatcher', 'BackendExtender',
-	'BackendAccessControl', 'backendManagerFactory'
+	"BackendManager",
+	"BackendDispatcher",
+	"BackendExtender",
+	"BackendAccessControl",
+	"backendManagerFactory",
 )

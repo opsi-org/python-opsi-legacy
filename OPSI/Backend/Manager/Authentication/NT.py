@@ -27,9 +27,15 @@ class NTAuthentication(AuthenticationModule):
 		self._admin_groupname = OPSI_ADMIN_GROUP
 		if self._admin_group_sid is not None:
 			try:
-				self._admin_groupname = win32security.LookupAccountSid(None, win32security.ConvertStringSidToSid(self._admin_group_sid))[0]
+				self._admin_groupname = win32security.LookupAccountSid(
+					None, win32security.ConvertStringSidToSid(self._admin_group_sid)
+				)[0]
 			except Exception as err:  # pylint: disable=broad-except
-				logger.error("Failed to lookup group with sid '%s': %s", self._admin_group_sid, err)
+				logger.error(
+					"Failed to lookup group with sid '%s': %s",
+					self._admin_group_sid,
+					err,
+				)
 
 	def get_instance(self):
 		return NTAuthentication(self._admin_group_sid)
@@ -40,12 +46,24 @@ class NTAuthentication(AuthenticationModule):
 
 		:raises BackendAuthenticationError: If authentication fails.
 		"""
-		logger.confidential("Trying to authenticate user %s with password %s by win32security", username, password)
+		logger.confidential(
+			"Trying to authenticate user %s with password %s by win32security",
+			username,
+			password,
+		)
 
 		try:
-			win32security.LogonUser(username, "None", password, win32security.LOGON32_LOGON_NETWORK, win32security.LOGON32_PROVIDER_DEFAULT)
+			win32security.LogonUser(
+				username,
+				"None",
+				password,
+				win32security.LOGON32_LOGON_NETWORK,
+				win32security.LOGON32_PROVIDER_DEFAULT,
+			)
 		except Exception as err:  # pylint: disable=broad-except
-			raise BackendAuthenticationError(f"Win32security authentication failed for user '{username}': {err}") from err
+			raise BackendAuthenticationError(
+				f"Win32security authentication failed for user '{username}': {err}"
+			) from err
 
 	def get_admin_groupname(self) -> str:
 		return self._admin_groupname.lower()
@@ -62,18 +80,28 @@ class NTAuthentication(AuthenticationModule):
 		gresume = 0
 		while True:
 			(groups, gtotal, gresume) = win32net.NetLocalGroupEnum(None, 0, gresume)
-			logger.trace("Got %s groups, total=%s, resume=%s", len(groups), gtotal, gresume)
+			logger.trace(
+				"Got %s groups, total=%s, resume=%s", len(groups), gtotal, gresume
+			)
 			for groupname in (u["name"] for u in groups):
 				logger.trace("Found group '%s'", groupname)
 				uresume = 0
 				while True:
-					(users, utotal, uresume) = win32net.NetLocalGroupGetMembers(None, groupname, 0, uresume)
-					logger.trace("Got %s users, total=%s, resume=%s", len(users), utotal, uresume)
+					(users, utotal, uresume) = win32net.NetLocalGroupGetMembers(
+						None, groupname, 0, uresume
+					)
+					logger.trace(
+						"Got %s users, total=%s, resume=%s", len(users), utotal, uresume
+					)
 					for sid in (u["sid"] for u in users):
-						(group_username, _domain, _group_type) = win32security.LookupAccountSid(None, sid)
+						(group_username, _domain, _group_type) = (
+							win32security.LookupAccountSid(None, sid)
+						)
 						if group_username.lower() == username.lower():
 							collected_groupnames.add(groupname)
-							logger.debug("User %s is member of group %s", username, groupname)
+							logger.debug(
+								"User %s is member of group %s", username, groupname
+							)
 					if uresume == 0:
 						break
 			if gresume == 0:

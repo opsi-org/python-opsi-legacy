@@ -305,13 +305,20 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 					user = parts[0]
 					password = ":".join(parts[1:])
 				user = user.strip().lower()
-				logger.confidential("Client supplied username '%s' and password '%s'", user, password)
+				logger.confidential(
+					"Client supplied username '%s' and password '%s'", user, password
+				)
 			except Exception as err:  # pylint: disable=broad-except
 				request_address = self.request.getClientAddress()
 				request_ip = None  # mimic getClientIP behaviour
 				if hasattr(request_address, "host"):
 					request_ip = request_address.host
-				logger.error("Bad Authorization header from '%s': %s", request_ip, err, exc_info=True)
+				logger.error(
+					"Bad Authorization header from '%s': %s",
+					request_ip,
+					err,
+					exc_info=True,
+				)
 
 		return (user, password)
 
@@ -370,9 +377,18 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 		# Get Session object
 		self.session = sessionHandler.getSession(sessionId, request_ip)
 		if sessionId == self.session.uid:
-			logger.info("Reusing session for client '%s', application '%s'", request_ip, userAgent)
+			logger.info(
+				"Reusing session for client '%s', application '%s'",
+				request_ip,
+				userAgent,
+			)
 		elif sessionId:
-			logger.notice("Application '%s' on client '%s' supplied non existing session id: %s", userAgent, request_ip, sessionId)
+			logger.notice(
+				"Application '%s' on client '%s' supplied non existing session id: %s",
+				userAgent,
+				request_ip,
+				sessionId,
+			)
 
 		if sessionHandler and self.session.ip and (self.session.ip != request_ip):
 			logger.critical(
@@ -396,7 +412,12 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 			)
 		self.session.userAgent = userAgent
 
-		logger.confidential("Session id is %s for client %s, application %s", self.session.uid, request_ip, self.session.userAgent)
+		logger.confidential(
+			"Session id is %s for client %s, application %s",
+			self.session.uid,
+			request_ip,
+			self.session.userAgent,
+		)
 
 		logger.confidential("Session content: %s", self.session.__dict__)
 		return result
@@ -433,7 +454,9 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 	def _getQuery(self, result):
 		self.query = ""
 		if self.request.method == b"GET":
-			self.query = urllib.parse.urlparse(urllib.parse.unquote(self.request.uri.decode("ascii"))).query
+			self.query = urllib.parse.urlparse(
+				urllib.parse.unquote(self.request.uri.decode("ascii"))
+			).query
 		elif self.request.method == b"POST":
 			self.query = self.request.content.read()
 		else:
@@ -454,13 +477,19 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 				except Exception:  # pylint: disable=broad-except
 					contentEncoding = None
 
-				logger.debug("Content-Type: %s, Content-Encoding: %s", contentType, contentEncoding)
+				logger.debug(
+					"Content-Type: %s, Content-Encoding: %s",
+					contentType,
+					contentEncoding,
+				)
 
 				if contentType and "gzip" in contentType:
 					# Invalid MIME type.
 					# Probably it is gzip-application/json-rpc and therefore
 					# we need to behave like we did before.
-					logger.debug("Expecting compressed data from client (backwards compatible)")
+					logger.debug(
+						"Expecting compressed data from client (backwards compatible)"
+					)
 					self.query = deflateDecode(self.query)
 				elif contentEncoding == "lz4":
 					self.query = lz4.frame.decompress(self.query)
@@ -480,7 +509,9 @@ class WorkerOpsi:  # pylint: disable=too-few-public-methods,too-many-instance-at
 		return result
 
 	def _processQuery(self, result):
-		logger.warning("Class %s should overwrite _processQuery", self.__class__.__name__)
+		logger.warning(
+			"Class %s should overwrite _processQuery", self.__class__.__name__
+		)
 		return self._decodeQuery(result)
 
 	def _generateResponse(self, result):  # pylint: disable=unused-argument
@@ -501,7 +532,9 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 		self._rpcs = []
 
 	def _getCallInstance(self, result):  # pylint: disable=unused-argument
-		logger.warning("Class %s should overwrite _getCallInstance", self.__class__.__name__)
+		logger.warning(
+			"Class %s should overwrite _getCallInstance", self.__class__.__name__
+		)
 		self._callInstance = None
 		self._callInterface = {}
 
@@ -516,7 +549,9 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 		rpcs = []
 		try:
 			if self.request.getHeader("Content-Type") == "application/msgpack":
-				rpcs = deserialize(msgpack.decode(self.query), deep=True, prevent_object_creation=True)
+				rpcs = deserialize(
+					msgpack.decode(self.query), deep=True, prevent_object_creation=True
+				)
 			else:
 				rpcs = fromJson(self.query, preventObjectCreation=True)
 			if not rpcs:
@@ -526,7 +561,9 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 				try:
 					if not os.path.exists(self.debugDir):
 						os.makedirs(self.debugDir)
-					debug_file = os.path.join(self.debugDir, f"service-json-decode-error-{uuid.uuid1()}")
+					debug_file = os.path.join(
+						self.debugDir, f"service-json-decode-error-{uuid.uuid1()}"
+					)
 					logger.notice("Writing debug file: %s", debug_file)
 					with open(debug_file, "wb") as file:
 						file.write(self.query)
@@ -535,7 +572,9 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 			raise OpsiBadRpcError(f"Failed to decode rpc: {err}") from err
 
 		for rpc in forceList(rpcs):
-			rpc = JsonRpc(instance=self._callInstance, interface=self._callInterface, rpc=rpc)
+			rpc = JsonRpc(
+				instance=self._callInstance, interface=self._callInterface, rpc=rpc
+			)
 			self._rpcs.append(rpc)
 
 		return result
@@ -563,7 +602,9 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 		return deferred
 
 	def _generateResponse(self, result):  # pylint: disable=too-many-branches
-		invalidMime = False  # For handling the invalid MIME type "gzip-application/json-rpc"
+		invalidMime = (
+			False  # For handling the invalid MIME type "gzip-application/json-rpc"
+		)
 		encoding = None
 		try:
 			if "lz4" in self.request.getHeader("Accept-Encoding"):
@@ -606,8 +647,12 @@ class WorkerOpsiJsonRpc(WorkerOpsi):  # pylint: disable=too-few-public-methods
 			# The invalid requests expect the encoding set to
 			# gzip but the content is deflated.
 			self.request.setHeader("Content-Encoding", "gzip")
-			self.request.setHeader("Content-Type", "gzip-application/json; charset=utf-8")
-			logger.debug("Sending deflated data (backwards compatible - with Content-Encoding 'gzip')")
+			self.request.setHeader(
+				"Content-Type", "gzip-application/json; charset=utf-8"
+			)
+			logger.debug(
+				"Sending deflated data (backwards compatible - with Content-Encoding 'gzip')"
+			)
 			data = deflateEncode(data)
 		elif encoding == "lz4":
 			logger.debug("Sending lz4 compressed data")
@@ -671,7 +716,9 @@ class WorkerOpsiJsonInterface(WorkerOpsiJsonRpc):  # pylint: disable=too-few-pub
 					methodName = method["name"]
 					javascript.append(f"parameters['{methodName}'] = new Array();")
 					for index, param in enumerate(method["params"]):
-						javascript.append(f"parameters['{methodName}'][{index}]='{param}';")
+						javascript.append(
+							f"parameters['{methodName}'][{index}]='{param}';"
+						)
 
 					selected = ""
 					if method["name"] == currentMethod:

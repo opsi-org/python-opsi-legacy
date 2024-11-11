@@ -49,18 +49,28 @@ class PAMAuthentication(AuthenticationModule):
 		:type service: str
 		:raises BackendAuthenticationError: If authentication fails.
 		"""
-		logger.confidential("Trying to authenticate user %s with password %s by PAM", username, password)
-		logger.trace("Attempting PAM authentication as user %s (service=%s)...", username, self._pam_service)
+		logger.confidential(
+			"Trying to authenticate user %s with password %s by PAM", username, password
+		)
+		logger.trace(
+			"Attempting PAM authentication as user %s (service=%s)...",
+			username,
+			self._pam_service,
+		)
 
 		try:
 			auth = pam.pam()
 			if not auth.authenticate(username, password, service=self._pam_service):
-				logger.trace("PAM authentication failed: %s (code %s)", auth.reason, auth.code)
+				logger.trace(
+					"PAM authentication failed: %s (code %s)", auth.reason, auth.code
+				)
 				raise RuntimeError(auth.reason)
 
 			logger.trace("PAM authentication successful.")
 		except Exception as err:
-			raise BackendAuthenticationError(f"PAM authentication failed for user '{username}': {err}") from err
+			raise BackendAuthenticationError(
+				f"PAM authentication failed for user '{username}': {err}"
+			) from err
 
 	def get_groupnames(self, username: str) -> Set[str]:
 		"""

@@ -10,16 +10,13 @@ from opsicommon.logging import get_logger
 
 from .Extended import ExtendedBackend
 
-__all__ = (
-	'ModificationTrackingBackend', 'BackendModificationListener'
-)
+__all__ = ("ModificationTrackingBackend", "BackendModificationListener")
 
 
 logger = get_logger("opsi.general")
 
 
 class ModificationTrackingBackend(ExtendedBackend):
-
 	def __init__(self, backend, overwrite=True):
 		ExtendedBackend.__init__(self, backend, overwrite=overwrite)
 		self._createInstanceMethods()
@@ -46,23 +43,25 @@ class ModificationTrackingBackend(ExtendedBackend):
 	def _executeMethod(self, methodName, **kwargs):
 		logger.debug(
 			"ModificationTrackingBackend %s: executing %s on backend %s",
-			self, methodName, self._backend
+			self,
+			methodName,
+			self._backend,
 		)
 		meth = getattr(self._backend, methodName)
 		result = meth(**kwargs)
 		action = None
-		if '_' in methodName:
-			action = methodName.split('_', 1)[1]
+		if "_" in methodName:
+			action = methodName.split("_", 1)[1]
 
-		if action in ('insertObject', 'updateObject', 'deleteObjects'):
+		if action in ("insertObject", "updateObject", "deleteObjects"):
 			value = list(kwargs.values())[0]
-			if action == 'insertObject':
-				self._fireEvent('objectInserted', value)
-			elif action == 'updateObject':
-				self._fireEvent('objectUpdated', value)
-			elif action == 'deleteObjects':
-				self._fireEvent('objectsDeleted', value)
-			self._fireEvent('backendModified')
+			if action == "insertObject":
+				self._fireEvent("objectInserted", value)
+			elif action == "updateObject":
+				self._fireEvent("objectUpdated", value)
+			elif action == "deleteObjects":
+				self._fireEvent("objectsDeleted", value)
+			self._fireEvent("backendModified")
 
 		return result
 

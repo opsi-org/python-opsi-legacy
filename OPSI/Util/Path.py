@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def cd(path: str):
-	'Change the current directory to `path` as long as the context exists.'
+	"Change the current directory to `path` as long as the context exists."
 
 	currentDir = os.getcwd()
 	os.chdir(path)

@@ -74,7 +74,9 @@ def testUsageCountDoesNothingOnExpiredSession(session):
 
 
 def testMarkingSessionForDeletion(session):
-	assert not session.getMarkedForDeletion(), "New session should not be marked for deletion."
+	assert (
+		not session.getMarkedForDeletion()
+	), "New session should not be marked for deletion."
 
 	session.setMarkedForDeletion()
 
@@ -91,7 +93,9 @@ def testDeletedSessionsAreMadeInvalid(session):
 
 
 def testSessionHandlerInitialisation():
-	handler = SessionHandler("testapp", 10, maxSessionsPerIp=4, sessionDeletionTimeout=23)
+	handler = SessionHandler(
+		"testapp", 10, maxSessionsPerIp=4, sessionDeletionTimeout=23
+	)
 	with deleteSessionsAfterContext(handler) as handler:
 		assert "testapp" == handler.sessionName
 		assert 10 == handler.sessionMaxInactiveInterval
@@ -142,7 +146,7 @@ def testSessionHandlerDeletingSessionInUse():
 
 
 def testDeletingNonExistingSessionMustNotFail(sessionHandler):
-	sessionHandler.deleteSession('iAmNotHere')
+	sessionHandler.deleteSession("iAmNotHere")
 
 
 @pytest.mark.parametrize("sessionCount", [256])
@@ -155,7 +159,7 @@ def testCreatingAndExpiringManySessions(sessionCount):
 		"testapp",
 		maxSessionsPerIp=4,
 		sessionMaxInactiveInterval=deletion_time_in_sec,
-		sessionDeletionTimeout=23
+		sessionDeletionTimeout=23,
 	)
 
 	with deleteSessionsAfterContext(handler) as handler:
@@ -170,7 +174,7 @@ def testCreatingAndExpiringManySessions(sessionCount):
 
 def testGetSessionsByIP():
 	handler = SessionHandler("testapp", maxSessionsPerIp=1)
-	testIP = '12.34.56.78'
+	testIP = "12.34.56.78"
 
 	with deleteSessionsAfterContext(handler) as handler:
 		assert {} == handler.getSessions()
@@ -196,13 +200,13 @@ def testGettingSession(sessionHandler):
 
 
 def testGettingSessionByUID(sessionHandler):
-	session = sessionHandler.getSession(uid='testUID12345')
+	session = sessionHandler.getSession(uid="testUID12345")
 
 	assert session.usageCount == 1
 
 
 def testGettingSessionByUIDAndReuse(sessionHandler):
-	firstSession = sessionHandler.getSession(uid='testUID12345')
+	firstSession = sessionHandler.getSession(uid="testUID12345")
 
 	assert firstSession.usageCount == 1
 
@@ -213,9 +217,9 @@ def testGettingSessionByUIDAndReuse(sessionHandler):
 
 
 def testGettingNewSessionDoesNotSetUid(sessionHandler):
-	session = sessionHandler.getSession(uid='testUID12345')
+	session = sessionHandler.getSession(uid="testUID12345")
 
-	assert session.uid != 'testUID12345'
+	assert session.uid != "testUID12345"
 
 
 def testGettingNewSessionDoesIgnoreSessionMarkedForDeletion(sessionHandler):

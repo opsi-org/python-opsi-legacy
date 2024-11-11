@@ -15,7 +15,6 @@ These values are not intended to be changed on-the-fly!
 Doing so might result in unforseen problems and is strongly discouraged!
 """
 
-
 # Group used to identify members whits administrative rights in opsi
 OPSI_ADMIN_GROUP = "opsiadmin"
 

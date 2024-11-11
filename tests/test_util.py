@@ -15,6 +15,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 
 import pytest
+
 from OPSI.Object import ConfigState, LocalbootProduct, OpsiClient
 from OPSI.Util import (
 	BlowfishError,
@@ -26,7 +27,6 @@ from OPSI.Util import (
 	formatFileSize,
 	fromJson,
 	generateOpsiHostKey,
-	getfqdn,
 	ipAddressInNetwork,
 	isRegularExpressionPattern,
 	md5sum,
@@ -40,9 +40,6 @@ from OPSI.Util import (
 from OPSI.Util.Config import getGlobalConfig
 
 from .helpers import (
-	fakeGlobalConf,
-	patchAddress,
-	patchEnvironmentVariables,
 	workInTemporaryDirectory,
 )
 
@@ -149,7 +146,9 @@ def testObjectToHtmlOutputIsAsExpected():
 	assert '<font class="json_key">"id"</font>: "htmltestproduct"' in result
 	assert '<font class="json_key">"licenseRequired"</font>: false' in result
 	assert '<font class="json_key">"ident"</font>: "htmltestproduct;3.1;1"' in result
-	assert '<font class="json_key">"name"</font>: "Product&nbsp;HTML&nbsp;Test"' in result
+	assert (
+		'<font class="json_key">"name"</font>: "Product&nbsp;HTML&nbsp;Test"' in result
+	)
 	assert '<font class="json_key">"changelog"</font>: null' in result
 	assert '<font class="json_key">"customScript"</font>: null' in result
 	assert '<font class="json_key">"uninstallScript"</font>: "uninstall.ins"' in result
@@ -440,8 +439,12 @@ def testGlobalConfigLinesNeedAssignments(globalConfigTestFile):  # pylint: disab
 
 def testGlobalConfigFileReadingValues(globalConfigTestFile):  # pylint: disable=redefined-outer-name
 	assert "value" == getGlobalConfig("keyword", globalConfigTestFile)
-	assert "this works too" == getGlobalConfig("value with spaces", globalConfigTestFile)
-	assert "we even can include a = and it works" == getGlobalConfig("advanced value", globalConfigTestFile)
+	assert "this works too" == getGlobalConfig(
+		"value with spaces", globalConfigTestFile
+	)
+	assert "we even can include a = and it works" == getGlobalConfig(
+		"advanced value", globalConfigTestFile
+	)
 
 
 def testGetGlobalConfigExitsGracefullyIfFileIsMissing(globalConfigTestFile):  # pylint: disable=redefined-outer-name,unused-argument
@@ -484,56 +487,6 @@ def testRemoveUnitDoesNotFailWithoutUnit(value, expected):
 )
 def testRemovingUnitFromValue(value, expected):
 	assert expected == removeUnit(value)
-
-
-def testGettingFQDN():
-	fqdn = "opsi.fqdntestcase.invalid"
-
-	with patchAddress(fqdn=fqdn):
-		assert fqdn == getfqdn()
-
-
-def testGettingFQDNFromGlobalConfig():
-	with patchAddress(fqdn="nomatch.opsi.invalid"):
-		fqdn = "opsi.test.invalid"
-		with fakeGlobalConf(fqdn=fqdn) as configPath:
-			assert fqdn == getfqdn(conf=configPath)
-
-
-def testGettingFQDNIfConfigMissing():
-	fqdn = "opsi.fqdntestcase.invalid"
-
-	configFilePath = randomString(32)
-	while os.path.exists(configFilePath):
-		configFilePath = randomString(32)
-
-	with patchAddress(fqdn=fqdn):
-		assert fqdn == getfqdn(conf=configFilePath)
-
-
-def testGettingFQDNIfConfigFileEmpty(tempDir):
-	fqdn = "opsi.fqdntestcase.invalid"
-	with patchAddress(fqdn=fqdn):
-		confPath = os.path.join(tempDir, randomString(8))
-		with open(confPath, "wb"):
-			pass
-
-		assert fqdn == getfqdn(conf=confPath)
-
-
-def testGettingFQDNFromEnvironment():
-	fqdn = "opsi.fqdntestcase.invalid"
-	with patchAddress(fqdn="nomatch.uib.local"):
-		with patchEnvironmentVariables(OPSI_HOSTNAME=fqdn):
-			assert fqdn == getfqdn()
-
-
-def testGetFQDNByIPAddress():
-	fqdn = "opsi.fqdntestcase.invalid"
-	address = "127.0.0.1"
-
-	with patchAddress(fqdn=fqdn, address=address):
-		assert fqdn == getfqdn(name=address)
 
 
 def testSerialisingSet():
@@ -620,7 +573,9 @@ def testSerialisingDictsInListWithFloat():
 	assert inputValues == fromJson(output)
 
 
-@pytest.mark.parametrize("inputValues", [{"a": "b", "c": 1, "e": 2}, {"a": "b", "c": 1, "e": 2.3}])
+@pytest.mark.parametrize(
+	"inputValues", [{"a": "b", "c": 1, "e": 2}, {"a": "b", "c": 1, "e": 2.3}]
+)
 def testSerialisingDict(inputValues):
 	result = toJson(inputValues)
 
@@ -823,7 +778,9 @@ def blowfishKey(request):
 
 
 def test_blowfish_encryption():
-	blowfishEncrypt("575bf0d0b557dd9184ae41e7ff58ead0", "jksdfjklöasdfjkladfsjkasdfjlkö")
+	blowfishEncrypt(
+		"575bf0d0b557dd9184ae41e7ff58ead0", "jksdfjklöasdfjkladfsjkasdfjlkö"
+	)
 
 
 def testBlowfishEncryption(randomText, blowfishKey):  # pylint: disable=redefined-outer-name
@@ -948,8 +905,12 @@ def testObjectToBashOutput():
 
 def testObjectToBashOnConfigStates():
 	states = [
-		ConfigState(configId="foo.bar.baz", objectId="client1.invalid.test", values=[""]),
-		ConfigState(configId="drive.slow", objectId="client2.invalid.test", values=[False]),
+		ConfigState(
+			configId="foo.bar.baz", objectId="client1.invalid.test", values=[""]
+		),
+		ConfigState(
+			configId="drive.slow", objectId="client2.invalid.test", values=[False]
+		),
 	]
 
 	result = objectToBash(states)
@@ -999,7 +960,12 @@ def testComparingWithOnlyOneEqualitySign():
 
 
 @pytest.mark.parametrize(
-	"first, operator, second", [("1.0or2.0", "<", "1.0or2.1"), ("1.0or2.0", "<", "1.1or2.0"), ("1.0or2.1", "<", "1.1or2.0")]
+	"first, operator, second",
+	[
+		("1.0or2.0", "<", "1.0or2.1"),
+		("1.0or2.0", "<", "1.1or2.0"),
+		("1.0or2.1", "<", "1.1or2.0"),
+	],
 )
 def testComparingOrVersions(first, operator, second):
 	assert compareVersions(first, operator, second)
@@ -1036,7 +1002,10 @@ def testIgnoringVersionsWithWaveInThem(ver1, operator, ver2):
 	assert compareVersions(ver1, operator, ver2)
 
 
-@pytest.mark.parametrize("ver1, operator, ver2", [("abc-1.2.3-4", "==", "1.2.3-4"), ("1.2.3-4", "==", "abc-1.2.3-4")])
+@pytest.mark.parametrize(
+	"ver1, operator, ver2",
+	[("abc-1.2.3-4", "==", "1.2.3-4"), ("1.2.3-4", "==", "abc-1.2.3-4")],
+)
 def testUsingInvalidVersionStringsFails(ver1, operator, ver2):
 	with pytest.raises(ValueError):
 		compareVersions(ver1, operator, ver2)
@@ -1054,6 +1023,8 @@ def testComparisonsWithDifferntDepthsAreMadeTheSameDepth(ver1, operator, ver2):
 	assert compareVersions(ver1, operator, ver2)
 
 
-@pytest.mark.parametrize("ver1, operator, ver2", [("1-2", "<", "1-3"), ("1-2.0", "<", "1-2.1")])
+@pytest.mark.parametrize(
+	"ver1, operator, ver2", [("1-2", "<", "1-3"), ("1-2.0", "<", "1-2.1")]
+)
 def testPackageVersionsAreComparedAswell(ver1, operator, ver2):
 	assert compareVersions(ver1, operator, ver2)

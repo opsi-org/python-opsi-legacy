@@ -9,8 +9,9 @@ Exceptions used in updating packages.
 from OPSI.Exceptions import OpsiError
 
 __all__ = (
-	'ConfigurationError', 'MissingConfigurationValueError',
-	'RequiringBackendError'
+	"ConfigurationError",
+	"MissingConfigurationValueError",
+	"RequiringBackendError",
 )
 
 

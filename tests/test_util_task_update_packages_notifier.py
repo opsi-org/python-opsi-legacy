@@ -14,8 +14,7 @@ from opsicommon.logging import secret_filter
 
 
 @pytest.fixture(
-	params=[DummyNotifier, EmailNotifier],
-	ids=["DummyNotifier", "EmailNotifier"]
+	params=[DummyNotifier, EmailNotifier], ids=["DummyNotifier", "EmailNotifier"]
 )
 def notifierClass(request):
 	yield request.param
@@ -44,7 +43,7 @@ def testSetupNotifier(notifierClass, notifierConfig):
 def testAddingMessages(notifier):
 	assert not notifier.hasMessage()
 
-	notifier.appendLine('Bla bla bla')
+	notifier.appendLine("Bla bla bla")
 
 	assert notifier.hasMessage()
 

@@ -89,7 +89,11 @@ def _parseConfig(filename):
 			value = value.strip()
 
 			if not value:
-				logger.warning("There is no value for %s in opsirc file %s, skipping.", key, filename)
+				logger.warning(
+					"There is no value for %s in opsirc file %s, skipping.",
+					key,
+					filename,
+				)
 				continue
 
 			if key == "address":
@@ -108,7 +112,11 @@ def _parseConfig(filename):
 			else:
 				logger.debug("Ignoring unknown key %s", key)
 
-	logger.debug("Found the following usable keys in %s: %s", filename, ", ".join(list(config.keys())))
+	logger.debug(
+		"Found the following usable keys in %s: %s",
+		filename,
+		", ".join(list(config.keys())),
+	)
 	return config
 
 

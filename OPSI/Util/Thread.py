@@ -26,7 +26,7 @@ def getGlobalThreadPool(*args, **kwargs):
 	if not global_pool:
 		global_pool = ThreadPool(*args, **kwargs)
 	else:
-		size = kwargs.get('size', 0)
+		size = kwargs.get("size", 0)
 		global_pool.increaseUsageCount()
 		if global_pool.size < size:
 			global_pool.adjustSize(size)
@@ -39,7 +39,9 @@ def _async_raise(tid, exctype):
 	if not inspect.isclass(exctype):
 		raise TypeError("Only types can be raised (not instances)")
 
-	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
+	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+		ctypes.c_long(tid), ctypes.py_object(exctype)
+	)
 	if res == 0:
 		logger.warning("Invalid thread id %s", tid)
 		return
@@ -80,7 +82,6 @@ class KillableThread(threading.Thread):
 
 
 class ThreadPool:
-
 	def __init__(self, size=20, autostart=True):
 		self.size = int(size)
 		self.started = False

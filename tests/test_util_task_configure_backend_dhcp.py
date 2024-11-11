@@ -25,18 +25,33 @@ FAKE_RESTART_COMMAND = "service opsi-test-dhcpd restart"
 
 @contextmanager
 def disableSystemCallsForConfigureDHCPD():
-	with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.pwd.getpwnam", lambda x: (0, 0, 1234)):
-		with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.grp.getgrnam", lambda x: (0, 0, 5678)):
+	with mock.patch(
+		"OPSI.Util.Task.ConfigureBackend.DHCPD.pwd.getpwnam", lambda x: (0, 0, 1234)
+	):
+		with mock.patch(
+			"OPSI.Util.Task.ConfigureBackend.DHCPD.grp.getgrnam", lambda x: (0, 0, 5678)
+		):
 			with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.execute"):
-				with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.patchSudoersFileToAllowRestartingDHCPD"):
+				with mock.patch(
+					"OPSI.Util.Task.ConfigureBackend.DHCPD.patchSudoersFileToAllowRestartingDHCPD"
+				):
 
 					def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
 						return FAKE_RESTART_COMMAND
 
-					with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand", getFakeRestartCommand):
-						with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.os.chown"):
-							with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.os.chmod"):
-								with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand"):
+					with mock.patch(
+						"OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand",
+						getFakeRestartCommand,
+					):
+						with mock.patch(
+							"OPSI.Util.Task.ConfigureBackend.DHCPD.os.chown"
+						):
+							with mock.patch(
+								"OPSI.Util.Task.ConfigureBackend.DHCPD.os.chmod"
+							):
+								with mock.patch(
+									"OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand"
+								):
 									yield
 
 
@@ -67,7 +82,9 @@ subnet 192.168.0.0 netmask 255.255.0.0 {
 		configureDHCPD(targetFile)
 
 	with open(targetFile, encoding="utf-8") as target:
-		assert any("next-server" in line for line in target), "next-server not fonud in new file."
+		assert any(
+			"next-server" in line for line in target
+		), "next-server not fonud in new file."
 
 
 def testConfiguringDHCPDBackendWithEmptyFile(tempDir):  # pylint: disable=unused-argument
@@ -92,7 +109,9 @@ def testConfiguringPatchesDHCPDBackendConfig(tempDir):  # pylint: disable=unused
 
 	funcMock = mock.Mock()
 	with disableSystemCallsForConfigureDHCPD():
-		with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand", funcMock):
+		with mock.patch(
+			"OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand", funcMock
+		):
 			configureDHCPD(filename)
 
 	backendConfigTarget = os.path.join("/etc", "opsi", "backends", "dhcpd.conf")
@@ -107,7 +126,10 @@ def testConfiguringCreatesBackupFile(tempDir):
 	assert len(os.listdir(tempDir)) == 1, "Too many files in temp directory"
 
 	with disableSystemCallsForConfigureDHCPD():
-		with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand", mock.Mock()):
+		with mock.patch(
+			"OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand",
+			mock.Mock(),
+		):
 			configureDHCPD(filename)
 
 	assert len(os.listdir(tempDir)) == 2, "No backup was created"
@@ -122,7 +144,9 @@ def testConfiguringCreatesBackupFile(tempDir):
 		('u"restart-dhcp-server"', "service opsi-test-dhcpd restart"),
 	),
 )
-def testUpdatingDHCPDBackendConfigReplacesCurrentCommand(tempDir, reload_command, expected_reload_command):
+def testUpdatingDHCPDBackendConfigReplacesCurrentCommand(
+	tempDir, reload_command, expected_reload_command
+):
 	target = os.path.join(tempDir, "dhcpd.test.conf")
 
 	with open(target, "w", encoding="utf-8") as file:
@@ -150,7 +174,10 @@ config = {
 	def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
 		return FAKE_RESTART_COMMAND
 
-	with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand", getFakeRestartCommand):
+	with mock.patch(
+		"OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand",
+		getFakeRestartCommand,
+	):
 		insertDHCPDRestartCommand(target, FAKE_RESTART_COMMAND)
 
 	config = backendConfigUtils.getBackendConfiguration(target)

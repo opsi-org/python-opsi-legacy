@@ -23,7 +23,11 @@ from OPSI.Util.Task.Sudoers import (
 
 @pytest.fixture
 def temporarySudoersFile(test_data_path):
-	with createTemporaryTestfile(os.path.join(test_data_path, "util", "task", "sudoers", "sudoers_without_entries")) as fileName:
+	with createTemporaryTestfile(
+		os.path.join(
+			test_data_path, "util", "task", "sudoers", "sudoers_without_entries"
+		)
+	) as fileName:
 		yield fileName
 
 
@@ -70,7 +74,10 @@ def testBackupIsCreated(test_data_path, tempDir):
 		print("Files in {0}: {1}".format(tempDir, filesInTemporaryFolder))
 
 	with createTemporaryTestfile(
-		os.path.join(test_data_path, "util", "task", "sudoers", "sudoers_without_entries"), tempDir=tempDir
+		os.path.join(
+			test_data_path, "util", "task", "sudoers", "sudoers_without_entries"
+		),
+		tempDir=tempDir,
 	) as fileName:
 		filesInTemporaryFolder = os.listdir(tempDir)
 
@@ -92,11 +99,15 @@ def testOpsiconfdDoesNotRequireTTY(temporarySudoersFile):
 			if _NO_TTY_REQUIRED_DEFAULT in line:
 				pytest.skip("Command already existing. Can't check.")
 
-	with mock.patch("OPSI.Util.Task.Sudoers.distributionRequiresNoTtyPatch", lambda: True):
+	with mock.patch(
+		"OPSI.Util.Task.Sudoers.distributionRequiresNoTtyPatch", lambda: True
+	):
 		patchSudoersFileForOpsi(fileName)
 
 	with open(fileName) as post:
-		assert any(_NO_TTY_REQUIRED_DEFAULT in line for line in post), "Expected {0} in patched file.".format(_NO_TTY_REQUIRED_DEFAULT)
+		assert any(
+			_NO_TTY_REQUIRED_DEFAULT in line for line in post
+		), "Expected {0} in patched file.".format(_NO_TTY_REQUIRED_DEFAULT)
 
 
 def testExecutingServiceDoesNotRequireTTY(temporarySudoersFile):
@@ -109,9 +120,9 @@ def testExecutingServiceDoesNotRequireTTY(temporarySudoersFile):
 	patchSudoersFileForOpsi(fileName)
 
 	with open(fileName) as post:
-		assert any(_NO_TTY_FOR_SERVICE_REQUIRED in line for line in post), "Expected {0} in patched file.".format(
-			_NO_TTY_FOR_SERVICE_REQUIRED
-		)
+		assert any(
+			_NO_TTY_FOR_SERVICE_REQUIRED in line for line in post
+		), "Expected {0} in patched file.".format(_NO_TTY_FOR_SERVICE_REQUIRED)
 
 
 def testServiceLineHasRightPathToService():

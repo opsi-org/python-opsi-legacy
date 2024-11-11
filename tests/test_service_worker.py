@@ -32,7 +32,11 @@ class FakeDictHeader(FakeHeader):
 			def __init__(self, key):
 				self.mediaType = key
 
-		return dict((ReturnWithMediaType(self.headers[key]), self.headers[key]) for key in self.headers if key.startswith(header))
+		return dict(
+			(ReturnWithMediaType(self.headers[key]), self.headers[key])
+			for key in self.headers
+			if key.startswith(header)
+		)
 
 
 class FakeMediaType(object):
@@ -49,7 +53,7 @@ class FakeMediaType(object):
 class FakeRequest(object):
 	def __init__(self, headers=None):
 		self.headers = headers or FakeHeader()
-		self.method = 'POST'
+		self.method = "POST"
 
 
 class FakeRPC(object):
@@ -72,10 +76,12 @@ def testReturningEmptyResponse():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert not result.headers.hasHeader('content-encoding')
-	assert 'null' == str(result.stream.read())
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert not result.headers.hasHeader("content-encoding")
+	assert "null" == str(result.stream.read())
 
 
 @pytest.mark.obsolete
@@ -87,16 +93,22 @@ def testHandlingMultipleRPCs():
 	"""
 	worker = WorkerOpsiJsonRpc(service=None, request=FakeRequest(), resource=None)
 	worker._rpcs = [
-		FakeRPC(), FakeRPC(1), FakeRPC(u"FÄKE!"),
-		FakeRPC({"Narziss": "Morgen Nicht Geboren"})
+		FakeRPC(),
+		FakeRPC(1),
+		FakeRPC("FÄKE!"),
+		FakeRPC({"Narziss": "Morgen Nicht Geboren"}),
 	]
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert not result.headers.hasHeader('content-encoding')
-	assert '[null, 1, "F\xc3\x84KE!", {"Narziss": "Morgen Nicht Geboren"}]' == str(result.stream.read())
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert not result.headers.hasHeader("content-encoding")
+	assert '[null, 1, "F\xc3\x84KE!", {"Narziss": "Morgen Nicht Geboren"}]' == str(
+		result.stream.read()
+	)
 
 
 @pytest.mark.obsolete
@@ -109,9 +121,11 @@ def testHandlingSingleResult():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert not result.headers.hasHeader('content-encoding')
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert not result.headers.hasHeader("content-encoding")
 	assert '"Hallo Welt"' == str(result.stream.read())
 
 
@@ -125,9 +139,11 @@ def testHandlingSingleResultConsistingOfList():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert not result.headers.hasHeader('content-encoding')
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert not result.headers.hasHeader("content-encoding")
 	assert '["Eins", "Zwei", "Drei"]' == str(result.stream.read())
 
 
@@ -142,16 +158,18 @@ def testCompressingResponseDataWithGzip():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert ['gzip'] == result.headers.getRawHeaders('content-encoding')
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert ["gzip"] == result.headers.getRawHeaders("content-encoding")
 
 	sdata = result.stream.read()
 
 	with gzip.GzipFile(fileobj=StringIO(sdata), mode="r") as gzipfile:
 		data = gzipfile.read()
 
-	assert 'null' == data
+	assert "null" == data
 
 
 @pytest.mark.obsolete
@@ -165,13 +183,15 @@ def testCompressingResponseDataWithDeflate():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert ['deflate'] == result.headers.getRawHeaders('content-encoding')
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert ["deflate"] == result.headers.getRawHeaders("content-encoding")
 
 	sdata = result.stream.read()
 	data = zlib.decompress(sdata)
-	assert 'null' == data
+	assert "null" == data
 
 
 @pytest.mark.obsolete
@@ -189,22 +209,23 @@ def testCompressingResponseIfInvalidMimetype():
 	The returned content-encoding is "gzip" but the content
 	is acutally compressed with deflate.
 	"""
-	testHeader = FakeDictHeader({
-		"Accept": "gzip-application/json-rpc",
-		"invalid": "ignoreme"
-	})
+	testHeader = FakeDictHeader(
+		{"Accept": "gzip-application/json-rpc", "invalid": "ignoreme"}
+	)
 	request = FakeRequest(testHeader)
 	worker = WorkerOpsiJsonRpc(service=None, request=request, resource=None)
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['gzip'] == result.headers.getRawHeaders('content-encoding')
-	assert ['gzip-application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
+	assert result.headers.hasHeader("content-type")
+	assert ["gzip"] == result.headers.getRawHeaders("content-encoding")
+	assert ["gzip-application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
 
 	sdata = result.stream.read()
 	data = zlib.decompress(sdata)
-	assert 'null' == data
+	assert "null" == data
 
 
 @pytest.mark.obsolete
@@ -215,25 +236,29 @@ def testReturningPlainCalls():
 
 	result = worker._generateResponse(None)
 	assert 200 == result.code
-	assert result.headers.hasHeader('content-type')
-	assert ['application/json;charset=utf-8'] == result.headers.getRawHeaders('content-type')
-	assert not result.headers.hasHeader('content-encoding')
+	assert result.headers.hasHeader("content-type")
+	assert ["application/json;charset=utf-8"] == result.headers.getRawHeaders(
+		"content-type"
+	)
+	assert not result.headers.hasHeader("content-encoding")
 
 	data = result.stream.read()
-	assert 'null' == str(data)
+	assert "null" == str(data)
 
 
 @pytest.mark.obsolete
 def testDecodingOldCallQuery():
 	"Simulating opsi 4.0.6 with invalid MIME type handling."
-	r = FakeRequest(headers=FakeHeader(
-		{
-			"content-encoding": ["gzip"],
-			"content-type": FakeMediaType("gzip-application/json-rpc"),
-		}
-	))
+	r = FakeRequest(
+		headers=FakeHeader(
+			{
+				"content-encoding": ["gzip"],
+				"content-type": FakeMediaType("gzip-application/json-rpc"),
+			}
+		)
+	)
 
 	worker = WorkerOpsi(service=None, request=r, resource=None)
 	worker.query = zlib.compress("Test 1234")
 	worker._decodeQuery(None)
-	assert 'Test 1234' == worker.query
+	assert "Test 1234" == worker.query

@@ -19,6 +19,7 @@ Functionality to patch a sudoers file on a Linux system.
 
 	Avoid duplicating settings.
 """
+
 import codecs
 import shutil
 import time
@@ -46,12 +47,17 @@ call opsi-set-rights.
 
 	:param sudoersFile: The path to the sudoers file.
 	"""
-	entries = ["opsiconfd ALL=NOPASSWD: /usr/bin/opsi-set-rights", f"%{FILE_ADMIN_GROUP} ALL=NOPASSWD: /usr/bin/opsi-set-rights"]
+	entries = [
+		"opsiconfd ALL=NOPASSWD: /usr/bin/opsi-set-rights",
+		f"%{FILE_ADMIN_GROUP} ALL=NOPASSWD: /usr/bin/opsi-set-rights",
+	]
 
 	_patchSudoersFileWithEntries(sudoersFile, entries)
 
 
-def patchSudoersFileToAllowRestartingDHCPD(dhcpdRestartCommand, sudoersFile=SUDOERS_FILE):
+def patchSudoersFileToAllowRestartingDHCPD(
+	dhcpdRestartCommand, sudoersFile=SUDOERS_FILE
+):
 	"""
 	Patches the sudoers file so opsiconfd can restart the DHCP daemon
 	and execute the ``service`` command without an tty.
@@ -96,7 +102,7 @@ def _patchSudoersFileWithEntries(sudoersFile, entries):
 			lines.append(line)
 
 	# Stripping is important to avoid problems with newlines.
-	entriesToAdd = set(entries) - set(l.strip() for l in lines)
+	entriesToAdd = set(entries) - set(line.strip() for line in lines)
 
 	ttyPatchRequired = ttyPatchRequired and distributionRequiresNoTtyPatch()
 	modifyFile = ttyPatchRequired or servicePatchRequired or entriesToAdd

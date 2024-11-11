@@ -39,7 +39,9 @@ class AuthenticationModule:
 	def user_is_admin(self, username: str) -> bool:
 		return self.get_admin_groupname() in self.get_groupnames(username)
 
-	def user_is_read_only(self, username: str, forced_user_groupnames: Set[str] = None) -> bool:
+	def user_is_read_only(
+		self, username: str, forced_user_groupnames: Set[str] = None
+	) -> bool:
 		user_groupnames = set()
 		if forced_user_groupnames is None:
 			user_groupnames = self.get_groupnames(username)

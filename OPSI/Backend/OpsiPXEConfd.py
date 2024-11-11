@@ -15,11 +15,8 @@ import threading
 import time
 from contextlib import closing, contextmanager
 from shlex import quote
-from typing import Any, Dict, Generator, List
+from typing import Any, Generator
 
-from OPSI.Backend.Base import ConfigDataBackend
-from OPSI.Backend.Base.Backend import Backend
-from OPSI.Backend.JSONRPC import JSONRPCBackend
 from opsicommon.exceptions import (
 	BackendMissingDataError,
 	BackendUnableToConnectError,
@@ -35,6 +32,10 @@ from opsicommon.objects import (
 )
 from opsicommon.system.network import get_fqdn
 from opsicommon.types import forceHostId, forceInt, forceUnicode, forceUnicodeList
+
+from OPSI.Backend.Base import ConfigDataBackend
+from OPSI.Backend.Base.Backend import Backend
+from OPSI.Backend.JSONRPC import JSONRPCBackend
 
 __all__ = ("ServerConnection", "OpsiPXEConfdBackend", "createUnixSocket")
 
@@ -67,7 +68,9 @@ class ServerConnection:  # pylint: disable=too-few-public-methods
 
 
 @contextmanager
-def createUnixSocket(port: int, timeout: float = 5.0) -> Generator[socket.socket, None, None]:
+def createUnixSocket(
+	port: int, timeout: float = 5.0
+) -> Generator[socket.socket, None, None]:
 	logger.notice("Creating unix socket %s", port)
 	_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	_socket.settimeout(timeout)
@@ -113,7 +116,9 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			backend = self._context
 		depots = backend.host_getObjects(id=self._depotId)  # pylint: disable=maybe-no-member
 		if not depots or not depots[0].getOpsiHostKey():
-			raise BackendMissingDataError(f"Failed to get opsi host key for depot '{self._depotId}'")
+			raise BackendMissingDataError(
+				f"Failed to get opsi host key for depot '{self._depotId}'"
+			)
 		self._opsiHostKey = depots[0].getOpsiHostKey()
 		secret_filter.add_secrets(self._opsiHostKey)
 
@@ -124,8 +129,8 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			# This can fail if backend is not yet initialized, continue!
 			logger.info(err)
 
-	def _parseArguments(self, kwargs: Dict[str, Any]) -> None:
-		for (option, value) in kwargs.items():
+	def _parseArguments(self, kwargs: dict[str, Any]) -> None:
+		for option, value in kwargs.items():
 			option = option.lower()
 			if option == "port":
 				self._port = value
@@ -140,15 +145,25 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 		if depot not in self._depotConnections:
 			if not self._opsiHostKey:
 				self._get_opsi_host_key()
-			self._depotConnections[depot] = self._getExternalBackendConnection(depot, self._depotId, self._opsiHostKey, port=port)
+			self._depotConnections[depot] = self._getExternalBackendConnection(
+				depot, self._depotId, self._opsiHostKey, port=port
+			)
 		return self._depotConnections[depot]
 
-	def _getExternalBackendConnection(self, address: str, username: str, password: str, port: int = 4447) -> JSONRPCBackend:
+	def _getExternalBackendConnection(
+		self, address: str, username: str, password: str, port: int = 4447
+	) -> JSONRPCBackend:
 		secret_filter.add_secrets(password)
 		try:
-			return JSONRPCBackend(address=f"https://{address}:{port}/rpc/backend/{self._name}", username=username, password=password)
+			return JSONRPCBackend(
+				address=f"https://{address}:{port}/rpc/backend/{self._name}",
+				username=username,
+				password=password,
+			)
 		except Exception as err:
-			raise BackendUnableToConnectError(f"Failed to connect to depot '{address}': {err}") from err
+			raise BackendUnableToConnectError(
+				f"Failed to connect to depot '{address}': {err}"
+			) from err
 
 	def _getResponsibleDepotId(self, clientId: str) -> str:
 		configStates = self._context.configState_getObjects(
@@ -165,14 +180,20 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			depotId = configs[0].defaultValues[0]
 		return depotId
 
-	def _pxeBootConfigurationUpdateNeeded(self, productOnClient: ProductOnClient) -> bool:  # pylint: disable=no-self-use
+	def _pxeBootConfigurationUpdateNeeded(
+		self, productOnClient: ProductOnClient
+	) -> bool:  # pylint: disable=no-self-use
 		if productOnClient.productType != "NetbootProduct":
-			logger.debug("Not a netboot product: %s, nothing to do", productOnClient.productId)
+			logger.debug(
+				"Not a netboot product: %s, nothing to do", productOnClient.productId
+			)
 			return False
 
 		if not productOnClient.actionRequest:
 			logger.debug(
-				"No action request update for product %s, client %s, nothing to do", productOnClient.productId, productOnClient.clientId
+				"No action request update for product %s, client %s, nothing to do",
+				productOnClient.productId,
+				productOnClient.clientId,
 			)
 			return False
 
@@ -183,13 +204,25 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 
 		try:  # pylint: disable=too-many-nested-blocks
 			try:
-				host = self._context.host_getObjects(attributes=["hardwareAddress", "opsiHostKey", "ipAddress"], id=clientId)[0]
+				host = self._context.host_getObjects(
+					attributes=["hardwareAddress", "opsiHostKey", "ipAddress"],
+					id=clientId,
+				)[0]
 			except IndexError:
 				logger.debug("No matching host found - fast exit.")
 				return serialize({"host": None, "productOnClient": []})
 
 			productOnClients = self._context.productOnClient_getObjects(
-				productType="NetbootProduct", clientId=clientId, actionRequest=["setup", "uninstall", "update", "always", "once", "custom"]
+				productType="NetbootProduct",
+				clientId=clientId,
+				actionRequest=[
+					"setup",
+					"uninstall",
+					"update",
+					"always",
+					"once",
+					"custom",
+				],
 			)
 			try:
 				productOnClient = productOnClients[0]
@@ -199,11 +232,19 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 
 			try:
 				productOnDepot = self._context.productOnDepot_getObjects(
-					productType="NetbootProduct", productId=productOnClient.productId, depotId=depotId
+					productType="NetbootProduct",
+					productId=productOnClient.productId,
+					depotId=depotId,
 				)[0]
 			except IndexError:
 				logger.debug("No productOnDepot found - fast exit.")
-				return serialize({"host": host, "productOnClient": productOnClient, "productOnDepot": None})
+				return serialize(
+					{
+						"host": host,
+						"productOnClient": productOnClient,
+						"productOnDepot": None,
+					}
+				)
 
 			# Get the product information for the version present on
 			# the depot.
@@ -236,13 +277,19 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 						# and no items are present.
 						pass
 					except Exception as err:  # pylint: disable=broad-except
-						logger.debug("Failed to detect elilo setting for %s: %s", clientId, err)
+						logger.debug(
+							"Failed to detect elilo setting for %s: %s", clientId, err
+						)
 
-			productPropertyStates = self._collectProductPropertyStates(clientId, productOnClient.productId, depotId)
+			productPropertyStates = self._collectProductPropertyStates(
+				clientId, productOnClient.productId, depotId
+			)
 			logger.debug("Collected product property states: %s", productPropertyStates)
 
 			backendinfo = self._context.backend_info()
-			backendinfo["hostCount"] = len(self._context.host_getObjects(attributes=["id"], type="OpsiClient"))
+			backendinfo["hostCount"] = len(
+				self._context.host_getObjects(attributes=["id"], type="OpsiClient")
+			)
 
 			data = {
 				"backendInfo": backendinfo,
@@ -258,21 +305,30 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			}
 
 			data = serialize(data, deep=True)
-			logger.debug("Collected data for opsipxeconfd (client %r): %s", clientId, data)
+			logger.debug(
+				"Collected data for opsipxeconfd (client %r): %s", clientId, data
+			)
 		except Exception as err:  # pylint: disable=broad-except
-			logger.error("Failed to collect data for opsipxeconfd (client %r): %s", clientId, err, exc_info=True)
+			logger.error(
+				"Failed to collect data for opsipxeconfd (client %r): %s",
+				clientId,
+				err,
+				exc_info=True,
+			)
 			data = {}
 
 		return data
 
-	def _collectConfigStates(self, clientId: str) -> List[ConfigState]:
+	def _collectConfigStates(self, clientId: str) -> list[ConfigState]:
 		configIds = [
 			"opsi-linux-bootimage.append",
 			"clientconfig.configserver.url",
 			"clientconfig.dhcpd.filename",
 		]
 
-		configStates = self._context.configState_getObjects(objectId=clientId, configId=configIds)
+		configStates = self._context.configState_getObjects(
+			objectId=clientId, configId=configIds
+		)
 
 		if len(configIds) == len(configStates):
 			# We have a value set for each of our configIds - exiting.
@@ -283,28 +339,46 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 
 		# Create missing config states
 		for config in self._context.config_getObjects(id=missingConfigStateIds):
-			logger.debug("Got default values for %s: %s", config.id, config.defaultValues)
+			logger.debug(
+				"Got default values for %s: %s", config.id, config.defaultValues
+			)
 			# Config state does not exist for client => create default
-			cf = ConfigState(configId=config.id, objectId=clientId, values=config.defaultValues)
+			cf = ConfigState(
+				configId=config.id, objectId=clientId, values=config.defaultValues
+			)
 			cf.setGeneratedDefault(True)
 			configStates.append(cf)
 
 		return configStates
 
-	def _collectProductPropertyStates(self, clientId: str, productId: str, depotId: str) -> Dict[str, str]:
-		productPropertyStates = self._context.productPropertyState_getObjects(objectId=clientId, productId=productId)
+	def _collectProductPropertyStates(
+		self, clientId: str, productId: str, depotId: str
+	) -> dict[str, str]:
+		productPropertyStates = self._context.productPropertyState_getObjects(
+			objectId=clientId, productId=productId
+		)
 
 		propertyStatePropertyIds = set(pps.propertyId for pps in productPropertyStates)
 
 		# Create missing product property states
-		for pps in self._context.productPropertyState_getObjects(productId=productId, objectId=depotId):
+		for pps in self._context.productPropertyState_getObjects(
+			productId=productId, objectId=depotId
+		):
 			if pps.propertyId not in propertyStatePropertyIds:
 				# Product property for client does not exist => add default (values of depot)
 				productPropertyStates.append(
-					ProductPropertyState(productId=pps.productId, propertyId=pps.propertyId, objectId=clientId, values=pps.values)
+					ProductPropertyState(
+						productId=pps.productId,
+						propertyId=pps.propertyId,
+						objectId=clientId,
+						values=pps.values,
+					)
 				)
 
-		return {pps.propertyId: ",".join(forceUnicodeList(pps.getValues())) for pps in productPropertyStates}
+		return {
+			pps.propertyId: ",".join(forceUnicodeList(pps.getValues()))
+			for pps in productPropertyStates
+		}
 
 	def _updateByProductOnClient(self, productOnClient: ProductOnClient) -> None:
 		if not self._pxeBootConfigurationUpdateNeeded(productOnClient):
@@ -317,7 +391,10 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			for method in destination.backend_getInterface():
 				if method["name"] == "opsipxeconfd_updatePXEBootConfiguration":
 					if len(method["params"]) < 2:
-						logger.debug("Depot %s does not support receiving cached data.", responsibleDepot)
+						logger.debug(
+							"Depot %s does not support receiving cached data.",
+							responsibleDepot,
+						)
 						return False
 
 					break
@@ -332,18 +409,30 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			depot, port = self._port.split(":")
 			destination = self._getDepotConnection(depot, port)
 		elif responsibleDepot != self._depotId:
-			logger.info("Not responsible for client '%s', forwarding request to depot %s", productOnClient.clientId, responsibleDepot)
+			logger.info(
+				"Not responsible for client '%s', forwarding request to depot %s",
+				productOnClient.clientId,
+				responsibleDepot,
+			)
 			destination = self._getDepotConnection(responsibleDepot)
 		else:
 			destination = self
 
 		if backendSupportsCachedData(destination):
-			data = self._collectDataForUpdate(productOnClient.clientId, responsibleDepot)
-			destination.opsipxeconfd_updatePXEBootConfiguration(productOnClient.clientId, data)
+			data = self._collectDataForUpdate(
+				productOnClient.clientId, responsibleDepot
+			)
+			destination.opsipxeconfd_updatePXEBootConfiguration(
+				productOnClient.clientId, data
+			)
 		else:
-			destination.opsipxeconfd_updatePXEBootConfiguration(productOnClient.clientId)
+			destination.opsipxeconfd_updatePXEBootConfiguration(
+				productOnClient.clientId
+			)
 
-	def opsipxeconfd_updatePXEBootConfiguration(self, clientId: str, data: Dict[str, Any] = None) -> None:
+	def opsipxeconfd_updatePXEBootConfiguration(
+		self, clientId: str, data: dict[str, Any] = None
+	) -> None:
 		"""
 		Update the boot configuration of a specific client.
 		This method will relay calls to opsipxeconfd who does the handling.
@@ -389,7 +478,9 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 			return destinationFile
 		except (OSError, IOError) as dataFileError:
 			logger.debug(dataFileError, exc_info=True)
-			logger.debug("Writing cache file %s failed: %s", destinationFile, dataFileError)
+			logger.debug(
+				"Writing cache file %s failed: %s", destinationFile, dataFileError
+			)
 		return None
 
 	def backend_exit(self) -> None:
@@ -419,7 +510,9 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 	def productOnClient_updateObject(self, productOnClient: ProductOnClient) -> None:
 		self._updateByProductOnClient(productOnClient)
 
-	def productOnClient_deleteObjects(self, productOnClients: List[ProductOnClient]) -> None:
+	def productOnClient_deleteObjects(
+		self, productOnClients: list[ProductOnClient]
+	) -> None:
 		errors = []
 		for productOnClient in productOnClients:
 			try:
@@ -443,8 +536,12 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 
 		self.opsipxeconfd_updatePXEBootConfiguration(configState.objectId)
 
-	def configState_deleteObjects(self, configStates: List[ConfigState]) -> None:
-		hosts = set(configState.objectId for configState in configStates if configState.configId == "clientconfig.depot.id")
+	def configState_deleteObjects(self, configStates: list[ConfigState]) -> None:
+		hosts = set(
+			configState.objectId
+			for configState in configStates
+			if configState.configId == "clientconfig.depot.id"
+		)
 
 		errors = []
 		for host in hosts:
@@ -460,7 +557,9 @@ class OpsiPXEConfdBackend(ConfigDataBackend):  # pylint: disable=too-many-instan
 class UpdateThread(threading.Thread):
 	_DEFAULT_DELAY = 3.0
 
-	def __init__(self, opsiPXEConfdBackend: OpsiPXEConfdBackend, clientId: str, command: str) -> None:
+	def __init__(
+		self, opsiPXEConfdBackend: OpsiPXEConfdBackend, clientId: str, command: str
+	) -> None:
 		threading.Thread.__init__(self)
 		self._opsiPXEConfdBackend = opsiPXEConfdBackend
 		self._clientId = clientId
@@ -476,15 +575,22 @@ class UpdateThread(threading.Thread):
 
 		with self._opsiPXEConfdBackend._updateThreadsLock:  # pylint: disable=protected-access
 			try:
-				logger.info("Updating pxe boot configuration for client '%s'", self._clientId)
+				logger.info(
+					"Updating pxe boot configuration for client '%s'", self._clientId
+				)
 				sc = ServerConnection(
-					self._opsiPXEConfdBackend._port, self._opsiPXEConfdBackend._timeout  # pylint: disable=protected-access
+					self._opsiPXEConfdBackend._port,
+					self._opsiPXEConfdBackend._timeout,  # pylint: disable=protected-access
 				)
 				logger.debug("Sending command %s", self._command)
 				result = sc.sendCommand(self._command)
 				logger.debug("Got result %s", result)
 			except Exception as err:  # pylint: disable=broad-except
-				logger.critical("Failed to update PXE boot configuration for client '%s': %s", self._clientId, err)
+				logger.critical(
+					"Failed to update PXE boot configuration for client '%s': %s",
+					self._clientId,
+					err,
+				)
 			finally:
 				del self._opsiPXEConfdBackend._updateThreads[self._clientId]  # pylint: disable=protected-access
 

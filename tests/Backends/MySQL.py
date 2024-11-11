@@ -11,7 +11,9 @@ from contextlib import contextmanager
 import pytest
 
 from OPSI.Backend.MySQL import (
-	MySQL, MySQLBackend, MySQLBackendObjectModificationTracker
+	MySQL,
+	MySQLBackend,
+	MySQLBackendObjectModificationTracker,
 )
 from OPSI.Util.Task.UpdateBackend.MySQL import disableForeignKeyChecks
 
@@ -26,7 +28,7 @@ UNKNOWN_TABLE_ERROR_CODE = 1051
 @contextmanager
 def getMySQLBackend(**backendOptions):
 	if not MySQLconfiguration:
-		pytest.skip('no MySQL backend configuration given.')
+		pytest.skip("no MySQL backend configuration given.")
 
 	optionsForBackend = MySQLconfiguration
 	optionsForBackend.update(backendOptions)
@@ -38,7 +40,7 @@ def getMySQLBackend(**backendOptions):
 @contextmanager
 def getMySQLModificationTracker():
 	if not MySQLconfiguration:
-		pytest.skip('no MySQL backend configuration given.')
+		pytest.skip("no MySQL backend configuration given.")
 
 	yield MySQLBackendObjectModificationTracker(**MySQLconfiguration)
 
@@ -54,7 +56,7 @@ def cleanDatabase(database):
 				while not success:
 					success = True
 					for table_name in getTableNames(database, session):
-						drop_command = f'DROP TABLE `{table_name}`'
+						drop_command = f"DROP TABLE `{table_name}`"
 						try:
 							database.execute(session, drop_command)
 						except Exception:  # pylint: disable=broad-except
@@ -71,4 +73,4 @@ def cleanDatabase(database):
 
 
 def getTableNames(database, session):
-	return set(tuple(i.values())[0] for i in database.getSet(session, 'SHOW TABLES'))
+	return set(tuple(i.values())[0] for i in database.getSet(session, "SHOW TABLES"))

@@ -57,8 +57,8 @@ def test_legacy_logger(utils):  # pylint: disable=redefined-outer-name
 	with utils.log_stream(LOG_TRACE) as stream:
 		legacy_logger = LegacyLogger()
 		assert legacy_logger == logger
-		#init_logging(file_level=logging.SECRET)
-		#legacy_logger.setLogFile("/tmp/test.log")
+		# init_logging(file_level=logging.SECRET)
+		# legacy_logger.setLogFile("/tmp/test.log")
 		# This method does nothing
 		legacy_logger.setLogFormat("xy")
 
@@ -73,7 +73,9 @@ def test_legacy_logger(utils):  # pylint: disable=redefined-outer-name
 		assert "SECRETSTRING2" not in log
 		assert "SECRETSTRING3" not in log
 
-		legacy_logger.logException(Exception("LOG_EXCEPTION"), logLevel=logging.CRITICAL)
+		legacy_logger.logException(
+			Exception("LOG_EXCEPTION"), logLevel=logging.CRITICAL
+		)
 		stream.seek(0)
 		log = stream.read()
 		assert "LOG_EXCEPTION" in log
@@ -87,13 +89,19 @@ def test_legacy_logger_calls(utils):  # pylint: disable=redefined-outer-name
 	legacy_logger.setConfidentialStrings(["topsecret"])
 	legacy_logger.addConfidentialString("evenmoresecret")
 	legacy_logger.setLogFormat("%s some format %s", currentThread=False, object=None)
-	legacy_logger.setConsoleFormat("%s some format %s", currentThread=False, object=None)
+	legacy_logger.setConsoleFormat(
+		"%s some format %s", currentThread=False, object=None
+	)
 	legacy_logger.setComponentName("name", currentThread=False, object=None)
 	legacy_logger.logToStdout(None)
 	legacy_logger.setSyslogFormat("%s some format %s", currentThread=False, object=None)
 	legacy_logger.setFileFormat("%s some format %s", currentThread=False, object=None)
-	legacy_logger.setUniventionFormat("%s some format %s", currentThread=False, object=None)
-	legacy_logger.setMessageSubjectFormat("%s some format %s", currentThread=False, object=None)
+	legacy_logger.setUniventionFormat(
+		"%s some format %s", currentThread=False, object=None
+	)
+	legacy_logger.setMessageSubjectFormat(
+		"%s some format %s", currentThread=False, object=None
+	)
 	legacy_logger.setUniventionLogger(None)
 	legacy_logger.setUniventionClass(None)
 	legacy_logger.getMessageSubject()
@@ -135,7 +143,7 @@ def test_legacy_logger_calls(utils):  # pylint: disable=redefined-outer-name
 		legacy_logger.essential("mymessage %s", "fill-value")
 		legacy_logger.comment("mymessage %s", "fill-value")
 		# calling log still fails as method signature has changed with opsi 4.2
-		#legacy_logger.log(3, "text %s", raiseException=False, formatArgs=["some format arg"], formatKwargs={})
+		# legacy_logger.log(3, "text %s", raiseException=False, formatArgs=["some format arg"], formatKwargs={})
 		stream.seek(0)
 		log = stream.read()
 		assert log.count("fill-value") == 13

@@ -52,6 +52,7 @@ RS_MD4_SIG_MAGIC = 0x72730136
 #  DEFINES FROM librsync.h  #
 #############################
 
+
 # librsync.h: rs_buffers_s
 class Buffer(ctypes.Structure):
 	_fields_ = [
@@ -113,7 +114,13 @@ _librsync.rs_job_free.restype = ctypes.c_int
 _librsync.rs_job_free.argtypes = (ctypes.c_void_p,)
 
 # A function declaration for our read callback.
-patch_callback = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_longlong, ctypes.c_size_t, ctypes.POINTER(Buffer))
+patch_callback = ctypes.CFUNCTYPE(
+	ctypes.c_int,
+	ctypes.c_void_p,
+	ctypes.c_longlong,
+	ctypes.c_size_t,
+	ctypes.POINTER(Buffer),
+)
 
 
 class LibrsyncError(Exception):
@@ -167,15 +174,21 @@ def librsyncSignature(filename, base64Encoded=True):
 
 	try:
 		with open(filename, "rb") as filehandle:
-			sigfile_handle = tempfile.SpooledTemporaryFile(max_size=MAX_SPOOL, mode="wb+")
+			sigfile_handle = tempfile.SpooledTemporaryFile(
+				max_size=MAX_SPOOL, mode="wb+"
+			)
 
 			job = None
 			if hasattr(_librsync, "RS_DEFAULT_STRONG_LEN"):
 				# librsync < 1.0.0
-				job = _librsync.rs_sig_begin(RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN)
+				job = _librsync.rs_sig_begin(
+					RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN
+				)
 			else:
 				# librsync >= 1.0.0
-				job = _librsync.rs_sig_begin(RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN, RS_MD4_SIG_MAGIC)
+				job = _librsync.rs_sig_begin(
+					RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN, RS_MD4_SIG_MAGIC
+				)
 			try:
 				_execute(job, filehandle, sigfile_handle)
 				sigfile_handle.seek(0)
@@ -186,7 +199,9 @@ def librsyncSignature(filename, base64Encoded=True):
 				_librsync.rs_job_free(job)
 				sigfile_handle.close()
 	except Exception as sigError:
-		raise RuntimeError(f"Failed to get librsync signature from {filename}: {forceUnicode(sigError)}") from sigError
+		raise RuntimeError(
+			f"Failed to get librsync signature from {filename}: {forceUnicode(sigError)}"
+		) from sigError
 
 
 def librsyncDeltaFile(filename, signature, deltafile):
@@ -228,7 +243,9 @@ def librsyncDeltaFile(filename, signature, deltafile):
 			_librsync.rs_free_sumset(sig)
 
 	except Exception as sigError:
-		raise RuntimeError(f"Failed to write delta file {deltafile}: {forceUnicode(sigError)}") from sigError
+		raise RuntimeError(
+			f"Failed to write delta file {deltafile}: {forceUnicode(sigError)}"
+		) from sigError
 
 
 def librsyncPatchFile(oldfile, deltafile, newfile):
@@ -236,7 +253,12 @@ def librsyncPatchFile(oldfile, deltafile, newfile):
 	Create the new file from old file and delta file.
 	"""
 
-	logger.debug("Patching with librync: old file %s, delta file %s, new file %s", oldfile, deltafile, newfile)
+	logger.debug(
+		"Patching with librync: old file %s, delta file %s, new file %s",
+		oldfile,
+		deltafile,
+		newfile,
+	)
 	oldfile = forceFilename(oldfile)
 	newfile = forceFilename(newfile)
 	deltafile = forceFilename(deltafile)
@@ -269,4 +291,6 @@ def librsyncPatchFile(oldfile, deltafile, newfile):
 					finally:
 						_librsync.rs_job_free(job)
 	except Exception as patchError:
-		raise RuntimeError(f"Failed to patch file {oldfile}: {forceUnicode(patchError)}") from patchError
+		raise RuntimeError(
+			f"Failed to patch file {oldfile}: {forceUnicode(patchError)}"
+		) from patchError

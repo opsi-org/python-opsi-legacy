@@ -22,6 +22,7 @@ def testMultiThreadingBackend(multithreadingBackend, numberOfThreads):
 	o2g, _, clients = fillBackendWithObjectToGroups(backend)
 
 	print("====================START=============================")
+
 	class MultiThreadTester(threading.Thread):
 		def __init__(self, backend, clients, objectToGroups):
 			threading.Thread.__init__(self)
@@ -39,7 +40,7 @@ def testMultiThreadingBackend(multithreadingBackend, numberOfThreads):
 			self.objectToGroup2 = o2g[1]
 
 			try:
-				print(u"Thread %s started" % self)
+				print("Thread %s started" % self)
 				time.sleep(1)
 				self.backend.host_getObjects()
 				self.backend.host_deleteObjects(self.client1)

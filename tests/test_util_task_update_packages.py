@@ -76,7 +76,9 @@ def test_listing_local_packages(tmpdir, package_updater_class):  # pylint: disab
 
 @pytest.fixture
 def example_config_path(test_data_path):
-	file_path = os.path.join(test_data_path, "util", "task", "updatePackages", "example_updater.conf")
+	file_path = os.path.join(
+		test_data_path, "util", "task", "updatePackages", "example_updater.conf"
+	)
 	with createTemporaryTestfile(file_path) as new_path:
 		yield new_path
 
@@ -90,7 +92,10 @@ def test_parsing_config_file(tmpdir, example_config_path, package_updater_class)
 	os.mkdir(repo_path)
 
 	patch_config_file(
-		example_config_path, logFile=os.path.join(tmpdir, "opsi-package-updater.log"), packageDir=tmpdir, repositoryConfigDir=repo_path
+		example_config_path,
+		logFile=os.path.join(tmpdir, "opsi-package-updater.log"),
+		packageDir=tmpdir,
+		repositoryConfigDir=repo_path,
 	)
 	copy_example_repo_configs(repo_path)
 
@@ -155,13 +160,17 @@ def copy_example_repo_configs(target_dir):
 	from .conftest import TEST_DATA_PATH  # pylint: disable=import-outside-toplevel
 
 	for filename in ("experimental.repo",):
-		file_path = os.path.join(TEST_DATA_PATH, "util", "task", "updatePackages", filename)
+		file_path = os.path.join(
+			TEST_DATA_PATH, "util", "task", "updatePackages", filename
+		)
 		shutil.copy(file_path, target_dir)
 
 
 @pytest.fixture(params=["apachelisting.html"], ids=["apache"])
 def repository_listing_page(test_data_path, request):
-	file_path = os.path.join(test_data_path, "util", "task", "updatePackages", request.param)
+	file_path = os.path.join(
+		test_data_path, "util", "task", "updatePackages", request.param
+	)
 
 	with open(file_path, encoding="utf-8") as example_file:
 		return example_file.read()
@@ -179,7 +188,9 @@ def test_link_extracting(repository_listing_page):  # pylint: disable=redefined-
 		raise RuntimeError("No links found!")
 
 
-def test_global_proxy_applied_to_repos(tmpdir, example_config_path, package_updater_class):  # pylint: disable=redefined-outer-name
+def test_global_proxy_applied_to_repos(
+	tmpdir, example_config_path, package_updater_class
+):  # pylint: disable=redefined-outer-name
 	test_proxy = "http://hurr:durr@someproxy:1234"
 
 	prepared_config = DEFAULT_CONFIG.copy()
@@ -235,7 +246,12 @@ def test_check_accept_ranges(tmp_path, package_updater_class):  # pylint: disabl
 	config["packageDir"] = str(local_dir)
 
 	config_file.write_text(
-		data=("[general]\n" f"packageDir = {str(local_dir)}\n" f"repositoryConfigDir = {str(repo_conf_path)}\n"), encoding="utf-8"
+		data=(
+			"[general]\n"
+			f"packageDir = {str(local_dir)}\n"
+			f"repositoryConfigDir = {str(repo_conf_path)}\n"
+		),
+		encoding="utf-8",
 	)
 
 	server_package_file = server_dir / "hwaudit_4.2.0.0-1.opsi"
@@ -257,7 +273,9 @@ def test_check_accept_ranges(tmp_path, package_updater_class):  # pylint: disabl
 
 	for accept_ranges in (True, False):
 		with http_test_server(
-			serve_directory=server_dir, response_headers={"accept-ranges": "bytes"} if accept_ranges else None, log_file=str(server_log)
+			serve_directory=server_dir,
+			response_headers={"accept-ranges": "bytes"} if accept_ranges else None,
+			log_file=str(server_log),
 		) as server:
 			base_url = f"http://localhost:{server.port}"
 			proxy = ""
@@ -267,7 +285,9 @@ def test_check_accept_ranges(tmp_path, package_updater_class):  # pylint: disabl
 			write_repo_conf(base_url, proxy)
 
 			local_package_file = local_dir / "hwaudit_4.1.0.0-1.opsi"
-			local_package_file.write_bytes(server_package_file.read_bytes() + b"def" * 3_000_000)
+			local_package_file.write_bytes(
+				server_package_file.read_bytes() + b"def" * 3_000_000
+			)
 
 			package_updater: OpsiPackageUpdater = package_updater_class(config)
 
@@ -286,17 +306,25 @@ def test_check_accept_ranges(tmp_path, package_updater_class):  # pylint: disabl
 			assert package["filename"] == server_package_file.name
 			assert package["zsyncFile"] == f"{base_url}/{zsync_file.name}"
 			with package_updater.makeSession(package["repository"]) as session:
-				assert package_updater._useZsync(session, package, local_packages[0]) == accept_ranges  # pylint: disable=protected-access
+				assert (
+					package_updater._useZsync(session, package, local_packages[0])
+					== accept_ranges
+				)  # pylint: disable=protected-access
 
 			if "localhost" in base_url:
 				server_log.unlink()
 			new_packages = package_updater.get_packages(DummyNotifier())
 			assert len(new_packages) == 1
 
-			request = json.loads(server_log.read_text(encoding="utf-8").rstrip().split("\n")[-1])
+			request = json.loads(
+				server_log.read_text(encoding="utf-8").rstrip().split("\n")[-1]
+			)
 			if "localhost" in base_url:
 				assert request["headers"].get("Authorization") == "Basic dXNlcjpwYXNz"
-				assert md5sum(str(local_dir / server_package_file.name)) == server_package_md5sum
+				assert (
+					md5sum(str(local_dir / server_package_file.name))
+					== server_package_md5sum
+				)
 				server_log.unlink()
 				if accept_ranges:
 					assert "Range" in request["headers"]

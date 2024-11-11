@@ -10,9 +10,9 @@ As an example this contains classes for hosts, products, configurations.
 Deprecated, use opsicommon.objects instead.
 """
 
-from typing import Any, List
+from typing import Any
 
-from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
 
 mandatoryConstructorArgs = mandatory_constructor_args
 getIdentAttributes = get_ident_attributes
@@ -22,5 +22,5 @@ getPossibleClassAttributes = get_possible_class_attributes
 decodeIdent = decode_ident
 
 
-def objectsDiffer(obj1: Any, obj2: Any, excludeAttributes: List[str] = None) -> bool:
+def objectsDiffer(obj1: Any, obj2: Any, excludeAttributes: list[str] = None) -> bool:
 	return objects_differ(obj1, obj2, exclude_attributes=excludeAttributes)

@@ -7,6 +7,7 @@ Configuration data for the backend.
 
 .. versionadded:: 4.0.6.1
 """
+
 import codecs
 import os
 import re
@@ -25,7 +26,11 @@ SimpleBoolConfig = namedtuple("SimpleBoolConfig", ["id", "description", "value"]
 SimpleUnicodeConfig = namedtuple("SimpleUnicodeConfig", ["id", "description", "values"])
 
 
-def initializeConfigs(backend: bm.BackendManager = None, configServer: OpsiConfigserver = None, pathToSMBConf: str = SMB_CONF) -> None:
+def initializeConfigs(
+	backend: bm.BackendManager = None,
+	configServer: OpsiConfigserver = None,
+	pathToSMBConf: str = SMB_CONF,
+) -> None:
 	"""
 	Adding default configurations to the backend.
 
@@ -72,7 +77,9 @@ default. Supply this if ``clientconfig.configserver.url`` or \
 
 
 def create_default_configs(  # pylint: disable=too-many-branches,too-many-statements
-	backend: bm.BackendManager, configServer: OpsiConfigserver = None, pathToSMBConf: str = SMB_CONF
+	backend: bm.BackendManager,
+	configServer: OpsiConfigserver = None,
+	pathToSMBConf: str = SMB_CONF,
 ) -> None:
 	configIdents = set(backend.config_getIdents(returnType="unicode"))  # pylint: disable=maybe-no-member
 	configs = []
@@ -136,7 +143,13 @@ def create_default_configs(  # pylint: disable=too-many-branches,too-many-statem
 
 	if "clientconfig.depot.dynamic" not in configIdents:
 		logger.debug("Missing clientconfig.depot.dynamic - adding it.")
-		configs.append(BoolConfig(id="clientconfig.depot.dynamic", description="Use dynamic depot selection", defaultValues=[False]))
+		configs.append(
+			BoolConfig(
+				id="clientconfig.depot.dynamic",
+				description="Use dynamic depot selection",
+				defaultValues=[False],
+			)
+		)
 
 	if "clientconfig.depot.drive" not in configIdents:
 		logger.debug("Missing clientconfig.depot.drive - adding it.")
@@ -221,11 +234,17 @@ def create_default_configs(  # pylint: disable=too-many-branches,too-many-statem
 	if "opsiclientd.global.verify_server_cert" not in configIdents:
 		logger.debug("Missing opsiclientd.global.verify_server_cert - adding it.")
 		configs.append(
-			BoolConfig(id="opsiclientd.global.verify_server_cert", description="Verify opsi server TLS certificates", defaultValues=[False])
+			BoolConfig(
+				id="opsiclientd.global.verify_server_cert",
+				description="Verify opsi server TLS certificates",
+				defaultValues=[False],
+			)
 		)
 
 	if "opsiclientd.global.install_opsi_ca_into_os_store" not in configIdents:
-		logger.debug("Missing opsiclientd.global.install_opsi_ca_into_os_store - adding it.")
+		logger.debug(
+			"Missing opsiclientd.global.install_opsi_ca_into_os_store - adding it."
+		)
 		configs.append(
 			BoolConfig(
 				id="opsiclientd.global.install_opsi_ca_into_os_store",
@@ -260,18 +279,33 @@ def create_default_configs(  # pylint: disable=too-many-branches,too-many-statem
 
 	if "license-management.use" not in configIdents:
 		logger.debug("Missing license-management.use - adding it.")
-		configs.append(BoolConfig(id="license-management.use", description="Activate license management", defaultValues=[False]))
+		configs.append(
+			BoolConfig(
+				id="license-management.use",
+				description="Activate license management",
+				defaultValues=[False],
+			)
+		)
 
 	if "software-on-demand.active" not in configIdents:
 		logger.debug("Missing software-on-demand.active - adding it.")
-		configs.append(BoolConfig(id="software-on-demand.active", description="Activate software-on-demand", defaultValues=[False]))
+		configs.append(
+			BoolConfig(
+				id="software-on-demand.active",
+				description="Activate software-on-demand",
+				defaultValues=[False],
+			)
+		)
 
 	if "software-on-demand.product-group-ids" not in configIdents:
 		logger.debug("Missing software-on-demand.product-group-ids - adding it.")
 		configs.append(
 			UnicodeConfig(
 				id="software-on-demand.product-group-ids",
-				description=("Product group ids containing products which are " "allowed to be installed on demand"),
+				description=(
+					"Product group ids containing products which are "
+					"allowed to be installed on demand"
+				),
 				possibleValues=["software-on-demand"],
 				defaultValues=["software-on-demand"],
 				editable=True,
@@ -346,7 +380,9 @@ def addDynamicDepotDriveSelection(backend: bm.BackendManager):
 	config = backend.config_getObjects(id="clientconfig.depot.drive")[0]
 
 	if "dynamic" not in config.possibleValues:
-		logger.debug("Could not find possibility to select dynamic drive selection. Adding it to 'clientconfig.depot.drive'.")
+		logger.debug(
+			"Could not find possibility to select dynamic drive selection. Adding it to 'clientconfig.depot.drive'."
+		)
 
 		config.possibleValues.append("dynamic")
 		backend.config_updateObject(config)
@@ -356,16 +392,28 @@ def createWANconfigs(backend: bm.BackendManager) -> None:
 	"Create the configurations that are used by the WAN extension if missing."
 
 	configs = [
-		SimpleBoolConfig("opsiclientd.event_gui_startup.active", "gui_startup active", True),
-		SimpleBoolConfig("opsiclientd.event_gui_startup{user_logged_in}.active", "gui_startup{user_logged_in} active", True),
-		SimpleBoolConfig("opsiclientd.event_net_connection.active", "event_net_connection active", False),
+		SimpleBoolConfig(
+			"opsiclientd.event_gui_startup.active", "gui_startup active", True
+		),
+		SimpleBoolConfig(
+			"opsiclientd.event_gui_startup{user_logged_in}.active",
+			"gui_startup{user_logged_in} active",
+			True,
+		),
+		SimpleBoolConfig(
+			"opsiclientd.event_net_connection.active",
+			"event_net_connection active",
+			False,
+		),
 		SimpleBoolConfig("opsiclientd.event_timer.active", "event_timer active", False),
 	]
 
 	_createBooleanConfigsIfMissing(backend, configs)
 
 
-def _createBooleanConfigsIfMissing(backend: bm.BackendManager, configs: List[Config]) -> None:
+def _createBooleanConfigsIfMissing(
+	backend: bm.BackendManager, configs: List[Config]
+) -> None:
 	availableConfigs = set(backend.config_getIdents())
 	for config in configs:
 		if config.id not in availableConfigs:
@@ -376,7 +424,9 @@ def _createBooleanConfigsIfMissing(backend: bm.BackendManager, configs: List[Con
 def createInstallByShutdownConfig(backend: bm.BackendManager) -> None:
 	"Create the configurations that are used by the InstallByShutdown extension if missing."
 
-	config = SimpleBoolConfig("clientconfig.install_by_shutdown.active", "install_by_shutdown active", False)
+	config = SimpleBoolConfig(
+		"clientconfig.install_by_shutdown.active", "install_by_shutdown active", False
+	)
 
 	_createBooleanConfigsIfMissing(backend, [config])
 
@@ -384,7 +434,9 @@ def createInstallByShutdownConfig(backend: bm.BackendManager) -> None:
 def createUserProfileManagementDefaults(backend: bm.BackendManager) -> None:
 	"Create the default configuration for the User Profile Management extension."
 
-	eventActiveConfig = SimpleBoolConfig("opsiclientd.event_user_login.active", "user_login active", False)
+	eventActiveConfig = SimpleBoolConfig(
+		"opsiclientd.event_user_login.active", "user_login active", False
+	)
 	_createBooleanConfigsIfMissing(backend, [eventActiveConfig])
 
 	actionProcressorCommand = SimpleUnicodeConfig(

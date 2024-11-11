@@ -35,7 +35,9 @@ from .test_software_and_hardware_audit import (
 # TODO: there are some cases we should test
 # * handling backends with / without license management
 # * test with serverID, depotID, hostID given
-@pytest.mark.parametrize("checkAuditData", [True, False], ids=["with audit", "without audit"])
+@pytest.mark.parametrize(
+	"checkAuditData", [True, False], ids=["with audit", "without audit"]
+)
 def testBackendReplication(replicationDestinationBackend, checkAuditData):
 	# One important note regarding pytest:
 	# With our current way of setting up backends we may end up in
@@ -50,7 +52,9 @@ def testBackendReplication(replicationDestinationBackend, checkAuditData):
 		replicator.replicate(audit=checkAuditData)
 
 		checkIfBackendIsFilled(writeBackend)
-		checkBackendDataIsEqual(readBackend, writeBackend, checkAuditData=checkAuditData)
+		checkBackendDataIsEqual(
+			readBackend, writeBackend, checkAuditData=checkAuditData
+		)
 
 		if not checkAuditData:
 			assert 0 == len(writeBackend.auditHardware_getObjects())
@@ -74,15 +78,21 @@ def checkBackendDataIsEqual(first, second, checkAuditData=True):
 	compareResultsFromBackendMethod(first, second, "productPropertyState_getObjects")
 	compareResultsFromBackendMethod(first, second, "configState_getObjects")
 	compareResultsFromBackendMethod(first, second, "objectToGroup_getObjects")
-	compareResultsFromBackendMethod(first, second, "softwareLicenseToLicensePool_getObjects")
+	compareResultsFromBackendMethod(
+		first, second, "softwareLicenseToLicensePool_getObjects"
+	)
 	compareResultsFromBackendMethod(first, second, "licenseOnClient_getObjects")
-	compareResultsFromBackendMethod(first, second, "auditSoftwareToLicensePool_getObjects")
+	compareResultsFromBackendMethod(
+		first, second, "auditSoftwareToLicensePool_getObjects"
+	)
 
 	if checkAuditData:
 		compareResultsFromBackendMethod(first, second, "auditHardware_getObjects")
 		compareResultsFromBackendMethod(first, second, "auditSoftware_getObjects")
 		compareResultsFromBackendMethod(first, second, "auditHardwareOnHost_getObjects")
-		compareResultsFromBackendMethod(first, second, "auditSoftwareOnClient_getObjects")
+		compareResultsFromBackendMethod(
+			first, second, "auditSoftwareOnClient_getObjects"
+		)
 
 
 def compareResultsFromBackendMethod(firstBackend, secondBackend, methodname):
@@ -114,7 +124,9 @@ def fillBackend(backend, licenseManagementData=False):
 	productProperties = fillBackendWithProductPropertys(backend, products)
 	fillBackendWithProductOnDepots(backend, products, configServer, depotServer)
 	fillBackendWithProductOnClients(backend, products, clients)
-	fillBackendWithProductPropertyStates(backend, productProperties, depotServer, clients)
+	fillBackendWithProductPropertyStates(
+		backend, productProperties, depotServer, clients
+	)
 	fillBackendWithConfigStates(backend, configs, clients, depotServer)
 	fillBackendWithObjectToGroups(backend, groups, clients)
 	auditSoftwares = fillBackendWithAuditSoftwares(backend)
@@ -142,7 +154,6 @@ def checkIfBackendIsFilled(backend, licenseManagementData=False, auditData=False
 		print(type(group), group.toHash())
 		assert type(group).__name__ in ("HostGroup", "ProductGroup")
 
-
 	if licenseManagementData:
 		# TODO: check licenseManagementData
 		assert len(backend.licenseContract_getObjects()) > 0
@@ -153,7 +164,10 @@ def checkIfBackendIsFilled(backend, licenseManagementData=False, auditData=False
 	assert len(backend.productProperty_getObjects()) > 0
 	for product_property in backend.productProperty_getObjects():
 		print(type(product_property), product_property.toHash())
-		assert type(product_property).__name__ in ("UnicodeProductProperty", "BoolProductProperty")
+		assert type(product_property).__name__ in (
+			"UnicodeProductProperty",
+			"BoolProductProperty",
+		)
 	assert len(backend.productOnDepot_getObjects()) > 0
 	assert len(backend.productOnClient_getObjects()) > 0
 	assert len(backend.productPropertyState_getObjects()) > 0
@@ -266,8 +280,12 @@ def fillBackendWithProductOnClients(backend, products, clients):
 	return productsOnClients
 
 
-def fillBackendWithProductPropertyStates(backend, productProperties, depotServer, clients):
-	productPropertyStates = getProductPropertyStates(productProperties, depotServer, clients)
+def fillBackendWithProductPropertyStates(
+	backend, productProperties, depotServer, clients
+):
+	productPropertyStates = getProductPropertyStates(
+		productProperties, depotServer, clients
+	)
 	backend.productPropertyState_createObjects(productPropertyStates)
 
 

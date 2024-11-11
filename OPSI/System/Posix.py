@@ -32,7 +32,7 @@ from signal import SIGKILL
 
 import psutil
 from opsicommon.logging import LOG_NONE, get_logger, logging_config
-from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
 from opsicommon.system.subprocess import (
 	get_subprocess_environment as opsicommon_get_subprocess_environment,
 )

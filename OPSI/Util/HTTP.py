@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 # Copyright (c) uib GmbH <info@uib.de>
@@ -16,7 +15,14 @@ def urlsplit(url):
 	_url = urlparse(url)
 	if _url.hostname is None:
 		return (None, _url.path, None, None, None, None)
-	return (_url.scheme, _url.hostname, _url.port, _url.path, _url.username, _url.password)
+	return (
+		_url.scheme,
+		_url.hostname,
+		_url.port,
+		_url.path,
+		_url.username,
+		_url.password,
+	)
 
 
 def deflateEncode(data, level=1):

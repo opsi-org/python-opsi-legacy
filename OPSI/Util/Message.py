@@ -28,19 +28,30 @@ from OPSI.Types import (
 )
 
 __all__ = (
-	'Subject', 'MessageSubject', 'ChoiceSubject', 'ProgressSubject',
-	'MessageObserver', 'ChoiceObserver', 'ProgressObserver', 'SubjectsObserver',
-	'MessageSubjectProxy', 'ChoiceSubjectProxy', 'ProgressSubjectProxy',
-	'NotificationServerProtocol', 'NotificationServerFactory',
-	'NotificationServer', 'NotificationClientProtocol',
-	'NotificationClientFactory', 'NotificationClient'
+	"Subject",
+	"MessageSubject",
+	"ChoiceSubject",
+	"ProgressSubject",
+	"MessageObserver",
+	"ChoiceObserver",
+	"ProgressObserver",
+	"SubjectsObserver",
+	"MessageSubjectProxy",
+	"ChoiceSubjectProxy",
+	"ProgressSubjectProxy",
+	"NotificationServerProtocol",
+	"NotificationServerFactory",
+	"NotificationServer",
+	"NotificationClientProtocol",
+	"NotificationClientFactory",
+	"NotificationClient",
 )
 
 logger = get_logger("opsi.general")
 
 
 class Subject:
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin,unused-argument
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin,unused-argument
 		self._id = forceUnicode(id)
 		self._type = forceUnicode(type)
 		self._title = forceUnicode(title)
@@ -77,27 +88,27 @@ class Subject:
 			"id": self.getId(),
 			"type": self.getType(),
 			"title": self.getTitle(),
-			"class": self.getClass()
+			"class": self.getClass(),
 		}
 
 	def __str__(self):
-		return '<%s type: %s, id: %s>' % (self.__class__.__name__, self._type, self._id)
+		return "<%s type: %s, id: %s>" % (self.__class__.__name__, self._type, self._id)
 
 	def __repr__(self):
 		return self.__str__()
 
 
 class MessageSubject(Subject):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
 		Subject.__init__(self, id, type, title, **args)
 		self.reset()
 		try:
-			self._message = forceUnicode(args['message'])
+			self._message = forceUnicode(args["message"])
 		except KeyError:
 			pass  # no matching key
 
 		try:
-			self._severity = forceInt(args['severity'])
+			self._severity = forceInt(args["severity"])
 		except KeyError:
 			pass  # no matching key
 
@@ -105,7 +116,7 @@ class MessageSubject(Subject):
 
 	def reset(self):
 		Subject.reset(self)
-		self._message = ''
+		self._message = ""
 		self._severity = 0
 
 	def setMessage(self, message, severity=0):
@@ -125,33 +136,33 @@ class MessageSubject(Subject):
 
 	def serializable(self):
 		subject = Subject.serializable(self)
-		subject['message'] = self.getMessage()
-		subject['severity'] = self.getSeverity()
+		subject["message"] = self.getMessage()
+		subject["severity"] = self.getSeverity()
 		return subject
 
 
 class ChoiceSubject(MessageSubject):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
 		MessageSubject.__init__(self, id, type, title, **args)
 		self.reset()
 		self._callbacks = []
 		try:
-			self._multiValue = forceBool(args['multiValue'])
+			self._multiValue = forceBool(args["multiValue"])
 		except KeyError:
 			pass
 
 		try:
-			self._choices = forceUnicodeList(args['choices'])
+			self._choices = forceUnicodeList(args["choices"])
 		except KeyError:
 			pass
 
 		try:
-			self._selectedIndexes = forceIntList(args['selectedIndexes'])
+			self._selectedIndexes = forceIntList(args["selectedIndexes"])
 		except KeyError:
 			pass
 
 		try:
-			self._callbacks = args['callbacks']
+			self._callbacks = args["callbacks"]
 		except KeyError:
 			pass
 
@@ -169,7 +180,11 @@ class ChoiceSubject(MessageSubject):
 	def setSelectedIndexes(self, selectedIndexes):
 		self._selectedIndexes = []
 		for selectedIndex in forceIntList(selectedIndexes):
-			if (selectedIndex < 0) or (selectedIndex > len(self._choices) - 1) or selectedIndex in self._selectedIndexes:
+			if (
+				(selectedIndex < 0)
+				or (selectedIndex > len(self._choices) - 1)
+				or selectedIndex in self._selectedIndexes
+			):
 				continue
 			if self._multiValue:
 				self._selectedIndexes = [selectedIndex]
@@ -211,61 +226,61 @@ class ChoiceSubject(MessageSubject):
 
 	def serializable(self):
 		subject = MessageSubject.serializable(self)
-		subject['choices'] = self.getChoices()
-		subject['selectedIndexes'] = self.getSelectedIndexes()
+		subject["choices"] = self.getChoices()
+		subject["selectedIndexes"] = self.getSelectedIndexes()
 		return subject
 
 
 class ProgressSubject(MessageSubject):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin,unused-argument
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin,unused-argument
 		MessageSubject.__init__(self, id, type, title, **args)
 		self.reset()
 		self._fireAlways = True
 		self._endChangable = True
 		try:
-			self._end = forceInt(args['end'])
+			self._end = forceInt(args["end"])
 			if self._end < 0:
 				self._end = 0
 		except KeyError:
 			pass
 
 		try:
-			self._percent = args['percent']
+			self._percent = args["percent"]
 		except KeyError:
 			pass
 
 		try:
-			self._state = args['state']
+			self._state = args["state"]
 		except KeyError:
 			pass
 
 		try:
-			self._timeStarted = args['timeStarted']
+			self._timeStarted = args["timeStarted"]
 		except KeyError:
 			pass
 
 		try:
-			self._timeSpend = args['timeSpend']
+			self._timeSpend = args["timeSpend"]
 		except KeyError:
 			pass
 
 		try:
-			self._timeLeft = args['timeLeft']
+			self._timeLeft = args["timeLeft"]
 		except KeyError:
 			pass
 
 		try:
-			self._timeFired = args['timeFired']
+			self._timeFired = args["timeFired"]
 		except KeyError:
 			pass
 
 		try:
-			self._speed = args['speed']
+			self._speed = args["speed"]
 		except KeyError:
 			pass
 
 		try:
-			self._fireAlways = forceBool(args['fireAlways'])
+			self._fireAlways = forceBool(args["fireAlways"])
 		except KeyError:
 			pass
 
@@ -309,7 +324,11 @@ class ProgressSubject(MessageSubject):
 		self._state = state
 
 		now = int(time.time())
-		if self._fireAlways or (self._timeFired != now) or (self._state in (0, self._end)):
+		if (
+			self._fireAlways
+			or (self._timeFired != now)
+			or (self._state in (0, self._end))
+		):
 			if self._state == 0:
 				self._percent = 0
 			elif self._end == 0:
@@ -323,7 +342,13 @@ class ProgressSubject(MessageSubject):
 				if self._speed < 0:
 					self._speed = 0
 				elif self._speed > 0:
-					self._timeLeft = int(((self._timeLeft * 2.0) + (self._end - self._state) / self._speed) / 3.0)
+					self._timeLeft = int(
+						(
+							(self._timeLeft * 2.0)
+							+ (self._end - self._state) / self._speed
+						)
+						/ 3.0
+					)
 
 			self._timeFired = now
 			self._notifyProgressChanged()
@@ -351,7 +376,14 @@ class ProgressSubject(MessageSubject):
 
 	def _notifyProgressChanged(self):
 		for observer in self._observers:
-			observer.progressChanged(self, self._state, self._percent, self._timeSpend, self._timeLeft, self._speed)
+			observer.progressChanged(
+				self,
+				self._state,
+				self._percent,
+				self._timeSpend,
+				self._timeLeft,
+				self._speed,
+			)
 
 	def _notifyEndChanged(self):
 		for observer in self._observers:
@@ -359,12 +391,12 @@ class ProgressSubject(MessageSubject):
 
 	def serializable(self):
 		subject = MessageSubject.serializable(self)
-		subject['end'] = self.getEnd()
-		subject['state'] = self.getState()
-		subject['percent'] = self.getPercent()
-		subject['timeSpend'] = self.getTimeSpend()
-		subject['timeLeft'] = self.getTimeLeft()
-		subject['speed'] = self.getSpeed()
+		subject["end"] = self.getEnd()
+		subject["state"] = self.getState()
+		subject["percent"] = self.getPercent()
+		subject["timeSpend"] = self.getTimeSpend()
+		subject["timeLeft"] = self.getTimeLeft()
+		subject["speed"] = self.getSpeed()
 		return subject
 
 
@@ -429,8 +461,10 @@ class SubjectsObserver(ChoiceObserver, ProgressObserver):
 		pass
 
 
-class MessageSubjectProxy(ProgressSubject, ProgressObserver, ChoiceSubject, ChoiceObserver):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin
+class MessageSubjectProxy(
+	ProgressSubject, ProgressObserver, ChoiceSubject, ChoiceObserver
+):
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
 		ChoiceSubject.__init__(self, id, type, title, **args)
 		ChoiceObserver.__init__(self)
 		ProgressSubject.__init__(self, id, type, title, **args)
@@ -453,12 +487,12 @@ class MessageSubjectProxy(ProgressSubject, ProgressObserver, ChoiceSubject, Choi
 
 
 class ChoiceSubjectProxy(MessageSubjectProxy):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
 		MessageSubjectProxy.__init__(self, id, type, title, **args)
 
 
 class ProgressSubjectProxy(MessageSubjectProxy):
-	def __init__(self, id, type='', title='', **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
 		MessageSubjectProxy.__init__(self, id, type, title, **args)
 
 
@@ -490,7 +524,8 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 		self.clients.append(client)
 		logger.info(
 			"Client connection made: %s, %d client(s) connected",
-			client.transport, self.connectionCount()
+			client.transport,
+			self.connectionCount(),
 		)
 		self.subjectsChanged(self.getSubjects())
 
@@ -498,30 +533,36 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 		self.clients.remove(client)
 		logger.info(
 			"Client connection lost: %s (%s), %d client(s) connected",
-			client.transport, reason, self.connectionCount()
+			client.transport,
+			reason,
+			self.connectionCount(),
 		)
 
 	def rpc(self, client, line):  # pylint: disable=unused-argument
 		logger.info("Received rpc '%s'", line)
 		try:
 			rpc = json.loads(line)
-			method = rpc['method']
-			params = rpc['params']
+			method = rpc["method"]
+			params = rpc["params"]
 
-			if method == 'setSelectedIndexes':
+			if method == "setSelectedIndexes":
 				subjectId = params[0]
 				selectedIndexes = params[1]
 				for subject in self.getSubjects():
-					if not isinstance(subject, ChoiceSubject) or (subject.getId() != subjectId):
+					if not isinstance(subject, ChoiceSubject) or (
+						subject.getId() != subjectId
+					):
 						continue
 					subject.setSelectedIndexes(selectedIndexes)
 					break
 
-			elif method == 'selectChoice':
+			elif method == "selectChoice":
 				logger.debug("selectChoice(%s)", str(params)[1:-1])
 				subjectId = params[0]
 				for subject in self.getSubjects():
-					if not isinstance(subject, ChoiceSubject) or (subject.getId() != subjectId):
+					if not isinstance(subject, ChoiceSubject) or (
+						subject.getId() != subjectId
+					):
 						continue
 					subject.selectChoice()
 					break
@@ -532,28 +573,51 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 
 	def messageChanged(self, subject, message):
 		if subject not in self.getSubjects():
-			logger.info("Unknown subject %s passed to messageChanged, automatically adding subject", subject)
+			logger.info(
+				"Unknown subject %s passed to messageChanged, automatically adding subject",
+				subject,
+			)
 			self.addSubject(subject)
-		logger.debug("messageChanged: subject id '%s', message '%s'", subject.getId(), message)
+		logger.debug(
+			"messageChanged: subject id '%s', message '%s'", subject.getId(), message
+		)
 		self.notify(name="messageChanged", params=[subject.serializable(), message])
 
 	def selectedIndexesChanged(self, subject, selectedIndexes):
 		if subject not in self.getSubjects():
-			logger.info("Unknown subject %s passed to selectedIndexesChanged, automatically adding subject", subject)
+			logger.info(
+				"Unknown subject %s passed to selectedIndexesChanged, automatically adding subject",
+				subject,
+			)
 			self.addSubject(subject)
-		logger.debug("selectedIndexesChanged: subject id '%s', selectedIndexes %s", subject.getId(), selectedIndexes)
-		self.notify(name="selectedIndexesChanged", params=[subject.serializable(), selectedIndexes])
+		logger.debug(
+			"selectedIndexesChanged: subject id '%s', selectedIndexes %s",
+			subject.getId(),
+			selectedIndexes,
+		)
+		self.notify(
+			name="selectedIndexesChanged",
+			params=[subject.serializable(), selectedIndexes],
+		)
 
 	def choicesChanged(self, subject, choices):
 		if subject not in self.getSubjects():
-			logger.info("Unknown subject %s passed to choicesChanged, automatically adding subject", subject)
+			logger.info(
+				"Unknown subject %s passed to choicesChanged, automatically adding subject",
+				subject,
+			)
 			self.addSubject(subject)
-		logger.debug("choicesChanged: subject id '%s', choices %s", subject.getId(), choices)
+		logger.debug(
+			"choicesChanged: subject id '%s', choices %s", subject.getId(), choices
+		)
 		self.notify(name="choicesChanged", params=[subject.serializable(), choices])
 
 	def progressChanged(self, subject, state, percent, timeSpend, timeLeft, speed):  # pylint:disable=too-many-arguments
 		if subject not in self.getSubjects():
-			logger.info("Unknown subject %s passed to progressChanged, automatically adding subject", subject)
+			logger.info(
+				"Unknown subject %s passed to progressChanged, automatically adding subject",
+				subject,
+			)
 			self.addSubject(subject)
 		logger.debug(
 			"progressChanged: subject id '%s', state %s, percent %s, timeSpend %s, timeLeft %s, speed %s",
@@ -562,13 +626,19 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 			percent,
 			timeSpend,
 			timeLeft,
-			speed
+			speed,
 		)
-		self.notify(name="progressChanged", params=[subject.serializable(), state, percent, timeSpend, timeLeft, speed])
+		self.notify(
+			name="progressChanged",
+			params=[subject.serializable(), state, percent, timeSpend, timeLeft, speed],
+		)
 
 	def endChanged(self, subject, end):
 		if subject not in self.getSubjects():
-			logger.info("Unknown subject %s passed to endChanged, automatically adding subject", subject)
+			logger.info(
+				"Unknown subject %s passed to endChanged, automatically adding subject",
+				subject,
+			)
 			self.addSubject(subject)
 		logger.debug("endChanged: subject id '%s', end %s", subject.getId(), end)
 		self.notify(name="endChanged", params=[subject.serializable(), end])
@@ -597,7 +667,9 @@ class NotificationServerFactory(ServerFactory, SubjectsObserver):
 			return
 
 		# json-rpc: notifications have id null
-		jsonBytes = json.dumps({"id": None, "method": name, "params": params}).encode("utf-8")
+		jsonBytes = json.dumps({"id": None, "method": name, "params": params}).encode(
+			"utf-8"
+		)
 		for client in clients:
 			try:
 				logger.debug("Sending line '%s' to client %s", jsonBytes, client)
@@ -611,7 +683,7 @@ class NotificationServer(threading.Thread, SubjectsObserver):
 		threading.Thread.__init__(self)
 		self._address = forceIpAddress(address)
 		if not self._address:
-			self._address = '0.0.0.0'
+			self._address = "0.0.0.0"
 		self._start_port = forceInt(start_port)
 		self._factory = NotificationServerFactory()
 		self._factory.setSubjects(subjects)
@@ -663,20 +735,33 @@ class NotificationServer(threading.Thread, SubjectsObserver):
 		while True:
 			trynum += 1
 			try:
-				logger.debug("Notification server - attempt %d, trying port %d", trynum, port)
-				if self._address == '0.0.0.0':
+				logger.debug(
+					"Notification server - attempt %d, trying port %d", trynum, port
+				)
+				if self._address == "0.0.0.0":
 					self._server = reactor.listenTCP(port, self._factory)  # pylint: disable=no-member
 				else:
-					self._server = reactor.listenTCP(port, self._factory, interface=self._address)  # pylint: disable=no-member
+					self._server = reactor.listenTCP(
+						port, self._factory, interface=self._address
+					)  # pylint: disable=no-member
 				self._port = port
 				self._listening = True
-				logger.info("Notification server is now listening on port %d after %d attempts", port, trynum)
+				logger.info(
+					"Notification server is now listening on port %d after %d attempts",
+					port,
+					trynum,
+				)
 				if not reactor.running:  # pylint: disable=no-member
 					logger.info("Starting reactor")
 					reactor.run(installSignalHandlers=0)  # pylint: disable=no-member
 				break
 			except Exception as error:  # pylint: disable=broad-except
-				logger.debug("Notification server - attempt %d, failed to listen on port %d: %s", trynum, port, error)
+				logger.debug(
+					"Notification server - attempt %d, failed to listen on port %d: %s",
+					trynum,
+					port,
+					error,
+				)
 				if trynum >= 20:
 					self._error = forceUnicode(error)
 					logger.error(error, exc_info=True)
@@ -756,17 +841,22 @@ class NotificationClientFactory(ClientFactory):
 		id = None  # pylint: disable=redefined-builtin
 		try:
 			rpc = json.loads(rpc)
-			id = rpc['id']
+			id = rpc["id"]
 			if id:
 				# Received rpc answer
 				self._rpcs[id] = rpc
 			else:
 				# Notification
-				method = rpc['method']
-				params = rpc['params']
-				if method == 'endConnection':
+				method = rpc["method"]
+				params = rpc["params"]
+				if method == "endConnection":
 					logger.info("Server requested connection end")
-					if not params or not params[0] or not self._notificationClient.getId() or self._notificationClient.getId() in forceList(params[0]):
+					if (
+						not params
+						or not params[0]
+						or not self._notificationClient.getId()
+						or self._notificationClient.getId() in forceList(params[0])
+					):
 						self._notificationClient.endConnectionRequested()
 				else:
 					logger.debug("self._observer.%s(*params)", method)
@@ -788,7 +878,7 @@ class NotificationClientFactory(ClientFactory):
 		if timeout >= self._timeout:
 			raise RuntimeError(f"Execute timed out after {self._timeout} seconds")
 
-		rpc = {'id': None, "method": method, "params": params}
+		rpc = {"id": None, "method": method, "params": params}
 		self.sendLine(json.dumps(rpc))
 
 
@@ -841,7 +931,9 @@ class NotificationClient(threading.Thread):
 			reactor.stop()  # pylint: disable=no-member
 
 	def setSelectedIndexes(self, subjectId, selectedIndexes):
-		self._factory.execute(method='setSelectedIndexes', params=[subjectId, selectedIndexes])
+		self._factory.execute(
+			method="setSelectedIndexes", params=[subjectId, selectedIndexes]
+		)
 
 	def selectChoice(self, subjectId):
-		self._factory.execute(method='selectChoice', params=[subjectId])
+		self._factory.execute(method="selectChoice", params=[subjectId])

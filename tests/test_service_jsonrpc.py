@@ -7,20 +7,21 @@ import pytest
 
 from OPSI.Service.JsonRpc import JsonRpc
 
-from .helpers import mock
 
-
-@pytest.mark.parametrize("invalidRpcInfo", [
-	None,
-	{},
-	{"id": 0},
-	{"tid": 0},
-	{"id": 1},
-	{"id": 1, "method": ""},
-	{"id": 1, "method": None},
-	{"id": 1, "method": 0},
-	{"id": 1, "method": False},
-])
+@pytest.mark.parametrize(
+	"invalidRpcInfo",
+	[
+		None,
+		{},
+		{"id": 0},
+		{"tid": 0},
+		{"id": 1},
+		{"id": 1, "method": ""},
+		{"id": 1, "method": None},
+		{"id": 1, "method": 0},
+		{"id": 1, "method": False},
+	],
+)
 def testJsonRpcRequiresTransactionId(invalidRpcInfo):
 	with pytest.raises(Exception):  # TODO: better Exception class
 		JsonRpc(None, None, invalidRpcInfo)
@@ -34,16 +35,20 @@ def testLoggingTraceback():
 	assert j.exception
 	assert j.traceback
 
-	print("Old traceback was something like this: {0!r}".format(
-		[u"	 line 105 in 'execute' in file '/root/python-opsi/OPSI/Service/JsonRpc.py'"]
-	))
+	print(
+		"Old traceback was something like this: {0!r}".format(
+			[
+				"	 line 105 in 'execute' in file '/root/python-opsi/OPSI/Service/JsonRpc.py'"
+			]
+		)
+	)
 	print("Collected traceback: {0!r}".format(j.traceback))
 	print("Collected Exception: {0!r}".format(j.exception))
 
-	assert 'line' in ''.join(j.traceback).lower()
-	assert 'file' in ''.join(j.traceback).lower()
-	assert 'jsonrpc' in ''.join(j.traceback).lower()  # Module name
-	assert 'execute' in ''.join(j.traceback).lower()  # Function name
+	assert "line" in "".join(j.traceback).lower()
+	assert "file" in "".join(j.traceback).lower()
+	assert "jsonrpc" in "".join(j.traceback).lower()  # Module name
+	assert "execute" in "".join(j.traceback).lower()  # Function name
 
 
 def testExecutingMethodOnInstance():
@@ -54,7 +59,7 @@ def testExecutingMethodOnInstance():
 	j = JsonRpc(
 		instance=TestInstance(),
 		interface=[{"name": "testMethod", "keywords": []}],
-		rpc={"id": 42, "method": "testMethod"}
+		rpc={"id": 42, "method": "testMethod"},
 	)
 	j.execute()
 
@@ -65,9 +70,9 @@ def testExecutingMethodOnInstance():
 	response = j.getResponse()
 	assert response
 
-	assert response['id'] == 42
-	assert response['result'] == ["yeah it works!"]
-	assert not response['error']
+	assert response["id"] == 42
+	assert response["result"] == ["yeah it works!"]
+	assert not response["error"]
 
 
 def testRequiringValidMethod():
@@ -90,10 +95,10 @@ def testGettingMetainformation():
 	assert not j.hasEnded()
 	assert j.getMethodName() == "foo"
 
-	assert j.getDuration() == None
+	assert j.getDuration() is None
 
 	j.execute()
 
 	assert j.isStarted()
 	assert j.hasEnded()
-	assert j.getDuration() != None
+	assert j.getDuration() is not None

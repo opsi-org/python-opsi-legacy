@@ -23,17 +23,7 @@ priority = "primary"
 name = "PyPI"
 priority = "primary"
 
-[tool.black]
-line-length = 140
-target-version = [ "py39", "py310",]
-use-tabs = true
-
-[tool.isort]
-profile = "black"
-indent = "\t"
-
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
 attrs = "^24.2"
 colorlog = "^6.6"
 ldap3 = "^2.9"
@@ -46,6 +36,7 @@ psutil = "^6.0"
 pyasn1 = "^0.6"
 pycryptodome = "^3.10"
 pyopenssl = "^24.2"
+python = ">=3.11,<3.14"
 python-opsi-common = ">=4.4,<4.5"
 python-pam = "^2.0"
 pyzsync = "^1.2"
@@ -56,18 +47,18 @@ sqlalchemy = ">=1.4,<2.0"
 tomlkit = "^0.13"
 typing-extensions = "^4.12"
 
-[tool.poetry.dev-dependencies]
-flake8 = "^6.0"
+[tool.poetry.group.dev.dependencies]
 mock = "^5.0"
-pylint = "^2.7"
 pytest = "^8.3"
 pytest-asyncio = "^0.24"
 pytest-cov = "^5.0"
-tan = "^23.3"
-isort = "^5.10.1"
+ruff = "^0.7"
 
 [tool.ruff.format]
 indent-style = "tab"
+
+[tool.ruff.lint]
+ignore = ["F405"]
 
 [tool.poetry.dependencies.distro]
 platform = "linux"

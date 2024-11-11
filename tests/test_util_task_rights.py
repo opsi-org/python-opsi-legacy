@@ -30,8 +30,12 @@ def patchUserInfo():
 	"Calls to find uid / gid will always succeed."
 	uid = 1234
 	gid = 5678
-	with mock.patch("OPSI.Util.Task.Rights.pwd.getpwnam", return_value=(None, None, uid)):
-		with mock.patch("OPSI.Util.Task.Rights.grp.getgrnam", return_value=(None, None, gid)):
+	with mock.patch(
+		"OPSI.Util.Task.Rights.pwd.getpwnam", return_value=(None, None, uid)
+	):
+		with mock.patch(
+			"OPSI.Util.Task.Rights.grp.getgrnam", return_value=(None, None, gid)
+		):
 			yield uid, gid
 
 
@@ -54,13 +58,17 @@ def test_permission_registry():
 	registry.remove_permissions()
 	assert len(registry.permissions) == 0
 
-	registry.register_permission(DirPermission("/tmp", None, None, 0o600, 0o700, recursive=True))
+	registry.register_permission(
+		DirPermission("/tmp", None, None, 0o600, 0o700, recursive=True)
+	)
 	assert len(registry.permissions) == 1
 
 	registry.register_default_permissions()
 	assert len(registry.permissions) == permission_count + 1
 
-	registry.register_permission(DirPermission("/tmp", None, None, 0o600, 0o700, recursive=True))
+	registry.register_permission(
+		DirPermission("/tmp", None, None, 0o600, 0o700, recursive=True)
+	)
 	assert len(registry.permissions) == permission_count + 1
 
 	registry.reinit()
@@ -96,7 +104,9 @@ def test_set_rights_recursive(tempDir, some_secondary_group_name):
 		os.chmod(path, 0o606)
 
 	for permission in (
-		DirPermission(dir1, username, some_secondary_group_name, 0o666, 0o777, recursive=True),
+		DirPermission(
+			dir1, username, some_secondary_group_name, 0o666, 0o777, recursive=True
+		),
 		DirPermission(dir2, None, None, 0o600, 0o700, recursive=True),
 		FilePermission(fil1, None, None, 0o660),
 		FilePermission(fil6, None, None, 0o660),
@@ -144,7 +154,9 @@ def test_set_rights_modify_file_exe(tempDir):
 	os.chmod(fil2, 0o775)
 	os.chmod(fil3, 0o777)
 
-	registry.register_permission(DirPermission(dir1, None, None, 0o666, 0o770, modify_file_exe=False))
+	registry.register_permission(
+		DirPermission(dir1, None, None, 0o666, 0o770, modify_file_exe=False)
+	)
 
 	set_rights(dir1)
 
@@ -157,7 +169,9 @@ def test_set_rights_modify_file_exe(tempDir):
 	os.chmod(fil2, 0o775)
 	os.chmod(fil3, 0o777)
 
-	registry.register_permission(DirPermission(dir1, None, None, 0o660, 0o770, modify_file_exe=False))
+	registry.register_permission(
+		DirPermission(dir1, None, None, 0o660, 0o770, modify_file_exe=False)
+	)
 
 	set_rights(dir1)
 
@@ -170,7 +184,9 @@ def test_set_rights_modify_file_exe(tempDir):
 	os.chmod(fil2, 0o775)
 	os.chmod(fil3, 0o777)
 
-	registry.register_permission(DirPermission(dir1, None, None, 0o660, 0o770, modify_file_exe=True))
+	registry.register_permission(
+		DirPermission(dir1, None, None, 0o660, 0o770, modify_file_exe=True)
+	)
 
 	set_rights(dir1)
 
@@ -197,7 +213,8 @@ def test_set_rights_file_in_dir(tempDir):
 		os.chmod(path, 0o666)
 
 	registry.register_permission(
-		DirPermission(dir1, None, None, 0o660, 0o770, recursive=True), DirPermission(dir2, None, None, 0o600, 0o700, recursive=True)
+		DirPermission(dir1, None, None, 0o660, 0o770, recursive=True),
+		DirPermission(dir2, None, None, 0o600, 0o700, recursive=True),
 	)
 
 	set_rights(fil1)
@@ -297,7 +314,9 @@ def testSetRightsOnSSHDirectory(tempDir):
 		assert stats.st_gid == groupId
 		assert stats.st_uid == userId
 
-	with mock.patch("OPSI.Util.Task.Rights._get_default_depot_user_ssh_dir", lambda: sshDir2):
+	with mock.patch(
+		"OPSI.Util.Task.Rights._get_default_depot_user_ssh_dir", lambda: sshDir2
+	):
 		with mock.patch("OPSI.Util.Task.Rights.DEFAULT_DEPOT_USER", None):
 			with mock.patch("OPSI.Util.Task.Rights.FILE_ADMIN_GROUP", None):
 				sshDir2 = os.path.join(tempDir, "ssh2")

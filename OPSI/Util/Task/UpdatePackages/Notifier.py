@@ -69,7 +69,12 @@ class EmailNotifier(BaseNotifier):  # pylint: disable=too-many-instance-attribut
 	"""
 
 	def __init__(
-		self, smtphost="localhost", smtpport=25, subject="opsi product updater", sender="", receivers=None
+		self,
+		smtphost="localhost",
+		smtpport=25,
+		subject="opsi product updater",
+		sender="",
+		receivers=None,
 	):  # pylint: disable=too-many-arguments
 		super().__init__()
 
@@ -110,13 +115,25 @@ class EmailNotifier(BaseNotifier):  # pylint: disable=too-many-instance-attribut
 					logger.debug("Server does not support STARTTLS.")
 
 			if self.username and self.password is not None:
-				logger.debug('Trying to authenticate against SMTP server %s:%s as user "%s"', self.smtphost, self.smtpport, self.username)
+				logger.debug(
+					'Trying to authenticate against SMTP server %s:%s as user "%s"',
+					self.smtphost,
+					self.smtpport,
+					self.username,
+				)
 				smtpObj.login(self.username, self.password)
 				smtpObj.ehlo_or_helo_if_needed()
 
 			smtpObj.sendmail(self.sender, self.receivers, mail)
-			logger.debug("SMTP-Host: '%s' SMTP-Port: '%s'", self.smtphost, self.smtpport)
-			logger.debug("Sender: '%s' Reveivers: '%s' Message: '%s'", self.sender, self.receivers, mail)
+			logger.debug(
+				"SMTP-Host: '%s' SMTP-Port: '%s'", self.smtphost, self.smtpport
+			)
+			logger.debug(
+				"Sender: '%s' Reveivers: '%s' Message: '%s'",
+				self.sender,
+				self.receivers,
+				mail,
+			)
 			logger.notice("Email successfully sent")
 			smtpObj.quit()
 		except Exception as err:
@@ -128,4 +145,6 @@ class EmailNotifier(BaseNotifier):  # pylint: disable=too-many-instance-attribut
 				if hasattr(smtpObj, "esmtp_features"):
 					logger.debug("ESMTP Features: %s", smtpObj.esmtp_features)
 
-			raise RuntimeError(f"Failed to send email using smtp server '{self.smtphost}': {err}") from err
+			raise RuntimeError(
+				f"Failed to send email using smtp server '{self.smtphost}': {err}"
+			) from err

@@ -62,14 +62,18 @@ def testByAudit(tempDir, destinationDir, hardwareClass, hostId):
 	_generateDirectories(tempDir, vendor, model)
 	_generateTestFiles(tempDir, vendor, model, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
+	result = integrateAdditionalWindowsDrivers(
+		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
+	)
 
-	expectedResult = [{
-		'devices': [],
-		'directory': u'%s/1' % destinationDir,
-		'driverNumber': 1,
-		'infFile': u'%s/1/test.inf' % destinationDir
-	}]
+	expectedResult = [
+		{
+			"devices": [],
+			"directory": "%s/1" % destinationDir,
+			"driverNumber": 1,
+			"infFile": "%s/1/test.inf" % destinationDir,
+		}
+	]
 
 	assert expectedResult == result
 
@@ -82,14 +86,18 @@ def testByAuditWithUnderscoreAtTheEnd(tempDir, destinationDir, hardwareClass, ho
 	_generateDirectories(tempDir, vendor, model)
 	_generateTestFiles(tempDir, vendor, model, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
+	result = integrateAdditionalWindowsDrivers(
+		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
+	)
 
-	expectedResult = [{
-		'devices': [],
-		'directory': u'%s/1' % destinationDir,
-		'driverNumber': 1,
-		'infFile': u'%s/1/test.inf' % destinationDir
-	}]
+	expectedResult = [
+		{
+			"devices": [],
+			"directory": "%s/1" % destinationDir,
+			"driverNumber": 1,
+			"infFile": "%s/1/test.inf" % destinationDir,
+		}
+	]
 
 	assert expectedResult == result
 
@@ -100,17 +108,23 @@ def testByAuditWithSKUFallback(tempDir, destinationDir, hardwareClass, hostId):
 	sku = "ABC"
 	model_without_sku = "Venue 11 Pro 7130 MS"
 
-	testData1 = auditHardwareOnHostFactory(hardwareClass, hostId, "Dell Inc.", model, sku)
+	testData1 = auditHardwareOnHostFactory(
+		hardwareClass, hostId, "Dell Inc.", model, sku
+	)
 	_generateDirectories(tempDir, vendor, model_without_sku)
 	_generateTestFiles(tempDir, vendor, model_without_sku, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
+	result = integrateAdditionalWindowsDrivers(
+		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
+	)
 
-	expectedResult = [{
-		'devices': [],
-		'directory': u'%s/1' % destinationDir,
-		'driverNumber': 1,
-		'infFile': u'%s/1/test.inf' % destinationDir
-	}]
+	expectedResult = [
+		{
+			"devices": [],
+			"directory": "%s/1" % destinationDir,
+			"driverNumber": 1,
+			"infFile": "%s/1/test.inf" % destinationDir,
+		}
+	]
 
 	assert expectedResult == result

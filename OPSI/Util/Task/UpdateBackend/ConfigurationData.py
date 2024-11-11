@@ -44,14 +44,22 @@ def setDefaultWorkbenchLocation(backend):
 	changedServers = set()
 	for server in servers:
 		if server.getWorkbenchLocalUrl() is None:
-			logger.notice("Setting missing value for workbenchLocalUrl on %s to %s", server.id, localWorkbenchPath)
+			logger.notice(
+				"Setting missing value for workbenchLocalUrl on %s to %s",
+				server.id,
+				localWorkbenchPath,
+			)
 			server.setWorkbenchLocalUrl(localWorkbenchPath)
 			changedServers.add(server)
 
 		if server.getWorkbenchRemoteUrl() is None:
 			depotAddress = getServerAddress(server.depotRemoteUrl)
 			remoteWorkbenchPath = f"smb://{depotAddress}/opsi_workbench"
-			logger.notice("Setting missing value for workbenchRemoteUrl on %s to %s", server.id, remoteWorkbenchPath)
+			logger.notice(
+				"Setting missing value for workbenchRemoteUrl on %s to %s",
+				server.id,
+				remoteWorkbenchPath,
+			)
 			server.setWorkbenchRemoteUrl(remoteWorkbenchPath)
 			changedServers.add(server)
 

@@ -77,7 +77,12 @@ except Exception as error:  # pylint: disable=broad-except
 
 class MessageBox:
 	def __init__(
-		self, ui: Any, width: int = 0, height: int = 0, title: str = _("Title"), text: str = ""  # pylint: disable=unused-argument
+		self,
+		ui: Any,
+		width: int = 0,
+		height: int = 0,
+		title: str = _("Title"),
+		text: str = "",  # pylint: disable=unused-argument
 	) -> None:
 		pass
 
@@ -136,7 +141,12 @@ class CopyDualProgressBox(DualProgressBox):
 
 class SnackMessageBox(MessageBox, MessageObserver):
 	def __init__(  # pylint: disable=too-many-arguments,super-init-not-called
-		self, ui: Any, width: int = 0, height: int = 0, title: str = _("Title"), text: str = ""
+		self,
+		ui: Any,
+		width: int = 0,
+		height: int = 0,
+		title: str = _("Title"),
+		text: str = "",
 	) -> None:
 		MessageObserver.__init__(self)
 
@@ -164,7 +174,9 @@ class SnackMessageBox(MessageBox, MessageObserver):
 			self._height = self._textHeight = height
 
 			self._gridForm = GridForm(self._ui.getScreen(), title, 1, 1)
-			self._textbox = Textbox(self._width, self._height, self._text, scroll=0, wrap=1)
+			self._textbox = Textbox(
+				self._width, self._height, self._text, scroll=0, wrap=1
+			)
 			self._gridForm.add(self._textbox, 0, 0)
 
 			# help line
@@ -239,7 +251,13 @@ class SnackMessageBox(MessageBox, MessageObserver):
 
 class SnackProgressBox(SnackMessageBox, ProgressBox, ProgressObserver):
 	def __init__(  # pylint: disable=super-init-not-called
-		self, ui: Any, width: int = 0, height: int = 0, total: int = 100, title: str = _("Title"), text: str = ""
+		self,
+		ui: Any,
+		width: int = 0,
+		height: int = 0,
+		total: int = 100,
+		title: str = _("Title"),
+		text: str = "",
 	) -> None:
 		ProgressObserver.__init__(self)
 
@@ -285,7 +303,15 @@ class SnackProgressBox(SnackMessageBox, ProgressBox, ProgressObserver):
 			self._factor = self._total / end
 			self.setState(self._state)
 
-	def progressChanged(self, subject: Any, state: Any, percent: Any, timeSpend: Any, timeLeft: Any, speed: Any) -> None:
+	def progressChanged(
+		self,
+		subject: Any,
+		state: Any,
+		percent: Any,
+		timeSpend: Any,
+		timeLeft: Any,
+		speed: Any,
+	) -> None:
 		self.setState(state)
 
 
@@ -309,7 +335,13 @@ class SnackCopyProgressBox(SnackProgressBox):
 
 class SnackDualProgressBox(SnackMessageBox, ProgressObserver):
 	def __init__(  # pylint: disable=too-many-arguments
-		self, ui: Any, width: int = 0, height: int = 0, total: int = 100, title: str = _("Title"), text: str = ""
+		self,
+		ui: Any,
+		width: int = 0,
+		height: int = 0,
+		total: int = 100,
+		title: str = _("Title"),
+		text: str = "",
 	) -> None:
 		ProgressObserver.__init__(self)
 
@@ -386,7 +418,13 @@ class SnackDualProgressBox(SnackMessageBox, ProgressObserver):
 				self.setCurrentState(self._currentState)
 
 	def progressChanged(
-		self, subject: Any, state: Any, percent: Any, timeSpend: Any, timeLeft: Any, speed: Any  # pylint: disable=unused-argument
+		self,
+		subject: Any,
+		state: Any,
+		percent: Any,
+		timeSpend: Any,
+		timeLeft: Any,
+		speed: Any,  # pylint: disable=unused-argument
 	) -> None:
 		if subject == self._overallProgressSubject:
 			self.setOverallState(state)
@@ -413,7 +451,7 @@ class UI:
 	def __init__(self) -> None:
 		self.confidentialStrings = []
 
-	def setConfidentialStrings(self, strings: List[str]) -> None:
+	def setConfidentialStrings(self, strings: list[str]) -> None:
 		strings = forceUnicodeList(strings)
 		self.confidentialStrings = []
 		for string in strings:
@@ -508,7 +546,11 @@ class UI:
 		return CopyDualProgressBox(self)
 
 	def createMessageBox(
-		self, width: int = -1, height: int = -1, title: str = _("Text"), text: str = ""  # pylint: disable=unused-argument
+		self,
+		width: int = -1,
+		height: int = -1,
+		title: str = _("Text"),
+		text: str = "",  # pylint: disable=unused-argument
 	) -> MessageBox:
 		return MessageBox(self)
 
@@ -572,7 +614,9 @@ class SnackUI(UI):
 		self._screen = SnackScreen()
 		if self._screen.width < 40 or self._screen.height < 24:
 			self.exit()
-			raise RuntimeError("Display to small (at least 24 lines by 40 columns needed)")
+			raise RuntimeError(
+				"Display to small (at least 24 lines by 40 columns needed)"
+			)
 		self.messageBox = None
 		self._screen.pushHelpLine("")
 
@@ -617,7 +661,13 @@ class SnackUI(UI):
 			raise
 
 	def showError(
-		self, text: str, title: str = _("An error occurred"), okLabel: str = _("OK"), width: int = -1, height: int = -1, seconds: int = 0
+		self,
+		text: str,
+		title: str = _("An error occurred"),
+		okLabel: str = _("OK"),
+		width: int = -1,
+		height: int = -1,
+		seconds: int = 0,
 	) -> Any:
 		try:
 			text = forceUnicode(text)
@@ -649,7 +699,9 @@ class SnackUI(UI):
 				self._screen.popWindow()
 			else:
 				gridForm.add(button, 0, 1)
-				helpLine = _("<F12> %s | <Space> select | <Up/Down> scroll text") % okLabel
+				helpLine = (
+					_("<F12> %s | <Space> select | <Up/Down> scroll text") % okLabel
+				)
 				self.getScreen().pushHelpLine(forceUnicode(helpLine))
 				return gridForm.runOnce()
 		except Exception as err:  # pylint: disable=broad-except
@@ -658,7 +710,13 @@ class SnackUI(UI):
 			raise
 
 	def showMessage(
-		self, text: str, title: str = _("Message"), okLabel: str = _("OK"), width: int = -1, height: int = -1, seconds: int = 0
+		self,
+		text: str,
+		title: str = _("Message"),
+		okLabel: str = _("OK"),
+		width: int = -1,
+		height: int = -1,
+		seconds: int = 0,
 	) -> Any:
 		try:
 			text = forceUnicode(text)
@@ -690,7 +748,9 @@ class SnackUI(UI):
 				self._screen.popWindow()
 			else:
 				gridForm.add(button, 0, 1)
-				helpLine = _("<F12> %s | <Space> select | <Up/Down> scroll text") % okLabel
+				helpLine = (
+					_("<F12> %s | <Space> select | <Up/Down> scroll text") % okLabel
+				)
 				self.getScreen().pushHelpLine(forceUnicode(helpLine))
 				return gridForm.runOnce()
 		except Exception as err:  # pylint: disable=broad-except
@@ -699,7 +759,12 @@ class SnackUI(UI):
 			raise
 
 	def createProgressBox(
-		self, width: int = -1, height: int = -1, total: int = 100, title: str = _("Progress"), text: str = ""
+		self,
+		width: int = -1,
+		height: int = -1,
+		total: int = 100,
+		title: str = _("Progress"),
+		text: str = "",
 	) -> SnackProgressBox:
 		try:
 			width = forceInt(width)
@@ -708,7 +773,9 @@ class SnackUI(UI):
 			title = forceUnicode(title)
 			text = forceUnicode(text)
 
-			progressBox = SnackProgressBox(ui=self, width=width, height=height, total=total, title=title, text=text)
+			progressBox = SnackProgressBox(
+				ui=self, width=width, height=height, total=total, title=title, text=text
+			)
 			return progressBox
 		except Exception as err:  # pylint: disable=broad-except
 			self.exit()
@@ -716,7 +783,12 @@ class SnackUI(UI):
 			raise
 
 	def createCopyProgressBox(  # pylint: disable=too-many-arguments
-		self, width: int = -1, height: int = -1, total: int = 100, title: str = _("Copy progress"), text: str = ""
+		self,
+		width: int = -1,
+		height: int = -1,
+		total: int = 100,
+		title: str = _("Copy progress"),
+		text: str = "",
 	) -> SnackCopyProgressBox:
 		try:
 			width = forceInt(width)
@@ -725,7 +797,9 @@ class SnackUI(UI):
 			title = forceUnicode(title)
 			text = forceUnicode(text)
 
-			progressBox = SnackCopyProgressBox(ui=self, width=width, height=height, total=total, title=title, text=text)
+			progressBox = SnackCopyProgressBox(
+				ui=self, width=width, height=height, total=total, title=title, text=text
+			)
 			return progressBox
 		except Exception as err:  # pylint: disable=broad-except
 			self.exit()
@@ -733,7 +807,12 @@ class SnackUI(UI):
 			raise
 
 	def createDualProgressBox(  # pylint: disable=too-many-arguments
-		self, width: int = -1, height: int = -1, total: int = 100, title: str = _("Progress"), text: str = ""
+		self,
+		width: int = -1,
+		height: int = -1,
+		total: int = 100,
+		title: str = _("Progress"),
+		text: str = "",
 	) -> SnackDualProgressBox:
 		try:
 			width = forceInt(width)
@@ -742,7 +821,9 @@ class SnackUI(UI):
 			title = forceUnicode(title)
 			text = forceUnicode(text)
 
-			dualProgressBox = SnackDualProgressBox(ui=self, width=width, height=height, total=total, title=title, text=text)
+			dualProgressBox = SnackDualProgressBox(
+				ui=self, width=width, height=height, total=total, title=title, text=text
+			)
 			return dualProgressBox
 		except Exception as err:  # pylint: disable=broad-except
 			self.exit()
@@ -750,7 +831,12 @@ class SnackUI(UI):
 			raise
 
 	def createCopyDualProgressBox(  # pylint: disable=too-many-arguments
-		self, width: int = -1, height: int = -1, total: int = 100, title: str = _("Copy progress"), text: str = ""
+		self,
+		width: int = -1,
+		height: int = -1,
+		total: int = 100,
+		title: str = _("Copy progress"),
+		text: str = "",
 	) -> SnackCopyDualProgressBox:
 		try:
 			width = forceInt(width)
@@ -759,20 +845,26 @@ class SnackUI(UI):
 			title = forceUnicode(title)
 			text = forceUnicode(text)
 
-			progressBox = SnackCopyDualProgressBox(ui=self, width=width, height=height, total=total, title=title, text=text)
+			progressBox = SnackCopyDualProgressBox(
+				ui=self, width=width, height=height, total=total, title=title, text=text
+			)
 			return progressBox
 		except Exception as err:  # pylint: disable=broad-except
 			self.exit()
 			logger.error(err, exc_info=True)
 			raise
 
-	def createMessageBox(self, width: int = -1, height: int = -1, title: str = _("Text"), text: str = "") -> SnackMessageBox:
+	def createMessageBox(
+		self, width: int = -1, height: int = -1, title: str = _("Text"), text: str = ""
+	) -> SnackMessageBox:
 		width = forceInt(width)
 		height = forceInt(height)
 		title = forceUnicode(title)
 		text = forceUnicode(text)
 
-		self.messageBox = SnackMessageBox(ui=self, width=width, height=height, title=title, text=text)
+		self.messageBox = SnackMessageBox(
+			ui=self, width=width, height=height, title=title, text=text
+		)
 		return self.messageBox
 
 	def getMessageBox(self) -> SnackMessageBox:
@@ -821,12 +913,21 @@ class SnackUI(UI):
 				else:
 					textHeight = height - len(text.split("\n")) + 1
 
-				textBox = Textbox(width=width, height=textHeight, text=text, scroll=1, wrap=1)
+				textBox = Textbox(
+					width=width, height=textHeight, text=text, scroll=1, wrap=1
+				)
 				textGrid.setField(textBox, col=0, row=0)
 
 			# create grid for input
 			entryGrid = Grid(1, 1)
-			entry = Entry(width=width, text=default, hidden=False, password=password, scroll=1, returnExit=0)
+			entry = Entry(
+				width=width,
+				text=default,
+				hidden=False,
+				password=password,
+				scroll=1,
+				returnExit=0,
+			)
 			entryGrid.setField(entry, col=0, row=0, padding=(0, 0, 0, 0))
 
 			# create grid for buttons
@@ -845,7 +946,10 @@ class SnackUI(UI):
 			gridForm.addHotKey("ESC")
 
 			# help line
-			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (cancelLabel, okLabel)
+			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (
+				cancelLabel,
+				okLabel,
+			)
 			if text:
 				helpLine += _(" | <Up/Down> scroll text")
 			self.getScreen().pushHelpLine(forceUnicode(helpLine))
@@ -868,7 +972,7 @@ class SnackUI(UI):
 
 	def getSelection(
 		self,
-		entries: List[Any],
+		entries: list[Any],
 		radio: bool = False,
 		width: int = -1,
 		height: int = -1,
@@ -876,7 +980,7 @@ class SnackUI(UI):
 		text: str = "",
 		okLabel: str = _("OK"),
 		cancelLabel: str = _("Cancel"),
-	) -> List[Any]:
+	) -> list[Any]:
 		try:
 			entries = forceList(entries)
 			radio = forceBool(radio)
@@ -915,13 +1019,17 @@ class SnackUI(UI):
 						textHeight = textHeight - 3 + entriesHeight
 						entriesHeight = 3
 
-				textBox = Textbox(width=width, height=textHeight, text=text, scroll=1, wrap=1)
+				textBox = Textbox(
+					width=width, height=textHeight, text=text, scroll=1, wrap=1
+				)
 				textGrid.setField(textBox, col=0, row=0)
 
 			# create widget for entries
 			entriesWidget = None
 			if radio:
-				entriesWidget = Listbox(height=entriesHeight, scroll=1, returnExit=0, width=0, showCursor=0)
+				entriesWidget = Listbox(
+					height=entriesHeight, scroll=1, returnExit=0, width=0, showCursor=0
+				)
 			else:
 				entriesWidget = CheckboxTree(height=entriesHeight, scroll=1)
 
@@ -934,11 +1042,17 @@ class SnackUI(UI):
 				if selected:
 					numSelected += 1
 				if radio:
-					entriesWidget.append(text=forceUnicode(entry.get("name", "???")), item=i)
+					entriesWidget.append(
+						text=forceUnicode(entry.get("name", "???")), item=i
+					)
 					if selected:
 						entriesWidget.setCurrent(i)
 				else:
-					entriesWidget.append(text=forceUnicode(entry.get("name", "???")), item=i, selected=selected)
+					entriesWidget.append(
+						text=forceUnicode(entry.get("name", "???")),
+						item=i,
+						selected=selected,
+					)
 				row += 1
 
 			# create grid for buttons
@@ -956,7 +1070,10 @@ class SnackUI(UI):
 			gridForm.add(buttonsGrid, col=0, row=2, padding=(0, 0, 0, 0))
 
 			# help line
-			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (cancelLabel, okLabel)
+			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (
+				cancelLabel,
+				okLabel,
+			)
 			if text:
 				helpLine += _(" | <Up/Down> scroll text")
 			self.getScreen().pushHelpLine(forceUnicode(helpLine))
@@ -985,7 +1102,7 @@ class SnackUI(UI):
 
 	def getValues(
 		self,
-		entries: List[Any],
+		entries: list[Any],
 		width: int = -1,
 		height: int = -1,
 		title: str = _("Please fill in"),
@@ -1023,7 +1140,9 @@ class SnackUI(UI):
 				if diff > 0:
 					textHeight -= diff
 				if textHeight > 0:
-					textBox = Textbox(width=width, height=textHeight, text=text, scroll=1, wrap=1)
+					textBox = Textbox(
+						width=width, height=textHeight, text=text, scroll=1, wrap=1
+					)
 					textGrid.setField(textBox, col=0, row=0)
 
 			# create grid for entries
@@ -1051,8 +1170,12 @@ class SnackUI(UI):
 					scroll=1,
 					returnExit=0,
 				)
-				entriesGrid.setField(label, col=0, row=row, anchorLeft=1, padding=(2, 0, 1, 0))
-				entriesGrid.setField(entry["entry"], col=1, row=row, anchorRight=1, padding=(1, 0, 2, 0))
+				entriesGrid.setField(
+					label, col=0, row=row, anchorLeft=1, padding=(2, 0, 1, 0)
+				)
+				entriesGrid.setField(
+					entry["entry"], col=1, row=row, anchorRight=1, padding=(1, 0, 2, 0)
+				)
 				row += 1
 
 			# create grid for buttons
@@ -1070,7 +1193,10 @@ class SnackUI(UI):
 			gridForm.add(buttonsGrid, col=0, row=2, padding=(0, 0, 0, 0))
 
 			# help line
-			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (cancelLabel, okLabel)
+			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (
+				cancelLabel,
+				okLabel,
+			)
 			if text:
 				helpLine += _(" | <Up/Down> scroll text")
 			self.getScreen().pushHelpLine(forceUnicode(helpLine))
@@ -1127,7 +1253,9 @@ class SnackUI(UI):
 
 			gridForm = GridForm(self._screen, title, 1, 2)
 
-			textBox = Textbox(width=width, height=height - 6, text=text, scroll=1, wrap=1)
+			textBox = Textbox(
+				width=width, height=height - 6, text=text, scroll=1, wrap=1
+			)
 			gridForm.add(textBox, col=0, row=0)
 
 			grid = Grid(2, 1)
@@ -1138,7 +1266,10 @@ class SnackUI(UI):
 			gridForm.add(grid, col=0, row=1)
 
 			# help line
-			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (cancelLabel, okLabel)
+			helpLine = _("<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select") % (
+				cancelLabel,
+				okLabel,
+			)
 			if text:
 				helpLine += _(" | <Up/Down> scroll text")
 			self.getScreen().pushHelpLine(forceUnicode(helpLine))

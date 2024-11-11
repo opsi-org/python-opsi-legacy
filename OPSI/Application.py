@@ -6,7 +6,7 @@
 Applications for the use of opsi in an twisted-application context.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from opsicommon.logging import get_logger
 
@@ -14,7 +14,7 @@ logger = get_logger("opsi.general")
 
 
 class AppRunner:  # pylint: disable=too-few-public-methods
-	def __init__(self, app: Any, config: Dict[str, Any]) -> None:
+	def __init__(self, app: Any, config: dict[str, Any]) -> None:
 		self._app = app
 		self._config = config
 
@@ -65,10 +65,9 @@ class CProfileRunner(_BaseProfiler):  # pylint: disable=too-few-public-methods
 
 
 class Application:  # pylint: disable=too-few-public-methods
-
 	profiler = {"profiler": ProfileRunner, "cprofiler": CProfileRunner}
 
-	def __init__(self, config: Dict[str, Any]) -> None:
+	def __init__(self, config: dict[str, Any]) -> None:
 		self._config = config
 		self._app = self._getApplication()
 		self._runner = self._getRunner()

@@ -5,7 +5,7 @@ stages:
   - doc
   - publish
 
-pylint-pytest:
+lint-and-test:
   #when: manual
   services:
     - name: mysql:8.3
@@ -35,7 +35,7 @@ pylint-pytest:
     poetry env use 3.13
     poetry lock --no-update
     poetry install
-    poetry run pylint --disable=R,C,fixme OPSI
+    poetry run ruff check OPSI tests
     poetry add mysqlclient==2.1.1
     poetry run pytest --tb=short -x -o junit_family=xunit2 --junitxml=testreport.xml --cov-append --cov-report term --cov-report xml -v tests
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+)%/'

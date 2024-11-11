@@ -22,10 +22,14 @@ def patchServiceUrlInDefaultConfigs(backend):
 	:type backend: ConfigDataBackend
 	"""
 	try:
-		configServer = backend.config_getObjects(attributes=["defaultValues"], id="clientconfig.configserver.url")[0]
+		configServer = backend.config_getObjects(
+			attributes=["defaultValues"], id="clientconfig.configserver.url"
+		)[0]
 		configServer = configServer.defaultValues[0]
 	except IndexError:
-		raise BackendMissingDataError("Unable to get clientconfig.configserver.url") from IndexError
+		raise BackendMissingDataError(
+			"Unable to get clientconfig.configserver.url"
+		) from IndexError
 
 	if configServer:
 		defaultMenu, grubMenu = getMenuFiles()

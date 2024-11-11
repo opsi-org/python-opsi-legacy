@@ -24,9 +24,19 @@ def testSortingWithoutConflicts():
 	print("Products: {0}".format(products))
 	print("Dependencies: {0}".format(dependencies))
 
-	expectedResult = ["opsi-agent", "sysessential", "firefox", "javavm", "ultravnc", "flashplayer", "jedit"]
+	expectedResult = [
+		"opsi-agent",
+		"sysessential",
+		"firefox",
+		"javavm",
+		"ultravnc",
+		"flashplayer",
+		"jedit",
+	]
 
-	assert expectedResult == SharedAlgorithm.generateProductSequence_algorithm1(products, dependencies)
+	assert expectedResult == SharedAlgorithm.generateProductSequence_algorithm1(
+		products, dependencies
+	)
 
 
 def getDependencies():
@@ -90,7 +100,12 @@ def getDependencies():
 		requirementType="before",
 	)
 
-	dependencies = [flashplayerDependency1, javavmDependency1, jeditDependency1, ultravncDependency1]
+	dependencies = [
+		flashplayerDependency1,
+		javavmDependency1,
+		jeditDependency1,
+		ultravncDependency1,
+	]
 
 	return dependencies, products
 
@@ -375,8 +390,18 @@ def testSortingWithOverlappingDependencies():
 	print("Products: {0}".format(products))
 	print("Deps: {0}".format(dependencies))
 
-	sortedProductList = SharedAlgorithm.generateProductSequence_algorithm1(products, dependencies)
-	assert sortedProductList == ["opsi-agent", "firefox", "javavm", "ultravnc", "sysessential", "flashplayer", "jedit"]
+	sortedProductList = SharedAlgorithm.generateProductSequence_algorithm1(
+		products, dependencies
+	)
+	assert sortedProductList == [
+		"opsi-agent",
+		"firefox",
+		"javavm",
+		"ultravnc",
+		"sysessential",
+		"flashplayer",
+		"jedit",
+	]
 
 
 def getDependenciesWithCrossingPriority():
@@ -407,9 +432,23 @@ front in contradiction to priority
 
 
 def testAlgorithm1SortingWithDifferentPriorities():
-	msServicePack = LocalbootProduct.fromHash({"priority": 0, "packageVersion": "5", "productVersion": "xpsp3", "id": "msservicepack"})
+	msServicePack = LocalbootProduct.fromHash(
+		{
+			"priority": 0,
+			"packageVersion": "5",
+			"productVersion": "xpsp3",
+			"id": "msservicepack",
+		}
+	)
 
-	msHotFix = LocalbootProduct.fromHash({"priority": 80, "packageVersion": "1", "productVersion": "201305", "id": "mshotfix"})
+	msHotFix = LocalbootProduct.fromHash(
+		{
+			"priority": 80,
+			"packageVersion": "1",
+			"productVersion": "201305",
+			"id": "mshotfix",
+		}
+	)
 
 	productDep = ProductDependency.fromHash(
 		{
@@ -423,7 +462,9 @@ def testAlgorithm1SortingWithDifferentPriorities():
 		}
 	)
 
-	results = SharedAlgorithm.generateProductSequence_algorithm1([msServicePack, msHotFix], [productDep])
+	results = SharedAlgorithm.generateProductSequence_algorithm1(
+		[msServicePack, msHotFix], [productDep]
+	)
 
 	first, second = results
 	assert msServicePack.id == first
@@ -461,7 +502,9 @@ def testAlgorithm1SortingWithAfterSetupDependency():
 		}
 	)
 
-	results = SharedAlgorithm.generateProductSequence_algorithm1([winDomain, renameClient], [productDep])
+	results = SharedAlgorithm.generateProductSequence_algorithm1(
+		[winDomain, renameClient], [productDep]
+	)
 
 	first, second = results
 	assert renameClient.id == first

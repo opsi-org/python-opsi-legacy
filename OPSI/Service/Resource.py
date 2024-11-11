@@ -23,7 +23,9 @@ class ResourceOpsi(resource.Resource):
 		resource.Resource.__init__(self)
 		self._service = service
 
-	def checkPrivileges(self, request, privileges, recurse=False, principal=None, inherited_aces=None):  # pylint: disable=unused-argument
+	def checkPrivileges(
+		self, request, privileges, recurse=False, principal=None, inherited_aces=None
+	):  # pylint: disable=unused-argument
 		deferred = defer.Deferred()
 		deferred.callback(None)
 		return deferred
@@ -41,7 +43,9 @@ class ResourceOpsi(resource.Resource):
 		try:
 			logger.trace("%s.render()", self.__class__.__name__)
 			if not self.WorkerClass:
-				raise RuntimeError(f"No worker class defined in resource {self.__class__.__name__}")
+				raise RuntimeError(
+					f"No worker class defined in resource {self.__class__.__name__}"
+				)
 			worker = self.WorkerClass(self._service, request, self)
 			worker.process()
 			return server.NOT_DONE_YET

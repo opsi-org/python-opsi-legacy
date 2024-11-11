@@ -20,7 +20,7 @@ import pytest
 
 @pytest.fixture(params=[10])
 def threadPool(request):
-	'''Returns an already started ThreadPool.'''
+	"""Returns an already started ThreadPool."""
 	pool = ThreadPool(size=request.param, autostart=False)
 	pool.start()
 	try:
@@ -46,14 +46,14 @@ def testThreadPoolWorkerHandlingCallback(threadPool):
 	def assertCallback(success, returned, errors):
 		result.append(returnedParams(success, returned, errors))
 
-	threadPool.addJob(function=lambda: 'test', callback=assertCallback)
+	threadPool.addJob(function=lambda: "test", callback=assertCallback)
 
 	time.sleep(0.1)  # give thread time to finish
 
 	assert 1 == len(result)
 	r = result[0]
 	assert r.success is True
-	assert r.returned == 'test'
+	assert r.returned == "test"
 	assert r.errors is None
 
 
@@ -111,7 +111,10 @@ def testSmallThreadPoolHandlingManyLongRunningTasks(threadPool):
 		threadPool.addJob(waitJob, callback=callback)
 
 	assert 2 == len(threadPool.worker)
-	assert threadPool.jobQueue.unfinished_tasks > len(threadPool.worker), "Expected more tasks in Queue than workers in pool, but got %s tasks and %s worker" % (threadPool.jobQueue.unfinished_tasks, len(threadPool.worker))
+	assert threadPool.jobQueue.unfinished_tasks > len(threadPool.worker), (
+		"Expected more tasks in Queue than workers in pool, but got %s tasks and %s worker"
+		% (threadPool.jobQueue.unfinished_tasks, len(threadPool.worker))
+	)
 
 	time.sleep(4)
 	assert 5 == len(results)

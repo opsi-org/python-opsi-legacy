@@ -84,7 +84,9 @@ def testGetFileInfosFromDavXML(twistedDAVXML):  # pylint: disable=redefined-oute
 		elif item["type"] == "file":
 			files = files + 1
 		else:
-			raise ValueError(f"Unexpected type '{item['type']}' found. Maybe creepy testdata?")
+			raise ValueError(
+				f"Unexpected type '{item['type']}' found. Maybe creepy testdata?"
+			)
 
 	assert dirs == 1
 	assert files == 3
@@ -122,7 +124,9 @@ def test_file_repo_start_end(tmpdir):
 			assert dst.read() == "6789"
 
 
-@pytest.mark.parametrize("repo_type,dynamic", [("file", False), ("http", False), ("http", True)])
+@pytest.mark.parametrize(
+	"repo_type,dynamic", [("file", False), ("http", False), ("http", True)]
+)
 def test_limit_download(tmpdir, repo_type, dynamic):
 	data = "o" * 2_000_000
 	limit = 100_000
@@ -161,12 +165,22 @@ def test_limit_download(tmpdir, repo_type, dynamic):
 		return bandwidth
 
 	# Setting DEFAULT_BUFFER_SIZE to slow down transfer
-	with mock.patch("OPSI.Util.Repository.Repository.DEFAULT_BUFFER_SIZE", 1000 if dynamic else 32 * 1000):
+	with mock.patch(
+		"OPSI.Util.Repository.Repository.DEFAULT_BUFFER_SIZE",
+		1000 if dynamic else 32 * 1000,
+	):
 		if repo_type.startswith(("http", "webdav")):
 			with http_test_server(serve_directory=src_dir) as server:
 				repo_url = f"{repo_type}://localhost:{server.port}"
-				repo = getRepository(repo_url, maxBandwidth=0 if dynamic else limit, dynamicBandwidth=dynamic)
-				with mock.patch("OPSI.Util.Repository.SpeedLimiter._get_network_usage", get_network_usage):
+				repo = getRepository(
+					repo_url,
+					maxBandwidth=0 if dynamic else limit,
+					dynamicBandwidth=dynamic,
+				)
+				with mock.patch(
+					"OPSI.Util.Repository.SpeedLimiter._get_network_usage",
+					get_network_usage,
+				):
 					download()
 					if dynamic:
 						simulate_other_traffic = True
@@ -225,7 +239,13 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 
 	packageContentFile = PackageContentFile(str(package_content_file))
 	packageContentFile.setProductClientDataDir(str(product_path))
-	packageContentFile.setClientDataFiles(list(findFilesGenerator(directory=str(product_path), followLinks=True, returnLinks=False)))
+	packageContentFile.setClientDataFiles(
+		list(
+			findFilesGenerator(
+				directory=str(product_path), followLinks=True, returnLinks=False
+			)
+		)
+	)
 	packageContentFile.generate()
 
 	assert sorted(package_content_file.read_text().split("\n")) == sorted(
@@ -239,13 +259,19 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 
 	file_depot = getRepository(f"file://{str(depot_path)}")
 	server_log_file = tmp_path / "server.log"
-	with http_test_server(serve_directory=depot_path, log_file=server_log_file) as server:
+	with http_test_server(
+		serve_directory=depot_path, log_file=server_log_file
+	) as server:
 		webdav_depot = getRepository(f"webdav://localhost:{server.port}")
 		# http_test_server does not support PROPFIND
 		webdav_depot.content = file_depot.content
 
 		for depot in (file_depot, webdav_depot):
-			sync = DepotToLocalDirectorySychronizer(sourceDepot=depot, destinationDirectory=str(local_path), productIds=[product_id])
+			sync = DepotToLocalDirectorySychronizer(
+				sourceDepot=depot,
+				destinationDirectory=str(local_path),
+				productIds=[product_id],
+			)
 			sync._productId = product_id  # pylint: disable=protected-access
 			sync._fileInfo = packageContentFile.parse()  # pylint: disable=protected-access
 			sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
@@ -266,14 +292,18 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 				assert not server_log_file.exists()
 
 				# Test correct but incomplete file part
-				(local_product_path / "subdir" / "file2.txt").write_text("0123456789" * 50_000)
+				(local_product_path / "subdir" / "file2.txt").write_text(
+					"0123456789" * 50_000
+				)
 				sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
 				request = json.loads(server_log_file.read_text())
 				assert request["headers"]["range"] == "bytes=500000-"
 
 				# Test incorrect and incomplete file part
 				server_log_file.unlink()
-				(local_product_path / "subdir" / "file2.txt").write_text("xxxxxxxxxx" * 50_000)
+				(local_product_path / "subdir" / "file2.txt").write_text(
+					"xxxxxxxxxx" * 50_000
+				)
 				sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
 
 				requests = server_log_file.read_text().split("\n")

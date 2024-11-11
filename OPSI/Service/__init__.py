@@ -47,7 +47,9 @@ is set.
 			raise OSError(f"Server key file '{self._sslServerKeyFile}' does not exist!")
 
 		if not os.path.isfile(self._sslServerCertFile):
-			raise OSError(f"Server certificate file '{self._sslServerCertFile}' does not exist!")
+			raise OSError(
+				f"Server certificate file '{self._sslServerCertFile}' does not exist!"
+			)
 
 		context = SSL.Context(SSL.SSLv23_METHOD)
 		context.use_privatekey_file(self._sslServerKeyFile)

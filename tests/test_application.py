@@ -38,7 +38,6 @@ class MockApp(object):
 
 
 class FakeApplication(Application):
-
 	def __init__(self, config):
 		Application.__init__(self, config)
 		self.steps = []
@@ -71,10 +70,7 @@ def testSetupShutdown():
 
 @pytest.mark.skipif(pstats is None, reason="Missing pstats module")
 def testProfiler(temporaryProfileFile):
-	config = {
-		"profile": temporaryProfileFile,
-		"profiler": "profiler"
-	}
+	config = {"profile": temporaryProfileFile, "profiler": "profiler"}
 
 	a = FakeApplication(config)
 	a.run()
@@ -89,10 +85,7 @@ def testProfiler(temporaryProfileFile):
 
 @pytest.mark.skipif(pstats is None, reason="Missing pstats module")
 def testCProfiler(temporaryProfileFile):
-	config = {
-		"profile": temporaryProfileFile,
-		"profiler": "cProfiler"
-	}
+	config = {"profile": temporaryProfileFile, "profiler": "cProfiler"}
 
 	a = FakeApplication(config)
 	a.run()
@@ -110,10 +103,7 @@ def testReactingToMissingProfiler(temporaryProfileFile):
 	try:
 		sys.modules["cProfile"] = None
 
-		config = {
-			"profile": temporaryProfileFile,
-			"profiler": "cProfiler"
-		}
+		config = {"profile": temporaryProfileFile, "profiler": "cProfiler"}
 
 		a = FakeApplication(config)
 
@@ -125,10 +115,7 @@ def testReactingToMissingProfiler(temporaryProfileFile):
 
 
 def testUnknownProfiler(temporaryProfileFile):
-	config = {
-		"profile": temporaryProfileFile,
-		"profiler": "foobar"
-	}
+	config = {"profile": temporaryProfileFile, "profiler": "foobar"}
 
 	with pytest.raises(NotImplementedError):
 		FakeApplication(config)
@@ -141,10 +128,7 @@ def testDefaultProfiler(temporaryProfileFile):
 
 
 def testCaseInsensitiveProfilerName(temporaryProfileFile):
-	config = {
-		"profile": temporaryProfileFile,
-		"profiler": "cPrOfIlEr"
-	}
+	config = {"profile": temporaryProfileFile, "profiler": "cPrOfIlEr"}
 
 	a = FakeApplication(config)
 	assert a._runner.__class__ == CProfileRunner

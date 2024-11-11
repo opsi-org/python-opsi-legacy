@@ -13,12 +13,13 @@ Algorithms to get a product order for an installation.
 """
 
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
+
+from opsicommon.logging import get_logger
 
 from OPSI.Exceptions import BackendUnaccomplishableError, OpsiProductOrderingError
 from OPSI.Object import Product, ProductDependency, ProductOnClient
 from OPSI.Types import forceBool, forceInt
-from opsicommon.logging import get_logger
 
 BOTTOM = -100
 
@@ -30,13 +31,17 @@ class CircularProductDependencyError(BackendUnaccomplishableError):
 
 
 def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
-	productOnClientByProductId: Dict[str, ProductOnClient],
+	productOnClientByProductId: dict[str, ProductOnClient],
 	productId: str,
-	productDependenciesByProductId: Dict[str, ProductDependency],
-	availableProductsByProductId: Dict[str, Product],
-	addedInfo: Optional[Dict[str, Any]] = None,
+	productDependenciesByProductId: dict[str, ProductDependency],
+	availableProductsByProductId: dict[str, Product],
+	addedInfo: Optional[dict[str, Any]] = None,
 ) -> None:
-	logger.debug("Checking dependencies for product %s, action %s", productId, productOnClientByProductId[productId].actionRequest)
+	logger.debug(
+		"Checking dependencies for product %s, action %s",
+		productId,
+		productOnClientByProductId[productId].actionRequest,
+	)
 	addedInfo = addedInfo or {}
 
 	poc = productOnClientByProductId[productId]
@@ -47,7 +52,9 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 		if dependency.productAction != poc.actionRequest:
 			continue
 
-		logger.debug("   need to check dependency to product %s", dependency.requiredProductId)
+		logger.debug(
+			"   need to check dependency to product %s", dependency.requiredProductId
+		)
 		if dependency.requiredAction:
 			logger.debug(
 				"   product %s requires action %s of product %s %s-%s on action %s",
@@ -73,12 +80,19 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 		installationStatus = "not_installed"
 		actionRequest = "none"
 		if dependency.requiredProductId in productOnClientByProductId:
-			installationStatus = productOnClientByProductId[dependency.requiredProductId].installationStatus
-			actionRequest = productOnClientByProductId[dependency.requiredProductId].actionRequest
+			installationStatus = productOnClientByProductId[
+				dependency.requiredProductId
+			].installationStatus
+			actionRequest = productOnClientByProductId[
+				dependency.requiredProductId
+			].actionRequest
 		logger.debug("addActionRequest: requiredAction %s", requiredAction)
 		if not requiredAction:
 			if dependency.requiredInstallationStatus == installationStatus:
-				logger.debug("   required installation status %s is fulfilled", dependency.requiredInstallationStatus)
+				logger.debug(
+					"   required installation status %s is fulfilled",
+					dependency.requiredInstallationStatus,
+				)
 				continue
 
 			if dependency.requiredInstallationStatus == "installed":
@@ -87,17 +101,24 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 				requiredAction = "uninstall"
 
 		# An action is required => check if possible
-		logger.debug("   need to set action %s for product %s to fulfill dependency", requiredAction, dependency.requiredProductId)
+		logger.debug(
+			"   need to set action %s for product %s to fulfill dependency",
+			requiredAction,
+			dependency.requiredProductId,
+		)
 
 		setActionRequestToNone = False
 		if dependency.requiredProductId not in availableProductsByProductId:
 			logger.warning(
-				"   product %s defines dependency to product %s, which is not avaliable on depot", productId, dependency.requiredProductId
+				"   product %s defines dependency to product %s, which is not avaliable on depot",
+				productId,
+				dependency.requiredProductId,
 			)
 			setActionRequestToNone = True
 		elif (
 			dependency.requiredProductVersion is not None
-			and dependency.requiredProductVersion != availableProductsByProductId[dependency.requiredProductId].productVersion
+			and dependency.requiredProductVersion
+			!= availableProductsByProductId[dependency.requiredProductId].productVersion
 		):
 			logger.warning(
 				"   product %s defines dependency to product %s, but product version %s is not available",
@@ -108,7 +129,8 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 			setActionRequestToNone = True
 		elif (
 			dependency.requiredPackageVersion is not None
-			and dependency.requiredPackageVersion != availableProductsByProductId[dependency.requiredProductId].packageVersion
+			and dependency.requiredPackageVersion
+			!= availableProductsByProductId[dependency.requiredProductId].packageVersion
 		):
 			logger.warning(
 				"   product %s defines dependency to product %s, but package version %s is not available",
@@ -119,7 +141,9 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 			setActionRequestToNone = True
 
 		if setActionRequestToNone:
-			logger.notice("   => setting action request for product %s to 'none'!", productId)
+			logger.notice(
+				"   => setting action request for product %s to 'none'!", productId
+			)
 			productOnClientByProductId[productId].actionRequest = "none"
 			continue
 
@@ -138,18 +162,30 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 			continue
 
 		if dependency.requiredProductId in addedInfo:
-			logger.warning("   => Product dependency loop including product %s detected, skipping", productId)
+			logger.warning(
+				"   => Product dependency loop including product %s detected, skipping",
+				productId,
+			)
 			logger.debug(
-				"Circular dependency at %s. Processed product: %s addedInfo: %s", dependency.requiredProductId, productId, addedInfo
+				"Circular dependency at %s. Processed product: %s addedInfo: %s",
+				dependency.requiredProductId,
+				productId,
+				addedInfo,
 			)
 			continue
 
-		logger.info("   => adding action %s for product %s", requiredAction, dependency.requiredProductId)
+		logger.info(
+			"   => adding action %s for product %s",
+			requiredAction,
+			dependency.requiredProductId,
+		)
 
 		if dependency.requiredProductId not in productOnClientByProductId:
 			productOnClientByProductId[dependency.requiredProductId] = ProductOnClient(
 				productId=dependency.requiredProductId,
-				productType=availableProductsByProductId[dependency.requiredProductId].getType(),
+				productType=availableProductsByProductId[
+					dependency.requiredProductId
+				].getType(),
 				clientId=poc.clientId,
 				installationStatus=None,
 				actionRequest="none",
@@ -160,7 +196,9 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 			"requiredAction": requiredAction,
 			"requirementType": dependency.requirementType,
 		}
-		productOnClientByProductId[dependency.requiredProductId].setActionRequest(requiredAction)
+		productOnClientByProductId[dependency.requiredProductId].setActionRequest(
+			requiredAction
+		)
 
 		addActionRequest(
 			productOnClientByProductId,
@@ -172,27 +210,39 @@ def addActionRequest(  # pylint: disable=too-many-branches,too-many-statements
 
 
 def addDependentProductOnClients(
-	productOnClients: List[ProductOnClient], availableProducts: List[Product], productDependencies: List[ProductDependency]
-) -> List[ProductOnClient]:
+	productOnClients: list[ProductOnClient],
+	availableProducts: list[Product],
+	productDependencies: list[ProductDependency],
+) -> list[ProductOnClient]:
 	availableProductsByProductId = {}
 	for availableProduct in availableProducts:
 		availableProductsByProductId[availableProduct.id] = availableProduct
 
 	productDependenciesByProductId = defaultdict(list)
 	for productDependency in productDependencies:
-		productDependenciesByProductId[productDependency.productId].append(productDependency)
+		productDependenciesByProductId[productDependency.productId].append(
+			productDependency
+		)
 
 	pocsByClientIdAndProductId = defaultdict(dict)
 	for productOnClient in productOnClients:
-		pocsByClientIdAndProductId[productOnClient.clientId][productOnClient.productId] = productOnClient
+		pocsByClientIdAndProductId[productOnClient.clientId][
+			productOnClient.productId
+		] = productOnClient
 
 	dependendProductOnClients = []
-	for (clientId, productOnClientByProductId) in pocsByClientIdAndProductId.items():
+	for clientId, productOnClientByProductId in pocsByClientIdAndProductId.items():
 		logger.debug("Adding dependent productOnClients for client %s", clientId)
 
 		addedInfo = {}
 		for productId in tuple(productOnClientByProductId.keys()):
-			addActionRequest(productOnClientByProductId, productId, productDependenciesByProductId, availableProductsByProductId, addedInfo)
+			addActionRequest(
+				productOnClientByProductId,
+				productId,
+				productDependenciesByProductId,
+				availableProductsByProductId,
+				addedInfo,
+			)
 		dependendProductOnClients.extend(list(productOnClientByProductId.values()))
 
 	return dependendProductOnClients
@@ -207,7 +257,9 @@ class XClassifiedProduct:
 		self.id = product.id  # pylint: disable=invalid-name
 		self.priority = product.priority  # handle this variable as final
 		self.revisedPriority = product.priority  # start value which may be modified
-		self.product = product  # keep pointer to the original standard product structure
+		self.product = (
+			product  # keep pointer to the original standard product structure
+		)
 
 	def __str__(self) -> str:
 		return f"<{self.__class__.__name__}(productId={self.id}, priority={self.priority}, revisedPriority={self.revisedPriority})>"
@@ -261,7 +313,9 @@ class Requirements:
 		located = False
 		while (i < len(self.list) - 1) and not located:
 			logger.trace(
-				"Requirement.prior: %s, self.list[self.orderByPrior[i]].prior: %s", requirement.prior, self.list[self.orderByPrior[i]].prior
+				"Requirement.prior: %s, self.list[self.orderByPrior[i]].prior: %s",
+				requirement.prior,
+				self.list[self.orderByPrior[i]].prior,
 			)
 			if requirement.prior > self.list[self.orderByPrior[i]].prior:
 				i += 1
@@ -351,7 +405,7 @@ class Requirements:
 
 		return -1
 
-	def firstPriorNotOccurringAsPosterior(self, startI: int) -> Tuple[Any, int]:
+	def firstPriorNotOccurringAsPosterior(self, startI: int) -> tuple[Any, int]:
 		j = startI
 		found = False
 		candidate = self.list[self.orderByPrior[startI]].prior
@@ -359,14 +413,19 @@ class Requirements:
 		candidatesCausingProblemes = []
 
 		while (j < len(self.list)) and not found:
-			if not self.list[self.orderByPrior[j]].fulfilled and self.posteriorIndexOf(candidate) == -1:
+			if (
+				not self.list[self.orderByPrior[j]].fulfilled
+				and self.posteriorIndexOf(candidate) == -1
+			):
 				# If requ j still not fulfilled and candidate does not occur
 				# as posterior among the not fulfilled
 				# then we adopt candidate (i.e. the prior element of requ j in requ list ordered by priors)
 				# as next element in our ordered sequence
 				found = True
 			else:
-				if (self.posteriorIndexOf(candidate) > -1) and (lastcandidate != candidate):
+				if (self.posteriorIndexOf(candidate) > -1) and (
+					lastcandidate != candidate
+				):
 					candidatesCausingProblemes.append(candidate)
 					lastcandidate = candidate
 
@@ -379,27 +438,31 @@ class Requirements:
 			noInListOrderedByPriors = j
 			return (candidate, noInListOrderedByPriors)
 
-		errorMessage = f"Potentially conflicting requirements for: {candidatesCausingProblemes}"
+		errorMessage = (
+			f"Potentially conflicting requirements for: {candidatesCausingProblemes}"
+		)
 		logger.error(errorMessage)
 		raise OpsiProductOrderingError(errorMessage, candidatesCausingProblemes)
 
 	def getCount(self) -> int:
 		return len(self.list)
 
-	def getRequList(self) -> List[OrderRequirement]:
+	def getRequlist(self) -> list[OrderRequirement]:
 		return self.list
 
-	def getOrderByPrior(self) -> List[OrderRequirement]:
+	def getOrderByPrior(self) -> list[OrderRequirement]:
 		return self.orderByPrior
 
-	def getOrderByPosteriors(self) -> List[OrderRequirement]:
+	def getOrderByPosteriors(self) -> list[OrderRequirement]:
 		return self.orderByPosterior
 
 
 class OrderBuild:  # pylint: disable=too-many-instance-attributes
 	"""Describes the building of an ordering"""
 
-	def __init__(self, elementCount: int, requs: Requirements, completing: bool) -> None:
+	def __init__(
+		self, elementCount: int, requs: Requirements, completing: bool
+	) -> None:
 		self.ordering = []
 		self.elementCount = elementCount
 		self.completing = completing
@@ -431,7 +494,9 @@ class OrderBuild:  # pylint: disable=too-many-instance-attributes
 		if self.usedCount >= self.elementCount:
 			return result
 
-		indexRequToFulfill = self.requs.indexOfFirstNotFulfilledRequirementOrderedByPrior()
+		indexRequToFulfill = (
+			self.requs.indexOfFirstNotFulfilledRequirementOrderedByPrior()
+		)
 		if indexRequToFulfill == -1:
 			self.allFulfilled = True
 			# Get the posteriors that did not occur as priors
@@ -468,7 +533,9 @@ class OrderBuild:  # pylint: disable=too-many-instance-attributes
 
 					# Sorted elements
 					for k in range(lastSortedCount):
-						newordering[self.elementCount - lastSortedCount + k] = self.ordering[k]
+						newordering[self.elementCount - lastSortedCount + k] = (
+							self.ordering[k]
+						)
 
 					# Put back
 					self.ordering = newordering
@@ -482,7 +549,9 @@ class OrderBuild:  # pylint: disable=too-many-instance-attributes
 			# Automatically any requirement is fulfilled where newEntry
 			# is the prior; do the markings
 
-			(newEntry, requNoInListOrderedByPriors) = self.requs.firstPriorNotOccurringAsPosterior(indexRequToFulfill)
+			(newEntry, requNoInListOrderedByPriors) = (
+				self.requs.firstPriorNotOccurringAsPosterior(indexRequToFulfill)
+			)
 
 			if newEntry == -1:
 				result = False
@@ -493,13 +562,13 @@ class OrderBuild:  # pylint: disable=too-many-instance-attributes
 				# as fulfilled and collect the posteriors
 				k = requNoInListOrderedByPriors
 				orderByPrior = self.requs.getOrderByPrior()
-				requK = self.requs.getRequList()[orderByPrior[k]]
+				requK = self.requs.getRequlist()[orderByPrior[k]]
 				while (k < self.requs.getCount()) and (newEntry == requK.prior):
 					requK.fulfilled = True
 					self.indexIsAmongPosteriors[requK.posterior] = True
 					k += 1
 					if k < self.requs.getCount():
-						requK = self.requs.getRequList()[orderByPrior[k]]
+						requK = self.requs.getRequlist()[orderByPrior[k]]
 				self.indexUsed[newEntry] = True
 
 			logger.debug("proceed newEntry %s", newEntry)
@@ -507,14 +576,18 @@ class OrderBuild:  # pylint: disable=too-many-instance-attributes
 		logger.debug("proceed result %s", result)
 		return result
 
-	def getOrdering(self) -> List[Any]:
+	def getOrdering(self) -> list[Any]:
 		return self.ordering
 
 
-def generateProductOnClientSequence(productOnClients: List[ProductOnClient], sortedList: List[str]) -> List[ProductOnClient]:
+def generateProductOnClientSequence(
+	productOnClients: list[ProductOnClient], sortedList: list[str]
+) -> list[ProductOnClient]:
 	pocsByClientIdAndProductId = defaultdict(dict)
 	for productOnClient in productOnClients:
-		pocsByClientIdAndProductId[productOnClient.clientId][productOnClient.productId] = productOnClient
+		pocsByClientIdAndProductId[productOnClient.clientId][
+			productOnClient.productId
+		] = productOnClient
 
 	productOnClients = []
 	for productOnClientsByProductId in pocsByClientIdAndProductId.values():
@@ -536,7 +609,9 @@ def generateProductOnClientSequence(productOnClients: List[ProductOnClient], sor
 	return productOnClients
 
 
-def generateProductOnClientSequenceX(productOnClients: List[ProductOnClient], sortedList: List[str]) -> List[ProductOnClient]:
+def generateProductOnClientSequenceX(
+	productOnClients: list[ProductOnClient], sortedList: list[str]
+) -> list[ProductOnClient]:
 	fProductId2ProductOnClients = {}
 	for productOnClient in productOnClients:
 		if productOnClient.productId not in fProductId2ProductOnClients:
@@ -562,7 +637,9 @@ def generateProductOnClientSequenceX(productOnClients: List[ProductOnClient], so
 	return result
 
 
-def getSetupRequirements(productDependencies: List[ProductDependency]) -> List[Tuple[str, str]]:
+def getSetupRequirements(
+	productDependencies: list[ProductDependency],
+) -> list[tuple[str, str]]:
 	# Requirements are list of pairs (install_prior, install_posterior)
 	# We treat only setup requirements
 	setupRequirements = []
@@ -570,24 +647,37 @@ def getSetupRequirements(productDependencies: List[ProductDependency]) -> List[T
 	for dependency in productDependencies:
 		if dependency.productAction != "setup":
 			continue
-		if dependency.requiredInstallationStatus != "installed" and dependency.requiredAction != "setup":
+		if (
+			dependency.requiredInstallationStatus != "installed"
+			and dependency.requiredAction != "setup"
+		):
 			continue
 		if dependency.requirementType == "before":
-			setupRequirements.append((dependency.requiredProductId, dependency.productId))
+			setupRequirements.append(
+				(dependency.requiredProductId, dependency.productId)
+			)
 		elif dependency.requirementType == "after":
-			setupRequirements.append((dependency.productId, dependency.requiredProductId))
+			setupRequirements.append(
+				(dependency.productId, dependency.requiredProductId)
+			)
 
 	return setupRequirements
 
 
-def generateProductSequence_algorithm1(availableProducts: List[Product], productDependencies: List[ProductDependency]) -> List[Product]:
+def generateProductSequence_algorithm1(
+	availableProducts: list[Product], productDependencies: list[ProductDependency]
+) -> list[Product]:
 	logger.info("Generating product sequence by algorithm 1.")
 	setupRequirements = getSetupRequirements(productDependencies)
 
-	return generateProductSequenceFromRequPairs_algorithm1(availableProducts, setupRequirements)
+	return generateProductSequenceFromRequPairs_algorithm1(
+		availableProducts, setupRequirements
+	)
 
 
-def modifySortingClassesForAlgorithm1(products: List[Product], setupRequirements: List[Any]) -> bool:  # pylint: disable=too-many-branches
+def modifySortingClassesForAlgorithm1(
+	products: list[Product], setupRequirements: list[Any]
+) -> bool:  # pylint: disable=too-many-branches
 	# idea:
 	# we reconstruct the priority chain
 	# by pushing the products upwards into it when required by a dependency
@@ -626,7 +716,11 @@ def modifySortingClassesForAlgorithm1(products: List[Product], setupRequirements
 				removeRequs = []
 				for requ in requsByPosterior[posti.id]:
 					if requ[0] not in fId2Prod:
-						logger.debug("product %s should be arranged before product %s but is not available", requ[0], requ[1])
+						logger.debug(
+							"product %s should be arranged before product %s but is not available",
+							requ[0],
+							requ[1],
+						)
 						removeRequs.append(requ)
 					else:
 						if fId2Prod[requ[0]].revisedPriority < level:
@@ -648,7 +742,9 @@ def modifySortingClassesForAlgorithm1(products: List[Product], setupRequirements
 	return recursionNecessary
 
 
-def generateProductSequenceFromRequPairs_algorithm1(availableProducts: List[Product], setupRequirements: List[Any]) -> List[Product]:
+def generateProductSequenceFromRequPairs_algorithm1(
+	availableProducts: list[Product], setupRequirements: list[Any]
+) -> list[Product]:
 	logger.debug("availableProducts %s", availableProducts)
 
 	xProducts = []
@@ -681,8 +777,8 @@ def generateProductSequenceFromRequPairs_algorithm1(availableProducts: List[Prod
 
 
 def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-	availableProducts: List[Product], setupRequirements: List[Any]
-) -> List[Product]:
+	availableProducts: list[Product], setupRequirements: list[Any]
+) -> list[Product]:
 	"""Build priority classes and indices"""
 	logger.debug("availableProducts %s", availableProducts)
 
@@ -705,7 +801,7 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 
 	requirementsByClasses = defaultdict(list)
 
-	for (prod1, prod2) in setupRequirements:
+	for prod1, prod2 in setupRequirements:
 		logger.debug("First product: %s", prod1)
 		if prod1 not in productById:
 			logger.debug("Product %s is requested but not available", prod1)
@@ -724,10 +820,16 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 		if prio1 > prio2:
 			logger.debug("The ordering is guaranteed by priority handling")
 		elif prio1 < prio2:
-			logger.warning("Dependency declaration between %s and %s contradicts priority declaration, will be ignored", prod1, prod2)
+			logger.warning(
+				"Dependency declaration between %s and %s contradicts priority declaration, will be ignored",
+				prod1,
+				prod2,
+			)
 		else:
 			prioclasskey = str(prio1)
-			requirementsByClasses[prioclasskey].append([productIndexInClass[prod1], productIndexInClass[prod2]])
+			requirementsByClasses[prioclasskey].append(
+				[productIndexInClass[prod1], productIndexInClass[prod2]]
+			)
 
 	foundClasses = []
 	orderingsByClasses = {}
@@ -752,7 +854,10 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 					for _ in prioclass:
 						order_build.proceed()
 				except OpsiProductOrderingError as err:
-					logger.warning("Product sort algorithm 2 caught OpsiProductOrderingError: %s", err)
+					logger.warning(
+						"Product sort algorithm 2 caught OpsiProductOrderingError: %s",
+						err,
+					)
 					for i, prio in enumerate(prioclass):
 						logger.info(" product %s %s", i, prio)
 
@@ -762,7 +867,11 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 					) from err
 
 				orderingsByClasses[prioclasskey] = order_build.getOrdering()
-				logger.debug("prioclasskey, ordering %s, %s", prioclasskey, order_build.getOrdering())
+				logger.debug(
+					"prioclasskey, ordering %s, %s",
+					prioclasskey,
+					order_build.getOrdering(),
+				)
 
 		for prioclasskey in foundClasses:
 			prioclass = priorityClasses[prioclasskey]
@@ -770,7 +879,11 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 			if prioclasskey in orderingsByClasses:
 				ordering = orderingsByClasses[prioclasskey]
 
-				logger.debug("prioclasskey in found classes, ordering %s, %s", prioclasskey, order_build.getOrdering())
+				logger.debug(
+					"prioclasskey in found classes, ordering %s, %s",
+					prioclasskey,
+					order_build.getOrdering(),
+				)
 
 				for idx in ordering:
 					sortedList.append(prioclass[idx])
@@ -787,12 +900,18 @@ def generateProductSequenceFromRequPairs_algorithm2(  # pylint: disable=too-many
 
 
 def generateProductOnClientSequence_algorithm1(
-	productOnClients: List[ProductOnClient], availableProducts: List[Product], productDependencies: List[ProductDependency]
-) -> List[ProductOnClient]:
+	productOnClients: list[ProductOnClient],
+	availableProducts: list[Product],
+	productDependencies: list[ProductDependency],
+) -> list[ProductOnClient]:
 	logger.info("Generating productOnClient sequence with algorithm 1.")
 
 	setupRequirements = getSetupRequirements(productDependencies)
-	sortedProductList = generateProductSequenceFromRequPairs_algorithm1(availableProducts, setupRequirements)
+	sortedProductList = generateProductSequenceFromRequPairs_algorithm1(
+		availableProducts, setupRequirements
+	)
 
-	productOnClients = generateProductOnClientSequence(productOnClients, sortedProductList)
+	productOnClients = generateProductOnClientSequence(
+		productOnClients, sortedProductList
+	)
 	return productOnClients

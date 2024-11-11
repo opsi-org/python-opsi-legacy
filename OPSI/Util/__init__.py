@@ -27,13 +27,13 @@ from functools import lru_cache
 from hashlib import md5
 from itertools import islice
 
+# pyright: reportMissingImports=false
 try:
 	# PyCryptodome from pypi installs into Crypto
 	from Crypto.Cipher import Blowfish
 	from Crypto.PublicKey import RSA
 	from Crypto.Util.number import bytes_to_long
 except (ImportError, OSError):
-	# pyright: reportMissingImports=false
 	# python3-pycryptodome installs into Cryptodome
 	from Cryptodome.Cipher import Blowfish
 	from Cryptodome.PublicKey import RSA
@@ -42,7 +42,7 @@ except (ImportError, OSError):
 from opsicommon.logging import get_logger
 from opsicommon.objects import deserialize as oc_deserialize
 from opsicommon.objects import from_json, serialize, to_json
-from opsicommon.types import (
+from opsicommon.types import (  # noqa: F401
 	_PACKAGE_VERSION_REGEX,
 	_PRODUCT_VERSION_REGEX,
 	forceBool,
@@ -51,9 +51,10 @@ from opsicommon.types import (
 	forceUnicode,
 )
 from opsicommon.utils import (
-	monkeypatch_subprocess_for_frozen,  # pylint: disable=unused-import
+	Singleton,
+	compare_versions,
+	monkeypatch_subprocess_for_frozen,  # pylint: disable=unused-import  # noqa: F401
 )
-from opsicommon.utils import Singleton, compare_versions
 from opsicommon.utils import generate_opsi_host_key as generateOpsiHostKey
 from opsicommon.utils import timestamp as oc_timestamp
 
@@ -114,7 +115,7 @@ class PickleString(str):
 		return base64.standard_b64encode(self)
 
 	def __setstate__(self, state):
-		self = base64.standard_b64decode(state)  # pylint: disable=self-cls-assignment
+		self = base64.standard_b64decode(state)  # pylint: disable=self-cls-assignment  # noqa: F841
 
 
 def formatFileSize(sizeInBytes, base: int = 2):  # pylint: disable=too-many-return-statements
@@ -183,7 +184,9 @@ def timestamp(secs=0, dateOnly=False):
 
 
 def fromJson(obj, objectType=None, preventObjectCreation=False):
-	return from_json(obj, object_type=objectType, prevent_object_creation=preventObjectCreation)
+	return from_json(
+		obj, object_type=objectType, prevent_object_creation=preventObjectCreation
+	)
 
 
 def toJson(obj):
@@ -242,7 +245,7 @@ def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branc
 		append(")")
 	elif isinstance(obj, dict):
 		append("(\n")
-		for (key, value) in obj.items():
+		for key, value in obj.items():
 			append(f"{key}=")
 			if isinstance(value, (dict, list)):
 				level += 1
@@ -560,7 +563,16 @@ def findFiles(  # pylint: disable=too-many-arguments
 ):
 	return list(
 		findFilesGenerator(
-			directory, prefix, excludeDir, excludeFile, includeDir, includeFile, returnDirs, returnLinks, followLinks, repository
+			directory,
+			prefix,
+			excludeDir,
+			excludeFile,
+			includeDir,
+			includeFile,
+			returnDirs,
+			returnLinks,
+			followLinks,
+			repository,
 		)
 	)
 
@@ -619,7 +631,9 @@ def getfqdn(name="", conf=None):
 			pass
 
 	# lazy import to avoid circular dependency
-	from OPSI.Util.Config import getGlobalConfig  # pylint: disable=import-outside-toplevel
+	from OPSI.Util.Config import (
+		getGlobalConfig,  # pylint: disable=import-outside-toplevel
+	)
 
 	if conf is not None:
 		host_id = getGlobalConfig("hostname", conf)
@@ -649,7 +663,9 @@ def removeDirectory(directory):
 		shutil.rmtree(directory)
 	except UnicodeDecodeError:
 		# See http://bugs.python.org/issue3616
-		logger.info("Client data directory seems to contain filenames with unicode characters. Trying fallback.")
+		logger.info(
+			"Client data directory seems to contain filenames with unicode characters. Trying fallback."
+		)
 
 		# late import to avoid circular dependency
 		import OPSI.System  # pylint: disable=import-outside-toplevel

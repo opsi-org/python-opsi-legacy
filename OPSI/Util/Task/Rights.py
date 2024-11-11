@@ -72,15 +72,28 @@ class FilePermission:
 		cur_mode = stat_res.st_mode & 0o7777
 		if cur_mode != self.file_permissions:
 			logger.trace("%s: %o != %o", path, cur_mode, self.file_permissions)
-			os.chmod(path, self.file_permissions, follow_symlinks=not stat.S_ISLNK(stat_res.st_mode))
+			os.chmod(
+				path,
+				self.file_permissions,
+				follow_symlinks=not stat.S_ISLNK(stat_res.st_mode),
+			)
 
 	def chown(self, path, stat_res=None):
 		stat_res = stat_res or os.stat(path, follow_symlinks=False)
 		# Unprivileged user cannot change file owner
 		uid = self.uid if _HAS_ROOT_RIGHTS else -1
 		if uid not in (-1, stat_res.st_uid) or self.gid not in (-1, stat_res.st_gid):
-			logger.trace("%s: %d:%d != %d:%d", path, stat_res.st_uid, stat_res.st_gid, uid, self.gid)
-			os.chown(path, uid, self.gid, follow_symlinks=not stat.S_ISLNK(stat_res.st_mode))
+			logger.trace(
+				"%s: %d:%d != %d:%d",
+				path,
+				stat_res.st_uid,
+				stat_res.st_gid,
+				uid,
+				self.gid,
+			)
+			os.chown(
+				path, uid, self.gid, follow_symlinks=not stat.S_ISLNK(stat_res.st_mode)
+			)
 
 	def apply(self, path):
 		stat_res = os.stat(path, follow_symlinks=False)
@@ -154,30 +167,94 @@ class PermissionRegistry(metaclass=Singleton):
 	def register_default_permissions(self):
 		self.register_permission(
 			DirPermission("/etc/opsi", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o660, 0o770),
-			DirPermission("/var/log/opsi", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o660, 0o770),
-			DirPermission("/var/lib/opsi", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o660, 0o770),
-			DirPermission("/etc/opsi/ssl", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o600, 0o750),
-			FilePermission("/etc/opsi/ssl/opsi-ca-cert.pem", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o644),
-			DirPermission("/var/lib/opsi/public", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o664, 0o2775, modify_file_exe=False),
-			DirPermission("/var/lib/opsi/depot", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o660, 0o2770, modify_file_exe=False),
-			DirPermission("/var/lib/opsi/repository", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o660, 0o2770),
-			DirPermission("/var/lib/opsi/depot/workbench", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o660, 0o2770, modify_file_exe=False),
+			DirPermission(
+				"/var/log/opsi", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o660, 0o770
+			),
+			DirPermission(
+				"/var/lib/opsi", OPSICONFD_USER, FILE_ADMIN_GROUP, 0o660, 0o770
+			),
+			DirPermission(
+				"/etc/opsi/ssl", OPSICONFD_USER, OPSI_ADMIN_GROUP, 0o600, 0o750
+			),
+			FilePermission(
+				"/etc/opsi/ssl/opsi-ca-cert.pem",
+				OPSICONFD_USER,
+				OPSI_ADMIN_GROUP,
+				0o644,
+			),
+			DirPermission(
+				"/var/lib/opsi/public",
+				OPSICONFD_USER,
+				FILE_ADMIN_GROUP,
+				0o664,
+				0o2775,
+				modify_file_exe=False,
+			),
+			DirPermission(
+				"/var/lib/opsi/depot",
+				OPSICONFD_USER,
+				FILE_ADMIN_GROUP,
+				0o660,
+				0o2770,
+				modify_file_exe=False,
+			),
+			DirPermission(
+				"/var/lib/opsi/repository",
+				OPSICONFD_USER,
+				FILE_ADMIN_GROUP,
+				0o660,
+				0o2770,
+			),
+			DirPermission(
+				"/var/lib/opsi/depot/workbench",
+				OPSICONFD_USER,
+				FILE_ADMIN_GROUP,
+				0o660,
+				0o2770,
+				modify_file_exe=False,
+			),
 		)
 
 		pxe_dir = getPxeDirectory()
 		if pxe_dir:
-			self.register_permission(DirPermission(pxe_dir, OPSICONFD_USER, FILE_ADMIN_GROUP, 0o664, 0o775))
+			self.register_permission(
+				DirPermission(pxe_dir, OPSICONFD_USER, FILE_ADMIN_GROUP, 0o664, 0o775)
+			)
 
 		ssh_dir = _get_default_depot_user_ssh_dir()
 		self.register_permission(
-			DirPermission(ssh_dir, DEFAULT_DEPOT_USER, FILE_ADMIN_GROUP, 0o640, 0o750, recursive=False),
-			FilePermission(os.path.join(ssh_dir, "id_rsa"), DEFAULT_DEPOT_USER, FILE_ADMIN_GROUP, 0o640),
-			FilePermission(os.path.join(ssh_dir, "id_rsa.pub"), DEFAULT_DEPOT_USER, FILE_ADMIN_GROUP, 0o644),
-			FilePermission(os.path.join(ssh_dir, "authorized_keys"), DEFAULT_DEPOT_USER, FILE_ADMIN_GROUP, 0o600),
+			DirPermission(
+				ssh_dir,
+				DEFAULT_DEPOT_USER,
+				FILE_ADMIN_GROUP,
+				0o640,
+				0o750,
+				recursive=False,
+			),
+			FilePermission(
+				os.path.join(ssh_dir, "id_rsa"),
+				DEFAULT_DEPOT_USER,
+				FILE_ADMIN_GROUP,
+				0o640,
+			),
+			FilePermission(
+				os.path.join(ssh_dir, "id_rsa.pub"),
+				DEFAULT_DEPOT_USER,
+				FILE_ADMIN_GROUP,
+				0o644,
+			),
+			FilePermission(
+				os.path.join(ssh_dir, "authorized_keys"),
+				DEFAULT_DEPOT_USER,
+				FILE_ADMIN_GROUP,
+				0o600,
+			),
 		)
 
 
-def setRightsOnSSHDirectory(userId=None, groupId=None, path=_get_default_depot_user_ssh_dir()):
+def setRightsOnSSHDirectory(
+	userId=None, groupId=None, path=_get_default_depot_user_ssh_dir()
+):
 	if not os.path.exists(path):
 		raise FileNotFoundError(f"Path '{path}' not found")
 
@@ -193,7 +270,9 @@ def setRightsOnSSHDirectory(userId=None, groupId=None, path=_get_default_depot_u
 		DirPermission(path, username, groupname, 0o640, 0o750, recursive=False),
 		FilePermission(os.path.join(path, "id_rsa"), username, groupname, 0o640),
 		FilePermission(os.path.join(path, "id_rsa.pub"), username, groupname, 0o644),
-		FilePermission(os.path.join(path, "authorized_keys"), username, groupname, 0o600),
+		FilePermission(
+			os.path.join(path, "authorized_keys"), username, groupname, 0o600
+		),
 	)
 	set_rights()
 
@@ -227,7 +306,9 @@ def set_rights(start_path="/"):  # pylint: disable=too-many-branches
 
 		recursive = os.path.isdir(path) and getattr(permission, "recursive", True)
 
-		logger.notice("Setting rights %son '%s'", "recursively " if recursive else "", path)
+		logger.notice(
+			"Setting rights %son '%s'", "recursively " if recursive else "", path
+		)
 		permission.apply(path)
 
 		if not recursive:

@@ -8,4 +8,4 @@ Utilities for updating packages on a opsi server.
 
 from .Updater import OpsiPackageUpdater
 
-__all__ = ('OpsiPackageUpdater', )
+__all__ = ("OpsiPackageUpdater",)

@@ -22,143 +22,113 @@ def host_control_backend(extendedConfigDataBackend):
 	yield HostControlBackend(extendedConfigDataBackend)
 
 
-@pytest.mark.parametrize("config, expected_result", (
+@pytest.mark.parametrize(
+	"config, expected_result",
 	(
-		["255.255.255.255", "192.168.10.255"],
-		{
-			IPv4Network('0.0.0.0/0'): {
-				IPv4Address('255.255.255.255'): (7, 9, 12287),
-				IPv4Address('192.168.10.255'): (7, 9, 12287)
-			}
-		}
-	),
-	(
-		["255.255.255.255"],
-		{
-			IPv4Network('0.0.0.0/0'): {
-				IPv4Address('255.255.255.255'): (7, 9, 12287)
-			}
-		}
-	),
-	(
-		{
-			"255.255.255.255": [9, 12287],
-			"10.10.255.255": [12287]
-		},
-		{
-			IPv4Network('0.0.0.0/0'): {
-				IPv4Address('255.255.255.255'): (9, 12287),
-				IPv4Address('10.10.255.255'): (12287,)
-			}
-		}
-	),
-	(
-		{
-			"0.0.0.0/0": {
-				"255.255.255.255": [9, 12287]
+		(
+			["255.255.255.255", "192.168.10.255"],
+			{
+				IPv4Network("0.0.0.0/0"): {
+					IPv4Address("255.255.255.255"): (7, 9, 12287),
+					IPv4Address("192.168.10.255"): (7, 9, 12287),
+				}
 			},
-			"10.10.0.0/16": {
-				"10.10.1.255": [9, 12287],
-				"10.10.2.255": [12287]
-			}
-		},
-		{
-			IPv4Network('0.0.0.0/0'): {
-				IPv4Address('255.255.255.255'): (9, 12287),
+		),
+		(
+			["255.255.255.255"],
+			{IPv4Network("0.0.0.0/0"): {IPv4Address("255.255.255.255"): (7, 9, 12287)}},
+		),
+		(
+			{"255.255.255.255": [9, 12287], "10.10.255.255": [12287]},
+			{
+				IPv4Network("0.0.0.0/0"): {
+					IPv4Address("255.255.255.255"): (9, 12287),
+					IPv4Address("10.10.255.255"): (12287,),
+				}
 			},
-			IPv4Network('10.10.0.0/16'): {
-				IPv4Address('10.10.1.255'): (9, 12287),
-				IPv4Address('10.10.2.255'): (12287,)
-			}
-		}
-	)
-))
+		),
+		(
+			{
+				"0.0.0.0/0": {"255.255.255.255": [9, 12287]},
+				"10.10.0.0/16": {"10.10.1.255": [9, 12287], "10.10.2.255": [12287]},
+			},
+			{
+				IPv4Network("0.0.0.0/0"): {
+					IPv4Address("255.255.255.255"): (9, 12287),
+				},
+				IPv4Network("10.10.0.0/16"): {
+					IPv4Address("10.10.1.255"): (9, 12287),
+					IPv4Address("10.10.2.255"): (12287,),
+				},
+			},
+		),
+	),
+)
 def test_set_broadcast_addresses(host_control_backend, config, expected_result):  # pylint: disable=redefined-outer-name
 	host_control_backend._set_broadcast_addresses(config)  # pylint: disable=protected-access
 	assert host_control_backend._broadcastAddresses == expected_result  # pylint: disable=protected-access
 
 
-@pytest.mark.parametrize("config, ip_address, expected_result", (
+@pytest.mark.parametrize(
+	"config, ip_address, expected_result",
 	(
-		["255.255.255.255", "192.168.10.255"],
-		None,
-		[
-			("255.255.255.255", (7, 9, 12287)),
-			("192.168.10.255", (7, 9, 12287))
-		]
+		(
+			["255.255.255.255", "192.168.10.255"],
+			None,
+			[("255.255.255.255", (7, 9, 12287)), ("192.168.10.255", (7, 9, 12287))],
+		),
+		(
+			{
+				"0.0.0.0/0": {"255.255.255.255": [9, 12287]},
+				"10.10.0.0/16": {"10.10.1.255": [9, 12287], "10.10.2.255": [12287]},
+			},
+			None,
+			[
+				("255.255.255.255", (9, 12287)),
+				("10.10.1.255", (9, 12287)),
+				("10.10.2.255", (12287,)),
+			],
+		),
+		(
+			{
+				"192.0.0.0/8": {"255.255.255.255": [9, 12287]},
+				"10.10.0.0/16": {"10.10.1.255": [9, 12287], "10.10.2.255": [12287]},
+			},
+			"10.1.1.1",
+			[
+				("255.255.255.255", (9, 12287)),
+				("10.10.1.255", (9, 12287)),
+				("10.10.2.255", (12287,)),
+			],
+		),
+		(
+			{
+				"0.0.0.0/0": {"255.255.255.255": [9, 12287]},
+				"10.10.0.0/16": {"10.10.1.255": [9, 12287], "10.10.2.255": [12287]},
+			},
+			"10.10.1.1",
+			[("10.10.1.255", (9, 12287)), ("10.10.2.255", (12287,))],
+		),
+		(
+			{
+				"192.168.0.0/16": {"255.255.255.255": [9, 12287]},
+				"10.10.1.0/24": {"10.10.1.255": [9, 12287]},
+				"10.10.2.0/24": {"10.10.2.255": [12287]},
+			},
+			"10.10.2.1",
+			[("10.10.2.255", (12287,))],
+		),
 	),
-	(
-		{
-			"0.0.0.0/0": {
-				"255.255.255.255": [9, 12287]
-			},
-			"10.10.0.0/16": {
-				"10.10.1.255": [9, 12287],
-				"10.10.2.255": [12287]
-			}
-		},
-		None,
-		[
-			("255.255.255.255", (9, 12287)),
-			("10.10.1.255", (9, 12287)),
-			("10.10.2.255", (12287,))
-		]
-	),
-	(
-		{
-			"192.0.0.0/8": {
-				"255.255.255.255": [9, 12287]
-			},
-			"10.10.0.0/16": {
-				"10.10.1.255": [9, 12287],
-				"10.10.2.255": [12287]
-			}
-		},
-		"10.1.1.1",
-		[
-			("255.255.255.255", (9, 12287)),
-			("10.10.1.255", (9, 12287)),
-			("10.10.2.255", (12287,))
-		]
-	),
-	(
-		{
-			"0.0.0.0/0": {
-				"255.255.255.255": [9, 12287]
-			},
-			"10.10.0.0/16": {
-				"10.10.1.255": [9, 12287],
-				"10.10.2.255": [12287]
-			}
-		},
-		"10.10.1.1",
-		[
-			("10.10.1.255", (9, 12287)),
-			("10.10.2.255", (12287,))
-		]
-	),
-	(
-		{
-			"192.168.0.0/16": {
-				"255.255.255.255": [9, 12287]
-			},
-			"10.10.1.0/24": {
-				"10.10.1.255": [9, 12287]
-			},
-			"10.10.2.0/24": {
-				"10.10.2.255": [12287]
-			}
-		},
-		"10.10.2.1",
-		[
-			("10.10.2.255", (12287,))
-		]
-	)
-))
-def test_get_broadcast_addresses_for_host(host_control_backend, config, ip_address, expected_result):  # pylint: disable=redefined-outer-name
+)
+def test_get_broadcast_addresses_for_host(
+	host_control_backend, config, ip_address, expected_result
+):  # pylint: disable=redefined-outer-name
 	host_control_backend._set_broadcast_addresses(config)  # pylint: disable=protected-access
 	host = OpsiClient(id="test.opsi.org", ipAddress=ip_address)
-	assert list(host_control_backend._get_broadcast_addresses_for_host(host)) == expected_result  # pylint: disable=protected-access
+	assert (
+		list(host_control_backend._get_broadcast_addresses_for_host(host))
+		== expected_result
+	)  # pylint: disable=protected-access
 
 
 def test_calling_start_and_stop_method(host_control_backend):  # pylint: disable=redefined-outer-name
@@ -170,9 +140,11 @@ def test_calling_start_and_stop_method(host_control_backend):  # pylint: disable
 	"""
 	clients = getClients()
 	host_control_backend.host_createObjects(clients)
-	host_control_backend._hostRpcTimeout = 1  # for faster finishing of the test # pylint: disable=protected-access
-	host_control_backend.hostControl_start(['client1.test.invalid'])
-	host_control_backend.hostControl_shutdown(['client1.test.invalid'])
+	host_control_backend._hostRpcTimeout = (
+		1  # for faster finishing of the test # pylint: disable=protected-access
+	)
+	host_control_backend.hostControl_start(["client1.test.invalid"])
+	host_control_backend.hostControl_shutdown(["client1.test.invalid"])
 
 
 def test_host_control_reachable_without_hosts(host_control_backend):  # pylint: disable=redefined-outer-name

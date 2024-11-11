@@ -73,7 +73,9 @@ class Session:  # pylint: disable=too-many-instance-attributes
 		if self.sessionTimer:
 			self.sessionTimer.cancel()
 			self.sessionTimer.join(1)
-		self.sessionTimer = threading.Timer(self.sessionMaxInactiveInterval, self.expire)
+		self.sessionTimer = threading.Timer(
+			self.sessionMaxInactiveInterval, self.expire
+		)
 		self.sessionTimer.start()
 
 	def setMarkedForDeletion(self):
@@ -112,7 +114,13 @@ class Session:  # pylint: disable=too-many-instance-attributes
 
 
 class SessionHandler:
-	def __init__(self, sessionName="OPSISID", sessionMaxInactiveInterval=120, maxSessionsPerIp=0, sessionDeletionTimeout=60):
+	def __init__(
+		self,
+		sessionName="OPSISID",
+		sessionMaxInactiveInterval=120,
+		maxSessionsPerIp=0,
+		sessionDeletionTimeout=60,
+	):
 		self.sessionName = forceUnicode(sessionName)
 		self.sessionMaxInactiveInterval = forceInt(sessionMaxInactiveInterval)
 		self.maxSessionsPerIp = forceInt(maxSessionsPerIp)
@@ -135,7 +143,9 @@ the value holds the sesion.
 		if not ip:
 			return self.sessions
 
-		return {uid: session for uid, session in self.sessions.items() if session.ip == ip}
+		return {
+			uid: session for uid, session in self.sessions.items() if session.ip == ip
+		}
 
 	def getSession(self, uid=None, ip=None):  # pylint: disable=invalid-name
 		if uid:
@@ -146,7 +156,11 @@ the value holds the sesion.
 				else:
 					# Set last modified to current time
 					session.increaseUsageCount()
-					logger.confidential("Returning session: %s (count: %d)", session.uid, session.usageCount)
+					logger.confidential(
+						"Returning session: %s (count: %d)",
+						session.uid,
+						session.usageCount,
+					)
 					return session
 			else:
 				logger.info("Failed to get session: session id %s not found", uid)
@@ -162,7 +176,9 @@ the value holds the sesion.
 					self.deleteSession(sessionUid)
 
 				if len(self.getSessions(ip)) >= self.maxSessionsPerIp:
-					raise OpsiServiceAuthenticationError(f"Session limit for ip '{ip}' reached")
+					raise OpsiServiceAuthenticationError(
+						f"Session limit for ip '{ip}' reached"
+					)
 
 		session = self.createSession()
 		session.increaseUsageCount()
@@ -184,7 +200,9 @@ the value holds the sesion.
 		)
 
 		if session.usageCount > 0:
-			logger.notice("Session %s currently in use, waiting before deletion", session.uid)
+			logger.notice(
+				"Session %s currently in use, waiting before deletion", session.uid
+			)
 
 		session.setMarkedForDeletion()
 		timeout = self.sessionDeletionTimeout
@@ -197,7 +215,10 @@ the value holds the sesion.
 			timeout -= sleepInSeconds
 
 		if timeout == 0:
-			logger.warning("Session '%s': timeout occurred while waiting for session to get free for deletion", session.uid)
+			logger.warning(
+				"Session '%s': timeout occurred while waiting for session to get free for deletion",
+				session.uid,
+			)
 
 		self.deleteSession(session.uid)
 		return True
@@ -215,7 +236,12 @@ the value holds the sesion.
 
 		try:
 			del self.sessions[uid]
-			logger.notice("Session '%s' from ip '%s', application '%s' deleted", session.uid, session.ip, session.userAgent)
+			logger.notice(
+				"Session '%s' from ip '%s', application '%s' deleted",
+				session.uid,
+				session.ip,
+				session.userAgent,
+			)
 			del session
 		except KeyError:
 			pass

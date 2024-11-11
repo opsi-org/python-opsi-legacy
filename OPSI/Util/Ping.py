@@ -172,7 +172,9 @@ def send_one_ping(my_socket, dest_addr, ID):  # pylint: disable=invalid-name
 
 	# Now that we have the right checksum, we put that in. It's just easier
 	# to make up a new header than to stuff it into the dummy.
-	header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), ID, 1)
+	header = struct.pack(
+		"bbHHh", ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), ID, 1
+	)
 	packet = header + data
 	my_socket.sendto(packet, (dest_addr, 1))  # Don't know about the 1
 
@@ -184,7 +186,9 @@ def ping(dest_addr, timeout=2):
 	icmp = socket.getprotobyname("icmp")
 	try:
 		my_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
-	except OSError as error:  # Exception type changed from socket.error to OSError in python3.3
+	except (
+		OSError
+	) as error:  # Exception type changed from socket.error to OSError in python3.3
 		if error.errno == 1:
 			# Operation not permitted
 			msg = " - Note that ICMP messages can only be sent from processes running as root."

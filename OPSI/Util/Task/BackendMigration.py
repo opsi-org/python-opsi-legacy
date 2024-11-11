@@ -31,7 +31,12 @@ def patch_dispatch_conf():
 				if match == ".*":
 					lines.append(f"{match} : mysql\n")
 					continue
-				backends = list({"mysql" if b.strip() == "file" else b.strip() for b in backends.split(",")})
+				backends = list(
+					{
+						"mysql" if b.strip() == "file" else b.strip()
+						for b in backends.split(",")
+					}
+				)
 				if "mysql" in backends:
 					if len(backends) == 1:
 						continue
@@ -39,18 +44,22 @@ def patch_dispatch_conf():
 					backends.insert(0, "mysql")
 				line = f"{match} : {', '.join(backends)}\n"
 			lines.append(line)
-	with open("/etc/opsi/backendManager/dispatch.conf", mode="w", encoding="utf-8") as file:
+	with open(
+		"/etc/opsi/backendManager/dispatch.conf", mode="w", encoding="utf-8"
+	) as file:
 		file.writelines(lines)
 
 
-def migrate_file_to_mysql(create_backup: bool = True, restart_services: bool = True) -> bool:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def migrate_file_to_mysql(
+	create_backup: bool = True, restart_services: bool = True
+) -> bool:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 	bm_config = {
 		"dispatchConfigFile": "/etc/opsi/backendManager/dispatch.conf",
 		"backendConfigDir": "/etc/opsi/backends",
 		"extensionConfigDir": "/etc/opsi/backendManager/extend.d",
 		"depotBackend": False,
 		"dispatchIgnoreModules": ["OpsiPXEConfd", "DHCPD", "HostControl"],
-		"unique_hardware_addresses": False
+		"unique_hardware_addresses": False,
 	}
 	backend_manager = backend = BackendManager(**bm_config)
 	backends = None
@@ -93,7 +102,11 @@ def migrate_file_to_mysql(create_backup: bool = True, restart_services: bool = T
 				logger.debug(err)
 				service_running[service] = False
 
-			logger.info("Service %r is %s", service, "running" if service_running[service] else "not running")
+			logger.info(
+				"Service %r is %s",
+				service,
+				"running" if service_running[service] else "not running",
+			)
 
 			if service_running[service]:
 				try:
@@ -106,9 +119,12 @@ def migrate_file_to_mysql(create_backup: bool = True, restart_services: bool = T
 					for _ in range(10):
 						try:
 							logger.debug("Checking if service %r is running", service)
-							execute(["systemctl", "is-active", "--quiet", service], shell=False)
+							execute(
+								["systemctl", "is-active", "--quiet", service],
+								shell=False,
+							)
 							time.sleep(2)
-						except RuntimeError as err:
+						except RuntimeError:
 							logger.info("Service %r stopped", service)
 							stopped = True
 							break
@@ -128,7 +144,9 @@ def migrate_file_to_mysql(create_backup: bool = True, restart_services: bool = T
 	write_backend.unique_hardware_addresses = False
 	write_backend.backend_createBase()
 
-	backend_replicator = BackendReplicator(readBackend=read_backend, writeBackend=write_backend, cleanupFirst=True)
+	backend_replicator = BackendReplicator(
+		readBackend=read_backend, writeBackend=write_backend, cleanupFirst=True
+	)
 	backend_replicator.replicate(audit=False)
 
 	patch_dispatch_conf()

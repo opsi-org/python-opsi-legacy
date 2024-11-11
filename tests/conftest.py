@@ -63,7 +63,9 @@ def pytest_configure(config):
 	# When the mode is auto, all discovered async tests are considered
 	# asyncio-driven even if they have no @pytest.mark.asyncio marker.
 	config.option.asyncio_mode = "auto"
-	config.addinivalue_line("markers", "obsolete: mark test that are obsolete for 4.2 development")
+	config.addinivalue_line(
+		"markers", "obsolete: mark test that are obsolete for 4.2 development"
+	)
 
 
 @pytest.fixture(autouse=True)
@@ -161,7 +163,12 @@ def backendManager(_serverBackend, tempDir, dist_data_path):  # pylint: disable=
 	"""
 	shutil.copytree(dist_data_path, os.path.join(tempDir, "etc", "opsi"))
 
-	yield BackendManager(backend=_serverBackend, extensionconfigdir=os.path.join(tempDir, "etc", "opsi", "backendManager", "extend.d"))
+	yield BackendManager(
+		backend=_serverBackend,
+		extensionconfigdir=os.path.join(
+			tempDir, "etc", "opsi", "backendManager", "extend.d"
+		),
+	)
 
 
 @pytest.fixture
@@ -219,7 +226,10 @@ def hardwareAuditConfigPath(dist_data_path):  # pylint: disable=redefined-outer-
 		yield fileCopy
 
 
-@pytest.fixture(params=[getFileBackend, getMySQLBackend, getSQLiteBackend], ids=["file", "mysql", "sqlite"])
+@pytest.fixture(
+	params=[getFileBackend, getMySQLBackend, getSQLiteBackend],
+	ids=["file", "mysql", "sqlite"],
+)
 def auditDataBackend(request, hardwareAuditConfigPath):  # pylint: disable=redefined-outer-name
 	with request.param(auditHardwareConfigFile=hardwareAuditConfigPath) as backend:
 		with _backendBase(backend):

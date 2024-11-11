@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 
 from OPSI.Types import forceBool, forceUnicode, forceUnicodeList
 
-__all__ = ('LinksExtractor', 'ProductRepositoryInfo')
+__all__ = ("LinksExtractor", "ProductRepositoryInfo")
 
 
 class ProductRepositoryInfo:  # pylint: disable=dangerous-default-value,too-many-instance-attributes,too-few-public-methods,too-many-arguments,too-many-locals
@@ -32,7 +32,7 @@ class ProductRepositoryInfo:  # pylint: disable=dangerous-default-value,too-many
 		includes=[],
 		active=False,
 		autoSetupExcludes=[],
-		verifyCert=False
+		verifyCert=False,
 	):
 		self.name = forceUnicode(name)
 		self.baseUrl = forceUnicode(baseUrl)
@@ -50,23 +50,23 @@ class ProductRepositoryInfo:  # pylint: disable=dangerous-default-value,too-many
 		self.opsiDepotId = opsiDepotId
 		self.onlyDownload = None
 		self.inheritProductProperties = None
-		self.description = ''
+		self.description = ""
 		self.active = forceBool(active)
 		self.verifyCert = forceBool(verifyCert)
 
 		self.proxy = None
 		if proxy:
 			self.proxy = proxy
-		if self.baseUrl.startswith('webdav'):
-			self.baseUrl = f'http{self.baseUrl[6:]}'
+		if self.baseUrl.startswith("webdav"):
+			self.baseUrl = f"http{self.baseUrl[6:]}"
 
 	def getDownloadUrls(self):
 		urls = set()
 		for directory in self.dirs:
-			if directory in ('', '/', '.'):
+			if directory in ("", "/", "."):
 				url = self.baseUrl
 			else:
-				url = f'{self.baseUrl}/{directory}'
+				url = f"{self.baseUrl}/{directory}"
 			if not url.endswith("/"):
 				url = f"{url}/"
 			urls.add(url)
@@ -79,7 +79,7 @@ class LinksExtractor(HTMLParser):  # pylint: disable=abstract-method
 		self.links = set()
 
 	def handle_starttag(self, tag, attrs):
-		if tag != 'a':
+		if tag != "a":
 			return
 
 		for attr in attrs:

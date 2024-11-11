@@ -52,7 +52,9 @@ _repository_.
 						product["packageVersion"],
 					)
 					updateAvailable = compareVersions(
-						availablePackage["version"], ">", f"{product['productVersion']}-{product['packageVersion']}"
+						availablePackage["version"],
+						">",
+						f"{product['productVersion']}-{product['packageVersion']}",
 					)
 
 					if updateAvailable:
