@@ -4,7 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 name = "python-opsi"
-version = "4.3.6.1"
+version = "4.4.0.0"
 description = "The opsi python library"
 homepage = "https://www.opsi.org"
 license = "AGPL-3.0"
@@ -47,18 +47,11 @@ sqlalchemy = ">=1.4,<2.0"
 tomlkit = "^0.13"
 typing-extensions = "^4.12"
 
-[tool.poetry.group.dev.dependencies]
-mock = "^5.0"
-pytest = "^8.3"
-pytest-asyncio = "^0.24"
-pytest-cov = "^5.0"
-ruff = "^0.7"
-
 [tool.ruff.format]
 indent-style = "tab"
 
 [tool.ruff.lint]
-ignore = ["F405"]
+ignore = [ "F405",]
 
 [tool.poetry.dependencies.distro]
 platform = "linux"
@@ -75,3 +68,10 @@ version = "^22.1"
 [tool.poetry.dependencies.wmi]
 platform = "win32"
 version = "^1.5"
+
+[tool.poetry.group.dev.dependencies]
+mock = "^5.0"
+pytest = "^8.3"
+pytest-asyncio = "^0.24"
+pytest-cov = "^5.0"
+ruff = "^0.7"
