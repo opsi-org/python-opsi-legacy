@@ -1,4 +1,4 @@
-image: docker.uib.gmbh/opsi/dev/pybuilder:uib-python-3.11
+image: docker.uib.gmbh/opsi/dev/pybuilder:uib-python-3.13
 
 stages:
   - test
@@ -32,6 +32,7 @@ pylint-pytest:
     cp tests/Backends/config.py.gitlabci tests/Backends/config.py
     apt-get update
     apt-get --yes install default-libmysqlclient-dev librsync1
+    poetry env use 3.13
     poetry lock --no-update
     poetry install
     poetry run pylint --disable=R,C,fixme OPSI
@@ -58,6 +59,7 @@ apidoc:
     - eval $(ssh-agent -s)
     - ssh-add <(echo "$BLOG_PUBLISH_PRIVATE_KEY")
   script:
+    - poetry env use 3.13
     - poetry lock --no-update
     - poetry install
     - poetry run opsi-dev-cli apidoc makehtml --output python-opsi
@@ -68,6 +70,7 @@ apidoc:
 uibpypi:
   stage: publish
   script:
+    - poetry env use 3.13
     - poetry lock --no-update
     - poetry install
     - poetry run opsi-dev-tool -l info --uib-pypi-publish
