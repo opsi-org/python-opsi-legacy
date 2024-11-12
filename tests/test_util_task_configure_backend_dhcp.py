@@ -32,27 +32,22 @@ def disableSystemCallsForConfigureDHCPD():
 			"OPSI.Util.Task.ConfigureBackend.DHCPD.grp.getgrnam", lambda x: (0, 0, 5678)
 		):
 			with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.execute"):
+
+				def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
+					return FAKE_RESTART_COMMAND
+
 				with mock.patch(
-					"OPSI.Util.Task.ConfigureBackend.DHCPD.patchSudoersFileToAllowRestartingDHCPD"
+					"OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand",
+					getFakeRestartCommand,
 				):
-
-					def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
-						return FAKE_RESTART_COMMAND
-
-					with mock.patch(
-						"OPSI.Util.Task.ConfigureBackend.DHCPD.getDHCPDRestartCommand",
-						getFakeRestartCommand,
-					):
+					with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.os.chown"):
 						with mock.patch(
-							"OPSI.Util.Task.ConfigureBackend.DHCPD.os.chown"
+							"OPSI.Util.Task.ConfigureBackend.DHCPD.os.chmod"
 						):
 							with mock.patch(
-								"OPSI.Util.Task.ConfigureBackend.DHCPD.os.chmod"
+								"OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand"
 							):
-								with mock.patch(
-									"OPSI.Util.Task.ConfigureBackend.DHCPD.insertDHCPDRestartCommand"
-								):
-									yield
+								yield
 
 
 def testConfigureDHCPWorksIfFileIsMissing(tempDir):  # pylint: disable=unused-argument

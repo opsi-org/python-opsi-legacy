@@ -11,13 +11,22 @@ import sqlite3
 import threading
 from typing import Any, Generator
 
+# Disable sqlalchemy 2.0 deprecation warnings
+import sqlalchemy.util.deprecations
 from opsicommon.logging import get_logger
-from sqlalchemy import create_engine
-from sqlalchemy.event import listen
-from sqlalchemy.orm import scoped_session, sessionmaker
 
-from OPSI.Backend.SQL import SQL, SQLBackend, SQLBackendObjectModificationTracker
-from OPSI.Types import forceFilename
+sqlalchemy.util.deprecations.SILENCE_UBER_WARNING = True
+
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.event import listen  # noqa: E402
+from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
+
+from OPSI.Backend.SQL import (  # noqa: E402
+	SQL,
+	SQLBackend,
+	SQLBackendObjectModificationTracker,
+)
+from OPSI.Types import forceFilename  # noqa: E402
 
 __all__ = ("SQLite", "SQLiteBackend", "SQLiteObjectBackendModificationTracker")
 

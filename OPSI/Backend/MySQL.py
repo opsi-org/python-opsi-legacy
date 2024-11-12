@@ -11,16 +11,24 @@ import time
 from typing import Any, Callable, List
 from urllib.parse import quote, urlencode
 
+# Disable sqlalchemy 2.0 deprecation warnings
+import sqlalchemy.util.deprecations
 from opsicommon.logging import get_logger, secret_filter
-from sqlalchemy import create_engine
-from sqlalchemy.event import listen
-from sqlalchemy.orm import scoped_session, sessionmaker
 
-from OPSI.Backend.Base import ConfigDataBackend
-from OPSI.Backend.SQL import SQL, SQLBackend, SQLBackendObjectModificationTracker
-from OPSI.Object import Product, ProductProperty
-from OPSI.Types import forceHostIdList, forceInt, forceUnicode
-from OPSI.Util import compareVersions
+sqlalchemy.util.deprecations.SILENCE_UBER_WARNING = True
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.event import listen  # noqa: E402
+from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
+
+from OPSI.Backend.Base import ConfigDataBackend  # noqa: E402
+from OPSI.Backend.SQL import (  # noqa: E402
+	SQL,
+	SQLBackend,
+	SQLBackendObjectModificationTracker,
+)
+from OPSI.Object import Product, ProductProperty  # noqa: E402
+from OPSI.Types import forceHostIdList, forceInt, forceUnicode  # noqa: E402
+from OPSI.Util import compareVersions  # noqa: E402
 
 __all__ = ("MySQL", "MySQLBackend", "MySQLBackendObjectModificationTracker")
 
