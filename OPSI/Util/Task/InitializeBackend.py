@@ -13,13 +13,13 @@ This holds backend-independent migrations.
 
 import os.path
 
+from opsicommon.logging import get_logger
+
 from OPSI.Backend.Base.ConfigData import OPSI_PASSWD_FILE
 from OPSI.Object import OpsiConfigserver
 from OPSI.System.Posix import getLocalFqdn, getNetworkConfiguration
 from OPSI.Types import forceList
 from OPSI.Util.Task.ConfigureBackend.ConfigurationData import initializeConfigs
-from OPSI.Util.Task.Rights import set_rights
-from opsicommon.logging import get_logger
 
 __all__ = ("initializeBackends",)
 
@@ -108,7 +108,6 @@ def _setupPasswdFile():
 	if not os.path.exists(OPSI_PASSWD_FILE):
 		with open(OPSI_PASSWD_FILE, mode="w", encoding="utf-8"):
 			pass
-		set_rights(OPSI_PASSWD_FILE)
 
 
 def _getServerConfig(fqdn, networkConfig):

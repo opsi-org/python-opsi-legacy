@@ -14,11 +14,11 @@ import re
 from collections import namedtuple
 from typing import List
 
+from opsicommon.logging import get_logger
+
 import OPSI.Backend.BackendManager as bm
 from OPSI.Object import BoolConfig, Config, OpsiConfigserver, UnicodeConfig
 from OPSI.System import Posix
-from OPSI.Util.Task.Samba import SMB_CONF
-from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
 
@@ -29,7 +29,7 @@ SimpleUnicodeConfig = namedtuple("SimpleUnicodeConfig", ["id", "description", "v
 def initializeConfigs(
 	backend: bm.BackendManager = None,
 	configServer: OpsiConfigserver = None,
-	pathToSMBConf: str = SMB_CONF,
+	pathToSMBConf: str = None,
 ) -> None:
 	"""
 	Adding default configurations to the backend.
@@ -79,7 +79,7 @@ default. Supply this if ``clientconfig.configserver.url`` or \
 def create_default_configs(  # pylint: disable=too-many-branches,too-many-statements
 	backend: bm.BackendManager,
 	configServer: OpsiConfigserver = None,
-	pathToSMBConf: str = SMB_CONF,
+	pathToSMBConf: str = None,
 ) -> None:
 	configIdents = set(backend.config_getIdents(returnType="unicode"))  # pylint: disable=maybe-no-member
 	configs = []
@@ -335,7 +335,7 @@ def create_default_configs(  # pylint: disable=too-many-branches,too-many-statem
 		backend.configState_createObjects(config_states)
 
 
-def readWindowsDomainFromSambaConfig(pathToConfig: str = SMB_CONF) -> str:
+def readWindowsDomainFromSambaConfig(pathToConfig: str = None) -> str:
 	"""
 	Get the Windows domain (workgroup) from smb.conf.
 	If no workgroup can be found this returns an empty string.
@@ -344,7 +344,7 @@ def readWindowsDomainFromSambaConfig(pathToConfig: str = SMB_CONF) -> str:
 	:return: The Windows domain in uppercase letters.
 	"""
 	winDomain = ""
-	if os.path.exists(pathToConfig):
+	if pathToConfig and os.path.exists(pathToConfig):
 		pattern = re.compile(r"^\s*workgroup\s*=\s*(\S+)\s*$")
 		with codecs.open(pathToConfig, "r", "utf-8") as sambaConfig:
 			for line in sambaConfig:

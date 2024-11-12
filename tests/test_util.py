@@ -37,7 +37,6 @@ from OPSI.Util import (
 	removeUnit,
 	toJson,
 )
-from OPSI.Util.Config import getGlobalConfig
 
 from .helpers import (
 	workInTemporaryDirectory,
@@ -427,28 +426,6 @@ def testChunkingGeneratorWithDifferentSize():
 @pytest.fixture
 def globalConfigTestFile(test_data_path):
 	return os.path.join(test_data_path, "util", "fake_global.conf")
-
-
-def testGlobalConfigCommentsInFileAreIgnored(globalConfigTestFile):  # pylint: disable=redefined-outer-name
-	assert "no" == getGlobalConfig("comment", globalConfigTestFile)
-
-
-def testGlobalConfigLinesNeedAssignments(globalConfigTestFile):  # pylint: disable=redefined-outer-name
-	assert getGlobalConfig("this", globalConfigTestFile) is None
-
-
-def testGlobalConfigFileReadingValues(globalConfigTestFile):  # pylint: disable=redefined-outer-name
-	assert "value" == getGlobalConfig("keyword", globalConfigTestFile)
-	assert "this works too" == getGlobalConfig(
-		"value with spaces", globalConfigTestFile
-	)
-	assert "we even can include a = and it works" == getGlobalConfig(
-		"advanced value", globalConfigTestFile
-	)
-
-
-def testGetGlobalConfigExitsGracefullyIfFileIsMissing(globalConfigTestFile):  # pylint: disable=redefined-outer-name,unused-argument
-	assert getGlobalConfig("dontCare", "nonexistingFile") is None
 
 
 @pytest.mark.parametrize(

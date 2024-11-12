@@ -630,19 +630,6 @@ def getfqdn(name="", conf=None):
 			# Not a fqdn
 			pass
 
-	# lazy import to avoid circular dependency
-	from OPSI.Util.Config import (
-		getGlobalConfig,  # pylint: disable=import-outside-toplevel
-	)
-
-	if conf is not None:
-		host_id = getGlobalConfig("hostname", conf)
-	else:
-		host_id = getGlobalConfig("hostname")
-
-	if host_id:
-		return forceFqdn(host_id)
-
 	return forceFqdn(socket.getfqdn())
 
 

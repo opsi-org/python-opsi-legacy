@@ -31,7 +31,6 @@ from OPSI.System.Posix import (
 	locateDHCPDConfig,
 )
 from OPSI.Util.File import DHCPDConf_Block, DHCPDConf_Parameter, DHCPDConfFile
-from OPSI.Util.Task.Sudoers import patchSudoersFileToAllowRestartingDHCPD
 
 logger = get_logger("opsi.general")
 
@@ -153,9 +152,6 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 			execute(restartCommand)
 		except Exception as err:  # pylint: disable=broad-except
 			logger.warning(err)
-
-	logger.notice("Configuring sudoers")
-	patchSudoersFileToAllowRestartingDHCPD(restartCommand)
 
 	opsiconfdUid = pwd.getpwnam(OPSICONFD_USER)[2]
 	adminGroupGid = grp.getgrnam(ADMIN_GROUP)[2]
