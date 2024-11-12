@@ -14,9 +14,7 @@ package:
     - python3-magic
     - python3-pampy
     - python3-pyasn1
-    - python3-openssl
     - python3-pycryptodome
-    - python3-twisted
     - python3-sqlalchemy
     - python3-mysqldb
     - python3-distro

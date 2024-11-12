@@ -28,7 +28,6 @@ from typing import (  # This is needed for dynamic loading  # noqa: F401
 import opsicommon  # This is needed for dynamic loading  # noqa: F401
 from opsicommon.logging import get_logger
 
-import OPSI.SharedAlgorithm
 from OPSI.Exceptions import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
 from OPSI.Object import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
 from OPSI.Types import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
@@ -1871,16 +1870,10 @@ into the IDs of these depots are to be found in the list behind \
 		return productOnClients
 
 	def productOnClient_generateSequence(self, productOnClients):
-		logger.info("Generating productOnClient sequence")
-		return self._productOnClient_processWithFunction(
-			productOnClients,
-			OPSI.SharedAlgorithm.generateProductOnClientSequence_algorithm1,
-		)
+		return productOnClients
 
 	def productOnClient_addDependencies(self, productOnClients):
-		return self._productOnClient_processWithFunction(
-			productOnClients, OPSI.SharedAlgorithm.addDependentProductOnClients
-		)
+		return productOnClients
 
 	def productOnClient_getObjects(self, attributes=[], **filter):  # pylint: disable=redefined-builtin,dangerous-default-value,too-many-locals,too-many-branches
 		"""
