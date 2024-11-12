@@ -10,20 +10,17 @@ from itertools import product as iterproduct
 
 import pytest
 
-from OPSI.Backend.Backend import temporaryBackendOptions
 from OPSI.Exceptions import BackendBadValueError
 from OPSI.Object import (
 	BoolProductProperty,
 	LocalbootProduct,
 	NetbootProduct,
 	OpsiClient,
-	OpsiDepotserver,
 	Product,
 	ProductDependency,
 	ProductOnClient,
 	ProductOnDepot,
 	ProductPropertyState,
-	UnicodeConfig,
 	UnicodeProductProperty,
 )
 from OPSI.Types import forceHostId
@@ -1538,6 +1535,7 @@ def testProductOnClientDependencies(extendedConfigDataBackend):
 	]
 	assert "product7" not in setup
 	assert "product9" not in setup
+
 
 def testGettingPxeConfigTemplate(backendManager):
 	"""
