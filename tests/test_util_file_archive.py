@@ -6,8 +6,6 @@
 Testing the work with archives.
 """
 
-import os
-
 import pytest
 
 from OPSI.Util.File.Archive import Archive, is_pigz_available

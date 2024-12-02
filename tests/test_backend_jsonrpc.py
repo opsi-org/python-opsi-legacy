@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from OPSI.Backend.JSONRPC import JSONRPCBackend
 from opsicommon.exceptions import OpsiServiceConnectionError
 from opsicommon.testing.helpers import http_test_server
+
+from OPSI.Backend.JSONRPC import JSONRPCBackend
 
 
 def test_jsonrpc_backend(tmp_path: Path) -> None:
@@ -56,11 +57,17 @@ def test_jsonrpc_backend(tmp_path: Path) -> None:
 			"annotations": {},
 		},
 	]
-	with http_test_server(generate_cert=True, log_file=log_file, response_headers={"server": "opsiconfd 4.3.0.0 (uvicorn)"}) as server:
-		server.response_body = json.dumps({"jsonrpc": "2.0", "result": interface}).encode("utf-8")
+	with http_test_server(
+		generate_cert=True,
+		log_file=log_file,
+		response_headers={"server": "opsiconfd 4.3.0.0 (uvicorn)"},
+	) as server:
+		server.response_body = json.dumps(
+			{"jsonrpc": "2.0", "result": interface}
+		).encode("utf-8")
 		server.response_headers["Content-Type"] = "application/json"
 		backend = JSONRPCBackend(address=f"https://localhost:{server.port}")
-		backend.test_method("arg1")  # pylint: disable=no-member
+		backend.test_method("arg1")
 
 		with pytest.raises(OpsiServiceConnectionError):
 			backend = JSONRPCBackend(address=f"https://localhost:{server.port+1}")

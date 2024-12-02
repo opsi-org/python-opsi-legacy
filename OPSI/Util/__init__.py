@@ -27,13 +27,13 @@ from functools import lru_cache
 from hashlib import md5
 from itertools import islice
 
+# pyright: reportMissingImports=false
 try:
 	# PyCryptodome from pypi installs into Crypto
 	from Crypto.Cipher import Blowfish
 	from Crypto.PublicKey import RSA
 	from Crypto.Util.number import bytes_to_long
 except (ImportError, OSError):
-	# pyright: reportMissingImports=false
 	# python3-pycryptodome installs into Cryptodome
 	from Cryptodome.Cipher import Blowfish
 	from Cryptodome.PublicKey import RSA
@@ -42,7 +42,7 @@ except (ImportError, OSError):
 from opsicommon.logging import get_logger
 from opsicommon.objects import deserialize as oc_deserialize
 from opsicommon.objects import from_json, serialize, to_json
-from opsicommon.types import (
+from opsicommon.types import (  # noqa: F401
 	_PACKAGE_VERSION_REGEX,
 	_PRODUCT_VERSION_REGEX,
 	forceBool,
@@ -51,9 +51,10 @@ from opsicommon.types import (
 	forceUnicode,
 )
 from opsicommon.utils import (
-	monkeypatch_subprocess_for_frozen,  # pylint: disable=unused-import
+	Singleton,
+	compare_versions,
+	monkeypatch_subprocess_for_frozen,  # noqa: F401
 )
-from opsicommon.utils import Singleton, compare_versions
 from opsicommon.utils import generate_opsi_host_key as generateOpsiHostKey
 from opsicommon.utils import timestamp as oc_timestamp
 
@@ -114,10 +115,10 @@ class PickleString(str):
 		return base64.standard_b64encode(self)
 
 	def __setstate__(self, state):
-		self = base64.standard_b64decode(state)  # pylint: disable=self-cls-assignment
+		self = base64.standard_b64decode(state)  # noqa: F841
 
 
-def formatFileSize(sizeInBytes, base: int = 2):  # pylint: disable=too-many-return-statements
+def formatFileSize(sizeInBytes, base: int = 2):
 	"""
 	https://wiki.ubuntu.com/UnitsPolicy
 
@@ -183,7 +184,9 @@ def timestamp(secs=0, dateOnly=False):
 
 
 def fromJson(obj, objectType=None, preventObjectCreation=False):
-	return from_json(obj, object_type=objectType, prevent_object_creation=preventObjectCreation)
+	return from_json(
+		obj, object_type=objectType, prevent_object_creation=preventObjectCreation
+	)
 
 
 def toJson(obj):
@@ -198,7 +201,7 @@ def objectToBeautifiedText(obj):
 	return json.dumps(serialize(obj), indent=4)
 
 
-def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branches
+def objectToBash(obj, bashVars=None, level=0):
 	"""
 	Converts `obj` into bash-compatible format.
 
@@ -242,7 +245,7 @@ def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branc
 		append(")")
 	elif isinstance(obj, dict):
 		append("(\n")
-		for (key, value) in obj.items():
+		for key, value in obj.items():
 			append(f"{key}=")
 			if isinstance(value, (dict, list)):
 				level += 1
@@ -264,7 +267,7 @@ def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branc
 	return bashVars
 
 
-def objectToHtml(obj, level=0):  # pylint: disable=too-many-branches
+def objectToHtml(obj, level=0):
 	if level == 0:
 		obj = serialize(obj)
 
@@ -325,7 +328,7 @@ def replaceSpecialHTMLCharacters(text):
 compareVersions = compare_versions
 
 
-def removeUnit(value: str) -> int:  # pylint: disable=invalid-name,too-many-return-statements
+def removeUnit(value: str) -> int:
 	"""
 	Take a string representing a byte-based size and return the
 	value in bytes.
@@ -445,7 +448,7 @@ def _prepareBlowfishKey(key: str) -> bytes:
 		raise BlowfishError(f"Unable to prepare key: {err}") from err
 
 
-def findFilesGenerator(  # pylint: disable=too-many-branches,too-many-locals,too-many-arguments,too-many-statements
+def findFilesGenerator(
 	directory,
 	prefix="",
 	excludeDir=None,
@@ -546,7 +549,7 @@ def findFilesGenerator(  # pylint: disable=too-many-branches,too-many-locals,too
 		yield pp
 
 
-def findFiles(  # pylint: disable=too-many-arguments
+def findFiles(
 	directory,
 	prefix="",
 	excludeDir=None,
@@ -560,19 +563,28 @@ def findFiles(  # pylint: disable=too-many-arguments
 ):
 	return list(
 		findFilesGenerator(
-			directory, prefix, excludeDir, excludeFile, includeDir, includeFile, returnDirs, returnLinks, followLinks, repository
+			directory,
+			prefix,
+			excludeDir,
+			excludeFile,
+			includeDir,
+			includeFile,
+			returnDirs,
+			returnLinks,
+			followLinks,
+			repository,
 		)
 	)
 
 
 if sys.version_info >= (3, 7):
 
-	def isRegularExpressionPattern(object):  # pylint: disable=redefined-builtin
+	def isRegularExpressionPattern(object):
 		return isinstance(object, re.Pattern)
 
 else:
 
-	def isRegularExpressionPattern(object):  # pylint: disable=redefined-builtin
+	def isRegularExpressionPattern(object):
 		return "SRE_Pattern" in str(type(object))
 
 
@@ -618,17 +630,6 @@ def getfqdn(name="", conf=None):
 			# Not a fqdn
 			pass
 
-	# lazy import to avoid circular dependency
-	from OPSI.Util.Config import getGlobalConfig  # pylint: disable=import-outside-toplevel
-
-	if conf is not None:
-		host_id = getGlobalConfig("hostname", conf)
-	else:
-		host_id = getGlobalConfig("hostname")
-
-	if host_id:
-		return forceFqdn(host_id)
-
 	return forceFqdn(socket.getfqdn())
 
 
@@ -649,10 +650,12 @@ def removeDirectory(directory):
 		shutil.rmtree(directory)
 	except UnicodeDecodeError:
 		# See http://bugs.python.org/issue3616
-		logger.info("Client data directory seems to contain filenames with unicode characters. Trying fallback.")
+		logger.info(
+			"Client data directory seems to contain filenames with unicode characters. Trying fallback."
+		)
 
 		# late import to avoid circular dependency
-		import OPSI.System  # pylint: disable=import-outside-toplevel
+		import OPSI.System
 
 		OPSI.System.execute("rm -rf {directory}")
 

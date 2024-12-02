@@ -27,30 +27,37 @@ def backendWithWANConfigs(backendManager):
 
 
 def clientHasWANEnabled(backend, clientId):
-	configsToCheck = set([
-		"opsiclientd.event_gui_startup.active",
-		"opsiclientd.event_gui_startup{user_logged_in}.active",
-		"opsiclientd.event_net_connection.active",
-		"opsiclientd.event_timer.active"
-	])
+	configsToCheck = set(
+		[
+			"opsiclientd.event_gui_startup.active",
+			"opsiclientd.event_gui_startup{user_logged_in}.active",
+			"opsiclientd.event_net_connection.active",
+			"opsiclientd.event_timer.active",
+		]
+	)
 
 	for configState in backend.configState_getObjects(objectId=clientId):
-		if configState.configId == u"opsiclientd.event_gui_startup.active":
+		if configState.configId == "opsiclientd.event_gui_startup.active":
 			if configState.values[0]:
 				return False
-			configsToCheck.remove(u"opsiclientd.event_gui_startup.active")
-		elif configState.configId == u"opsiclientd.event_gui_startup{user_logged_in}.active":
+			configsToCheck.remove("opsiclientd.event_gui_startup.active")
+		elif (
+			configState.configId
+			== "opsiclientd.event_gui_startup{user_logged_in}.active"
+		):
 			if configState.values[0]:
 				return False
-			configsToCheck.remove(u"opsiclientd.event_gui_startup{user_logged_in}.active")
-		elif configState.configId == u"opsiclientd.event_net_connection.active":
+			configsToCheck.remove(
+				"opsiclientd.event_gui_startup{user_logged_in}.active"
+			)
+		elif configState.configId == "opsiclientd.event_net_connection.active":
 			if not configState.values[0]:
 				return False
-			configsToCheck.remove(u"opsiclientd.event_net_connection.active")
-		elif configState.configId == u"opsiclientd.event_timer.active":
+			configsToCheck.remove("opsiclientd.event_net_connection.active")
+		elif configState.configId == "opsiclientd.event_timer.active":
 			if not configState.values[0]:
 				return False
-			configsToCheck.remove(u"opsiclientd.event_timer.active")
+			configsToCheck.remove("opsiclientd.event_timer.active")
 
 	if configsToCheck:
 		print("The following configs were not set: {0}".format(configsToCheck))
@@ -61,7 +68,7 @@ def clientHasWANEnabled(backend, clientId):
 
 def testEnablingSettingForOneHost(backendWithWANConfigs):
 	backend = backendWithWANConfigs
-	clientId = 'testclient.test.invalid'
+	clientId = "testclient.test.invalid"
 	backend.host_createObjects(OpsiClient(id=clientId))
 
 	backend.changeWANConfig(True, clientId)
@@ -74,7 +81,7 @@ def testEnablingSettingForOneHost(backendWithWANConfigs):
 def testEnablingSettingForMultipleHosts(backendWithWANConfigs):
 	backend = backendWithWANConfigs
 
-	clientIds = ['testclient{0}.test.invalid'.format(num) for num in range(10)]
+	clientIds = ["testclient{0}.test.invalid".format(num) for num in range(10)]
 	backend.host_createObjects([OpsiClient(id=clientId) for clientId in clientIds])
 
 	backend.changeWANConfig(True, clientIds)
@@ -90,8 +97,8 @@ def testNotFailingOnEmptyList(backendWithWANConfigs):
 def testNotChangingUnreferencedClient(backendWithWANConfigs):
 	backend = backendWithWANConfigs
 
-	clientIds = ['testclient{0}.test.invalid'.format(num) for num in range(10)]
-	singleClient = 'testclient99.test.invalid'
+	clientIds = ["testclient{0}.test.invalid".format(num) for num in range(10)]
+	singleClient = "testclient99.test.invalid"
 	backend.host_createObjects([OpsiClient(id=clientId) for clientId in clientIds])
 	backend.host_createObjects([OpsiClient(id=singleClient)])
 
@@ -104,18 +111,21 @@ def testNotChangingUnreferencedClient(backendWithWANConfigs):
 	assert not clientHasWANEnabled(backend, singleClient)
 
 
-@pytest.mark.parametrize("value, expected", [
-	("on", True),
-	("1", True),
-	("true", True),
-	("off", False),
-	("false", False),
-	("0", False),
-])
+@pytest.mark.parametrize(
+	"value, expected",
+	[
+		("on", True),
+		("1", True),
+		("true", True),
+		("off", False),
+		("false", False),
+		("0", False),
+	],
+)
 def testUsingNonBooleanParameters(backendWithWANConfigs, value, expected):
 	backend = backendWithWANConfigs
 
-	client = OpsiClient(id='testclient101.test.invalid')
+	client = OpsiClient(id="testclient101.test.invalid")
 	backend.host_createObjects([client])
 
 	backend.changeWANConfig(value, client.id)

@@ -15,7 +15,9 @@ def no_export(func: Callable) -> Callable:
 	return func
 
 
-def deprecated(func: Callable = None, *, alternative_method: Callable = None) -> Callable:
+def deprecated(
+	func: Callable = None, *, alternative_method: Callable = None
+) -> Callable:
 	if func is None:
 		return functools.partial(deprecated, alternative_method=alternative_method)
 

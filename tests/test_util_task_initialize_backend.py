@@ -10,13 +10,24 @@ import OPSI.Util.Task.InitializeBackend as initBackend
 
 
 def testGettingServerConfig():
-	networkConfig = {"ipAddress": "192.168.12.34", "hardwareAddress": "acabacab", "subnet": "192.168.12.0", "netmask": "255.255.255.0"}
+	networkConfig = {
+		"ipAddress": "192.168.12.34",
+		"hardwareAddress": "acabacab",
+		"subnet": "192.168.12.0",
+		"netmask": "255.255.255.0",
+	}
 	fqdn = "blackwidow.test.invalid"
 
-	config = initBackend._getServerConfig(fqdn, networkConfig)  # pylint: disable=protected-access
+	config = initBackend._getServerConfig(fqdn, networkConfig)
 
 	assert config["id"] == fqdn
-	for key in ("opsiHostKey", "description", "notes", "inventoryNumber", "masterDepotId"):
+	for key in (
+		"opsiHostKey",
+		"description",
+		"notes",
+		"inventoryNumber",
+		"masterDepotId",
+	):
 		assert config[key] is None
 
 	assert config["ipAddress"] == networkConfig["ipAddress"]
@@ -30,4 +41,7 @@ def testGettingServerConfig():
 	assert config["repositoryRemoteUrl"] == f"webdavs://{fqdn}:4447/repository"
 	assert config["workbenchLocalUrl"] == "file:///var/lib/opsi/workbench"
 	assert config["workbenchRemoteUrl"] == f"smb://{fqdn}/opsi_workbench"
-	assert config["networkAddress"] == f"{networkConfig['subnet']}/{networkConfig['netmask']}"
+	assert (
+		config["networkAddress"]
+		== f"{networkConfig['subnet']}/{networkConfig['netmask']}"
+	)

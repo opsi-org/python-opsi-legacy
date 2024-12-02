@@ -57,16 +57,16 @@ def testGetClients(backendManager, hosts, clients):
 	for client in newClients:
 		assert isinstance(client, dict)
 
-		assert 'type' not in client
-		assert 'id' not in client
-		assert 'depotId' in client
+		assert "type" not in client
+		assert "id" not in client
+		assert "depotId" in client
 
 		for key, value in client.items():
-			assert value is not None, 'Key {} has a None value'.format(key)
+			assert value is not None, "Key {} has a None value".format(key)
 
-		clientIds.remove(client['hostId'])
+		clientIds.remove(client["hostId"])
 
-	assert not clientIds, 'possibly duplicate clients'
+	assert not clientIds, "possibly duplicate clients"
 
 
 def testGetClientIDs(backendManager, hosts, clients):
@@ -87,13 +87,13 @@ def testGetClientsOnDepot(backendManager, hosts, clients, configServer):
 		backendManager.host_insertObject(host)
 
 	clientIds = backendManager.getClientsOnDepot(configServer.id)
-	assert not clientIds, 'Default mapping appeared somewhere'
+	assert not clientIds, "Default mapping appeared somewhere"
 
 	clientConfigDepotId = UnicodeConfig(
-		id=u'clientconfig.depot.id',
-		description=u'Depotserver to use',
+		id="clientconfig.depot.id",
+		description="Depotserver to use",
 		possibleValues=[],
-		defaultValues=[configServer.id]
+		defaultValues=[configServer.id],
 	)
 	backendManager.config_createObjects(clientConfigDepotId)
 	clientIds = backendManager.getClientsOnDepot(configServer.id)
@@ -102,21 +102,23 @@ def testGetClientsOnDepot(backendManager, hosts, clients, configServer):
 	assert not diff
 
 
-@pytest.mark.parametrize("value", [1, 'justahostname'])
+@pytest.mark.parametrize("value", [1, "justahostname"])
 def testGetClientsOnDepotExpectsValidIDs(backendManager, value):
 	with pytest.raises(ValueError):
 		backendManager.getClientsOnDepot(value)
 
 
-def testGetClientsOnDepotWithDifferentDepot(backendManager, hosts, clients, depots, configServer):
+def testGetClientsOnDepotWithDifferentDepot(
+	backendManager, hosts, clients, depots, configServer
+):
 	for host in hosts:
 		backendManager.host_insertObject(host)
 
 	clientConfigDepotId = UnicodeConfig(
-		id=u'clientconfig.depot.id',
-		description=u'Depotserver to use',
+		id="clientconfig.depot.id",
+		description="Depotserver to use",
 		possibleValues=[],
-		defaultValues=[configServer.id]
+		defaultValues=[configServer.id],
 	)
 	backendManager.config_createObjects(clientConfigDepotId)
 
@@ -125,7 +127,9 @@ def testGetClientsOnDepotWithDifferentDepot(backendManager, hosts, clients, depo
 	assert len(clientIds) == 0
 
 	client = random.choice(clients)
-	backendManager.configState_create(clientConfigDepotId.id, client.id, values=[depot.id])
+	backendManager.configState_create(
+		clientConfigDepotId.id, client.id, values=[depot.id]
+	)
 
 	clientIds = backendManager.getClientsOnDepot(depot.id)
 	assert len(clientIds) == 1
@@ -134,14 +138,19 @@ def testGetClientsOnDepotWithDifferentDepot(backendManager, hosts, clients, depo
 	assert len(backendManager.getClientsOnDepot(configServer.id)) == len(clients) - 1
 
 
-@pytest.mark.parametrize("productIds, installationStatus", [
-	([], None),
-	([''], None),
-	(['myproduct'], 1),
-	(['myproduct'], 'not_a_valid_status'),
-	(['myproduct'], 'intalled'),  # Typo - missing s
-])
-def testGetClientsWithProductsWithInvalidParameters(backendManager, productIds, installationStatus):
+@pytest.mark.parametrize(
+	"productIds, installationStatus",
+	[
+		([], None),
+		([""], None),
+		(["myproduct"], 1),
+		(["myproduct"], "not_a_valid_status"),
+		(["myproduct"], "intalled"),  # Typo - missing s
+	],
+)
+def testGetClientsWithProductsWithInvalidParameters(
+	backendManager, productIds, installationStatus
+):
 	with pytest.raises(ValueError):
 		backendManager.getClientsWithProducts(productIds, installationStatus)
 
@@ -153,13 +162,13 @@ def testGetClientsWithProducts(backendManager, clients):
 	testclient = random.choice(clients)
 	dummyClient = random.choice([c for c in clients if c != testclient])
 
-	product = LocalbootProduct('product2', '2.0', 'test')
+	product = LocalbootProduct("product2", "2.0", "test")
 	backendManager.product_insertObject(product)
 
 	fillerProducts = [
-		LocalbootProduct("filler1", '1', '1'),
-		LocalbootProduct("filler2", '2', '2'),
-		LocalbootProduct("filler3", '3', '3'),
+		LocalbootProduct("filler1", "1", "1"),
+		LocalbootProduct("filler2", "2", "2"),
+		LocalbootProduct("filler3", "3", "3"),
 	]
 	for poc in fillerProducts:
 		backendManager.product_insertObject(poc)
@@ -172,17 +181,17 @@ def testGetClientsWithProducts(backendManager, clients):
 			productId=fillerProd.getId(),
 			productType=fillerProd.getType(),
 			clientId=dummyClient.getId(),
-			installationStatus='installed',
+			installationStatus="installed",
 			productVersion=fillerProd.getProductVersion(),
-			packageVersion=fillerProd.getPackageVersion()
+			packageVersion=fillerProd.getPackageVersion(),
 		),
 		ProductOnClient(
 			productId=fillerProd2.getId(),
 			productType=fillerProd2.getType(),
 			clientId=dummyClient.getId(),
-			installationStatus='installed',
+			installationStatus="installed",
 			productVersion=fillerProd2.getProductVersion(),
-			packageVersion=fillerProd2.getPackageVersion()
+			packageVersion=fillerProd2.getPackageVersion(),
 		),
 	]
 
@@ -190,9 +199,9 @@ def testGetClientsWithProducts(backendManager, clients):
 		productId=product.getId(),
 		productType=product.getType(),
 		clientId=testclient.getId(),
-		installationStatus='installed',
+		installationStatus="installed",
 		productVersion=product.getProductVersion(),
-		packageVersion=product.getPackageVersion()
+		packageVersion=product.getPackageVersion(),
 	)
 	for poc in fillerPocs + [relevantPoc]:
 		backendManager.productOnClient_insertObject(poc)
@@ -203,28 +212,33 @@ def testGetClientsWithProducts(backendManager, clients):
 	assert clientsToCheck[0] == testclient.id
 
 
-@pytest.mark.parametrize("expectedClient, desiredStatus", [
-	('testclient2.test.invalid', 'installed'),
-	('testclient1.test.invalid', 'unknown'),
-])
-def testGetClientsWithProductsWithSpecificStatus(backendManager, clients, desiredStatus, expectedClient):
+@pytest.mark.parametrize(
+	"expectedClient, desiredStatus",
+	[
+		("testclient2.test.invalid", "installed"),
+		("testclient1.test.invalid", "unknown"),
+	],
+)
+def testGetClientsWithProductsWithSpecificStatus(
+	backendManager, clients, desiredStatus, expectedClient
+):
 	for client in clients:
 		backendManager.host_insertObject(client)
 
-	testclient1 = OpsiClient(id='testclient1.test.invalid')
+	testclient1 = OpsiClient(id="testclient1.test.invalid")
 	backendManager.host_insertObject(testclient1)
-	testclient2 = OpsiClient(id='testclient2.test.invalid')
+	testclient2 = OpsiClient(id="testclient2.test.invalid")
 	backendManager.host_insertObject(testclient2)
 
-	product1 = LocalbootProduct('product1', '1.0', '1')
+	product1 = LocalbootProduct("product1", "1.0", "1")
 	backendManager.product_insertObject(product1)
-	product2 = LocalbootProduct('product2', '2.0', '1')
+	product2 = LocalbootProduct("product2", "2.0", "1")
 	backendManager.product_insertObject(product2)
 
 	fillerProducts = [
-		LocalbootProduct("filler1", '1', '1'),
-		LocalbootProduct("filler2", '2', '2'),
-		LocalbootProduct("filler3", '3', '3'),
+		LocalbootProduct("filler1", "1", "1"),
+		LocalbootProduct("filler2", "2", "2"),
+		LocalbootProduct("filler3", "3", "3"),
 	]
 	for poc in fillerProducts:
 		backendManager.product_insertObject(poc)
@@ -234,9 +248,9 @@ def testGetClientsWithProductsWithSpecificStatus(backendManager, clients, desire
 			productId=product.getId(),
 			productType=product.getType(),
 			clientId=client.getId(),
-			installationStatus=random.choice(['installed', 'not_installed', 'unknown']),
+			installationStatus=random.choice(["installed", "not_installed", "unknown"]),
 			productVersion=product.getProductVersion(),
-			packageVersion=product.getPackageVersion()
+			packageVersion=product.getPackageVersion(),
 		)
 		for client, product in itertools.product(clients, fillerProducts)
 	]
@@ -246,62 +260,64 @@ def testGetClientsWithProductsWithSpecificStatus(backendManager, clients, desire
 			productId=product1.getId(),
 			productType=product1.getType(),
 			clientId=testclient2.getId(),
-			installationStatus='installed',
+			installationStatus="installed",
 			productVersion=product1.getProductVersion(),
-			packageVersion=product1.getPackageVersion()
+			packageVersion=product1.getPackageVersion(),
 		),
 		ProductOnClient(
 			productId=product2.getId(),
 			productType=product2.getType(),
 			clientId=testclient1.getId(),
-			installationStatus='unknown',
+			installationStatus="unknown",
 			productVersion=product2.getProductVersion(),
-			packageVersion=product2.getPackageVersion()
+			packageVersion=product2.getPackageVersion(),
 		),
 	]
 
 	for poc in fillerPocs + relevantPocs:
 		backendManager.productOnClient_insertObject(poc)
 
-	clientsToCheck = backendManager.getClientsWithProducts([product1.id, product2.id], desiredStatus)
+	clientsToCheck = backendManager.getClientsWithProducts(
+		[product1.id, product2.id], desiredStatus
+	)
 
 	assert len(clientsToCheck) == 1
 	assert clientsToCheck[0] == expectedClient
 
 
-@pytest.mark.parametrize("param", ['update', ['update']])
+@pytest.mark.parametrize("param", ["update", ["update"]])
 def testGetClientsWithActionRequest(backendManager, clients, param):
 	for client in clients:
 		backendManager.host_insertObject(client)
 
-	testclient1 = OpsiClient(id='testclient1.test.invalid')
+	testclient1 = OpsiClient(id="testclient1.test.invalid")
 	backendManager.host_insertObject(testclient1)
 
-	product1 = LocalbootProduct('product1', '1.0', '1')
+	product1 = LocalbootProduct("product1", "1.0", "1")
 	backendManager.product_insertObject(product1)
-	product2 = LocalbootProduct('product2', '2.0', '1')
+	product2 = LocalbootProduct("product2", "2.0", "1")
 	backendManager.product_insertObject(product2)
 
 	fillerProducts = [
-		LocalbootProduct("filler1", '1', '1'),
-		LocalbootProduct("filler2", '2', '2'),
-		LocalbootProduct("filler3", '3', '3'),
+		LocalbootProduct("filler1", "1", "1"),
+		LocalbootProduct("filler2", "2", "2"),
+		LocalbootProduct("filler3", "3", "3"),
 	]
 	for poc in fillerProducts:
 		backendManager.product_insertObject(poc)
 
 	# Skipping update because we search for this
-	actionRequests = ['setup', 'uninstall', 'always', 'once', 'custom', 'none']
+	actionRequests = ["setup", "uninstall", "always", "once", "custom", "none"]
 
 	fillerPocs = [
 		ProductOnClient(
 			productId=product.getId(),
 			productType=product.getType(),
 			clientId=client.getId(),
-			installationStatus=random.choice(['installed', 'not_installed', 'unknown']),
+			installationStatus=random.choice(["installed", "not_installed", "unknown"]),
 			actionRequest=random.choice(actionRequests),
 			productVersion=product.getProductVersion(),
-			packageVersion=product.getPackageVersion()
+			packageVersion=product.getPackageVersion(),
 		)
 		for client, product in itertools.product(clients, fillerProducts)
 	]
@@ -311,19 +327,19 @@ def testGetClientsWithActionRequest(backendManager, clients, param):
 			productId=product1.getId(),
 			productType=product1.getType(),
 			clientId=testclient1.getId(),
-			installationStatus='installed',
-			actionRequest='update',
+			installationStatus="installed",
+			actionRequest="update",
 			productVersion=product1.getProductVersion(),
-			packageVersion=product1.getPackageVersion()
+			packageVersion=product1.getPackageVersion(),
 		),
 		ProductOnClient(
 			productId=product2.getId(),
 			productType=product2.getType(),
 			clientId=testclient1.getId(),
-			installationStatus='unknown',
-			actionRequest='update',
+			installationStatus="unknown",
+			actionRequest="update",
 			productVersion=product2.getProductVersion(),
-			packageVersion=product2.getPackageVersion()
+			packageVersion=product2.getPackageVersion(),
 		),
 	]
 
@@ -340,36 +356,36 @@ def testGetClientsWithActionRequestHandlingMultipleRequests(backendManager, clie
 	for client in clients:
 		backendManager.host_insertObject(client)
 
-	testclient1 = OpsiClient(id='testclient1.test.invalid')
+	testclient1 = OpsiClient(id="testclient1.test.invalid")
 	backendManager.host_insertObject(testclient1)
-	testclient2 = OpsiClient(id='testclient2.test.invalid')
+	testclient2 = OpsiClient(id="testclient2.test.invalid")
 	backendManager.host_insertObject(testclient2)
 
-	product1 = LocalbootProduct('product1', '1.0', '1')
+	product1 = LocalbootProduct("product1", "1.0", "1")
 	backendManager.product_insertObject(product1)
-	product2 = LocalbootProduct('product2', '2.0', '1')
+	product2 = LocalbootProduct("product2", "2.0", "1")
 	backendManager.product_insertObject(product2)
 
 	fillerProducts = [
-		LocalbootProduct("filler1", '1', '1'),
-		LocalbootProduct("filler2", '2', '2'),
-		LocalbootProduct("filler3", '3', '3'),
+		LocalbootProduct("filler1", "1", "1"),
+		LocalbootProduct("filler2", "2", "2"),
+		LocalbootProduct("filler3", "3", "3"),
 	]
 	for poc in fillerProducts:
 		backendManager.product_insertObject(poc)
 
 	# Excluding setup and update because we search for these
-	actionRequests = ['uninstall', 'always', 'once', 'custom', 'none']
+	actionRequests = ["uninstall", "always", "once", "custom", "none"]
 
 	fillerPocs = [
 		ProductOnClient(
 			productId=product.getId(),
 			productType=product.getType(),
 			clientId=client.getId(),
-			installationStatus=random.choice(['installed', 'not_installed', 'unknown']),
+			installationStatus=random.choice(["installed", "not_installed", "unknown"]),
 			actionRequest=random.choice(actionRequests),
 			productVersion=product.getProductVersion(),
-			packageVersion=product.getPackageVersion()
+			packageVersion=product.getPackageVersion(),
 		)
 		for client, product in itertools.product(clients, fillerProducts)
 	]
@@ -379,39 +395,42 @@ def testGetClientsWithActionRequestHandlingMultipleRequests(backendManager, clie
 			productId=product1.getId(),
 			productType=product1.getType(),
 			clientId=testclient2.getId(),
-			installationStatus='installed',
-			actionRequest='setup',
+			installationStatus="installed",
+			actionRequest="setup",
 			productVersion=product1.getProductVersion(),
-			packageVersion=product1.getPackageVersion()
+			packageVersion=product1.getPackageVersion(),
 		),
 		ProductOnClient(
 			productId=product2.getId(),
 			productType=product2.getType(),
 			clientId=testclient1.getId(),
-			installationStatus='unknown',
-			actionRequest='update',
+			installationStatus="unknown",
+			actionRequest="update",
 			productVersion=product2.getProductVersion(),
-			packageVersion=product2.getPackageVersion()
+			packageVersion=product2.getPackageVersion(),
 		),
 	]
 
 	for poc in fillerPocs + relevantPocs:
 		backendManager.productOnClient_insertObject(poc)
 
-	clientsToCheck = backendManager.getClientsWithActionRequest(['setup', 'update'])
+	clientsToCheck = backendManager.getClientsWithActionRequest(["setup", "update"])
 
 	assert len(clientsToCheck) == 2
 	assert testclient1.id in clientsToCheck
 	assert testclient2.id in clientsToCheck
 
 
-@pytest.mark.parametrize("parameter", [
-	'sssetup',
-	'',
-	['mixandmatch', 'setup'],
-	('upd', 'ate'),
-	[''],
-])
+@pytest.mark.parametrize(
+	"parameter",
+	[
+		"sssetup",
+		"",
+		["mixandmatch", "setup"],
+		("upd", "ate"),
+		[""],
+	],
+)
 def testGetClientsWithActionRequestFailsWithWrongParameter(backendManager, parameter):
 	with pytest.raises(ValueError):
 		backendManager.getClientsWithActionRequest(parameter)

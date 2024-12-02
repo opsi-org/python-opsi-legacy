@@ -2,7 +2,6 @@
 
 # Copyright (c) uib GmbH <info@uib.de>
 # License: AGPL-3.0
-# pylint: disable=too-many-lines
 """
 OPSI.Util.Repository
 """
@@ -64,10 +63,10 @@ def getRepository(url, **kwargs):
 	raise RepositoryError(f"Repository url '{url}' not supported")
 
 
-def getFileInfosFromDavXML(davxmldata, encoding="utf-8"):  # pylint: disable=unused-argument,too-many-branches
+def getFileInfosFromDavXML(davxmldata, encoding="utf-8"):
 	content = []
 	root = ET.fromstring(davxmldata)
-	for child in root:  # pylint: disable=too-many-nested-blocks
+	for child in root:
 		info = {"size": 0, "type": "file", "path": "", "name": ""}
 		if child.tag != "{DAV:}response":
 			raise RepositoryError("No valid davxml given")
@@ -110,28 +109,39 @@ class RepositoryHook:
 	def __init__(self):
 		pass
 
-	def pre_Repository_copy(self, source, destination, overallProgressSubject, currentProgressSubject):  # pylint: disable=no-self-use
+	def pre_Repository_copy(
+		self, source, destination, overallProgressSubject, currentProgressSubject
+	):
 		return (source, destination, overallProgressSubject, currentProgressSubject)
 
 	def post_Repository_copy(
 		self, source, destination, overallProgressSubject, currentProgressSubject
-	):  # pylint: disable=unused-argument,no-self-use
+	):
 		return None
 
 	def error_Repository_copy(
-		self, source, destination, overallProgressSubject, currentProgressSubject, exception
-	):  # pylint: disable=unused-argument,too-many-arguments
+		self,
+		source,
+		destination,
+		overallProgressSubject,
+		currentProgressSubject,
+		exception,
+	):
 		pass
 
 
-class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
-	_dynamic_bandwidth_threshold_limit = 0.75  # pylint: disable=invalid-name
-	_dynamic_bandwidth_threshold_no_limit = 0.95  # pylint: disable=invalid-name
+class SpeedLimiter:
+	_dynamic_bandwidth_threshold_limit = 0.75
+	_dynamic_bandwidth_threshold_no_limit = 0.95
 	_dynamic_bandwidth_limit_rate = 0.2
 	_default_min_buffer_size = 16
 	_default_max_buffer_size = 256 * 1024
 
-	def __init__(self, min_buffer_size: int = _default_min_buffer_size, max_buffer_size: int = _default_max_buffer_size):
+	def __init__(
+		self,
+		min_buffer_size: int = _default_min_buffer_size,
+		max_buffer_size: int = _default_max_buffer_size,
+	):
 		self._dynamic = False
 		self._max_bandwidth = 0
 		self._network_performance_counter = None
@@ -170,18 +180,22 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 			self._stop_network_performance_counter()
 		retry = 0
 		exception = None
-		from OPSI.System import (  # pylint: disable=import-outside-toplevel
+		from OPSI.System import (
 			NetworkPerformanceCounter,
 			getDefaultNetworkInterfaceName,
 		)
 
 		while retry > 5:
 			try:
-				self._network_performance_counter = NetworkPerformanceCounter(getDefaultNetworkInterfaceName())
+				self._network_performance_counter = NetworkPerformanceCounter(
+					getDefaultNetworkInterfaceName()
+				)
 				break
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				exception = str(err)
-				logger.debug("Setting dynamic bandwidth failed, waiting 5 sec and trying again.")
+				logger.debug(
+					"Setting dynamic bandwidth failed, waiting 5 sec and trying again."
+				)
 				retry += 1
 				time.sleep(5)
 
@@ -194,7 +208,7 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 	def _stop_network_performance_counter(self):
 		try:
 			self._network_performance_counter.stop()
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning("Failed to stop NetworkPerformanceCounter: %s", err)
 		self._network_performance_counter = None
 
@@ -205,7 +219,7 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 			if self._transfer_direction == "out":
 				return self._network_performance_counter.getBytesOutPerSecond()
 			return self._network_performance_counter.getBytesInPerSecond()
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning("NetworkPerformanceCounter failing: %s", err)
 			return 0.0
 
@@ -255,8 +269,12 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 			if now - timestamp > max_age:
 				del self._network_usage_data[timestamp]
 
-		avg_total = statistics.mean([val["total"] for val in self._network_usage_data.values()])
-		avg_usage = statistics.mean([val["usage"] for val in self._network_usage_data.values()])
+		avg_total = statistics.mean(
+			[val["total"] for val in self._network_usage_data.values()]
+		)
+		avg_usage = statistics.mean(
+			[val["usage"] for val in self._network_usage_data.values()]
+		)
 		logger.trace(
 			"Average usage: %0.1f%%, average total: %0.2fkByte/s, average speed: %0.2fkByte/s",
 			avg_usage * 100,
@@ -288,7 +306,9 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 		if avg_usage <= self._dynamic_bandwidth_threshold_limit:
 			limit = max(avg_total * self._dynamic_bandwidth_limit_rate, 20_000)
 			if self._max_bandwidth and self._max_bandwidth < limit:
-				logger.debug("Not setting dynamic limit, which would be higher than the hard limit")
+				logger.debug(
+					"Not setting dynamic limit, which would be higher than the hard limit"
+				)
 			else:
 				self._dynamic_bandwidth_limit = limit
 				logger.debug(
@@ -300,7 +320,7 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 
 		return self._dynamic_bandwidth_limit
 
-	def _limit(self, buffer_size: int) -> int:  # pylint: disable=too-many-branches,too-many-statements
+	def _limit(self, buffer_size: int) -> int:
 		bwlimit = self._max_bandwidth
 
 		if self._dynamic:
@@ -328,7 +348,10 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 				# Too fast
 				factor = float(speed) / float(bwlimit)
 				logger.debug(
-					"Transfer speed %0.2fkByte/s is to fast, limit: %0.2fkByte/s, factor: %0.5f", speed / 1000, bwlimit / 1000, factor
+					"Transfer speed %0.2fkByte/s is to fast, limit: %0.2fkByte/s, factor: %0.5f",
+					speed / 1000,
+					bwlimit / 1000,
+					factor,
 				)
 
 				if factor < 1.001:
@@ -337,12 +360,17 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 					bandwidthSleepTime = self._bandwidth_sleep_time + (0.0007 * factor)
 				else:
 					bandwidthSleepTime = self._bandwidth_sleep_time + (0.007 * factor)
-				self._bandwidth_sleep_time = (bandwidthSleepTime + self._bandwidth_sleep_time) / 2
+				self._bandwidth_sleep_time = (
+					bandwidthSleepTime + self._bandwidth_sleep_time
+				) / 2
 			else:
 				# Too slow
 				factor = float(bwlimit) / float(speed)
 				logger.debug(
-					"Transfer speed %0.2fkByte/s is to slow, limit: %0.2fkByte/s, factor: %0.5f", speed / 1000, bwlimit / 1000, factor
+					"Transfer speed %0.2fkByte/s is to slow, limit: %0.2fkByte/s, factor: %0.5f",
+					speed / 1000,
+					bwlimit / 1000,
+					factor,
 				)
 
 				if factor < 1.001:
@@ -351,7 +379,9 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 					bandwidthSleepTime = self._bandwidth_sleep_time - (0.0006 * factor)
 				else:
 					bandwidthSleepTime = self._bandwidth_sleep_time - (0.006 * factor)
-				self._bandwidth_sleep_time = (bandwidthSleepTime + self._bandwidth_sleep_time) / 2
+				self._bandwidth_sleep_time = (
+					bandwidthSleepTime + self._bandwidth_sleep_time
+				) / 2
 
 			if self._bandwidth_sleep_time <= 0.0:
 				self._bandwidth_sleep_time = 0.000001
@@ -382,7 +412,11 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 
 	def set_bandwidth(self, max_bandwidth: int = 0, dynamic: bool = False):
 		"""maxBandwidth in byte/s"""
-		logger.info("Setting bandwidth limits to: max=%f kByte/s, dynamic=%s", max_bandwidth / 1000, dynamic)
+		logger.info(
+			"Setting bandwidth limits to: max=%f kByte/s, dynamic=%s",
+			max_bandwidth / 1000,
+			dynamic,
+		)
 		self._dynamic = forceBool(dynamic)
 		self._max_bandwidth = max(forceInt(max_bandwidth), 0)
 
@@ -413,7 +447,7 @@ class SpeedLimiter:  # pylint: disable=too-many-instance-attributes
 		return new_buffer_size
 
 
-class Repository:  # pylint: disable=too-many-instance-attributes
+class Repository:
 	DEFAULT_BUFFER_SIZE = 32 * 1000
 
 	def __init__(self, url, **kwargs):
@@ -440,15 +474,21 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 	def setBandwidth(self, dynamicBandwidth, maxBandwidth):
 		self._dynamicBandwidth = dynamicBandwidth
 		self._maxBandwidth = maxBandwidth
-		self.speed_limiter.set_bandwidth(max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth)
+		self.speed_limiter.set_bandwidth(
+			max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth
+		)
 
 	def setMaxBandwidth(self, maxBandwidth):
 		self._maxBandwidth = maxBandwidth
-		self.speed_limiter.set_bandwidth(max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth)
+		self.speed_limiter.set_bandwidth(
+			max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth
+		)
 
 	def setDynamicBandwidth(self, dynamicBandwidth):
 		self._dynamicBandwidth = dynamicBandwidth
-		self.speed_limiter.set_bandwidth(max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth)
+		self.speed_limiter.set_bandwidth(
+			max_bandwidth=self._maxBandwidth, dynamic=self._dynamicBandwidth
+		)
 
 	def __str__(self):
 		return f"<{self.__class__.__name__}({self._url})>"
@@ -472,15 +512,13 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 		except ValueError:  # element not in list
 			pass
 
-	def _transferDown(self, src, dst, size, progressSubject=None):  # pylint: disable=redefined-builtin
+	def _transferDown(self, src, dst, size, progressSubject=None):
 		return self._transfer("in", src, dst, size, progressSubject)
 
 	def _transferUp(self, src, dst, size, progressSubject=None):
 		return self._transfer("out", src, dst, size, progressSubject)
 
-	def _transfer(
-		self, transferDirection, src, dst, size, progressSubject=None
-	):  # pylint: disable=redefined-builtin,too-many-arguments,too-many-branches
+	def _transfer(self, transferDirection, src, dst, size, progressSubject=None):
 		logger.debug(
 			"Transfer %s from %s to %s (size=%s, dynamic bandwidth=%s, max bandwidth=%s)",
 			transferDirection,
@@ -549,10 +587,10 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 			logger.info(error, exc_info=True)
 			raise
 
-	def _preProcessPath(self, path):  # pylint: disable=no-self-use
+	def _preProcessPath(self, path):
 		return path
 
-	def content(self, source="", recursive=False):  # pylint: disable=no-self-use
+	def content(self, source="", recursive=False):
 		"""
 		List the content of the repository.
 
@@ -591,44 +629,55 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 			dirname = "/".join(parts[:-1])
 			filename = parts[-1]
 			if not filename:
-				return {"name": dirname.split("/")[:-1], "path": dirname.split("/")[:-1], "type": "dir", "size": 0}
+				return {
+					"name": dirname.split("/")[:-1],
+					"path": dirname.split("/")[:-1],
+					"type": "dir",
+					"size": 0,
+				}
 
 			for item in self.content(dirname):
 				if item["name"] == filename:
 					info = item
 					return info
 			raise IOError("File not found")
-		except Exception as err:  # pylint: disable=broad-except
-			raise RepositoryError(f"Failed to get file info for '{source}': {err}") from err
+		except Exception as err:
+			raise RepositoryError(
+				f"Failed to get file info for '{source}': {err}"
+			) from err
 
 	def exists(self, source):
 		try:
 			self.fileInfo(source)
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			return False
 
 		return True
 
-	def islink(self, source):  # pylint: disable=unused-argument,no-self-use
+	def islink(self, source):
 		return False
 
 	def isfile(self, source):
 		try:
 			info = self.fileInfo(source)
 			return info.get("type", "") == "file"
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			return False
 
 	def isdir(self, source):
 		try:
 			info = self.fileInfo(source)
 			return info.get("type", "") == "dir"
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			return False
 
 	def copy(
-		self, source, destination, overallProgressSubject=None, currentProgressSubject=None
-	):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+		self,
+		source,
+		destination,
+		overallProgressSubject=None,
+		currentProgressSubject=None,
+	):
 		"""
 		source = file,  destination = file              => overwrite destination
 		source = file,  destination = dir               => copy into destination
@@ -639,8 +688,10 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 		source = dir/*, destination = dir/not existent  => create destination if not exists, copy content of source into destination
 		"""
 		for hook in self._hooks:
-			(source, destination, overallProgressSubject, currentProgressSubject) = hook.pre_Repository_copy(
-				source, destination, overallProgressSubject, currentProgressSubject
+			(source, destination, overallProgressSubject, currentProgressSubject) = (
+				hook.pre_Repository_copy(
+					source, destination, overallProgressSubject, currentProgressSubject
+				)
 			)
 
 		try:
@@ -689,7 +740,9 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 						sizeString = f"{float(info['size']) / (1000 * 1000):0.2f} MByte"
 					elif info["size"] > 1000:
 						sizeString = f"{float(info['size']) / 1000:0.2f} kByte"
-					overallProgressSubject.setMessage(f"[1/1] {info['name']} ({sizeString})")
+					overallProgressSubject.setMessage(
+						f"[1/1] {info['name']} ({sizeString})"
+					)
 
 				try:
 					self.download(source, destinationFile, currentProgressSubject)
@@ -706,7 +759,9 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 				if not os.path.exists(destination):
 					os.makedirs(destination)
 				elif os.path.isfile(destination):
-					raise IOError(f"Cannot copy directory '{source}' into file '{destination}'")
+					raise IOError(
+						f"Cannot copy directory '{source}' into file '{destination}'"
+					)
 				elif os.path.isdir(destination):
 					if not copySrcContent:
 						destination = os.path.join(destination, info["name"])
@@ -728,12 +783,14 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 							countLenFormat = "%" + str(countLen) + "s"
 							sizeString = f"{item['size']:0.0f} Byte"
 							if item["size"] > 1000 * 1000:
-								sizeString = f"{float(item['size']) / (1000 * 1000):0.2f} MByte"
+								sizeString = (
+									f"{float(item['size']) / (1000 * 1000):0.2f} MByte"
+								)
 							elif item["size"] > 1000:
 								sizeString = f"{float(item['size']) / 1000:0.2f} kByte"
 
 							overallProgressSubject.setMessage(
-								"[%s/%s] %s (%s)"  # pylint: disable=consider-using-f-string
+								"[%s/%s] %s (%s)"
 								% (
 									countLenFormat % fileCount,
 									totalFiles,
@@ -748,7 +805,11 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 							raise RuntimeError(f"Bad target directory '{targetDir}'")
 						if targetDir and not os.path.isdir(targetDir):
 							os.makedirs(targetDir)
-						self.download("/".join((source, item["path"])), os.path.join(targetDir, item["name"]), currentProgressSubject)
+						self.download(
+							"/".join((source, item["path"])),
+							os.path.join(targetDir, item["name"]),
+							currentProgressSubject,
+						)
 
 						if overallProgressSubject:
 							overallProgressSubject.addToState(item["size"])
@@ -759,24 +820,37 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 				overallProgressSubject.setState(size)
 		except Exception as error:
 			for hook in self._hooks:
-				hook.error_Repository_copy(source, destination, overallProgressSubject, currentProgressSubject, error)
+				hook.error_Repository_copy(
+					source,
+					destination,
+					overallProgressSubject,
+					currentProgressSubject,
+					error,
+				)
 			raise error
 
 		for hook in self._hooks:
-			hook.post_Repository_copy(source, destination, overallProgressSubject, currentProgressSubject)
+			hook.post_Repository_copy(
+				source, destination, overallProgressSubject, currentProgressSubject
+			)
 
-	def upload(self, source, destination, progressSubject=None):  # pylint: disable=no-self-use
+	def upload(self, source, destination, progressSubject=None):
 		raise RepositoryError("Not implemented")
 
 	def download(
-		self, source, destination, progressSubject=None, startByteNumber=-1, endByteNumber=-1
-	):  # pylint: disable=no-self-use,too-many-arguments
+		self,
+		source,
+		destination,
+		progressSubject=None,
+		startByteNumber=-1,
+		endByteNumber=-1,
+	):
 		raise RepositoryError("Not implemented")
 
-	def delete(self, destination):  # pylint: disable=no-self-use
+	def delete(self, destination):
 		raise RepositoryError("Not implemented")
 
-	def makeDirectory(self, destination):  # pylint: disable=no-self-use
+	def makeDirectory(self, destination):
 		raise RepositoryError("Not implemented")
 
 	def disconnect(self):
@@ -785,7 +859,7 @@ class Repository:  # pylint: disable=too-many-instance-attributes
 	def __del__(self):
 		try:
 			self.disconnect()
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			pass
 
 
@@ -816,14 +890,21 @@ class FileRepository(Repository):
 			if not os.path.exists(source):
 				raise IOError("File not found")
 
-			info = {"name": os.path.basename(source), "path": source[len(self._path) + 1 :], "type": "file", "size": 0}
+			info = {
+				"name": os.path.basename(source),
+				"path": source[len(self._path) + 1 :],
+				"type": "file",
+				"size": 0,
+			}
 			if os.path.isdir(source):
 				info["type"] = "dir"
 			if os.path.isfile(source):
 				info["size"] = os.path.getsize(source)
 			return info
-		except Exception as err:  # pylint: disable=broad-except
-			raise RepositoryError(f"Failed to get file info for '{source}': {err}") from err
+		except Exception as err:
+			raise RepositoryError(
+				f"Failed to get file info for '{source}': {err}"
+			) from err
 
 	def exists(self, source):
 		return os.path.exists(self._preProcessPath(source))
@@ -860,7 +941,7 @@ class FileRepository(Repository):
 						content.append(info)
 						if recursive:
 							_recurse(path=entry, content=content)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.error(err)
 
 			return content
@@ -868,8 +949,13 @@ class FileRepository(Repository):
 		return _recurse(path=source, content=content)
 
 	def download(
-		self, source, destination, progressSubject=None, startByteNumber=-1, endByteNumber=-1
-	):  # pylint: disable=too-many-arguments
+		self,
+		source,
+		destination,
+		progressSubject=None,
+		startByteNumber=-1,
+		endByteNumber=-1,
+	):
 		"""
 		startByteNumber: position of first byte to be read
 		endByteNumber:   position of last byte to be read
@@ -896,8 +982,10 @@ class FileRepository(Repository):
 					src.seek(startByteNumber)
 				with open(destination, "wb") as dst:
 					self._transferDown(src, dst, size, progressSubject)
-		except Exception as err:  # pylint: disable=broad-except
-			raise RepositoryError(f"Failed to download '{source}' to '{destination}': {err}") from err
+		except Exception as err:
+			raise RepositoryError(
+				f"Failed to download '{source}' to '{destination}': {err}"
+			) from err
 
 	def upload(self, source, destination, progressSubject=None):
 		source = forceUnicode(source)
@@ -915,7 +1003,9 @@ class FileRepository(Repository):
 				with open(destination, "wb") as dst:
 					self._transferUp(src, dst, size, progressSubject)
 		except Exception as err:
-			raise RepositoryError(f"Failed to upload '{source}' to '{destination}': {err}") from err
+			raise RepositoryError(
+				f"Failed to upload '{source}' to '{destination}': {err}"
+			) from err
 
 	def delete(self, destination):
 		destination = self._preProcessPath(destination)
@@ -935,14 +1025,16 @@ class TimeoutHTTPAdapter(HTTPAdapter):
 			del kwargs["timeout"]
 		super().__init__(*args, **kwargs)
 
-	def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):  # pylint: disable=too-many-arguments
+	def send(
+		self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+	):
 		if timeout is None:
 			timeout = self.timeout
 		return super().send(request, stream, timeout, verify, cert, proxies)
 
 
-class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attributes
-	def __init__(self, url, **kwargs):  # pylint: disable=too-many-branches,too-many-statements
+class HTTPRepository(Repository):
+	def __init__(self, url, **kwargs):
 		Repository.__init__(self, url, **kwargs)
 
 		self._application = f"opsi-http-repository/{__version__}"
@@ -969,7 +1061,11 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 				self._password = str(value or "")
 			elif option == "connecttimeout" and value not in (None, ""):
 				self._connect_timeout = int(value)
-			elif option in ("readtimeout", "timeout", "sockettimeout") and value not in (None, ""):
+			elif option in (
+				"readtimeout",
+				"timeout",
+				"sockettimeout",
+			) and value not in (None, ""):
 				self._read_timeout = int(value)
 			elif option == "verifyservercert":
 				self._verify_server_cert = bool(value)
@@ -981,7 +1077,9 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 				if str(value) in ("auto", "4", "6"):
 					self._ip_version = str(value)
 				else:
-					logger.error("Invalid ip version '%s', using %s", value, self._ip_version)
+					logger.error(
+						"Invalid ip version '%s', using %s", value, self._ip_version
+					)
 			elif option == "sessionlifetime" and value:
 				self._session_lifetime = int(value)
 
@@ -992,10 +1090,20 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 
 		self._session = requests.Session()
 		self._session.auth = (self._username or "", self._password or "")
-		self._session.headers.update({"User-Agent": self._application, "X-opsi-session-lifetime": str(self._session_lifetime)})
+		self._session.headers.update(
+			{
+				"User-Agent": self._application,
+				"X-opsi-session-lifetime": str(self._session_lifetime),
+			}
+		)
 
 		no_proxy_addresses = ["localhost", "127.0.0.1", "ip6-localhost", "::1"]
-		self._session = prepare_proxy_environment(url, self._proxy_url, no_proxy_addresses=no_proxy_addresses, session=self._session)
+		self._session = prepare_proxy_environment(
+			url,
+			self._proxy_url,
+			no_proxy_addresses=no_proxy_addresses,
+			session=self._session,
+		)
 
 		if self._verify_server_cert:
 			self._session.verify = self._ca_cert_file or True
@@ -1003,7 +1111,9 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 			self._session.verify = False
 
 		self._http_adapter = TimeoutHTTPAdapter(
-			timeout=(self._connect_timeout, self._read_timeout), pool_maxsize=self._http_pool_maxsize, max_retries=self._http_max_retries
+			timeout=(self._connect_timeout, self._read_timeout),
+			pool_maxsize=self._http_pool_maxsize,
+			max_retries=self._http_max_retries,
 		)
 		self._session.mount("http://", self._http_adapter)
 		self._session.mount("https://", self._http_adapter)
@@ -1071,8 +1181,13 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 		return quote(path.encode("utf-8"))
 
 	def download(
-		self, source, destination, progressSubject=None, startByteNumber=-1, endByteNumber=-1
-	):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
+		self,
+		source,
+		destination,
+		progressSubject=None,
+		startByteNumber=-1,
+		endByteNumber=-1,
+	):
 		"""
 		startByteNumber: position of first byte to be read
 		endByteNumber:   position of last byte to be read
@@ -1095,7 +1210,10 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 				headers["range"] = f"bytes={sbn}-{ebn}"
 
 			response = self._session.get(source_url, headers=headers, stream=True)
-			if response.status_code not in (requests.codes["ok"], requests.codes["partial_content"]):
+			if response.status_code not in (
+				requests.codes["ok"],
+				requests.codes["partial_content"],
+			):
 				raise RuntimeError(f"{response.status_code} - {response.text}")
 
 			size = int(response.headers.get("content-length", 0))
@@ -1110,9 +1228,11 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 				response.raw.decode_content = False
 				self._transferDown(response.raw, dst, size, progressSubject)
 
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err, exc_info=True)
-			raise RepositoryError(f"Failed to download '{source}' to '{destination}': {err}") from err
+			raise RepositoryError(
+				f"Failed to download '{source}' to '{destination}': {err}"
+			) from err
 		logger.trace("HTTP download done")
 
 	def disconnect(self):
@@ -1120,17 +1240,17 @@ class HTTPRepository(Repository):  # pylint: disable=too-many-instance-attribute
 		if self._session:
 			try:
 				self._session.close()
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				pass
 
 
-class FileProgessWrapper:  # pylint: disable=too-few-public-methods
+class FileProgessWrapper:
 	def __init__(self, file, repository: Repository, progress_subject):
 		self.file = file
 		self.repository = repository
 		self.progress_subject = progress_subject
 
-	def read(self, size):  # pylint: disable=unused-argument
+	def read(self, size):
 		# Read buffer_size to speed up transfer
 		data = self.file.read(self.repository.bufferSize)
 		if self.progress_subject:
@@ -1154,7 +1274,7 @@ class WebDAVRepository(HTTPRepository):
 		source = "/" + source.lstrip("/")
 		source_url = self.base_url.rstrip("/") + self._preProcessPath(source)
 		source_url = source_url.rstrip("/") + "/"
-		
+
 		if recursive and source in self._contentCache:
 			if time.time() - self._contentCache[source]["time"] > 60:
 				del self._contentCache[source]
@@ -1169,7 +1289,9 @@ class WebDAVRepository(HTTPRepository):
 
 		response = self._session.request("PROPFIND", url=source_url, headers=headers)
 		if response.status_code != requests.codes["multi_status"]:
-			raise RepositoryError(f"Failed to list dir '{source}': {response.status_code} - {response.text}")
+			raise RepositoryError(
+				f"Failed to list dir '{source}': {response.status_code} - {response.text}"
+			)
 
 		encoding = "utf-8"
 		contentType = response.headers.get("content-type", "").lower()
@@ -1184,7 +1306,9 @@ class WebDAVRepository(HTTPRepository):
 		for entry in getFileInfosFromDavXML(davxmldata=davxmldata, encoding=encoding):
 			if entry["path"].startswith("/"):
 				# Absolut path to realtive path
-				entry["path"] = posixpath.relpath(entry["path"], start=self._path + source)
+				entry["path"] = posixpath.relpath(
+					entry["path"], start=self._path + source
+				)
 			if entry["path"] and entry["path"] not in (".", ".."):
 				content.append(entry)
 		logger.debug("fileinfo: %s", content)
@@ -1212,13 +1336,20 @@ class WebDAVRepository(HTTPRepository):
 			with open(source, "rb") as src:
 				self.speed_limiter.transfer_started("out")
 				fpw = FileProgessWrapper(src, self, progressSubject)
-				response = self._session.put(url=destination_url, headers=headers, data=fpw)
+				response = self._session.put(
+					url=destination_url, headers=headers, data=fpw
+				)
 				self.speed_limiter.transfer_ended()
-				if response.status_code not in (requests.codes["created"], requests.codes["no_content"]):
+				if response.status_code not in (
+					requests.codes["created"],
+					requests.codes["no_content"],
+				):
 					raise RuntimeError(f"{response.status_code} - {response.text}")
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err, exc_info=True)
-			raise RepositoryError(f"Failed to upload '{source}' to '{destination}': {err}") from err
+			raise RepositoryError(
+				f"Failed to upload '{source}' to '{destination}': {err}"
+			) from err
 		logger.trace("WebDAV upload done")
 
 	def delete(self, destination):
@@ -1226,19 +1357,23 @@ class WebDAVRepository(HTTPRepository):
 		destination_url = self.base_url.rstrip("/") + destination
 		response = self._session.delete(url=destination_url)
 		if response.status_code != requests.codes["no_content"]:
-			raise RepositoryError(f"Failed to delete '{destination}': {response.status_code}")
+			raise RepositoryError(
+				f"Failed to delete '{destination}': {response.status_code}"
+			)
 
 
-class CIFSRepository(FileRepository):  # pylint: disable=too-many-instance-attributes
-	def __init__(self, url, **kwargs):  # pylint: disable=super-init-not-called
-		Repository.__init__(self, url, **kwargs)  # pylint: disable=non-parent-init-called
+class CIFSRepository(FileRepository):
+	def __init__(self, url, **kwargs):
+		Repository.__init__(self, url, **kwargs)
 
 		match = re.search(r"^(smb|cifs)://([^/]+/.+)$", self._url, re.IGNORECASE)
 		if not match:
 			raise RepositoryError(f"Bad smb/cifs url: '{self._url}'")
 
 		if os.name not in ("posix", "nt"):
-			raise NotImplementedError(f"CIFSRepository not yet avaliable on os '{os.name}'")
+			raise NotImplementedError(
+				f"CIFSRepository not yet avaliable on os '{os.name}'"
+			)
 
 		self._mountShare = forceBool(kwargs.get("mount", True))
 		self._mounted = False
@@ -1269,7 +1404,9 @@ class CIFSRepository(FileRepository):  # pylint: disable=too-many-instance-attri
 			self._mount()
 		else:
 			parts = self._url.split("/")
-			self._path = "\\\\" + parts[2] + "\\" + parts[3] + self._path.replace("/", "\\")
+			self._path = (
+				"\\\\" + parts[2] + "\\" + parts[3] + self._path.replace("/", "\\")
+			)
 
 	def getMountPoint(self):
 		return self._mountPoint
@@ -1295,7 +1432,7 @@ class CIFSRepository(FileRepository):  # pylint: disable=too-many-instance-attri
 			if self._mountPointCreated:
 				try:
 					os.rmdir(self._mountPoint)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.error(err)
 			raise mountError
 
@@ -1316,10 +1453,15 @@ class CIFSRepository(FileRepository):  # pylint: disable=too-many-instance-attri
 		self._umount()
 
 
-class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-methods
+class DepotToLocalDirectorySychronizer:
 	def __init__(
-		self, sourceDepot, destinationDirectory, productIds=None, maxBandwidth=0, dynamicBandwidth=False
-	):  # pylint: disable=too-many-arguments
+		self,
+		sourceDepot,
+		destinationDirectory,
+		productIds=None,
+		maxBandwidth=0,
+		dynamicBandwidth=False,
+	):
 		productIds = productIds or []
 		self._sourceDepot = sourceDepot
 		self._destinationDirectory = forceUnicode(destinationDirectory)
@@ -1329,11 +1471,11 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 		self._fileInfo = None
 		if not os.path.isdir(self._destinationDirectory):
 			os.mkdir(self._destinationDirectory)
-		self._sourceDepot.setBandwidth(dynamicBandwidth=dynamicBandwidth, maxBandwidth=maxBandwidth)
+		self._sourceDepot.setBandwidth(
+			dynamicBandwidth=dynamicBandwidth, maxBandwidth=maxBandwidth
+		)
 
-	def _synchronizeDirectories(
-		self, source, destination, progressSubject=None
-	):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def _synchronizeDirectories(self, source, destination, progressSubject=None):
 		source = forceUnicode(source)
 		destination = forceUnicode(destination)
 		logger.debug("Syncing directory %s to %s", source, destination)
@@ -1358,7 +1500,7 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 				os.remove(path)
 
 		# Start sync
-		for item in self._sourceDepot.content(source):  # pylint: disable=too-many-nested-blocks
+		for item in self._sourceDepot.content(source):
 			source = forceUnicode(source)
 			sourcePath = source + "/" + item["name"]
 			destinationPath = os.path.join(destination, item["name"])
@@ -1368,9 +1510,16 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 			if relSource not in self._fileInfo:
 				continue
 			if self._fileInfo[relSource]["type"] == "d":
-				self._synchronizeDirectories(sourcePath, destinationPath, progressSubject)
+				self._synchronizeDirectories(
+					sourcePath, destinationPath, progressSubject
+				)
 			else:
-				logger.debug("Syncing %s with %s %s", relSource, destinationPath, self._fileInfo[relSource])
+				logger.debug(
+					"Syncing %s with %s %s",
+					relSource,
+					destinationPath,
+					self._fileInfo[relSource],
+				)
 				if self._fileInfo[relSource]["type"] == "l":
 					self._linkFiles[relSource] = self._fileInfo[relSource]["target"]
 					continue
@@ -1385,13 +1534,23 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 						exists = False
 					if exists:
 						md5s = md5sum(destinationPath)
-						logger.debug("Destination file '%s' already exists (size: %s, md5sum: %s)", destinationPath, size, md5s)
+						logger.debug(
+							"Destination file '%s' already exists (size: %s, md5sum: %s)",
+							destinationPath,
+							size,
+							md5s,
+						)
 						localSize = os.path.getsize(destinationPath)
-						if localSize == size and md5s == self._fileInfo[relSource]["md5sum"]:
+						if (
+							localSize == size
+							and md5s == self._fileInfo[relSource]["md5sum"]
+						):
 							continue
 
 				if progressSubject:
-					progressSubject.setMessage(_("Downloading file '%s'") % item["name"])
+					progressSubject.setMessage(
+						_("Downloading file '%s'") % item["name"]
+					)
 
 				partialEndFile = f"{destinationPath}.opsi_sync_endpart"
 				partialStartFile = f"{destinationPath}.opsi_sync_startpart"
@@ -1400,10 +1559,16 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 				if exists and (localSize < size):
 					try:
 						# First byte needed is byte number <localSize>
-						logger.info("Downloading file '%s' starting at byte number %d", item["name"], localSize)
+						logger.info(
+							"Downloading file '%s' starting at byte number %d",
+							item["name"],
+							localSize,
+						)
 						if os.path.exists(partialEndFile):
 							os.remove(partialEndFile)
-						self._sourceDepot.download(sourcePath, partialEndFile, startByteNumber=localSize)
+						self._sourceDepot.download(
+							sourcePath, partialEndFile, startByteNumber=localSize
+						)
 
 						with open(destinationPath, "ab") as f1:
 							with open(partialEndFile, "rb") as f2:
@@ -1411,12 +1576,22 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 
 						md5s = md5sum(destinationPath)
 						if md5s != self._fileInfo[relSource]["md5sum"]:
-							logger.info("MD5sum of composed file differs after downloading end part")
+							logger.info(
+								"MD5sum of composed file differs after downloading end part"
+							)
 							if os.path.exists(partialStartFile):
 								os.remove(partialStartFile)
 							# Last byte needed is byte number <localSize> - 1
-							logger.info("Downloading file '%s' ending at byte number %d", item["name"], localSize - 1)
-							self._sourceDepot.download(sourcePath, partialStartFile, endByteNumber=localSize - 1)
+							logger.info(
+								"Downloading file '%s' ending at byte number %d",
+								item["name"],
+								localSize - 1,
+							)
+							self._sourceDepot.download(
+								sourcePath,
+								partialStartFile,
+								endByteNumber=localSize - 1,
+							)
 
 							with open(partialStartFile, "ab") as f1:
 								with open(partialEndFile, "rb") as f2:
@@ -1427,11 +1602,18 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 							os.rename(partialStartFile, destinationPath)
 							md5s = md5sum(destinationPath)
 							if md5s != self._fileInfo[relSource]["md5sum"]:
-								logger.info("MD5sum of composed file differs after downloading start part")
+								logger.info(
+									"MD5sum of composed file differs after downloading start part"
+								)
 								raise RuntimeError("MD5sum differs")
 						composed = True
-					except Exception as err:  # pylint: disable=broad-except
-						logger.warning("Error completing a partially downloaded file '%s': %s", item["name"], err, exc_info=True)
+					except Exception as err:
+						logger.warning(
+							"Error completing a partially downloaded file '%s': %s",
+							item["name"],
+							err,
+							exc_info=True,
+						)
 
 				for fn in (partialEndFile, partialStartFile):
 					if os.path.exists(fn):
@@ -1441,7 +1623,9 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 					if os.path.exists(destinationPath):
 						os.remove(destinationPath)
 					logger.info("Downloading file '%s'", item["name"])
-					self._sourceDepot.download(sourcePath, destinationPath, progressSubject=progressSubject)
+					self._sourceDepot.download(
+						sourcePath, destinationPath, progressSubject=progressSubject
+					)
 
 				md5s = md5sum(destinationPath)
 				if md5s != self._fileInfo[relSource]["md5sum"]:
@@ -1452,24 +1636,31 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 					logger.error(error)
 					raise RuntimeError(error)
 
-	def synchronize(
-		self, productProgressObserver=None, overallProgressObserver=None
-	):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def synchronize(self, productProgressObserver=None, overallProgressObserver=None):
 		if not self._productIds:
 			logger.info("Getting product dirs of depot '%s'", self._sourceDepot)
 			for item in self._sourceDepot.content():
 				self._productIds.append(item["name"])
 
 		overallProgressSubject = ProgressSubject(
-			id="sync_products_overall", type="product_sync", end=len(self._productIds), fireAlways=True
+			id="sync_products_overall",
+			type="product_sync",
+			end=len(self._productIds),
+			fireAlways=True,
 		)
 		overallProgressSubject.setMessage(_("Synchronizing products"))
 		if overallProgressObserver:
 			overallProgressSubject.attachObserver(overallProgressObserver)
 
 		for self._productId in self._productIds:
-			productProgressSubject = ProgressSubject(id="sync_product_" + self._productId, type="product_sync", fireAlways=True)
-			productProgressSubject.setMessage(_("Synchronizing product %s") % self._productId)
+			productProgressSubject = ProgressSubject(
+				id="sync_product_" + self._productId,
+				type="product_sync",
+				fireAlways=True,
+			)
+			productProgressSubject.setMessage(
+				_("Synchronizing product %s") % self._productId
+			)
 			if productProgressObserver:
 				productProgressSubject.attachObserver(productProgressObserver)
 			packageContentFile = None
@@ -1477,16 +1668,25 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 			try:
 				self._linkFiles = {}
 				logger.notice(
-					"Syncing product %s of depot %s with local directory %s", self._productId, self._sourceDepot, self._destinationDirectory
+					"Syncing product %s of depot %s with local directory %s",
+					self._productId,
+					self._sourceDepot,
+					self._destinationDirectory,
 				)
 
-				productDestinationDirectory = os.path.join(self._destinationDirectory, self._productId)
+				productDestinationDirectory = os.path.join(
+					self._destinationDirectory, self._productId
+				)
 				if not os.path.isdir(productDestinationDirectory):
 					os.mkdir(productDestinationDirectory)
 
 				logger.info("Downloading package content file")
-				packageContentFile = os.path.join(productDestinationDirectory, f"{self._productId}.files")
-				self._sourceDepot.download(f"{self._productId}/{self._productId}.files", packageContentFile)
+				packageContentFile = os.path.join(
+					productDestinationDirectory, f"{self._productId}.files"
+				)
+				self._sourceDepot.download(
+					f"{self._productId}/{self._productId}.files", packageContentFile
+				)
 				self._fileInfo = PackageContentFile(packageContentFile).parse()
 
 				size = 0
@@ -1496,11 +1696,16 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 					except KeyError:
 						pass
 
-				productProgressSubject.setMessage(_("Synchronizing product %s (%.2fkByte)") % (self._productId, (size / 1000)))
+				productProgressSubject.setMessage(
+					_("Synchronizing product %s (%.2fkByte)")
+					% (self._productId, (size / 1000))
+				)
 				productProgressSubject.setEnd(size)
 				productProgressSubject.setEndChangable(False)
 
-				self._synchronizeDirectories(self._productId, productDestinationDirectory, productProgressSubject)
+				self._synchronizeDirectories(
+					self._productId, productDestinationDirectory, productProgressSubject
+				)
 
 				links = list(self._linkFiles.keys())
 				links.sort()
@@ -1513,21 +1718,33 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 								linkSource = linkSource[1:]
 							if linkDestination.startswith("/"):
 								linkDestination = linkDestination[1:]
-							linkSource = os.path.join(productDestinationDirectory, linkSource.replace("/", "\\"))
-							linkDestination = os.path.join(productDestinationDirectory, linkDestination.replace("/", "\\"))
+							linkSource = os.path.join(
+								productDestinationDirectory,
+								linkSource.replace("/", "\\"),
+							)
+							linkDestination = os.path.join(
+								productDestinationDirectory,
+								linkDestination.replace("/", "\\"),
+							)
 							if os.path.exists(linkDestination):
 								if os.path.isdir(linkDestination):
 									shutil.rmtree(linkDestination)
 								else:
 									os.remove(linkDestination)
-							logger.info("Symlink => copying '%s' to '%s'", linkSource, linkDestination)
+							logger.info(
+								"Symlink => copying '%s' to '%s'",
+								linkSource,
+								linkDestination,
+							)
 							if os.path.isdir(linkSource):
 								shutil.copytree(linkSource, linkDestination)
 							else:
 								shutil.copyfile(linkSource, linkDestination)
 						else:
 							if os.path.exists(linkDestination):
-								if os.path.isdir(linkDestination) and not os.path.islink(linkDestination):
+								if os.path.isdir(
+									linkDestination
+								) and not os.path.islink(linkDestination):
 									shutil.rmtree(linkDestination)
 								else:
 									os.remove(linkDestination)
@@ -1535,10 +1752,14 @@ class DepotToLocalDirectorySychronizer:  # pylint: disable=too-few-public-method
 							parts -= len(linkSource.split("/"))
 							for _counter in range(parts):
 								linkSource = os.path.join("..", linkSource)
-							logger.info("Symlink '%s' to '%s'", linkDestination, linkSource)
+							logger.info(
+								"Symlink '%s' to '%s'", linkDestination, linkSource
+							)
 							os.symlink(linkSource, linkDestination)
 			except Exception as error:
-				productProgressSubject.setMessage(_("Failed to sync product %s: %s") % (self._productId, error))
+				productProgressSubject.setMessage(
+					_("Failed to sync product %s: %s") % (self._productId, error)
+				)
 				if packageContentFile and os.path.exists(packageContentFile):
 					os.unlink(packageContentFile)
 				raise

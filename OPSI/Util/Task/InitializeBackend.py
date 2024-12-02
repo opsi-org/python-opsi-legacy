@@ -13,13 +13,13 @@ This holds backend-independent migrations.
 
 import os.path
 
+from opsicommon.logging import get_logger
+
 from OPSI.Backend.Base.ConfigData import OPSI_PASSWD_FILE
 from OPSI.Object import OpsiConfigserver
 from OPSI.System.Posix import getLocalFqdn, getNetworkConfiguration
 from OPSI.Types import forceList
 from OPSI.Util.Task.ConfigureBackend.ConfigurationData import initializeConfigs
-from OPSI.Util.Task.Rights import set_rights
-from opsicommon.logging import get_logger
 
 __all__ = ("initializeBackends",)
 
@@ -39,7 +39,7 @@ def initializeBackends(ipAddress=None, backendManagerConfig=None):
 	_setupPasswdFile()
 
 	from OPSI.Backend.BackendManager import (
-		BackendManager,  # pylint: disable=import-outside-toplevel
+		BackendManager,
 	)
 
 	managerConfig = {"depotBackend": False}
@@ -47,38 +47,40 @@ def initializeBackends(ipAddress=None, backendManagerConfig=None):
 		managerConfig.update(backendManagerConfig)
 
 	with BackendManager(**managerConfig) as backend:
-		backend.backend_createBase()  # pylint: disable=no-member
+		backend.backend_createBase()
 
 		networkConfig = getNetworkConfiguration(ipAddress)
 		fqdn = getLocalFqdn()
 
 		logger.info("Trying to find a Configserver...")
-		configServer = backend.host_getObjects(type="OpsiConfigserver")  # pylint: disable=no-member
-		if not configServer and not backend.host_getIdents(type="OpsiConfigserver", id=fqdn):  # pylint: disable=no-member
-			depot = backend.host_getObjects(type="OpsiDepotserver", id=fqdn)  # pylint: disable=no-member
+		configServer = backend.host_getObjects(type="OpsiConfigserver")
+		if not configServer and not backend.host_getIdents(
+			type="OpsiConfigserver", id=fqdn
+		):
+			depot = backend.host_getObjects(type="OpsiDepotserver", id=fqdn)
 			if not depot:
 				logger.notice("Creating config server '%s'", fqdn)
 				serverConfig = _getServerConfig(fqdn, networkConfig)
-				backend.host_createOpsiConfigserver(**serverConfig)  # pylint: disable=no-member
-				configServer = backend.host_getObjects(type="OpsiConfigserver", id=fqdn)  # pylint: disable=no-member
+				backend.host_createOpsiConfigserver(**serverConfig)
+				configServer = backend.host_getObjects(type="OpsiConfigserver", id=fqdn)
 			else:
 				logger.notice("Converting depot server '%s' to config server", fqdn)
 				configServer = OpsiConfigserver.fromHash(depot[0].toHash())
-				backend.host_createObjects(configServer)  # pylint: disable=no-member
+				backend.host_createObjects(configServer)
 
 				# list expected in further processing
 				configServer = [configServer]
 		else:
-			depot = backend.host_getObjects(type="OpsiDepotserver", id=fqdn)  # pylint: disable=no-member
+			depot = backend.host_getObjects(type="OpsiDepotserver", id=fqdn)
 			if not depot:
 				logger.notice("Creating depot server '%s'", fqdn)
 				serverConfig = _getServerConfig(fqdn, networkConfig)
-				backend.host_createOpsiDepotserver(**serverConfig)  # pylint: disable=no-member
+				backend.host_createOpsiDepotserver(**serverConfig)
 
 		if configServer:
 			if configServer[0].id == fqdn:
 				try:
-					configServer = backend.host_getObjects(type="OpsiConfigserver")[0]  # pylint: disable=no-member
+					configServer = backend.host_getObjects(type="OpsiConfigserver")[0]
 				except IndexError as err:
 					raise RuntimeError(f"Config server '{fqdn}' not found") from err
 
@@ -88,7 +90,7 @@ def initializeBackends(ipAddress=None, backendManagerConfig=None):
 					configServer.setHardwareAddress(networkConfig["hardwareAddress"])
 
 				# make sure the config server is present in all backends or we get reference error later on
-				backend.host_insertObject(configServer)  # pylint: disable=no-member
+				backend.host_insertObject(configServer)
 
 			# initializeConfigs does only handle a single object
 			configServer = forceList(configServer)[0]
@@ -106,7 +108,6 @@ def _setupPasswdFile():
 	if not os.path.exists(OPSI_PASSWD_FILE):
 		with open(OPSI_PASSWD_FILE, mode="w", encoding="utf-8"):
 			pass
-		set_rights(OPSI_PASSWD_FILE)
 
 
 def _getServerConfig(fqdn, networkConfig):

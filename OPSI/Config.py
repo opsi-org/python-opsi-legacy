@@ -15,7 +15,6 @@ These values are not intended to be changed on-the-fly!
 Doing so might result in unforseen problems and is strongly discouraged!
 """
 
-
 # Group used to identify members whits administrative rights in opsi
 OPSI_ADMIN_GROUP = "opsiadmin"
 
@@ -34,7 +33,7 @@ try:
 
 	OPSI_ADMIN_GROUP = OpsiConfFile().getOpsiAdminGroup()
 	FILE_ADMIN_GROUP = OpsiConfFile().getOpsiFileAdminGroup()
-except Exception:  # pylint: disable=broad-except
+except Exception:
 	# Use "pcpatch" if group exists otherwise use the new default "opsifileadmins"
 	try:
 		import grp
@@ -47,8 +46,8 @@ except Exception:  # pylint: disable=broad-except
 # User that is running opsiconfd.
 try:
 	# pyright: reportMissingImports=false
-	from opsiconfd.config import config  # pylint: disable=import-error
+	from opsiconfd.config import config
 
 	OPSICONFD_USER = config.run_as_user
-except Exception:  # pylint: disable=broad-except
+except Exception:
 	OPSICONFD_USER = "opsiconfd"

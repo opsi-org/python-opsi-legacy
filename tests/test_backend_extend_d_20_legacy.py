@@ -15,23 +15,29 @@ that were written for opsi 3.
 import pytest
 
 from OPSI.Object import (
-	BoolProductProperty, LocalbootProduct, OpsiClient, OpsiDepotserver,
-	ProductDependency, ProductOnDepot, ProductPropertyState,
-	UnicodeProductProperty)
+	BoolProductProperty,
+	LocalbootProduct,
+	OpsiClient,
+	OpsiDepotserver,
+	ProductDependency,
+	ProductOnDepot,
+	ProductPropertyState,
+	UnicodeProductProperty,
+)
 from OPSI.Exceptions import BackendMissingDataError
 from .test_hosts import getClients, getConfigServer, getDepotServers
 
 
 def testGetGeneralConfigValueFailsWithInvalidObjectId(backendManager):
 	with pytest.raises(ValueError):
-		backendManager.getGeneralConfig_hash('foo')
+		backendManager.getGeneralConfig_hash("foo")
 
 
 def testGetGeneralConfig(backendManager):
 	"""
 	Calling the function with some valid FQDN must not fail.
 	"""
-	values = backendManager.getGeneralConfig_hash('some.client.fqdn')
+	values = backendManager.getGeneralConfig_hash("some.client.fqdn")
 	assert not values
 
 
@@ -62,8 +68,8 @@ def generateLargeConfig(numberOfConfigs):
 
 
 def testDeleteProductDependency(backendManager):
-	firstProduct = LocalbootProduct('prod', '1.0', '1.0')
-	secondProduct = LocalbootProduct('dependency', '1.0', '1.0')
+	firstProduct = LocalbootProduct("prod", "1.0", "1.0")
+	secondProduct = LocalbootProduct("dependency", "1.0", "1.0")
 	backendManager.product_insertObject(firstProduct)
 	backendManager.product_insertObject(secondProduct)
 
@@ -71,10 +77,10 @@ def testDeleteProductDependency(backendManager):
 		productId=firstProduct.id,
 		productVersion=firstProduct.productVersion,
 		packageVersion=firstProduct.packageVersion,
-		productAction='setup',
+		productAction="setup",
 		requiredProductId=secondProduct.id,
-		requiredAction='setup',
-		requirementType='after'
+		requiredAction="setup",
+		requirementType="after",
 	)
 	backendManager.productDependency_insertObject(prodDependency)
 
@@ -88,47 +94,53 @@ def testDeleteProductDependency(backendManager):
 		productVersion=firstProduct.getProductVersion(),
 		packageVersion=firstProduct.getPackageVersion(),
 		depotId=depot.id,
-		locked=False
+		locked=False,
 	)
 	backendManager.productOnDepot_createObjects([productOnDepot])
 
 	assert backendManager.productDependency_getObjects()
 
-	backendManager.deleteProductDependency(firstProduct.id, "", secondProduct.id, requiredProductClassId="unusedParam", requirementType="unused")
+	backendManager.deleteProductDependency(
+		firstProduct.id,
+		"",
+		secondProduct.id,
+		requiredProductClassId="unusedParam",
+		requirementType="unused",
+	)
 
 	assert not backendManager.productDependency_getObjects()
 
 
 @pytest.mark.parametrize("createDepotState", [True, False])
 def testSetProductPropertyWithoutSideEffects(backendManager, createDepotState):
-	product = LocalbootProduct('aboabo', '1.0', '2')
+	product = LocalbootProduct("aboabo", "1.0", "2")
 	backendManager.product_insertObject(product)
 
 	testprop = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"changeMe",
+		propertyId="changeMe",
 		possibleValues=["True", "NO NO NO"],
 		defaultValues=["NOT YOUR IMAGE"],
 		editable=True,
-		multiValue=False
+		multiValue=False,
 	)
 	untouchable = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"ucanttouchthis",
+		propertyId="ucanttouchthis",
 		possibleValues=["Chocolate", "Starfish"],
 		defaultValues=["Chocolate"],
 		editable=True,
-		multiValue=False
+		multiValue=False,
 	)
 	backendManager.productProperty_insertObject(testprop)
 	backendManager.productProperty_insertObject(untouchable)
 
 	configserver = getConfigServer()
-	depot = OpsiDepotserver('biscuit.some.test')
+	depot = OpsiDepotserver("biscuit.some.test")
 	backendManager.host_insertObject(configserver)
 	backendManager.host_insertObject(depot)
 
@@ -138,12 +150,12 @@ def testSetProductPropertyWithoutSideEffects(backendManager, createDepotState):
 			productId=product.id,
 			propertyId=testprop.propertyId,
 			objectId=depot.id,
-			values=testprop.getDefaultValues()
+			values=testprop.getDefaultValues(),
 		)
 		backendManager.productPropertyState_insertObject(depotProdState)
 		expectedStates += 1
 
-	backendManager.setProductProperty(product.id, testprop.propertyId, 'Starfish')
+	backendManager.setProductProperty(product.id, testprop.propertyId, "Starfish")
 
 	results = backendManager.productProperty_getObjects()
 	assert len(results) == 2
@@ -169,18 +181,26 @@ def testSetProductPropertyWithoutSideEffects(backendManager, createDepotState):
 		assert pps.productId == product.id
 		assert pps.propertyId == testprop.propertyId
 		assert pps.objectId == depot.id
-		assert pps.values == ['Starfish']
+		assert pps.values == ["Starfish"]
 
 
-@pytest.mark.parametrize("productExists", [True, False], ids=["product exists", "product missing"])
-@pytest.mark.parametrize("propertyExists", [True, False], ids=["property exists", "property missing"])
-@pytest.mark.parametrize("clientExists", [True, False], ids=["client exists", "client missing"])
-def testSetProductPropertyHandlingMissingObjects(backendManager, productExists, propertyExists, clientExists):
+@pytest.mark.parametrize(
+	"productExists", [True, False], ids=["product exists", "product missing"]
+)
+@pytest.mark.parametrize(
+	"propertyExists", [True, False], ids=["property exists", "property missing"]
+)
+@pytest.mark.parametrize(
+	"clientExists", [True, False], ids=["client exists", "client missing"]
+)
+def testSetProductPropertyHandlingMissingObjects(
+	backendManager, productExists, propertyExists, clientExists
+):
 	expectedProperties = 0
-	productId = 'existence'
+	productId = "existence"
 
 	if productExists:
-		product = LocalbootProduct(productId, '1.0', '1')
+		product = LocalbootProduct(productId, "1.0", "1")
 		backendManager.product_insertObject(product)
 
 		if propertyExists:
@@ -188,45 +208,47 @@ def testSetProductPropertyHandlingMissingObjects(backendManager, productExists, 
 				productId=product.id,
 				productVersion=product.productVersion,
 				packageVersion=product.packageVersion,
-				propertyId=u"changer",
+				propertyId="changer",
 				possibleValues=["True", "False"],
 				defaultValues=["False"],
 				editable=True,
-				multiValue=False
+				multiValue=False,
 			)
 			backendManager.productProperty_insertObject(testprop)
 
 			expectedProperties += 1
 
 	with pytest.raises(BackendMissingDataError):
-		backendManager.setProductProperty(productId, 'nothere', False)
+		backendManager.setProductProperty(productId, "nothere", False)
 
 	assert len(backendManager.productProperty_getObjects()) == expectedProperties
 
 	if clientExists:
-		client = OpsiClient('testclient.domain.invalid')
+		client = OpsiClient("testclient.domain.invalid")
 		backendManager.host_insertObject(client)
 
 	with pytest.raises(BackendMissingDataError):
-		backendManager.setProductProperty(productId, 'nothere', False, 'testclient.domain.invalid')
+		backendManager.setProductProperty(
+			productId, "nothere", False, "testclient.domain.invalid"
+		)
 
 	assert len(backendManager.productProperty_getObjects()) == expectedProperties
 
 
 def testSetProductPropertyHandlingBoolProductProperties(backendManager):
-	product = LocalbootProduct('testproduct', '1.0', '2')
+	product = LocalbootProduct("testproduct", "1.0", "2")
 	backendManager.product_insertObject(product)
 
 	testprop = BoolProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"changeMe",
-		defaultValues=[False]
+		propertyId="changeMe",
+		defaultValues=[False],
 	)
 	backendManager.productProperty_insertObject(testprop)
 
-	client = OpsiClient('testclient.domain.invalid')
+	client = OpsiClient("testclient.domain.invalid")
 	backendManager.host_insertObject(client)
 
 	backendManager.setProductProperty(product.id, testprop.propertyId, True, client.id)
@@ -246,47 +268,49 @@ def testSetProductPropertyHandlingBoolProductProperties(backendManager):
 
 
 def testSetProductPropertyNotConcatenatingStrings(backendManager):
-	product = LocalbootProduct('testproduct', '1.0', '2')
+	product = LocalbootProduct("testproduct", "1.0", "2")
 	backendManager.product_insertObject(product)
 
 	testprop = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"rebootflag",
+		propertyId="rebootflag",
 		possibleValues=["0", "1", "2", "3"],
 		defaultValues=["0"],
 		editable=False,
-		multiValue=False
+		multiValue=False,
 	)
 	donotchange = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"upgradeproducts",
+		propertyId="upgradeproducts",
 		possibleValues=["firefox", "opsi-vhd-control", "winscp"],
 		defaultValues=["firefox", "opsi-vhd-control", "winscp"],
 		editable=True,
-		multiValue=True
+		multiValue=True,
 	)
 
 	backendManager.productProperty_insertObject(testprop)
 	backendManager.productProperty_insertObject(donotchange)
 
-	client = OpsiClient('testclient.domain.invalid')
+	client = OpsiClient("testclient.domain.invalid")
 	backendManager.host_insertObject(client)
 
 	sideeffectPropState = ProductPropertyState(
 		productId=product.id,
 		propertyId=donotchange.propertyId,
 		objectId=client.id,
-		values=donotchange.getDefaultValues()
+		values=donotchange.getDefaultValues(),
 	)
 	backendManager.productPropertyState_insertObject(sideeffectPropState)
 
 	backendManager.setProductProperty(product.id, testprop.propertyId, "1", client.id)
 
-	result = backendManager.productProperty_getObjects(propertyId=donotchange.propertyId)
+	result = backendManager.productProperty_getObjects(
+		propertyId=donotchange.propertyId
+	)
 	assert len(result) == 1
 	result = result[0]
 	assert isinstance(result, UnicodeProductProperty)
@@ -316,26 +340,28 @@ def testSetProductPropertyNotConcatenatingStrings(backendManager):
 
 
 def testSetProductPropertyFailingIfMultivalueIsFalse(backendManager):
-	product = LocalbootProduct('testproduct', '1.0', '2')
+	product = LocalbootProduct("testproduct", "1.0", "2")
 	backendManager.product_insertObject(product)
 
 	testprop = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"rebootflag",
+		propertyId="rebootflag",
 		possibleValues=["0", "1", "2", "3"],
 		defaultValues=["0"],
 		editable=False,
-		multiValue=False
+		multiValue=False,
 	)
 	backendManager.productProperty_insertObject(testprop)
 
-	client = OpsiClient('testclient.domain.invalid')
+	client = OpsiClient("testclient.domain.invalid")
 	backendManager.host_insertObject(client)
 
 	with pytest.raises(ValueError):
-		backendManager.setProductProperty(product.id, testprop.propertyId, ["1", "2"], client.id)
+		backendManager.setProductProperty(
+			product.id, testprop.propertyId, ["1", "2"], client.id
+		)
 
 
 def testGetDepotId(backendManager):
@@ -347,48 +373,54 @@ def testGetDepotId(backendManager):
 	backendManager.host_createObjects(depots)
 	backendManager.host_createObjects(configServer)
 
-	backendManager.config_createObjects([{
-		"id": u'clientconfig.depot.id',
-		"type": "UnicodeConfig",
-		"values": [configServer.id],
-	}])
+	backendManager.config_createObjects(
+		[
+			{
+				"id": "clientconfig.depot.id",
+				"type": "UnicodeConfig",
+				"values": [configServer.id],
+			}
+		]
+	)
 
 	client = clients[0]
 	depotId = depots[0].id
-	backendManager.configState_create(u'clientconfig.depot.id', client.id, values=depotId)
+	backendManager.configState_create(
+		"clientconfig.depot.id", client.id, values=depotId
+	)
 
 	assert depotId == backendManager.getDepotId(clientId=client.id)
 
 
 def testSetProductPropertiesWithMultipleValues(backendManager):
-	product = LocalbootProduct('testproduct', '1.0', '2')
+	product = LocalbootProduct("testproduct", "1.0", "2")
 	backendManager.product_insertObject(product)
 
 	testprop = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"rebootflag",
+		propertyId="rebootflag",
 		possibleValues=["0", "1", "2", "3"],
 		defaultValues=["0"],
 		editable=False,
-		multiValue=True
+		multiValue=True,
 	)
 	donotchange = UnicodeProductProperty(
 		productId=product.id,
 		productVersion=product.productVersion,
 		packageVersion=product.packageVersion,
-		propertyId=u"upgradeproducts",
+		propertyId="upgradeproducts",
 		possibleValues=["firefox", "opsi-vhd-control", "winscp"],
 		defaultValues=["firefox", "opsi-vhd-control", "winscp"],
 		editable=True,
-		multiValue=True
+		multiValue=True,
 	)
 
 	backendManager.productProperty_insertObject(testprop)
 	backendManager.productProperty_insertObject(donotchange)
 
-	client = OpsiClient('testclient.domain.invalid')
+	client = OpsiClient("testclient.domain.invalid")
 	backendManager.host_insertObject(client)
 
 	depotIds = set()
@@ -397,9 +429,13 @@ def testSetProductPropertiesWithMultipleValues(backendManager):
 		backendManager.host_insertObject(depot)
 
 	for depotId in depotIds:
-		backendManager.setProductProperties(product.id, {testprop.propertyId: ["1", "2"]}, depotId)
+		backendManager.setProductProperties(
+			product.id, {testprop.propertyId: ["1", "2"]}, depotId
+		)
 
-	result = backendManager.productProperty_getObjects(propertyId=donotchange.propertyId)
+	result = backendManager.productProperty_getObjects(
+		propertyId=donotchange.propertyId
+	)
 	assert len(result) == 1
 	result = result[0]
 	assert isinstance(result, UnicodeProductProperty)

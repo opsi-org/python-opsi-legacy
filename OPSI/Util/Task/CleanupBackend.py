@@ -32,7 +32,7 @@ _CHUNK_SIZE = 500
 logger = get_logger("opsi.general")
 
 
-def cleanupBackend(backend=None):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def cleanupBackend(backend=None):
 	"""
 	Clean up data from your backends.
 
@@ -43,16 +43,17 @@ def cleanupBackend(backend=None):  # pylint: disable=too-many-locals,too-many-br
 BackendManager from default paths.
 	:type backend: OPSI.Backend.Backend
 	"""
+
 	def usesMysqlBackend():
 		logger.notice("Parsing dispatch.conf")
-		bdc = BackendDispatchConfigFile('/etc/opsi/backendManager/dispatch.conf')
+		bdc = BackendDispatchConfigFile("/etc/opsi/backendManager/dispatch.conf")
 		dispatchConfig = bdc.parse()
 		for entry in dispatchConfig:
 			(regex, backends) = entry
-			if not re.search(regex, 'backend_createBase'):
+			if not re.search(regex, "backend_createBase"):
 				continue
 
-			if 'mysql' in backends:
+			if "mysql" in backends:
 				return True
 
 		return False
@@ -61,18 +62,20 @@ BackendManager from default paths.
 
 	if backend is None:
 		backend = BackendManager(
-			dispatchConfigFile='/etc/opsi/backendManager/dispatch.conf',
-			backendConfigDir='/etc/opsi/backends',
-			extensionConfigDir='/etc/opsi/backendManager/extend.d',
+			dispatchConfigFile="/etc/opsi/backendManager/dispatch.conf",
+			backendConfigDir="/etc/opsi/backends",
+			extensionConfigDir="/etc/opsi/backendManager/extend.d",
 			depotBackend=False,
 			dispatchIgnoreModules=["OpsiPXEConfd", "DHCPD", "HostControl"],
 		)
 
 		try:
 			if usesMysqlBackend():
-				logger.notice("Mysql-backend detected. Trying to cleanup mysql-backend first")
+				logger.notice(
+					"Mysql-backend detected. Trying to cleanup mysql-backend first"
+				)
 				cleanUpMySQL()
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning(err)
 
 	logger.notice("Cleaning up groups")
@@ -81,13 +84,21 @@ BackendManager from default paths.
 	logger.notice("Cleaning up products")
 	cleanUpProducts(backend)
 
-	logger.debug('Getting current depots...')
-	depotIds = set(depot.id for depot in backend.host_getObjects(type=["OpsiConfigserver", "OpsiDepotserver"]))  # pylint: disable=maybe-no-member
-	logger.debug('Depots are: %s', depotIds)
+	logger.debug("Getting current depots...")
+	depotIds = set(
+		depot.id
+		for depot in backend.host_getObjects(
+			type=["OpsiConfigserver", "OpsiDepotserver"]
+		)
+	)
+	logger.debug("Depots are: %s", depotIds)
 
-	logger.debug('Getting current products...')
-	productIdents = set(product.getIdent(returnType='unicode') for product in backend.product_getObjects())
-	logger.debug('Product idents are: %s', productIdents)
+	logger.debug("Getting current products...")
+	productIdents = set(
+		product.getIdent(returnType="unicode")
+		for product in backend.product_getObjects()
+	)
+	logger.debug("Product idents are: %s", productIdents)
 
 	logger.notice("Cleaning up product on depots")
 	cleanUpProductOnDepots(backend, depotIds, productIdents)
@@ -99,46 +110,62 @@ BackendManager from default paths.
 	productPropertyIdents = set()
 	deleteProductProperties = []
 	productPropertiesToCleanup = {}
-	for productProperty in backend.productProperty_getObjects():  # pylint: disable=maybe-no-member
+	for productProperty in backend.productProperty_getObjects():
 		productIdent = f"{productProperty.productId};{productProperty.productVersion};{productProperty.packageVersion}"
 		if not productProperty.editable and productProperty.possibleValues:
 			productPropertyIdent = f"{productIdent};{productProperty.propertyId}"
 			productPropertiesToCleanup[productPropertyIdent] = productProperty
 
 		if productIdent not in productIdents:
-			logger.info("Marking productProperty %s of non existent product '%s' for deletion", productProperty, productIdent)
+			logger.info(
+				"Marking productProperty %s of non existent product '%s' for deletion",
+				productProperty,
+				productIdent,
+			)
 			deleteProductProperties.append(productProperty)
 		else:
-			productPropertyIdent = f"{productProperty.productId};{productProperty.propertyId}"
+			productPropertyIdent = (
+				f"{productProperty.productId};{productProperty.propertyId}"
+			)
 			productPropertyIdents.add(productPropertyIdent)
 
 	if deleteProductProperties:
 		for productProperties in chunk(deleteProductProperties, _CHUNK_SIZE):
 			logger.debug("Deleting product properties: '%s'", productProperties)
-			backend.productProperty_deleteObjects(productProperties)  # pylint: disable=maybe-no-member
+			backend.productProperty_deleteObjects(productProperties)
 
 	logger.notice("Cleaning up product property states")
 	deleteProductPropertyStates = []
-	for productPropertyState in backend.productPropertyState_getObjects():  # pylint: disable=maybe-no-member
-		productPropertyIdent = f"{productPropertyState.productId};{productPropertyState.propertyId}"
+	for productPropertyState in backend.productPropertyState_getObjects():
+		productPropertyIdent = (
+			f"{productPropertyState.productId};{productPropertyState.propertyId}"
+		)
 		if productPropertyIdent not in productPropertyIdents:
 			logger.info(
 				"Marking productPropertyState %s of non existent productProperty '%s' for deletion",
-				productPropertyState, productPropertyIdent
+				productPropertyState,
+				productPropertyIdent,
 			)
 			deleteProductPropertyStates.append(productPropertyState)
 
 	if deleteProductPropertyStates:
 		for productPropertyStates in chunk(deleteProductPropertyStates, _CHUNK_SIZE):
-			logger.debug("Deleting product property states: '%s'", productPropertyStates)
-			backend.productPropertyState_deleteObjects(productPropertyStates)  # pylint: disable=maybe-no-member
+			logger.debug(
+				"Deleting product property states: '%s'", productPropertyStates
+			)
+			backend.productPropertyState_deleteObjects(productPropertyStates)
 
-	for depot in backend.host_getObjects(type='OpsiDepotserver'):  # pylint: disable=maybe-no-member,too-many-nested-blocks
-		objectIds = set(ClientToDepot['clientId'] for ClientToDepot in backend.configState_getClientToDepotserver(depotIds=depot.id))
+	for depot in backend.host_getObjects(type="OpsiDepotserver"):
+		objectIds = set(
+			ClientToDepot["clientId"]
+			for ClientToDepot in backend.configState_getClientToDepotserver(
+				depotIds=depot.id
+			)
+		)
 		objectIds.add(depot.id)
 
 		productOnDepotIdents = {}
-		for productOnDepot in backend.productOnDepot_getObjects(depotId=depot.id):  # pylint: disable=maybe-no-member
+		for productOnDepot in backend.productOnDepot_getObjects(depotId=depot.id):
 			productIdent = f"{productOnDepot.productId};{productOnDepot.productVersion};{productOnDepot.packageVersion}"
 			productOnDepotIdents[productOnDepot.productId] = productIdent
 
@@ -147,10 +174,8 @@ BackendManager from default paths.
 
 		deleteProductPropertyStates = []
 		updateProductPropertyStates = []
-		for productPropertyState in backend.productPropertyState_getObjects(  # pylint: disable=maybe-no-member
-			objectId=objectIds,
-			productId=list(productOnDepotIdents),
-			propertyId=[]
+		for productPropertyState in backend.productPropertyState_getObjects(
+			objectId=objectIds, productId=list(productOnDepotIdents), propertyId=[]
 		):
 			productIdent = productOnDepotIdents.get(productPropertyState.productId)
 			if not productIdent:
@@ -167,12 +192,15 @@ BackendManager from default paths.
 				if value in productProperty.possibleValues:
 					newValues.append(value)
 					continue
-				if productProperty.getType() == 'BoolProductProperty' and forceBool(value) in productProperty.possibleValues:
+				if (
+					productProperty.getType() == "BoolProductProperty"
+					and forceBool(value) in productProperty.possibleValues
+				):
 					newValues.append(forceBool(value))
 					changedValues.append(value)
 					changed = True
 					continue
-				if productProperty.getType() == 'UnicodeProductProperty':
+				if productProperty.getType() == "UnicodeProductProperty":
 					newValue = None
 					for possibleValue in productProperty.possibleValues:
 						if forceUnicodeLower(possibleValue) == forceUnicodeLower(value):
@@ -189,27 +217,38 @@ BackendManager from default paths.
 				if not newValues:
 					logger.info(
 						"Marking productPropertyState %s for deletion: no value in possible values (%s)",
-						productPropertyState, removeValues
+						productPropertyState,
+						removeValues,
 					)
 					deleteProductPropertyStates.append(productPropertyState)
 				else:
 					productPropertyState.setValues(newValues)
 					logger.info(
 						"Marking productPropertyState %s for update: values not in possible values: %s, values corrected: %s",
-						productPropertyState, removeValues, changedValues
+						productPropertyState,
+						removeValues,
+						changedValues,
 					)
 					updateProductPropertyStates.append(productPropertyState)
 
 		if deleteProductPropertyStates:
-			for productPropertyStates in chunk(deleteProductPropertyStates, _CHUNK_SIZE):
-				logger.debug("Deleting product property states: '%s'", productPropertyStates)
-				backend.productPropertyState_deleteObjects(productPropertyStates)  # pylint: disable=maybe-no-member
+			for productPropertyStates in chunk(
+				deleteProductPropertyStates, _CHUNK_SIZE
+			):
+				logger.debug(
+					"Deleting product property states: '%s'", productPropertyStates
+				)
+				backend.productPropertyState_deleteObjects(productPropertyStates)
 			del deleteProductPropertyStates
 
 		if updateProductPropertyStates:
-			for productPropertyStates in chunk(updateProductPropertyStates, _CHUNK_SIZE):
-				logger.debug("Updating product property states: '%s'", productPropertyStates)
-				backend.productPropertyState_updateObjects(productPropertyStates)  # pylint: disable=maybe-no-member
+			for productPropertyStates in chunk(
+				updateProductPropertyStates, _CHUNK_SIZE
+			):
+				logger.debug(
+					"Updating product property states: '%s'", productPropertyStates
+				)
+				backend.productPropertyState_updateObjects(productPropertyStates)
 			del updateProductPropertyStates
 
 	logger.notice("Cleaning up config states")
@@ -222,7 +261,7 @@ BackendManager from default paths.
 	cleanUpAuditSoftwareOnClients(backend)
 
 
-def cleanUpMySQL(backendConfigFile='/etc/opsi/backends/mysql.conf'):
+def cleanUpMySQL(backendConfigFile="/etc/opsi/backends/mysql.conf"):
 	"""
 	Clean up an MySQL backend.
 
@@ -237,7 +276,9 @@ used MySQL backend.
 
 	logger.notice(
 		"Connection to database '%s' on '%s' as user '%s'",
-		config["database"], config["address"], config["username"]
+		config["database"],
+		config["address"],
+		config["username"],
 	)
 	mysql = MySQL(**config)
 	with mysql.session() as session:
@@ -245,22 +286,30 @@ used MySQL backend.
 		deleteIds = []
 		found = []
 		for res in mysql.getSet(
-			session,
-			"SELECT * FROM PRODUCT_PROPERTY_VALUE WHERE isDefault like '1'"
+			session, "SELECT * FROM PRODUCT_PROPERTY_VALUE WHERE isDefault like '1'"
 		):
-			ident = ';'.join([
-				res['propertyId'], res['productId'], res['productVersion'], res['productVersion'], res['value']]
+			ident = ";".join(
+				[
+					res["propertyId"],
+					res["productId"],
+					res["productVersion"],
+					res["productVersion"],
+					res["value"],
+				]
 			)
 			if ident not in found:
 				found.append(ident)
-			elif res['value'] in ('0', '1') and res['product_property_id'] not in deleteIds:
-				deleteIds.append(res['product_property_id'])
+			elif (
+				res["value"] in ("0", "1")
+				and res["product_property_id"] not in deleteIds
+			):
+				deleteIds.append(res["product_property_id"])
 
 		for ID in deleteIds:
 			logger.notice("Deleting PropertyValue id: %s", ID)
 			mysql.execute(
 				session,
-				f"DELETE FROM `PRODUCT_PROPERTY_VALUE` where `product_property_id` = '{ID}'"
+				f"DELETE FROM `PRODUCT_PROPERTY_VALUE` where `product_property_id` = '{ID}'",
 			)
 
 
@@ -273,14 +322,15 @@ def cleanUpGroups(backend):
 	:type backend: OPSI.Backend.Backend
 	"""
 	updatedGroups = []
-	groups = backend.group_getObjects(type='HostGroup')
+	groups = backend.group_getObjects(type="HostGroup")
 	groupIds = set(group.id for group in groups)
 
 	for group in groups:
 		if group.getParentGroupId() and group.getParentGroupId() not in groupIds:
 			logger.info(
 				"Removing parent group id '%s' from group '%s' because parent group does not exist",
-				group.parentGroupId, group.id
+				group.parentGroupId,
+				group.id,
 			)
 			group.parentGroupId = None
 			updatedGroups.append(group)
@@ -300,16 +350,18 @@ def cleanUpProducts(backend):
 	"""
 	productIdents = set()
 	for productOnDepot in backend.productOnDepot_getObjects():
-		productIdent = ";".join((
-			productOnDepot.productId,
-			productOnDepot.productVersion,
-			productOnDepot.packageVersion
-		))
+		productIdent = ";".join(
+			(
+				productOnDepot.productId,
+				productOnDepot.productVersion,
+				productOnDepot.packageVersion,
+			)
+		)
 		productIdents.add(productIdent)
 
 	deleteProducts = []
 	for product in backend.product_getObjects():
-		if product.getIdent(returnType='unicode') not in productIdents:
+		if product.getIdent(returnType="unicode") not in productIdents:
 			logger.info("Marking unreferenced product %s for deletion", product)
 			deleteProducts.append(product)
 
@@ -332,19 +384,25 @@ product is not existing anymore.
 	"""
 	deleteProductOnDepots = []
 	for productOnDepot in backend.productOnDepot_getObjects():
-		productIdent = ";".join([
-			productOnDepot.productId, productOnDepot.productVersion, productOnDepot.packageVersion
-		])
+		productIdent = ";".join(
+			[
+				productOnDepot.productId,
+				productOnDepot.productVersion,
+				productOnDepot.packageVersion,
+			]
+		)
 		if productOnDepot.depotId not in depotIds:
 			logger.info(
 				"Marking product on depot %s for deletion, because opsi depot Server '%s' not found",
-				productOnDepot, productOnDepot.depotId
+				productOnDepot,
+				productOnDepot.depotId,
 			)
 			deleteProductOnDepots.append(productOnDepot)
 		elif productIdent not in existingProductIdents:
 			logger.info(
 				"Marking product on depot %s with missing product reference "
-				"for deletion", productOnDepot
+				"for deletion",
+				productOnDepot,
 			)
 			deleteProductOnDepots.append(productOnDepot)
 
@@ -363,18 +421,20 @@ is either *not_installed* without an action request set.
 	:type backend: OPSI.Backend.Backend
 	"""
 	deleteProductOnClients = []
-	clientIds = set(client.id for client in backend.host_getObjects(type=["OpsiClient"]))
+	clientIds = set(
+		client.id for client in backend.host_getObjects(type=["OpsiClient"])
+	)
 
 	for productOnClient in backend.productOnClient_getObjects():
 		if productOnClient.clientId not in clientIds:
 			logger.info(
 				"Marking productOnClient %s for deletion, client doesn't exists",
-				productOnClient
+				productOnClient,
 			)
 			deleteProductOnClients.append(productOnClient)
 		elif (
-			productOnClient.installationStatus == 'not_installed'
-			and productOnClient.actionRequest == 'none'
+			productOnClient.installationStatus == "not_installed"
+			and productOnClient.actionRequest == "none"
 		):
 			logger.info("Marking productOnClient %s for deletion", productOnClient)
 			deleteProductOnClients.append(productOnClient)
@@ -411,7 +471,8 @@ def cleanUpConfigStates(backend):
 		if configState.configId not in configIds:
 			logger.info(
 				"Marking configState %s of non existent config '%s' for deletion",
-				configState, configState.configId
+				configState,
+				configState.configId,
 			)
 			deleteConfigStates.append(configState)
 
@@ -431,17 +492,24 @@ def cleanUpAuditSoftwares(backend):
 
 	idents = set()
 	for aso in backend.auditSoftwareOnClient_getHashes():
-		idents.add(f"{aso['name']};{aso['version']};{aso['subVersion']};{aso['language']};{aso['architecture']}")
+		idents.add(
+			f"{aso['name']};{aso['version']};{aso['subVersion']};{aso['language']};{aso['architecture']}"
+		)
 	for aso in backend.auditSoftwareToLicensePool_getHashes():
-		idents.add(f"{aso['name']};{aso['version']};{aso['subVersion']};{aso['language']};{aso['architecture']}")
+		idents.add(
+			f"{aso['name']};{aso['version']};{aso['subVersion']};{aso['language']};{aso['architecture']}"
+		)
 
 	for aso in backend.auditSoftware_getHashes():
 		ident = f"{aso['name']};{aso['version']};{aso['subVersion']};{aso['language']};{aso['architecture']}"
 		if ident not in idents:
 			logger.info("Deleting unreferenced audit software %s", ident)
 			backend.auditSoftware_delete(
-				aso['name'], aso['version'],
-				aso['subVersion'], aso['language'], aso['architecture']
+				aso["name"],
+				aso["version"],
+				aso["subVersion"],
+				aso["language"],
+				aso["architecture"],
 			)
 
 
@@ -462,6 +530,10 @@ def cleanUpAuditSoftwareOnClients(backend):
 		if ident not in idents:
 			logger.info("Deleting audit software on client '%s'", ident)
 			backend.auditSoftwareOnClient_delete(
-				aso['name'], aso['version'], aso['subVersion'],
-				aso['language'], aso['architecture'], aso['clientId']
+				aso["name"],
+				aso["version"],
+				aso["subVersion"],
+				aso["language"],
+				aso["architecture"],
+				aso["clientId"],
 			)

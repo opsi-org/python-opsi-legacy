@@ -15,6 +15,10 @@ from __future__ import absolute_import
 
 import os
 import re
+import warnings
+
+from opsicommon.logging import get_logger
+from opsicommon.objects import BaseObject
 
 from OPSI.Backend.Base import Backend, ExtendedBackend, ExtendedConfigDataBackend
 from OPSI.Backend.Depotserver import DepotserverBackend
@@ -22,17 +26,15 @@ from OPSI.Backend.HostControl import HostControlBackend
 from OPSI.Backend.HostControlSafe import HostControlSafeBackend
 from OPSI.Exceptions import BackendConfigurationError
 from OPSI.Types import forceBool
-from opsicommon.logging import get_logger
-from opsicommon.objects import BaseObject
 
 from .AccessControl import BackendAccessControl
 from .Config import loadBackendConfig
 from .Dispatcher import BackendDispatcher
 from .Extender import BackendExtender
 
-__all__ = ('BackendManager', 'backendManagerFactory')
+__all__ = ("BackendManager", "backendManagerFactory")
 
-_BACKEND_CONFIG_NAME_REGEX = re.compile(r'^[a-zA-Z0-9-_]+$')
+_BACKEND_CONFIG_NAME_REGEX = re.compile(r"^[a-zA-Z0-9-_]+$")
 
 logger = get_logger("opsi.general")
 
@@ -44,16 +46,17 @@ class BackendManager(ExtendedBackend):
 	This includes extending the backends, dispatching calls to backends,
 	limiting the access through ACL.
 	"""
+
 	default_config = {
-		"dispatchConfigFile": '/etc/opsi/backendManager/dispatch.conf',
-		"backendConfigDir": '/etc/opsi/backends',
-		"extensionConfigDir": '/etc/opsi/backendManager/extend.d',
+		"dispatchConfigFile": "/etc/opsi/backendManager/dispatch.conf",
+		"backendConfigDir": "/etc/opsi/backends",
+		"extensionConfigDir": "/etc/opsi/backendManager/extend.d",
 		"depotBackend": False,
 		"hostControlBackend": True,
-		"hostControlSafeBackend": True
+		"hostControlSafeBackend": True,
 	}
 
-	def __init__(self, **kwargs):  # pylint: disable=super-init-not-called,too-many-locals,too-many-branches,too-many-statements
+	def __init__(self, **kwargs):
 		"""
 		Creating a BackendManager.
 
@@ -112,7 +115,7 @@ class BackendManager(ExtendedBackend):
 					bmc[key] = val
 		kwargs = bmc
 
-		Backend.__init__(self, **kwargs)  # pylint: disable=non-parent-init-called
+		Backend.__init__(self, **kwargs)
 
 		dispatch = False
 		extend = False
@@ -126,35 +129,35 @@ class BackendManager(ExtendedBackend):
 		loadBackend = None
 
 		argumentToDelete = set()
-		for (option, value) in kwargs.items():
+		for option, value in kwargs.items():
 			option = option.lower()
-			if option == 'backend':
+			if option == "backend":
 				if isinstance(value, str):
 					loadBackend = value
 				else:
 					self._backend = value
 				argumentToDelete.add(option)
-			elif option == 'backendconfigdir':
+			elif option == "backendconfigdir":
 				self._backendConfigDir = value
-			elif option in ('dispatchconfig', 'dispatchconfigfile') and value:
+			elif option in ("dispatchconfig", "dispatchconfigfile") and value:
 				dispatch = True
-			elif option == 'depotbackend':
+			elif option == "depotbackend":
 				depotBackend = forceBool(value)
-			elif option == 'hostcontrolbackend':
+			elif option == "hostcontrolbackend":
 				hostControlBackend = forceBool(value)
-			elif option == 'hostcontrolsafebackend':
+			elif option == "hostcontrolsafebackend":
 				hostControlSafeBackend = forceBool(value)
-			elif option == 'extensionconfigdir' and value:
+			elif option == "extensionconfigdir" and value:
 				extensionConfigDir = value
 				extend = True
-			elif option == 'extensionclass':
+			elif option == "extensionclass":
 				extensionClass = value
 				extend = True
-			elif option == 'extend':
+			elif option == "extend":
 				extend = forceBool(value)
-			elif option in ('acl', 'aclfile') and value:
+			elif option in ("acl", "aclfile") and value:
 				accessControl = True
-			elif option == 'accesscontrolclass':
+			elif option == "accesscontrolclass":
 				accessControlClass = value
 
 		for argument in argumentToDelete:
@@ -175,7 +178,9 @@ class BackendManager(ExtendedBackend):
 
 		if extend or depotBackend:
 			if dispatch and self._backend.is_extended_config_data_backend:
-				logger.info("* BackendManager is using BackendDispatcher as ExtendedConfigDataBackend")
+				logger.info(
+					"* BackendManager is using BackendDispatcher as ExtendedConfigDataBackend"
+				)
 			else:
 				logger.info("* BackendManager is creating ExtendedConfigDataBackend")
 				# DepotserverBackend/BackendExtender need ExtendedConfigDataBackend backend
@@ -190,29 +195,37 @@ class BackendManager(ExtendedBackend):
 			logger.info("* BackendManager is creating HostControlBackend")
 			hostControlBackendConfig = dict(kwargs)
 			try:
-				hostControlBackendConfig.update(self.__loadBackendConfig('hostcontrol')['config'])
-			except Exception as err:  # pylint: disable=broad-except
-				logger.error(
-					"Failed to load configuration for HostControlBackend: %s",
-					err
+				hostControlBackendConfig.update(
+					self.__loadBackendConfig("hostcontrol")["config"]
 				)
-			self._backend = HostControlBackend(self._backend, **hostControlBackendConfig)
+			except Exception as err:
+				logger.error(
+					"Failed to load configuration for HostControlBackend: %s", err
+				)
+			self._backend = HostControlBackend(
+				self._backend, **hostControlBackendConfig
+			)
 
 		if hostControlSafeBackend:
 			logger.info("* BackendManager is creating HostControlSafeBackend")
 			hostControlSafeBackendConfig = dict(kwargs)
 			try:
-				hostControlSafeBackendConfig.update(self.__loadBackendConfig('hostcontrol')['config'])
-			except Exception as err:  # pylint: disable=broad-except
-				logger.error(
-					"Failed to load configuration for HostControlSafeBackend: %s",
-					err
+				hostControlSafeBackendConfig.update(
+					self.__loadBackendConfig("hostcontrol")["config"]
 				)
-			self._backend = HostControlSafeBackend(self._backend, **hostControlSafeBackendConfig)
+			except Exception as err:
+				logger.error(
+					"Failed to load configuration for HostControlSafeBackend: %s", err
+				)
+			self._backend = HostControlSafeBackend(
+				self._backend, **hostControlSafeBackendConfig
+			)
 
 		if accessControl:
 			logger.info("* BackendManager is creating %s", accessControlClass.__name__)
-			self._backend = self.backendAccessControl = accessControlClass(backend=self._backend, **kwargs)
+			self._backend = self.backendAccessControl = accessControlClass(
+				backend=self._backend, **kwargs
+			)
 
 		if extensionConfigDir or extensionClass:
 			logger.info("* BackendManager is creating BackendExtender")
@@ -222,13 +235,15 @@ class BackendManager(ExtendedBackend):
 
 	def get_jsonrpc_backend(self):
 		dispatcher = self._get_backend_dispatcher()
-		return dispatcher._backends.get("jsonrpc", {}).get("instance")  # pylint: disable=no-member,protected-access
+		return dispatcher._backends.get("jsonrpc", {}).get("instance")
 
 	def __loadBackendConfig(self, name):
 		if not self._backendConfigDir:
 			raise BackendConfigurationError("Backend config dir not given")
 		if not os.path.exists(self._backendConfigDir):
-			raise BackendConfigurationError(f"Backend config dir '{self._backendConfigDir}' not found")
+			raise BackendConfigurationError(
+				f"Backend config dir '{self._backendConfigDir}' not found"
+			)
 		if not _BACKEND_CONFIG_NAME_REGEX.search(name):
 			raise ValueError(f"Bad backend config name '{name}'")
 		name = name.lower()
@@ -237,24 +252,43 @@ class BackendManager(ExtendedBackend):
 
 	def __loadBackend(self, name):
 		config = self.__loadBackendConfig(name)
-		if not config['module']:
-			raise BackendConfigurationError(f"No module defined in backend config file for '{name}'")
-		if not isinstance(config['config'], dict):
-			raise BackendConfigurationError(f"Bad type for 'config' var in backend config file for '{name}': has to be dict")
-		config['config']['name'] = name
-		moduleName = config['module']
+		if not config["module"]:
+			raise BackendConfigurationError(
+				f"No module defined in backend config file for '{name}'"
+			)
+		if not isinstance(config["config"], dict):
+			raise BackendConfigurationError(
+				f"Bad type for 'config' var in backend config file for '{name}': has to be dict"
+			)
+		config["config"]["name"] = name
+		moduleName = config["module"]
 		backendClassName = f"{config['module']}Backend"
-		exec(f'from OPSI.Backend.{moduleName} import {backendClassName}')  # pylint: disable=exec-used
-		return eval(f'{backendClassName}(**config["config"])')  # pylint: disable=eval-used
+		exec_locals: dict[str, object] = {}
+		with warnings.catch_warnings():
+			exec(
+				f"from OPSI.Backend.{moduleName} import {backendClassName}",
+				None,
+				exec_locals,
+			)
+		return exec_locals[backendClassName](**config["config"])
 
 	_loadBackend = __loadBackend
 
+
 def backendManagerFactory(
-	user, password, dispatchConfigFile, backendConfigDir,
-	extensionConfigDir, aclFile, depotId, postpath, context, **kwargs
-):  # pylint: disable=too-many-arguments
+	user,
+	password,
+	dispatchConfigFile,
+	backendConfigDir,
+	extensionConfigDir,
+	aclFile,
+	depotId,
+	postpath,
+	context,
+	**kwargs,
+):
 	backendManager = None
-	if len(postpath) == 2 and postpath[0] == 'backend':
+	if len(postpath) == 2 and postpath[0] == "backend":
 		backendManager = BackendManager(
 			backend=postpath[1],
 			accessControlContext=context,
@@ -262,11 +296,11 @@ def backendManagerFactory(
 			aclFile=aclFile,
 			username=user,
 			password=password,
-			**kwargs
+			**kwargs,
 		)
-	elif len(postpath) == 2 and postpath[0] == 'extend':
+	elif len(postpath) == 2 and postpath[0] == "extend":
 		extendPath = postpath[1]
-		if not re.search(r'^[a-zA-Z0-9_-]+$', extendPath):
+		if not re.search(r"^[a-zA-Z0-9_-]+$", extendPath):
 			raise ValueError(f"Extension config path '{extendPath}' refused")
 		backendManager = BackendManager(
 			dispatchConfigFile=dispatchConfigFile,
@@ -279,7 +313,7 @@ def backendManagerFactory(
 			hostControlSafeBackend=True,
 			username=user,
 			password=password,
-			**kwargs
+			**kwargs,
 		)
 	else:
 		backendManager = BackendManager(
@@ -293,7 +327,7 @@ def backendManagerFactory(
 			hostControlSafeBackend=True,
 			username=user,
 			password=password,
-			**kwargs
+			**kwargs,
 		)
 
 	return backendManager

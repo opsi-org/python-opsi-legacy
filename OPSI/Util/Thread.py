@@ -14,7 +14,7 @@ from queue import Empty, Queue
 from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
-global_pool = None  # pylint: disable=invalid-name
+global_pool = None
 
 
 class ThreadPoolException(Exception):
@@ -22,11 +22,11 @@ class ThreadPoolException(Exception):
 
 
 def getGlobalThreadPool(*args, **kwargs):
-	global global_pool  # pylint: disable=global-statement,invalid-name
+	global global_pool
 	if not global_pool:
 		global_pool = ThreadPool(*args, **kwargs)
 	else:
-		size = kwargs.get('size', 0)
+		size = kwargs.get("size", 0)
 		global_pool.increaseUsageCount()
 		if global_pool.size < size:
 			global_pool.adjustSize(size)
@@ -39,7 +39,9 @@ def _async_raise(tid, exctype):
 	if not inspect.isclass(exctype):
 		raise TypeError("Only types can be raised (not instances)")
 
-	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
+	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+		ctypes.c_long(tid), ctypes.py_object(exctype)
+	)
 	if res == 0:
 		logger.warning("Invalid thread id %s", tid)
 		return
@@ -55,12 +57,12 @@ class KillableThread(threading.Thread):
 		"""determines this (self's) thread id"""
 		# do we have it cached?
 		if hasattr(self, "_thread_id"):
-			return self._thread_id  # pylint: disable=access-member-before-definition
+			return self._thread_id
 
 		# no, look for it in the _active dict
-		for tid, tobj in threading._active.items():  # pylint: disable=protected-access
+		for tid, tobj in threading._active.items():
 			if tobj is self:
-				self._thread_id = tid  # pylint: disable=attribute-defined-outside-init
+				self._thread_id = tid
 				return tid
 
 		logger.warning("Cannot terminate, could not determine the thread's id")
@@ -80,7 +82,6 @@ class KillableThread(threading.Thread):
 
 
 class ThreadPool:
-
 	def __init__(self, size=20, autostart=True):
 		self.size = int(size)
 		self.started = False
@@ -188,7 +189,7 @@ class Worker(threading.Thread):
 						result = function(*args, **kwargs)
 						success = True
 						errors = None
-					except Exception as error:  # pylint: disable=broad-except
+					except Exception as error:
 						logger.debug("Problem running function: '%s'", error)
 						result = None
 						errors = error

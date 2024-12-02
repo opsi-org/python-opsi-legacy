@@ -8,8 +8,6 @@ opsi python library - Posix
 Functions and classes for the use with a POSIX operating system.
 """
 
-# pylint: disable=too-many-lines
-
 import codecs
 import copy as pycopy
 import datetime
@@ -32,7 +30,7 @@ from signal import SIGKILL
 
 import psutil
 from opsicommon.logging import LOG_NONE, get_logger, logging_config
-from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from opsicommon.objects import *  # noqa: F403
 from opsicommon.system.subprocess import (
 	get_subprocess_environment as opsicommon_get_subprocess_environment,
 )
@@ -56,7 +54,7 @@ from opsicommon.utils import frozen_lru_cache
 from OPSI.Exceptions import CommandNotFoundException
 from OPSI.Util import getfqdn, objectToBeautifiedText, removeUnit
 
-distro_module = None  # pylint: disable=invalid-name
+distro_module = None
 if platform.system() == "Linux":
 	import distro as distro_module
 
@@ -133,245 +131,245 @@ LD_LIBRARY_EXCLUDE_LIST = ["/usr/lib/opsiclientd"]
 logger = get_logger("opsi.general")
 
 hooks = []
-x86_64 = False  # pylint: disable=invalid-name
+x86_64 = False
 try:
 	if "64bit" in platform.architecture():
-		x86_64 = True  # pylint: disable=invalid-name
-except Exception:  # pylint: disable=broad-except
+		x86_64 = True
+except Exception:
 	pass
 
 
-class SystemSpecificHook:  # pylint: disable=too-many-public-methods
+class SystemSpecificHook:
 	def __init__(self):
 		pass
 
-	def pre_reboot(self, wait):  # pylint: disable=no-self-use
+	def pre_reboot(self, wait):
 		return wait
 
-	def post_reboot(self, wait):  # pylint: disable=unused-argument,no-self-use
+	def post_reboot(self, wait):
 		return None
 
-	def error_reboot(self, wait, exception):  # pylint: disable=no-self-use
+	def error_reboot(self, wait, exception):
 		pass
 
-	def pre_halt(self, wait):  # pylint: disable=no-self-use
+	def pre_halt(self, wait):
 		return wait
 
-	def post_halt(self, wait):  # pylint: disable=unused-argument,no-self-use
+	def post_halt(self, wait):
 		return None
 
-	def error_halt(self, wait, exception):  # pylint: disable=no-self-use
+	def error_halt(self, wait, exception):
 		pass
 
-	def pre_Harddisk_deletePartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_deletePartitionTable(self, harddisk):
 		return None
 
-	def post_Harddisk_deletePartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_deletePartitionTable(self, harddisk):
 		return None
 
-	def error_Harddisk_deletePartitionTable(self, harddisk, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_deletePartitionTable(self, harddisk, exception):
 		pass
 
-	def pre_Harddisk_writePartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_writePartitionTable(self, harddisk):
 		return None
 
-	def post_Harddisk_writePartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_writePartitionTable(self, harddisk):
 		return None
 
-	def error_Harddisk_writePartitionTable(self, harddisk, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_writePartitionTable(self, harddisk, exception):
 		pass
 
-	def pre_Harddisk_readPartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_readPartitionTable(self, harddisk):
 		return None
 
-	def post_Harddisk_readPartitionTable(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_readPartitionTable(self, harddisk):
 		return None
 
-	def error_Harddisk_readPartitionTable(self, harddisk, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_readPartitionTable(self, harddisk, exception):
 		pass
 
-	def pre_Harddisk_setPartitionBootable(self, harddisk, partition, bootable):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_setPartitionBootable(self, harddisk, partition, bootable):
 		return (partition, bootable)
 
-	def post_Harddisk_setPartitionBootable(self, harddisk, partition, bootable):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_setPartitionBootable(self, harddisk, partition, bootable):
 		return None
 
 	def error_Harddisk_setPartitionBootable(
 		self, harddisk, partition, bootable, exception
-	):  # pylint: disable=no-self-use
+	):
 		pass
 
-	def pre_Harddisk_setPartitionId(self, harddisk, partition, id):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name
+	def pre_Harddisk_setPartitionId(self, harddisk, partition, id):
 		return (partition, id)
 
-	def post_Harddisk_setPartitionId(self, harddisk, partition, id):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name
+	def post_Harddisk_setPartitionId(self, harddisk, partition, id):
 		return None
 
-	def error_Harddisk_setPartitionId(self, harddisk, partition, id, exception):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name
+	def error_Harddisk_setPartitionId(self, harddisk, partition, id, exception):
 		pass
 
-	def pre_Harddisk_readMasterBootRecord(self, harddisk):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_readMasterBootRecord(self, harddisk):
 		return None
 
-	def post_Harddisk_readMasterBootRecord(self, harddisk, result):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_readMasterBootRecord(self, harddisk, result):
 		return result
 
-	def error_Harddisk_readMasterBootRecord(self, harddisk, exception):  # pylint: disable=no-self-use,no-self-use
+	def error_Harddisk_readMasterBootRecord(self, harddisk, exception):
 		pass
 
-	def pre_Harddisk_writeMasterBootRecord(self, harddisk, system):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_writeMasterBootRecord(self, harddisk, system):
 		return system
 
-	def post_Harddisk_writeMasterBootRecord(self, harddisk, system):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_writeMasterBootRecord(self, harddisk, system):
 		return None
 
-	def error_Harddisk_writeMasterBootRecord(self, harddisk, system, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_writeMasterBootRecord(self, harddisk, system, exception):
 		pass
 
-	def pre_Harddisk_readPartitionBootRecord(self, harddisk, partition):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_readPartitionBootRecord(self, harddisk, partition):
 		return partition
 
-	def post_Harddisk_readPartitionBootRecord(self, harddisk, partition, result):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_readPartitionBootRecord(self, harddisk, partition, result):
 		return result
 
-	def error_Harddisk_readPartitionBootRecord(self, harddisk, partition, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_readPartitionBootRecord(self, harddisk, partition, exception):
 		pass
 
-	def pre_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType):
 		return (partition, fsType)
 
-	def post_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType):
 		return None
 
 	def error_Harddisk_writePartitionBootRecord(
 		self, harddisk, partition, fsType, exception
-	):  # pylint: disable=no-self-use
+	):
 		pass
 
-	def pre_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):
 		return (partition, sector)
 
-	def post_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):
 		return None
 
 	def error_Harddisk_setNTFSPartitionStartSector(
 		self, harddisk, partition, sector, exception
-	):  # pylint: disable=no-self-use
+	):
 		pass
 
-	def pre_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name,too-many-arguments
+	def pre_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):
 		return (start, end, fs, type, boot, lba)
 
-	def post_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name,too-many-arguments
+	def post_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):
 		return None
 
 	def error_Harddisk_createPartition(
 		self, harddisk, start, end, fs, type, boot, lba, exception
-	):  # pylint: disable=unused-argument,redefined-builtin,no-self-use,invalid-name,too-many-arguments
+	):
 		pass
 
-	def pre_Harddisk_deletePartition(self, harddisk, partition):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_deletePartition(self, harddisk, partition):
 		return partition
 
-	def post_Harddisk_deletePartition(self, harddisk, partition):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_deletePartition(self, harddisk, partition):
 		return None
 
-	def error_Harddisk_deletePartition(self, harddisk, partition, exception):  # pylint: disable=no-self-use
+	def error_Harddisk_deletePartition(self, harddisk, partition, exception):
 		pass
 
-	def pre_Harddisk_mountPartition(self, harddisk, partition, mountpoint, **options):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_mountPartition(self, harddisk, partition, mountpoint, **options):
 		return (partition, mountpoint, options)
 
-	def post_Harddisk_mountPartition(self, harddisk, partition, mountpoint, **options):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_mountPartition(self, harddisk, partition, mountpoint, **options):
 		return None
 
 	def error_Harddisk_mountPartition(
 		self, harddisk, partition, mountpoint, exception, **options
-	):  # pylint: disable=unused-argument,no-self-use
+	):
 		pass
 
-	def pre_Harddisk_umountPartition(self, harddisk, partition):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_umountPartition(self, harddisk, partition):
 		return partition
 
-	def post_Harddisk_umountPartition(self, harddisk, partition):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_umountPartition(self, harddisk, partition):
 		return None
 
-	def error_Harddisk_umountPartition(self, harddisk, partition, exception):  # pylint: disable=unused-argument,no-self-use
+	def error_Harddisk_umountPartition(self, harddisk, partition, exception):
 		pass
 
-	def pre_Harddisk_createFilesystem(self, harddisk, partition, fs):  # pylint: disable=unused-argument,no-self-use,invalid-name
+	def pre_Harddisk_createFilesystem(self, harddisk, partition, fs):
 		return (partition, fs)
 
-	def post_Harddisk_createFilesystem(self, harddisk, partition, fs):  # pylint: disable=unused-argument,no-self-use,invalid-name
+	def post_Harddisk_createFilesystem(self, harddisk, partition, fs):
 		return None
 
-	def error_Harddisk_createFilesystem(self, harddisk, partition, fs, exception):  # pylint: disable=unused-argument,no-self-use,invalid-name
+	def error_Harddisk_createFilesystem(self, harddisk, partition, fs, exception):
 		pass
 
-	def pre_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs):  # pylint: disable=unused-argument,no-self-use,invalid-name
+	def pre_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs):
 		return (partition, size, fs)
 
-	def post_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs):  # pylint: disable=unused-argument,no-self-use,invalid-name
+	def post_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs):
 		return None
 
-	def error_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs, exception):  # pylint: disable=unused-argument,no-self-use,invalid-name,too-many-arguments
+	def error_Harddisk_resizeFilesystem(self, harddisk, partition, size, fs, exception):
 		pass
 
-	def pre_Harddisk_shred(self, harddisk, partition, iterations, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_shred(self, harddisk, partition, iterations, progressSubject):
 		return (partition, iterations, progressSubject)
 
-	def post_Harddisk_shred(self, harddisk, partition, iterations, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_shred(self, harddisk, partition, iterations, progressSubject):
 		return None
 
 	def error_Harddisk_shred(
 		self, harddisk, partition, iterations, progressSubject, exception
-	):  # pylint: disable=unused-argument,no-self-use,too-many-arguments
+	):
 		pass
 
-	def pre_Harddisk_fill(self, harddisk, partition, infile, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_fill(self, harddisk, partition, infile, progressSubject):
 		return (partition, infile, progressSubject)
 
-	def post_Harddisk_fill(self, harddisk, partition, infile, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_fill(self, harddisk, partition, infile, progressSubject):
 		return None
 
 	def error_Harddisk_fill(
 		self, harddisk, partition, infile, progressSubject, exception
-	):  # pylint: disable=unused-argument,no-self-use,too-many-arguments
+	):
 		pass
 
-	def pre_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def pre_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):
 		return (partition, imageFile, progressSubject)
 
-	def post_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def post_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):
 		return None
 
 	def error_Harddisk_saveImage(
 		self, harddisk, partition, imageFile, progressSubject, exception
-	):  # pylint: disable=unused-argument,no-self-use,too-many-arguments
+	):
 		pass
 
 	def pre_Harddisk_restoreImage(
 		self, harddisk, partition, imageFile, progressSubject
-	):  # pylint: disable=unused-argument,no-self-use
+	):
 		return (partition, imageFile, progressSubject)
 
 	def post_Harddisk_restoreImage(
 		self, harddisk, partition, imageFile, progressSubject
-	):  # pylint: disable=unused-argument,no-self-use
+	):
 		return None
 
 	def error_Harddisk_restoreImage(
 		self, harddisk, partition, imageFile, progressSubject, exception
-	):  # pylint: disable=unused-argument,no-self-use,too-many-arguments
+	):
 		pass
 
-	def pre_auditHardware(self, config, hostId, progressSubject):  # pylint: disable=unused-argument,no-self-use
+	def pre_auditHardware(self, config, hostId, progressSubject):
 		return (config, hostId, progressSubject)
 
-	def post_auditHardware(self, config, hostId, result):  # pylint: disable=unused-argument,no-self-use
+	def post_auditHardware(self, config, hostId, result):
 		return result
 
-	def error_auditHardware(self, config, hostId, progressSubject, exception):  # pylint: disable=unused-argument,no-self-use
+	def error_auditHardware(self, config, hostId, progressSubject, exception):
 		pass
 
 
@@ -458,7 +456,7 @@ def getNetworkInterfaces():
 	return [getNetworkDeviceConfig(device) for device in getEthernetDevices()]
 
 
-def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
+def getNetworkDeviceConfig(device):
 	if not device:
 		raise ValueError("No device given")
 
@@ -486,7 +484,7 @@ def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
 					result["hardwareAddress"] = item.address
 			# Skipping all others devices
 			break
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		logger.warning("Failed to get address info for device %s", device)
 
 	for line in execute(f"{which('ip')} route"):
@@ -503,7 +501,7 @@ def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
 
 		result["vendorId"] = forceHardwareVendorId(f"{val:>04x}")
 		logger.notice(f'device {device} vendor ID is {result["vendorId"]}')
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		logger.debug(
 			"Failed to get vendor id for network device %s, trying alternative", device
 		)
@@ -514,7 +512,7 @@ def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
 			)
 			result["vendorId"] = forceHardwareVendorId(f"{int(valList[0], 16):>04x}")
 			logger.notice(f'device {device} vendor ID is {result["vendorId"]}')
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			logger.debug("Alternative failed, no vendor ID for device %s found", device)
 
 	try:
@@ -527,7 +525,7 @@ def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
 
 		result["deviceId"] = forceHardwareDeviceId(f"{val:>04x}")
 		logger.notice(f'device {device} device ID is {result["deviceId"]}')
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		logger.debug(
 			"Failed to get device id for network device %s, trying alternative", device
 		)
@@ -542,7 +540,7 @@ def getNetworkDeviceConfig(device):  # pylint: disable=too-many-branches
 
 			result["deviceId"] = forceHardwareDeviceId(f"{val:>04x}")
 			logger.notice(f'device {device} device ID is {result["deviceId"]}')
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			logger.debug("alternative failed, no vendor ID for device %s found", device)
 
 	return result
@@ -557,7 +555,7 @@ def getDefaultNetworkInterfaceName():
 	return None
 
 
-class NetworkPerformanceCounter(threading.Thread):  # pylint: disable=too-many-instance-attributes
+class NetworkPerformanceCounter(threading.Thread):
 	def __init__(self, interface):
 		threading.Thread.__init__(self)
 		if not interface:
@@ -624,7 +622,7 @@ class NetworkPerformanceCounter(threading.Thread):  # pylint: disable=too-many-i
 		return self._bytesOutPerSecond
 
 
-def getDHCPResult(device, leasesFile=None):  # pylint: disable=too-many-branches,too-many-statements
+def getDHCPResult(device, leasesFile=None):
 	"""
 	Get the settings of the current DHCP lease.
 
@@ -702,7 +700,7 @@ keys are: ``ip``, ``netmask``, ``bootserver``, ``nextserver``, \
 						dhcpResult["rebind"] = line.split(" ", 1)[-1]
 					elif line.startswith("expire "):
 						dhcpResult["expire"] = line.split(" ", 1)[-1]
-			except Exception as error:  # pylint: disable=broad-except
+			except Exception as error:
 				logger.warning(error)
 	else:
 		logger.debug("Leases file %s does not exist.", leasesFile)
@@ -728,7 +726,7 @@ keys are: ``ip``, ``netmask``, ``bootserver``, ``nextserver``, \
 				dhcpResult[keyValue[0].replace(" ", "").lower()] = (
 					keyValue[1].strip().split()[0]
 				)
-		except Exception as error:  # pylint: disable=broad-except
+		except Exception as error:
 			logger.warning(error)
 	return dhcpResult
 
@@ -772,7 +770,7 @@ def getLocalFqdn():
 		) from err
 
 
-def getNetworkConfiguration(ipAddress=None):  # pylint: disable=too-many-branches
+def getNetworkConfiguration(ipAddress=None):
 	"""
 	Get the network configuration for the local host.
 
@@ -835,11 +833,11 @@ def getNetworkConfiguration(ipAddress=None):  # pylint: disable=too-many-branche
 		if networkConfig["subnet"]:
 			networkConfig["subnet"] += "."
 
-		networkConfig["subnet"] += "%d" % (  # pylint: disable=consider-using-f-string
+		networkConfig["subnet"] += "%d" % (
 			int(networkConfig["ipAddress"].split(".")[i])
 			& int(networkConfig["netmask"].split(".")[i])
 		)
-		networkConfig["broadcast"] += "%d" % (  # pylint: disable=consider-using-f-string
+		networkConfig["broadcast"] += "%d" % (
 			int(networkConfig["ipAddress"].split(".")[i])
 			| int(networkConfig["netmask"].split(".")[i]) ^ 255
 		)
@@ -930,7 +928,7 @@ def get_subprocess_environment(
 	return sp_env
 
 
-def execute(  # pylint: disable=dangerous-default-value,too-many-branches,too-many-statements,too-many-arguments,too-many-locals
+def execute(
 	cmd,
 	nowait=False,
 	getHandle=False,
@@ -1123,18 +1121,18 @@ def _terminateProcess(process):
 	"""
 	try:
 		process.kill()
-	except Exception as killException:  # pylint: disable=broad-except
+	except Exception as killException:
 		logger.debug("Killing process %s failed: %s", process.pid, killException)
 
 		try:
 			os.kill(process.pid, SIGKILL)
-		except Exception as sigKillException:  # pylint: disable=broad-except
+		except Exception as sigKillException:
 			logger.debug(
 				"Sending SIGKILL to pid %s failed: %s", process.pid, sigKillException
 			)
 
 
-def terminateProcess(processHandle=None, processId=None):  # pylint: disable=unused-argument
+def terminateProcess(processHandle=None, processId=None):
 	if not processId:
 		raise ValueError("Process id must be given")
 
@@ -1142,7 +1140,7 @@ def terminateProcess(processHandle=None, processId=None):  # pylint: disable=unu
 
 	try:
 		os.kill(processId, SIGKILL)
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.warning("Sending SIGKILL to pid %s failed: %s", processId, err)
 		raise
 
@@ -1247,7 +1245,7 @@ def umount(devOrMountpoint, max_attempts=10):
 			execute(f"{which('umount')} {devOrMountpoint}")
 			logger.info("'%s' umounted", devOrMountpoint)
 			break
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			if attempt >= max_attempts:
 				logger.error("Failed to umount '%s': %s", devOrMountpoint, err)
 				raise RuntimeError(
@@ -1267,7 +1265,7 @@ def getBlockDeviceBusType(device):
 	"""
 	device = forceFilename(device)
 
-	(devs, type) = ([], None)  # pylint: disable=redefined-builtin
+	(devs, type) = ([], None)
 	if os.path.islink(device):
 		dev = os.readlink(device)
 		if not dev.startswith("/"):
@@ -1300,7 +1298,7 @@ def getBlockDeviceBusType(device):
 	return None
 
 
-def getBlockDeviceContollerInfo(device, lshwoutput=None):  # pylint: disable=too-many-branches
+def getBlockDeviceContollerInfo(device, lshwoutput=None):
 	device = forceFilename(device)
 	if lshwoutput and isinstance(lshwoutput, list):
 		lines = lshwoutput
@@ -1344,7 +1342,7 @@ def getBlockDeviceContollerInfo(device, lshwoutput=None):  # pylint: disable=too
 			continue
 
 		if parts[1].lower() == device:
-			for hwPath in storageControllers:  # pylint: disable=consider-using-dict-items
+			for hwPath in storageControllers:
 				if parts[0].startswith(hwPath + "/"):
 					return storageControllers[hwPath]
 
@@ -1381,7 +1379,7 @@ def getBlockDeviceContollerInfo(device, lshwoutput=None):  # pylint: disable=too
 				"deviceId": forceHardwareDeviceId(deviceId),
 			}
 
-			for hwPath in storageControllers:  # pylint: disable=consider-using-dict-items
+			for hwPath in storageControllers:
 				return storageControllers[hwPath]
 		else:
 			# Quick Hack: for entry like this:
@@ -1410,13 +1408,13 @@ def getBlockDeviceContollerInfo(device, lshwoutput=None):  # pylint: disable=too
 					"deviceId": forceHardwareDeviceId(deviceId),
 				}
 
-				for hwPath in storageControllers:  # pylint: disable=consider-using-dict-items
+				for hwPath in storageControllers:
 					return storageControllers[hwPath]
 
 	return None
 
 
-class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
+class Harddisk:
 	def __init__(self, device):
 		self.device = forceFilename(device)
 		self.model = ""
@@ -1457,7 +1455,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		# Make sure your kernel supports edd (CONFIG_EDD=y/m) and module is loaded if not compiled in
 		try:
 			execute("modprobe edd")
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.debug(err)
 			return
 
@@ -1496,9 +1494,9 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 				try:
 					self.rotational = forceBool(int(line.strip()))
 					break
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					pass
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(
 				"Checking if the device %s is rotational failed: %s", self.device, err
 			)
@@ -1533,7 +1531,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 			raise ValueError(f"Unknown disk label '{label}'")
 		self.label = label
 
-	def setPartitionId(self, partition, id):  # pylint: disable=redefined-builtin,invalid-name
+	def setPartitionId(self, partition, id):
 		part_id = id
 		for hook in hooks:
 			(partition, part_id) = hook.pre_Harddisk_setPartitionId(
@@ -1565,7 +1563,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 					part_id = "07"
 				else:
 					raise ValueError(f"Partition type '{part_id}' not supported!")
-			part_id = eval("0x" + part_id)  # pylint: disable=eval-used
+			part_id = eval("0x" + part_id)
 			offset = 0x1BE + (partition - 1) * 16 + 4
 			with open(self.device, "rb+") as file:
 				file.seek(offset)
@@ -1596,7 +1594,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 					file.write(chr(0x80))
 				else:
 					file.write(chr(0x00))
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			for hook in hooks:
 				hook.error_Harddisk_setPartitionBootable(self, partition, bootable, err)
 			raise
@@ -1621,7 +1619,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 			for line in result:
 				try:
 					self.size = int(line.strip()) * 1024
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					pass
 
 			logger.info(
@@ -1671,7 +1669,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_readPartitionTable(self)
 
-	def _parsePartitionTable(self, sfdiskListingOutput):  # pylint: disable=too-many-branches,too-many-statements
+	def _parsePartitionTable(self, sfdiskListingOutput):
 		"""
 		Parses the partition table and sets the corresponding attributes
 		on this object.
@@ -1680,7 +1678,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		:type sfdiskListingOutput: [str, ]
 		"""
 
-		for line in sfdiskListingOutput:  # pylint: disable=too-many-nested-blocks
+		for line in sfdiskListingOutput:
 			line = line.strip()
 
 			if line.lower().startswith("disk"):
@@ -1756,7 +1754,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 									fsline,
 								)
 								fs = fsline
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					partitionData = {
@@ -1912,7 +1910,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 
 					if part["boot"]:
 						cmd += ",*"
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Partition %d not found: %s", (pnum + 1), err)
 					cmd += "0,0"
 
@@ -1945,14 +1943,14 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		logger.info("Forcing kernel to reread partition table of '%s'.", self.device)
 		try:
 			execute(f"{which('partprobe')} {self.device}", env=sp_env)
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			logger.error(
 				"Forcing kernel reread partion table failed, waiting 5 sec. and try again"
 			)
 			try:
 				time.sleep(5)
 				execute(f"{which('partprobe')} {self.device}", ignoreExitCode=[1])
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				logger.error("Reread Partiontabel failed the second time, given up.")
 				raise
 
@@ -1976,7 +1974,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_deletePartitionTable(self)
 
-	def shred(self, partition=0, iterations=25, progressSubject=None):  # pylint: disable=too-many-locals
+	def shred(self, partition=0, iterations=25, progressSubject=None):
 		for hook in hooks:
 			(partition, iterations, progressSubject) = hook.pre_Harddisk_shred(
 				self, partition, iterations, progressSubject
@@ -2043,7 +2041,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 	def randomFill(self, partition=0, progressSubject=None):
 		self.fill(forceInt(partition), "/dev/urandom", progressSubject)
 
-	def fill(self, partition=0, infile="", progressSubject=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def fill(self, partition=0, infile="", progressSubject=None):
 		for hook in hooks:
 			(partition, infile, progressSubject) = hook.pre_Harddisk_fill(
 				self, partition, infile, progressSubject
@@ -2147,7 +2145,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 			mbr = hook.post_Harddisk_readMasterBootRecord(self, mbr)
 		return mbr
 
-	def writeMasterBootRecord(self, system="auto"):  # pylint: disable=too-many-branches
+	def writeMasterBootRecord(self, system="auto"):
 		for hook in hooks:
 			system = hook.pre_Harddisk_writeMasterBootRecord(self, system)
 
@@ -2160,7 +2158,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 				res = execute(cmd)
 				if res:
 					ms_sys_version = res[0][14:].strip()
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				ms_sys_version = "2.1.3"
 
 			mbrType = "-w"
@@ -2190,7 +2188,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 				if self.ldPreload:
 					sp_env["LD_PRELOAD"] = self.ldPreload
 				execute(cmd, env=sp_env)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error("Failed to write mbr: %s", err)
 				raise RuntimeError(f"Failed to write mbr: {err}") from err
 		except Exception as err:
@@ -2208,7 +2206,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		try:
 			with open(self.getPartition(partition)["device"], "rb") as file:
 				pbr = file.read(512)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			for hook in hooks:
 				hook.error_Harddisk_readPartitionBootRecord(self, partition, err)
 			raise
@@ -2248,7 +2246,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 				result = execute(cmd, env=sp_env)
 				if "successfully" not in result[0]:
 					raise RuntimeError(result)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error("Cannot write partition boot record: %s", err)
 				raise RuntimeError(
 					f"Cannot write partition boot record: {err}"
@@ -2263,7 +2261,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_writePartitionBootRecord(self, partition, fsType)
 
-	def setNTFSPartitionStartSector(self, partition, sector=0):  # pylint: disable=too-many-branches
+	def setNTFSPartitionStartSector(self, partition, sector=0):
 		for hook in hooks:
 			(partition, sector) = hook.pre_Harddisk_setNTFSPartitionStartSector(
 				self, partition, sector
@@ -2356,7 +2354,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 
 	def createPartition(
 		self, start, end, fs, type="primary", boot=False, lba=False, number=None
-	):  # pylint: disable=redefined-builtin,invalid-name,too-many-branches,too-many-statements,too-many-arguments,too-many-locals
+	):
 		for hook in hooks:
 			(start, end, fs, type, boot, lba) = hook.pre_Harddisk_createPartition(
 				self, start, end, fs, type, boot, lba
@@ -2583,11 +2581,11 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 					if start <= prev["cylEnd"]:
 						# Partitions overlap
 						start = prev["cylEnd"] + 1
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				pass
 
 			try:
-				next = self.getPartition(number + 1)  # pylint: disable=redefined-builtin
+				next = self.getPartition(number + 1)
 				nextstart = next["cylStart"]
 				if unit == "sec":
 					nextstart = next["secStart"]
@@ -2595,7 +2593,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 				if end >= nextstart:
 					# Partitions overlap
 					end = nextstart - 1
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				pass
 
 			start = max(start, 2048)
@@ -2746,7 +2744,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_umountPartition(self, partition)
 
-	def createFilesystem(self, partition, fs=None):  # pylint: disable=invalid-name,too-many-branches
+	def createFilesystem(self, partition, fs=None):
 		for hook in hooks:
 			(partition, fs) = hook.pre_Harddisk_createFilesystem(self, partition, fs)
 
@@ -2813,7 +2811,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_createFilesystem(self, partition, fs)
 
-	def resizeFilesystem(self, partition, size=0, fs=None):  # pylint: disable=invalid-name
+	def resizeFilesystem(self, partition, size=0, fs=None):
 		for hook in hooks:
 			(partition, size, fs) = hook.pre_Harddisk_resizeFilesystem(
 				self, partition, size, fs
@@ -2853,7 +2851,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 		for hook in hooks:
 			hook.post_Harddisk_resizeFilesystem(self, partition, size, fs)
 
-	def saveImage(self, partition, imageFile, progressSubject=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def saveImage(self, partition, imageFile, progressSubject=None):
 		for hook in hooks:
 			(partition, imageFile, progressSubject) = hook.pre_Harddisk_saveImage(
 				self, partition, imageFile, progressSubject
@@ -2861,7 +2859,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 
 		saveImageResult = {"TotalTime": "n/a", "AveRate": "n/a", "AveUnit": "n/a"}
 
-		try:  # pylint: disable=too-many-nested-blocks
+		try:
 			partition = forceInt(partition)
 			imageFile = forceUnicode(imageFile)
 
@@ -2916,7 +2914,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 					for currentBuffer in islice(buf, len(buf) - 1):
 						try:
 							logger.debug(" -->>> %s", currentBuffer)
-						except Exception:  # pylint: disable=broad-except
+						except Exception:
 							pass
 
 						if "Partclone fail" in currentBuffer:
@@ -2995,7 +2993,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 
 		return saveImageResult
 
-	def restoreImage(self, partition, imageFile, progressSubject=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-statements,too-many-locals
+	def restoreImage(self, partition, imageFile, progressSubject=None):
 		for hook in hooks:
 			(partition, imageFile, progressSubject) = hook.pre_Harddisk_restoreImage(
 				self, partition, imageFile, progressSubject
@@ -3077,7 +3075,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 			if self.ldPreload:
 				sp_env["LD_PRELOAD"] = self.ldPreload
 
-			if imageType == "partclone":  # pylint: disable=too-many-nested-blocks
+			if imageType == "partclone":
 				logger.info(
 					"Restoring partclone image '%s' to '%s'",
 					imageFile,
@@ -3116,7 +3114,7 @@ class Harddisk:  # pylint: disable=too-many-instance-attributes,too-many-public-
 						for currentBuffer in islice(buf, len(buf) - 1):
 							try:
 								logger.debug(" -->>> %s", currentBuffer)
-							except Exception:  # pylint: disable=broad-except
+							except Exception:
 								pass
 
 							if "Partclone fail" in currentBuffer:
@@ -3336,12 +3334,12 @@ def _checkForDistribution(name):
 	try:
 		sysinfo = SysInfo()
 		return name.lower() in sysinfo.distribution.lower()
-	except Exception as error:  # pylint: disable=broad-except
+	except Exception as error:
 		logger.debug("Failed to check for Distribution: %s", error)
 		return False
 
 
-class Distribution:  # pylint: disable=too-many-instance-attributes
+class Distribution:
 	def __init__(self, distribution_information=None):
 		if distribution_information is None:
 			distribution_information = (
@@ -3351,7 +3349,7 @@ class Distribution:  # pylint: disable=too-many-instance-attributes
 			)
 
 		logger.debug("distribution information: %s", distribution_information)
-		self.distribution, self._version, self.id = distribution_information  # pylint: disable=invalid-name
+		self.distribution, self._version, self.id = distribution_information
 		self.distribution = self.distribution.strip()
 
 		self.hostname = platform.node()
@@ -3365,8 +3363,8 @@ class Distribution:  # pylint: disable=too-many-instance-attributes
 	def version(self):
 		if "errata" in self._version:
 			version = self._version.strip('"').split("-")[0]
-			return tuple([int(x) for x in version.split(".")])  # pylint: disable=consider-using-generator
-		return tuple([int(x) for x in self._version.split(".")])  # pylint: disable=consider-using-generator
+			return tuple([int(x) for x in version.split(".")])
+		return tuple([int(x) for x in self._version.split(".")])
 
 	@staticmethod
 	@lru_cache(None)
@@ -3384,7 +3382,7 @@ class Distribution:  # pylint: disable=too-many-instance-attributes
 			try:
 				lsbReleaseOutput = execute("lsb_release -i")
 				distributor = lsbReleaseOutput[0].split(":")[1].strip()
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				distributor = ""
 
 		return distributor
@@ -3457,14 +3455,14 @@ class SysInfo:
 			% (
 				int(self.ipAddress.split(".")[i])
 				| int(self.netmask.split(".")[i]) ^ 255
-			)  # pylint: disable=consider-using-f-string
+			)
 			for i in range(len(self.ipAddress.split(".")))
 		)
 
 	@property
 	def subnet(self):
 		return ".".join(
-			"%d" % (int(self.ipAddress.split(".")[i]) & int(self.netmask.split(".")[i]))  # pylint: disable=consider-using-f-string
+			"%d" % (int(self.ipAddress.split(".")[i]) & int(self.netmask.split(".")[i]))
 			for i in range(len(self.ipAddress.split(".")))
 		)
 
@@ -3508,12 +3506,12 @@ def auditHardware(config, hostId, progressSubject=None):
 	return auditHardwareOnHosts
 
 
-def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):  # pylint: disable=dangerous-default-value,unused-argument,too-many-branches,too-many-locals
+def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):
 	if not config:
 		logger.error("hardwareInventory: no config given")
 		return {}
 
-	for hwClass in config:  # pylint: disable=too-many-nested-blocks
+	for hwClass in config:
 		if not hwClass.get("Class") or not hwClass["Class"].get("Opsi"):
 			continue
 
@@ -3554,7 +3552,7 @@ def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):  # p
 				if match:
 					result = None
 					srcfields = match.group(2)
-					fieldsdict = eval(srcfields)  # pylint: disable=eval-used
+					fieldsdict = eval(srcfields)
 					attr = ""
 					for key, value in fieldsdict.items():
 						for i in range(len(opsiValues.get(key, []))):
@@ -3563,7 +3561,7 @@ def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):  # p
 							break
 					if attr:
 						pythonline = pythonline.replace(f"#{srcfields}#", f"'{attr}'")
-						result = eval(pythonline)  # pylint: disable=eval-used
+						result = eval(pythonline)
 
 					if opsiName not in opsiValues:
 						opsiValues[opsiName].append({})
@@ -3573,8 +3571,8 @@ def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):  # p
 	return opsiValues
 
 
-def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-argument,too-many-branches,too-many-locals,too-many-statements
-	import xml.dom.minidom  # pylint: disable=import-outside-toplevel
+def hardwareInventory(config, progressSubject=None):
+	import xml.dom.minidom
 
 	if not config:
 		logger.error("hardwareInventory: no config given")
@@ -3582,7 +3580,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 
 	opsiValues = {}
 
-	def getAttribute(dom, tagname, attrname):  # pylint: disable=unused-variable
+	def getAttribute(dom, tagname, attrname):
 		nodelist = dom.getElementsByTagName(tagname)
 		if nodelist:
 			return nodelist[0].getAttribute(attrname).strip()
@@ -3610,7 +3608,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 	proc_env = get_subprocess_environment(add_lc_all_C=True, add_path_sbin=True)
 	xmlOut = "\n".join(execute("lshw -xml", env=proc_env, captureStderr=False))
 	xmlOut = re.sub(
-		"[%c%c%c%c%c%c%c%c%c%c%c%c%c]"  # pylint: disable=consider-using-f-string
+		"[%c%c%c%c%c%c%c%c%c%c%c%c%c]"
 		% (
 			0x00,
 			0x01,
@@ -3818,7 +3816,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 
 		logger.trace("Parsed lsusb info:")
 		logger.trace(objectToBeautifiedText(lsusb))
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.error(err)
 
 	# Read output from dmidecode
@@ -3828,7 +3826,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 	option = None
 	optRegex = re.compile(r"(\s+)([^:]+):(.*)")
 	proc_env = get_subprocess_environment(add_path_sbin=True)
-	for line in execute("dmidecode", captureStderr=False, env=proc_env):  # pylint: disable=too-many-nested-blocks
+	for line in execute("dmidecode", captureStderr=False, env=proc_env):
 		try:
 			if not line.strip():
 				continue
@@ -3861,7 +3859,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 						else:
 							dmidecode[dmiType][-1][option] = []
 					dmidecode[dmiType][-1][option].append(removeUnit(line.strip()))
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(
 				"Error while parsing dmidecode output '%s': %s", line.strip(), err
 			)
@@ -3869,7 +3867,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 	logger.trace(objectToBeautifiedText(dmidecode))
 
 	# Build hw info structure
-	for hwClass in config:  # pylint: disable=too-many-nested-blocks
+	for hwClass in config:
 		if (
 			not hwClass.get("Class")
 			or not hwClass["Class"].get("Opsi")
@@ -3887,7 +3885,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 				devices = []
 				for hwclass in linuxClass[6:].split("|"):
 					hwid = ""
-					filter = None  # pylint: disable=redefined-builtin
+					filter = None
 					if ":" in hwclass:
 						(hwclass, hwid) = hwclass.split(":", 1)
 						if ":" in hwid:
@@ -3939,14 +3937,14 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 								else:
 									(attr, method) = filter.split(".", 1)
 									if dev.getAttribute(attr):
-										if eval(f"dev.getAttribute(attr).{method}"):  # pylint: disable=eval-used
+										if eval(f"dev.getAttribute(attr).{method}"):
 											filtered.append(dev)
 									elif dev.hasChildNodes():
 										for child in dev.childNodes:
 											if (
 												child.nodeName == attr
 											) and child.hasChildNodes():
-												if eval(  # pylint: disable=eval-used
+												if eval(
 													f"child.firstChild.data.strip().{method}"
 												):
 													filtered.append(dev)
@@ -3956,12 +3954,12 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 													child.hasAttributes()
 													and child.getAttribute(attr)
 												):
-													if eval(  # pylint: disable=eval-used
+													if eval(
 														f"child.getAttribute(attr).{method}"
 													):
 														filtered.append(dev)
 														break
-											except Exception:  # pylint: disable=broad-except
+											except Exception:
 												pass
 							# Also consider nodes with matching class
 							if (
@@ -4014,7 +4012,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 												== part
 											):
 												nextElements.append(child)
-										except Exception:  # pylint: disable=broad-except
+										except Exception:
 											pass
 									# Prefer matching child.id over matching child.class
 									if not nextElements:
@@ -4026,7 +4024,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 													== part
 												):
 													nextElements.append(child)
-											except Exception:  # pylint: disable=broad-except
+											except Exception:
 												pass
 								if not nextElements:
 									logger.warning(
@@ -4055,8 +4053,8 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 							if method and data:
 								try:
 									logger.debug("Eval: %s.%s", data, method)
-									data = eval(f"data.{method}")  # pylint: disable=eval-used
-								except Exception as err:  # pylint: disable=broad-except
+									data = eval(f"data.{method}")
+								except Exception as err:
 									logger.error(
 										"Failed to excecute '%s.%s': %s",
 										data,
@@ -4083,7 +4081,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 						if (
 							filterAttr
 							and dev.get(filterAttr)
-							and not eval(f"str(dev.get(filterAttr)).{filterExp}")  # pylint: disable=eval-used
+							and not eval(f"str(dev.get(filterAttr)).{filterExp}")
 						):
 							continue
 						device = {}
@@ -4101,10 +4099,10 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 										logger.debug(
 											"Eval: %s.%s", dev.get(aname, ""), method
 										)
-										device[attribute["Opsi"]] = eval(  # pylint: disable=eval-used
+										device[attribute["Opsi"]] = eval(
 											f"dev.get(aname, '').{method}"
 										)
-									except Exception as err:  # pylint: disable=broad-except
+									except Exception as err:
 										if not device.get(attribute["Opsi"]):
 											device[attribute["Opsi"]] = ""
 										logger.error(
@@ -4141,7 +4139,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 
 						try:
 							device[attribute["Opsi"]] = dev[attribute["Linux"]]
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							logger.warning(err)
 							device[attribute["Opsi"]] = ""
 					opsiValues[opsiClass].append(device)
@@ -4169,10 +4167,10 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 								if isinstance(value, list):
 									value = ", ".join(value)
 								if method:
-									value = eval(f"value.{method}")  # pylint: disable=eval-used
+									value = eval(f"value.{method}")
 
 							device[attribute["Opsi"]] = value
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							logger.warning(err)
 							device[attribute["Opsi"]] = ""
 					opsiValues[opsiClass].append(device)
@@ -4296,7 +4294,7 @@ def getDHCPDRestartCommand(default=None):
 	if serviceName:
 		try:
 			return f"{which('service')} {serviceName} restart"
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.debug("Ooops, getting the path to service failed: %s", err)
 
 	locations = (
@@ -4324,7 +4322,7 @@ def getDHCPServiceName():
 	Tries to read the name of the used dhcpd.
 	Returns `None` if no known service was detected.
 	"""
-	global _DHCP_SERVICE_NAME  # pylint: disable=global-statement
+	global _DHCP_SERVICE_NAME
 	if _DHCP_SERVICE_NAME is not None:
 		return _DHCP_SERVICE_NAME
 
@@ -4335,7 +4333,7 @@ def getDHCPServiceName():
 			if servicename in knownServices:
 				_DHCP_SERVICE_NAME = servicename
 				return servicename
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		pass
 	return None
 
@@ -4351,7 +4349,7 @@ lookup to determine what value needs to be returned in case no \
 service name was detected by the automatic approach.
 	:type staticFallback: bool
 	"""
-	global _SAMBA_SERVICE_NAME  # pylint: disable=global-statement
+	global _SAMBA_SERVICE_NAME
 	if _SAMBA_SERVICE_NAME is not None:
 		return _SAMBA_SERVICE_NAME
 
@@ -4435,7 +4433,7 @@ def getActiveConsoleSessionId():
 	return getActiveSessionId()
 
 
-def getActiveSessionIds(protocol=None, states=["active", "disconnected"]):  # pylint: disable=dangerous-default-value,unused-argument
+def getActiveSessionIds(protocol=None, states=["active", "disconnected"]):
 	"""
 	Getting the IDs of the currently active sessions.
 
@@ -4474,11 +4472,11 @@ def getActiveSessionInformation():
 	return info
 
 
-def grant_session_access(username: str, session_id: str):  # pylint: disable=unused-argument
+def grant_session_access(username: str, session_id: str):
 	return opsicommon_get_subprocess_environment()
 
 
-def runCommandInSession(  # pylint: disable=unused-argument,too-many-arguments,too-many-locals
+def runCommandInSession(
 	command,
 	sessionId=None,
 	desktop=None,
@@ -4519,7 +4517,7 @@ until the execution of the process is terminated.
 	if sessionId is not None:
 		try:
 			sp_env = grant_session_access(getpass.getuser(), sessionId)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(
 				"Failed to grant access to session %s to user %s: %s",
 				sessionId,
@@ -4527,7 +4525,7 @@ until the execution of the process is terminated.
 				err,
 				exc_info=True,
 			)
-	process = subprocess.Popen(  # pylint: disable=consider-using-with
+	process = subprocess.Popen(
 		args=command,
 		shell=shell,
 		stdin=subprocess.PIPE,
@@ -4610,5 +4608,5 @@ def setLocalSystemTime(timestring):
 		logger.info("Setting Systemtime Time to %s", timestring)
 		systemTime = f'date --set="{dt.year}-{dt.month}-{dt.day} {dt.hour}:{dt.minute}:{dt.second}.{dt.microsecond}"'
 		subprocess.call([systemTime])
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.error("Failed to set System Time: %s", err)

@@ -16,10 +16,10 @@ try:
 except ImportError:
 	pass
 
-from opsicommon.logging import get_logger
+from opsicommon.logging import get_logger  # noqa: E402
 
-import OPSI.Util.Task.ConfigureBackend as backendUtils
-from OPSI.Backend.MySQL import MySQLBackend
+import OPSI.Util.Task.ConfigureBackend as backendUtils  # noqa: E402
+from OPSI.Backend.MySQL import MySQLBackend  # noqa: E402
 
 DATABASE_EXISTS_ERROR_CODE = 1007
 ACCESS_DENIED_ERROR_CODE = 1044
@@ -79,9 +79,20 @@ on to. Defaults to ``logger.error``.
 		config.update(additionalBackendConfig)
 
 	try:
-		initializeDatabase(dbAdminUser, dbAdminPass, config, systemConfig=systemConfiguration, notificationFunction=notificationFunction)
+		initializeDatabase(
+			dbAdminUser,
+			dbAdminPass,
+			config,
+			systemConfig=systemConfiguration,
+			notificationFunction=notificationFunction,
+		)
 	except DatabaseConnectionFailedException as err:
-		errorFunction("Failed to connect to host '%s' as user '%s': %s", config["address"], dbAdminUser, err)
+		errorFunction(
+			"Failed to connect to host '%s' as user '%s': %s",
+			config["address"],
+			dbAdminUser,
+			err,
+		)
 		raise err
 	except Exception as err:
 		errorFunction(err)
@@ -93,9 +104,9 @@ on to. Defaults to ``logger.error``.
 	backend = MySQLBackend(**config)
 	try:
 		backend.backend_createBase()
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		if err.args[0] == INVALID_DEFAULT_VALUE:
-			errorFunction(  # pylint: disable=logging-fstring-interpolation
+			errorFunction(
 				f"It seems you have the MySQL strict mode enabled. Please read the opsi handbook.\n{err}"
 			)
 		raise err
@@ -103,46 +114,71 @@ on to. Defaults to ``logger.error``.
 	notificationFunction("Finished initializing mysql backend.")
 
 
-def initializeDatabase(dbAdminUser, dbAdminPass, config, systemConfig=None, notificationFunction=None, errorFunction=None):
+def initializeDatabase(
+	dbAdminUser,
+	dbAdminPass,
+	config,
+	systemConfig=None,
+	notificationFunction=None,
+	errorFunction=None,
+):
 	"""
 	Create a database and grant the OPSI user the needed rights on it.
 	"""
 
 	if not MySQLdb:
-		raise ModuleNotFoundError("Missing mysqlclient module to perform initializeDatabase operation.")
+		raise ModuleNotFoundError(
+			"Missing mysqlclient module to perform initializeDatabase operation."
+		)
 
 	@contextmanager
 	def connectAsDBA():
-		conConfig = {"host": config["address"], "user": dbAdminUser, "passwd": dbAdminPass}
+		conConfig = {
+			"host": config["address"],
+			"user": dbAdminUser,
+			"passwd": dbAdminPass,
+		}
 
 		try:
 			with closing(MySQLdb.connect(**conConfig)) as db:
 				yield db
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			if config["address"] == "127.0.0.1":
-				logger.info("Failed to connect with tcp/ip (%s), retrying with socket", err)
+				logger.info(
+					"Failed to connect with tcp/ip (%s), retrying with socket", err
+				)
 				try:
 					conConfig["host"] = "localhost"
 					with closing(MySQLdb.connect(**conConfig)) as db:
 						yield db
-				except Exception as error:  # pylint: disable=broad-except
+				except Exception as error:
 					raise DatabaseConnectionFailedException(error) from error
 			else:
 				raise DatabaseConnectionFailedException(err) from err
 
 	def createUser(host):
-		notificationFunction(f"Creating user '{config['username']}' and granting all rights on '{config['database']}'")
+		notificationFunction(
+			f"Creating user '{config['username']}' and granting all rights on '{config['database']}'"
+		)
 		db.query(f"CREATE USER IF NOT EXISTS '{config['username']}'@'{host}'")
 		try:
-			db.query(f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED WITH mysql_native_password BY '{config['password']}'")
-		except Exception as err:  # pylint: disable=broad-except
+			db.query(
+				f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED WITH mysql_native_password BY '{config['password']}'"
+			)
+		except Exception as err:
 			logger.debug(err)
 			try:
-				db.query(f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED BY '{config['password']}'")
-			except Exception as error:  # pylint: disable=broad-except
+				db.query(
+					f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED BY '{config['password']}'"
+				)
+			except Exception as error:
 				logger.debug(error)
-				db.query(f"SET PASSWORD FOR'{config['username']}'@'{host}' = PASSWORD('{config['password']}')")
-		db.query(f"GRANT ALL ON {config['database']}.* TO '{config['username']}'@'{host}'")
+				db.query(
+					f"SET PASSWORD FOR'{config['username']}'@'{host}' = PASSWORD('{config['password']}')"
+				)
+		db.query(
+			f"GRANT ALL ON {config['database']}.* TO '{config['username']}'@'{host}'"
+		)
 		db.query("FLUSH PRIVILEGES")
 		notificationFunction(f"User '{config['username']}' created and privileges set")
 
@@ -153,17 +189,28 @@ def initializeDatabase(dbAdminUser, dbAdminPass, config, systemConfig=None, noti
 		errorFunction = logger.error
 
 	if systemConfig is None:
-		systemConfig = backendUtils._getSysConfig()  # pylint: disable=protected-access
+		systemConfig = backendUtils._getSysConfig()
 
 	# Connect to database host
-	notificationFunction("Connecting to host '{0[address]}' as user '{username}'".format(config, username=dbAdminUser))
+	notificationFunction(
+		"Connecting to host '{0[address]}' as user '{username}'".format(
+			config, username=dbAdminUser
+		)
+	)
 	with connectAsDBA() as db:
-		notificationFunction("Successfully connected to host '{0[address]}'" " as user '{username}'".format(config, username=dbAdminUser))
+		notificationFunction(
+			"Successfully connected to host '{0[address]}'"
+			" as user '{username}'".format(config, username=dbAdminUser)
+		)
 
 		# Create opsi database and user
 		notificationFunction("Creating database '{database}'".format(**config))
 		try:
-			db.query("CREATE DATABASE {database} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_bin;".format(**config))
+			db.query(
+				"CREATE DATABASE {database} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_bin;".format(
+					**config
+				)
+			)
 		except MySQLdb.OperationalError as err:
 			if err.args[0] == ACCESS_DENIED_ERROR_CODE:
 				raise DatabaseConnectionFailedException(str(err)) from err
@@ -173,7 +220,12 @@ def initializeDatabase(dbAdminUser, dbAdminPass, config, systemConfig=None, noti
 				raise err
 		notificationFunction("Database '{database}' created".format(**config))
 
-		if config["address"] in ("localhost", "127.0.0.1", systemConfig["hostname"], systemConfig["fqdn"]):
+		if config["address"] in (
+			"localhost",
+			"127.0.0.1",
+			systemConfig["hostname"],
+			systemConfig["fqdn"],
+		):
 			createUser("localhost")
 			if config["address"] not in ("localhost", "127.0.0.1"):
 				createUser(config["address"])
@@ -183,13 +235,26 @@ def initializeDatabase(dbAdminUser, dbAdminPass, config, systemConfig=None, noti
 			createUser(systemConfig["hostname"])
 
 	# Test connection / credentials
-	notificationFunction("Testing connection to database '{database}' as " "user '{username}'".format(**config))
+	notificationFunction(
+		"Testing connection to database '{database}' as " "user '{username}'".format(
+			**config
+		)
+	)
 
-	userConnectionSettings = {"host": config["address"], "user": config["username"], "passwd": config["password"], "db": config["database"]}
+	userConnectionSettings = {
+		"host": config["address"],
+		"user": config["username"],
+		"passwd": config["password"],
+		"db": config["database"],
+	}
 	try:
 		with closing(MySQLdb.connect(**userConnectionSettings)):
 			pass
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		raise DatabaseConnectionFailedException(err) from err
 
-	notificationFunction("Successfully connected to host '{address}' as user" " '{username}'".format(**config))
+	notificationFunction(
+		"Successfully connected to host '{address}' as user" " '{username}'".format(
+			**config
+		)
+	)

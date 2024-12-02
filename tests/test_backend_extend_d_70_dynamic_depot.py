@@ -19,6 +19,7 @@ through ``exec``.
 """
 
 import random
+
 import pytest
 
 from OPSI.Logger import Logger
@@ -32,92 +33,110 @@ def testDepotSelectionAlgorythmIsExecutable(depotSelectionAlgorythm):
 	Executing the default configuration should never fail.
 	"""
 	currentLocals = locals()
-	assert 'selectDepot' not in currentLocals
+	assert "selectDepot" not in currentLocals
 	exec(depotSelectionAlgorythm, None, currentLocals)
-	assert 'selectDepot' in currentLocals
-	selectDepot = currentLocals['selectDepot']
+	assert "selectDepot" in currentLocals
+	selectDepot = currentLocals["selectDepot"]
 	print(selectDepot)
 
 
-def testDepotSelectionAlgorythmReturnsMasterDepotIfNoAlternativesAreGiven(depotSelectionAlgorythm):
+def testDepotSelectionAlgorythmReturnsMasterDepotIfNoAlternativesAreGiven(
+	depotSelectionAlgorythm,
+):
 	currentLocals = locals()
 	exec(depotSelectionAlgorythm, None, currentLocals)
-	selectDepot = currentLocals['selectDepot']
+	selectDepot = currentLocals["selectDepot"]
 
-	masterDepot = FakeDepot('clients.master.depot')
+	masterDepot = FakeDepot("clients.master.depot")
 	assert masterDepot == selectDepot({}, masterDepot)
 
 
 def testDepotSelectionAlgorithmByLowestLatency(depotSelectionAlgorithmByLatency):
 	currentLocals = locals()
 	exec(depotSelectionAlgorithmByLatency, None, currentLocals)
-	selectDepot = currentLocals['selectDepot']
+	selectDepot = currentLocals["selectDepot"]
 
-	masterDepot = FakeDepot('clients.master.depot')
-	lowLatencyRepo = FakeDepot('x.y.z', latency=1.5)
-	alternativeDepots = [FakeDepot('a'), lowLatencyRepo, FakeDepot('b', latency=5)]
+	masterDepot = FakeDepot("clients.master.depot")
+	lowLatencyRepo = FakeDepot("x.y.z", latency=1.5)
+	alternativeDepots = [FakeDepot("a"), lowLatencyRepo, FakeDepot("b", latency=5)]
 	random.shuffle(alternativeDepots)
 	assert lowLatencyRepo == selectDepot({}, masterDepot, alternativeDepots)
 
 
-def testDepotSelectionByLatencyIgnoresDepotsWithoutLatency(depotSelectionAlgorithmByLatency):
+def testDepotSelectionByLatencyIgnoresDepotsWithoutLatency(
+	depotSelectionAlgorithmByLatency,
+):
 	currentLocals = locals()
 	exec(depotSelectionAlgorithmByLatency, None, currentLocals)
-	selectDepot = currentLocals['selectDepot']
+	selectDepot = currentLocals["selectDepot"]
 
-	highLatencyRepo = FakeDepot('a', latency=10)
+	highLatencyRepo = FakeDepot("a", latency=10)
 	alternativeDepots = [highLatencyRepo]
 	random.shuffle(alternativeDepots)
-	assert highLatencyRepo == selectDepot({}, FakeDepot('m', latency=None), alternativeDepots)
+	assert highLatencyRepo == selectDepot(
+		{}, FakeDepot("m", latency=None), alternativeDepots
+	)
 
 
-def testDepotSelectionAlgorithmByMasterDepotAndLatency(depotSelectionAlgorithmByMasterDepotAndLatency):
-	masterDepot = FakeDepot('clients.master.depot')
-	wantedRepo = FakeDepot('our.wanted.repo', latency=1, masterDepotId='clients.master.depot')
+def testDepotSelectionAlgorithmByMasterDepotAndLatency(
+	depotSelectionAlgorithmByMasterDepotAndLatency,
+):
+	masterDepot = FakeDepot("clients.master.depot")
+	wantedRepo = FakeDepot(
+		"our.wanted.repo", latency=1, masterDepotId="clients.master.depot"
+	)
 	alternativeDepots = [
-		FakeDepot('another.master', latency=0.5),
-		FakeDepot('sub.for.another.master', latency=0.4, masterDepotId='another.master'),
+		FakeDepot("another.master", latency=0.5),
+		FakeDepot(
+			"sub.for.another.master", latency=0.4, masterDepotId="another.master"
+		),
 		wantedRepo,
-		FakeDepot('slower.repo.with.right.master', latency=1.5, masterDepotId='clients.master.depot')
+		FakeDepot(
+			"slower.repo.with.right.master",
+			latency=1.5,
+			masterDepotId="clients.master.depot",
+		),
 	]
 	random.shuffle(alternativeDepots)
 
-	currentLocals = locals()
-	exec(depotSelectionAlgorithmByMasterDepotAndLatency)
-	selectDepot = currentLocals['selectDepot']
+	loc = {}
+	exec(depotSelectionAlgorithmByMasterDepotAndLatency, None, loc)
+	selectDepot = loc["selectDepot"]
 	assert wantedRepo == selectDepot({}, masterDepot, alternativeDepots)
 
 
 def testDepotSelectionAlgorithmByRandom(depotSelectionAlgorithmByRandom):
 	EXPECTATION_MARGIN = 0.7
-	NUM_DEPOTS = 3		# at least 2
+	NUM_DEPOTS = 3  # at least 2
 	NUM_RUNS = 300
 
-	currentLocals = locals()
-	exec(depotSelectionAlgorithmByRandom, None, currentLocals)
-	selectDepot = currentLocals['selectDepot']
+	loc = {}
+	exec(depotSelectionAlgorithmByRandom, None, loc)
+	selectDepot = loc["selectDepot"]
 
-	masterDepot = FakeDepot('clients.master.depot')
-	alternativeDepots = [FakeDepot(f'depot{num}') for num in range(NUM_DEPOTS-1)]
+	masterDepot = FakeDepot("clients.master.depot")
+	alternativeDepots = [FakeDepot(f"depot{num}") for num in range(NUM_DEPOTS - 1)]
 	result_counts = [0] * NUM_DEPOTS
 	for _ in range(NUM_RUNS):
 		result = selectDepot({}, masterDepot, alternativeDepots)
 		try:
 			result_counts[alternativeDepots.index(result)] += 1
-		except ValueError:	# in case of master depot
+		except ValueError:  # in case of master depot
 			result_counts[-1] += 1
 	print("random depot selection distribution:", result_counts)
 	for count in result_counts:
 		assert count >= EXPECTATION_MARGIN * NUM_RUNS / NUM_DEPOTS
 
 
-@pytest.fixture(params=[
-	'getDepotSelectionAlgorithm',  # must always return a working algo
-	'getDepotSelectionAlgorithmByLatency',
-	'getDepotSelectionAlgorithmByMasterDepotAndLatency',
-	'getDepotSelectionAlgorithmByNetworkAddress',
-	'getDepotSelectionAlgorithmByRandom'
-])
+@pytest.fixture(
+	params=[
+		"getDepotSelectionAlgorithm",  # must always return a working algo
+		"getDepotSelectionAlgorithmByLatency",
+		"getDepotSelectionAlgorithmByMasterDepotAndLatency",
+		"getDepotSelectionAlgorithmByNetworkAddress",
+		"getDepotSelectionAlgorithmByRandom",
+	]
+)
 def depotSelectionAlgorythm(request, backendManager):
 	"""
 	All possible algorythms.
@@ -170,7 +189,7 @@ def showAlgoWithLineNumbers(algo):
 	"""
 	Prints the given algorythm with line numbers preceding each line.
 	"""
-	for number, line in enumerate(algo.split('\n')):
+	for number, line in enumerate(algo.split("\n")):
 		print("{num}: {line}".format(num=number, line=line))
 
 
@@ -182,4 +201,6 @@ class FakeDepot:
 		self.masterDepotId = masterDepotId
 
 	def __repr__(self):
-		return "<FakeDepot({id}, latency={latency}, masterDepotId={masterDepotId})>".format(**self.__dict__)
+		return "<FakeDepot({id}, latency={latency}, masterDepotId={masterDepotId})>".format(
+			**self.__dict__
+		)

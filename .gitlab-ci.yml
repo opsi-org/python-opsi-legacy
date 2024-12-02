@@ -1,11 +1,11 @@
-image: docker.uib.gmbh/opsi/dev/pybuilder:uib-python-3.11
+image: docker.uib.gmbh/opsi/dev/pybuilder:deb9-py3.13
 
 stages:
   - test
   - doc
   - publish
 
-pylint-pytest:
+lint-and-test:
   #when: manual
   services:
     - name: mysql:8.3
@@ -32,9 +32,10 @@ pylint-pytest:
     cp tests/Backends/config.py.gitlabci tests/Backends/config.py
     apt-get update
     apt-get --yes install default-libmysqlclient-dev librsync1
+    poetry env use 3.13
     poetry lock --no-update
     poetry install
-    poetry run pylint --disable=R,C,fixme OPSI
+    poetry run ruff check OPSI tests
     poetry add mysqlclient==2.1.1
     poetry run pytest --tb=short -x -o junit_family=xunit2 --junitxml=testreport.xml --cov-append --cov-report term --cov-report xml -v tests
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+)%/'
@@ -58,6 +59,7 @@ apidoc:
     - eval $(ssh-agent -s)
     - ssh-add <(echo "$BLOG_PUBLISH_PRIVATE_KEY")
   script:
+    - poetry env use 3.13
     - poetry lock --no-update
     - poetry install
     - poetry run opsi-dev-cli apidoc makehtml --output python-opsi
@@ -68,6 +70,7 @@ apidoc:
 uibpypi:
   stage: publish
   script:
+    - poetry env use 3.13
     - poetry lock --no-update
     - poetry install
     - poetry run opsi-dev-tool -l info --uib-pypi-publish

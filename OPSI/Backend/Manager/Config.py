@@ -25,14 +25,14 @@ def loadBackendConfig(path):
 		raise BackendConfigurationError(f"Backend config file '{path}' not found")
 
 	moduleGlobals = {
-		'config': {},  # Will be filled after loading
-		'module': '',  # Will be filled after loading
-		'os': os,
-		'socket': socket,
-		'sys': sys,
+		"config": {},  # Will be filled after loading
+		"module": "",  # Will be filled after loading
+		"os": os,
+		"socket": socket,
+		"sys": sys,
 	}
 
-	exec(_readFile(path), moduleGlobals)  # pylint: disable=exec-used
+	exec(_readFile(path), moduleGlobals)
 
 	return moduleGlobals
 

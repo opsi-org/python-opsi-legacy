@@ -19,20 +19,21 @@ from .helpers import workInTemporaryDirectory, mock
 @contextmanager
 def fakeWIMEnvironment(tempDir=None):
 	from .conftest import TEST_DATA_PATH
+
 	with workInTemporaryDirectory(tempDir) as temporaryDir:
-		fakeWimPath = os.path.join(temporaryDir, 'fake.wim')
-		with open(fakeWimPath, 'w'):
+		fakeWimPath = os.path.join(temporaryDir, "fake.wim")
+		with open(fakeWimPath, "w"):
 			pass
 
-		exampleData = os.path.join(TEST_DATA_PATH, 'wimlib.example')
+		exampleData = os.path.join(TEST_DATA_PATH, "wimlib.example")
 
 		def fakeReturningOutput(_unused):
-			with open(exampleData, 'rt', encoding='utf-8') as f:
+			with open(exampleData, "rt", encoding="utf-8") as f:
 				content = f.read()
-				return content.split('\n')
+				return content.split("\n")
 
-		with mock.patch('OPSI.Util.WIM.which', lambda x: '/usr/bin/echo'):
-			with mock.patch('OPSI.Util.WIM.execute', fakeReturningOutput):
+		with mock.patch("OPSI.Util.WIM.which", lambda x: "/usr/bin/echo"):
+			with mock.patch("OPSI.Util.WIM.execute", fakeReturningOutput):
 				yield fakeWimPath
 
 
@@ -44,22 +45,22 @@ def fakeWimPath(dist_data_path):
 
 def testParsingNonExistingWimFileFails():
 	with pytest.raises(OSError):
-		parseWIM('not_here.wim')
+		parseWIM("not_here.wim")
 
 
 def testParsingWIMReturnNoInformationFails(fakeWimPath):
-	with mock.patch('OPSI.Util.WIM.execute', lambda x: ['']):
+	with mock.patch("OPSI.Util.WIM.execute", lambda x: [""]):
 		with pytest.raises(ValueError):
 			parseWIM(fakeWimPath)
 
 
 def testParsingWIM(fakeWimPath):
 	imageData = {
-		'Windows 7 STARTERN': (set(['de-DE']), 'de-DE'),
-		'Windows 7 HOMEBASICN': (set(['de-DE']), 'de-DE'),
-		'Windows 7 HOMEPREMIUMN': (set(['de-DE']), 'de-DE'),
-		'Windows 7 PROFESSIONALN': (set(['de-DE']), 'de-DE'),
-		'Windows 7 ULTIMATEN': (set(['de-DE']), 'de-DE'),
+		"Windows 7 STARTERN": (set(["de-DE"]), "de-DE"),
+		"Windows 7 HOMEBASICN": (set(["de-DE"]), "de-DE"),
+		"Windows 7 HOMEPREMIUMN": (set(["de-DE"]), "de-DE"),
+		"Windows 7 PROFESSIONALN": (set(["de-DE"]), "de-DE"),
+		"Windows 7 ULTIMATEN": (set(["de-DE"]), "de-DE"),
 	}
 
 	for image in parseWIM(fakeWimPath):

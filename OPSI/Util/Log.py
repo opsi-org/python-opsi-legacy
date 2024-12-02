@@ -8,7 +8,7 @@ Utilities for working with logs.
 
 from OPSI.Types import forceInt
 
-__all__ = ('truncateLogData', )
+__all__ = ("truncateLogData",)
 
 
 def truncateLogData(data, maxSize):
@@ -23,7 +23,7 @@ def truncateLogData(data, maxSize):
 	maxSize = forceInt(maxSize)
 	dataLength = len(data)
 	if dataLength > maxSize:
-		start = data.find('\n', dataLength - maxSize)
+		start = data.find("\n", dataLength - maxSize)
 		if start == -1:
 			start = dataLength - maxSize
 		return data[start:].lstrip()

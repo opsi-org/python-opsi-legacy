@@ -31,14 +31,13 @@ from OPSI.System.Posix import (
 	locateDHCPDConfig,
 )
 from OPSI.Util.File import DHCPDConf_Block, DHCPDConf_Parameter, DHCPDConfFile
-from OPSI.Util.Task.Sudoers import patchSudoersFileToAllowRestartingDHCPD
 
 logger = get_logger("opsi.general")
 
 DHCPD_CONF = locateDHCPDConfig(default="/etc/dhcp/dhcpd.conf")
 
 
-def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def configureDHCPD(configFile=DHCPD_CONF):
 	"""
 	Configure the configuration file for DHCPD.
 
@@ -60,13 +59,22 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 	dhcpdConf.parse()
 
 	confChanged = False
-	if dhcpdConf.getGlobalBlock().getParameters_hash().get("use-host-decl-names", False):
+	if (
+		dhcpdConf.getGlobalBlock()
+		.getParameters_hash()
+		.get("use-host-decl-names", False)
+	):
 		logger.info("  use-host-decl-names already enabled")
 	else:
 		confChanged = True
 		logger.notice("  enabling use-host-decl-names")
 		dhcpdConf.getGlobalBlock().addComponent(
-			DHCPDConf_Parameter(startLine=-1, parentBlock=dhcpdConf.getGlobalBlock(), key="use-host-decl-names", value=True)
+			DHCPDConf_Parameter(
+				startLine=-1,
+				parentBlock=dhcpdConf.getGlobalBlock(),
+				key="use-host-decl-names",
+				value=True,
+			)
 		)
 
 	subnets = dhcpdConf.getGlobalBlock().getBlocks("subnet", recursive=True)
@@ -78,7 +86,12 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 				startLine=-1,
 				parentBlock=dhcpdConf.getGlobalBlock(),
 				type="subnet",
-				settings=["subnet", sysConfig["subnet"], "netmask", sysConfig["netmask"]],
+				settings=[
+					"subnet",
+					sysConfig["subnet"],
+					"netmask",
+					sysConfig["netmask"],
+				],
 			)
 		)
 
@@ -88,7 +101,11 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 		if not groups:
 			confChanged = True
 			logger.notice("    No groups found, adding group")
-			subnet.addComponent(DHCPDConf_Block(startLine=-1, parentBlock=subnet, type="group", settings=["group"]))
+			subnet.addComponent(
+				DHCPDConf_Block(
+					startLine=-1, parentBlock=subnet, type="group", settings=["group"]
+				)
+			)
 
 		for group in subnet.getBlocks("group"):
 			logger.info("    Configuring group")
@@ -98,7 +115,14 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 				logger.info("      next-server already set")
 			else:
 				confChanged = True
-				group.addComponent(DHCPDConf_Parameter(startLine=-1, parentBlock=group, key="next-server", value=sysConfig["ipAddress"]))
+				group.addComponent(
+					DHCPDConf_Parameter(
+						startLine=-1,
+						parentBlock=group,
+						key="next-server",
+						value=sysConfig["ipAddress"],
+					)
+				)
 				logger.notice("      next-server set to %s", sysConfig["ipAddress"])
 
 			if params.get("filename"):
@@ -108,7 +132,11 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 				filename = "linux/pxelinux.0"
 				if isSLES() or isOpenSUSE():
 					filename = "opsi/pxelinux.0"
-				group.addComponent(DHCPDConf_Parameter(startLine=-1, parentBlock=group, key="filename", value=filename))
+				group.addComponent(
+					DHCPDConf_Parameter(
+						startLine=-1, parentBlock=group, key="filename", value=filename
+					)
+				)
 				logger.notice("      filename set to %s", filename)
 
 	restartCommand = getDHCPDRestartCommand(default="/etc/init.d/dhcp3-server restart")
@@ -122,11 +150,8 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 		logger.notice("  Restarting dhcpd")
 		try:
 			execute(restartCommand)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning(err)
-
-	logger.notice("Configuring sudoers")
-	patchSudoersFileToAllowRestartingDHCPD(restartCommand)
 
 	opsiconfdUid = pwd.getpwnam(OPSICONFD_USER)[2]
 	adminGroupGid = grp.getgrnam(ADMIN_GROUP)[2]
@@ -138,7 +163,11 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 		if dhcpDir == "/etc":
 			return
 
-		logger.notice('Detected Red Hat-family system. Providing rights on "%s" to group "%s"', dhcpDir, ADMIN_GROUP)
+		logger.notice(
+			'Detected Red Hat-family system. Providing rights on "%s" to group "%s"',
+			dhcpDir,
+			ADMIN_GROUP,
+		)
 		os.chown(dhcpDir, -1, adminGroupGid)
 
 	backendConfigFile = os.path.join("/etc", "opsi", "backends", "dhcpd.conf")

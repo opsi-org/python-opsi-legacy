@@ -13,8 +13,11 @@ import pytest
 
 from OPSI.Util.Task.UpdateBackend.File import (
 	FileBackendUpdateError,
-	getVersionFilePath, readBackendVersion, _readVersionFile,
-	updateBackendVersion, updateFileBackend
+	getVersionFilePath,
+	readBackendVersion,
+	_readVersionFile,
+	updateBackendVersion,
+	updateFileBackend,
 )
 
 from .Backends.File import getFileBackend
@@ -27,18 +30,18 @@ def fileBackend(tempDir):
 
 
 def testUpdatingFileBackend(fileBackend, tempDir):
-	config = os.path.join(tempDir, 'etc', 'opsi', 'backends', 'file.conf')
+	config = os.path.join(tempDir, "etc", "opsi", "backends", "file.conf")
 
 	updateFileBackend(config)
 
 
 def testReadingSchemaVersionFromMissingFile(tempDir):
-	assert readBackendVersion(os.path.join(tempDir, 'missingbasedir')) is None
+	assert readBackendVersion(os.path.join(tempDir, "missingbasedir")) is None
 
 
 @pytest.fixture
 def baseDirectory(tempDir):
-	newDir = os.path.join(tempDir, 'config')
+	newDir = os.path.join(tempDir, "config")
 	os.makedirs(newDir)
 	yield newDir
 
@@ -47,18 +50,13 @@ def baseDirectory(tempDir):
 def writtenConfig(baseDirectory):
 	configFile = getVersionFilePath(baseDirectory)
 	config = {
-		0:
-			{
-				"start": 1495529319.022833,
-				"end": 1495529341.870662,
-			},
-		1:
-			{
-				"start": 1495539432.271123,
-				"end": 1495539478.045244
-			},
+		0: {
+			"start": 1495529319.022833,
+			"end": 1495529341.870662,
+		},
+		1: {"start": 1495539432.271123, "end": 1495539478.045244},
 	}
-	with open(configFile, 'w') as f:
+	with open(configFile, "w") as f:
 		json.dump(config, f)
 
 	yield config
@@ -75,14 +73,17 @@ def testReadingSchemaVersion(baseDirectory, writtenConfig):
 	assert version > 0
 
 
-@pytest.mark.parametrize("config", [
-	{0: {"start": 1495529319.022833}},  # missing end
-	{0: {}}  # missing start
-])
+@pytest.mark.parametrize(
+	"config",
+	[
+		{0: {"start": 1495529319.022833}},  # missing end
+		{0: {}},  # missing start
+	],
+)
 def testRaisingExceptionOnUnfinishedUpdate(baseDirectory, config):
 	configFile = getVersionFilePath(baseDirectory)
 
-	with open(configFile, 'w') as f:
+	with open(configFile, "w") as f:
 		json.dump(config, f)
 
 	with pytest.raises(FileBackendUpdateError):

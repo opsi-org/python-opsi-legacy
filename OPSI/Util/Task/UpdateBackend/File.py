@@ -33,7 +33,10 @@ class FileBackendUpdateError(BackendUpdateError):
 	"""
 
 
-def updateFileBackend(backendConfigFile="/etc/opsi/backends/file.conf", additionalBackendConfiguration=None):
+def updateFileBackend(
+	backendConfigFile="/etc/opsi/backends/file.conf",
+	additionalBackendConfiguration=None,
+):
 	"""
 	Applies migrations to the file-based backend.
 
@@ -86,10 +89,14 @@ started but never ended.
 
 	for version, info in schemaConfig.items():
 		if "start" not in info:
-			raise FileBackendUpdateError(f"Update {version} gone wrong: start time missing.")
+			raise FileBackendUpdateError(
+				f"Update {version} gone wrong: start time missing."
+			)
 
 		if "end" not in info:
-			raise FileBackendUpdateError(f"Update {version} gone wrong: end time missing.")
+			raise FileBackendUpdateError(
+				f"Update {version} gone wrong: end time missing."
+			)
 
 	maximumVersion = max(schemaConfig)
 

@@ -9,9 +9,10 @@ LDAP authentication
 from typing import Set
 
 import ldap3
+from opsicommon.logging import get_logger
+
 from OPSI.Backend.Manager.Authentication import AuthenticationModule
 from OPSI.Exceptions import BackendAuthenticationError
-from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
 
@@ -45,7 +46,9 @@ class LDAPAuthentication(AuthenticationModule):
 		self._ldap = None
 		if self._bind_user is None:
 			if self._uri["base"]:
-				realm = ".".join([dc.split("=")[1] for dc in self._uri["base"].split(",")])
+				realm = ".".join(
+					[dc.split("=")[1] for dc in self._uri["base"].split(",")]
+				)
 			else:
 				realm = self._uri["host"]
 			self._bind_user = "{username}@" + realm
@@ -79,18 +82,26 @@ class LDAPAuthentication(AuthenticationModule):
 		"""
 		self._ldap = None
 		try:
-			bind_user = self._bind_user.replace("{username}", username).replace("{base}", self._uri["base"])
+			bind_user = self._bind_user.replace("{username}", username).replace(
+				"{base}", self._uri["base"]
+			)
 			logger.info("Binding as user %s to server %s", bind_user, self.server_url)
 			# self._ldap = ldap3.Connection(server=self.server_url, client_strategy=ldap3.SAFE_SYNC, user=bind_user, password=password)
-			self._ldap = ldap3.Connection(server=self.server_url, user=bind_user, password=password)
+			self._ldap = ldap3.Connection(
+				server=self.server_url, user=bind_user, password=password
+			)
 			if not self._ldap.bind():
 				raise RuntimeError(f"bind failed: {self._ldap.result}")
 			# self._ldap.extend.standard.who_am_i()
 		except Exception as err:
-			logger.info("LDAP authentication failed for user '%s'", username, exc_info=True)
-			raise BackendAuthenticationError(f"LDAP authentication failed for user '{username}': {err}") from err
+			logger.info(
+				"LDAP authentication failed for user '%s'", username, exc_info=True
+			)
+			raise BackendAuthenticationError(
+				f"LDAP authentication failed for user '{username}': {err}"
+			) from err
 
-	def get_groupnames(self, username: str) -> Set[str]:  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def get_groupnames(self, username: str) -> Set[str]:
 		groupnames = set()
 		if not self._ldap:
 			raise RuntimeError("Failed to get groupnames, not connected to ldap")
@@ -98,10 +109,17 @@ class LDAPAuthentication(AuthenticationModule):
 		ldap_type = "openldap"
 		user_dn = None
 		group_dns = []
-		for uf in [f"(&(objectclass=user)(sAMAccountName={username}))", f"(&(objectclass=posixAccount)(uid={username}))"]:
+		for uf in [
+			f"(&(objectclass=user)(sAMAccountName={username}))",
+			f"(&(objectclass=posixAccount)(uid={username}))",
+		]:
 			try:
-				logger.debug("Searching user in ldap base=%s, filter=%s", self._uri["base"], uf)
-				self._ldap.search(self._uri["base"], uf, search_scope=ldap3.SUBTREE, attributes="*")
+				logger.debug(
+					"Searching user in ldap base=%s, filter=%s", self._uri["base"], uf
+				)
+				self._ldap.search(
+					self._uri["base"], uf, search_scope=ldap3.SUBTREE, attributes="*"
+				)
 				for entry in sorted(self._ldap.entries):
 					user_dn = entry.entry_dn
 					if "memberOf" in entry.entry_attributes:
@@ -135,8 +153,15 @@ class LDAPAuthentication(AuthenticationModule):
 		for base in group_dns or [self._uri["base"]]:
 			scope = ldap3.BASE if group_dns else ldap3.SUBTREE
 
-			logger.debug("Searching groups in ldap base=%s, scope=%s, filter=%s", base, scope, group_filter)
-			self._ldap.search(base, group_filter, search_scope=scope, attributes=attributes)
+			logger.debug(
+				"Searching groups in ldap base=%s, scope=%s, filter=%s",
+				base,
+				scope,
+				group_filter,
+			)
+			self._ldap.search(
+				base, group_filter, search_scope=scope, attributes=attributes
+			)
 
 			for entry in sorted(self._ldap.entries):
 				group_name = None
@@ -150,9 +175,13 @@ class LDAPAuthentication(AuthenticationModule):
 					groupnames.add(group_name)
 					# Get nested groups (one level only, uses RDN)
 					if "memberOf" in entry.entry_attributes:
-						logger.debug("Nested groups of %s: %s", entry.entry_dn, entry.memberOf)
+						logger.debug(
+							"Nested groups of %s: %s", entry.entry_dn, entry.memberOf
+						)
 						for nested_group_dn in entry.memberOf:
-							groupnames.add(nested_group_dn.split(",")[0].split("=", 1)[1])
+							groupnames.add(
+								nested_group_dn.split(",")[0].split("=", 1)[1]
+							)
 
 				elif "member" in entry.entry_attributes:
 					logger.debug("Entry %s member: %s", entry.entry_dn, entry.member)
@@ -161,7 +190,9 @@ class LDAPAuthentication(AuthenticationModule):
 							groupnames.add(group_name)
 							break
 				elif "memberUid" in entry.entry_attributes:
-					logger.debug("Entry %s memberUid: %s", entry.entry_dn, entry.memberUid)
+					logger.debug(
+						"Entry %s memberUid: %s", entry.entry_dn, entry.memberUid
+					)
 					for member in entry.memberUid:
 						if member.lower() == username.lower():
 							groupnames.add(group_name)
@@ -172,5 +203,5 @@ class LDAPAuthentication(AuthenticationModule):
 		if self._ldap:
 			try:
 				self._ldap.unbind()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.warning(err)

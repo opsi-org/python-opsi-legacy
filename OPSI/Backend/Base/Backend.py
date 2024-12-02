@@ -20,19 +20,21 @@ from hashlib import md5
 from textwrap import dedent
 from typing import Union
 
+# pyright: reportMissingImports=false
 try:
 	# PyCryptodome from pypi installs into Crypto
 	from Crypto.Hash import MD5
 	from Crypto.Signature import pkcs1_15
 except (ImportError, OSError):
-	# pyright: reportMissingImports=false
 	# python3-pycryptodome installs into Cryptodome
 	from Cryptodome.Hash import MD5
 	from Cryptodome.Signature import pkcs1_15
 
+from opsicommon.logging import get_logger
+
 from OPSI import __version__ as LIBRARY_VERSION
 from OPSI.Exceptions import BackendError
-from OPSI.Object import *  # this is needed for dynamic loading # pylint: disable=wildcard-import,unused-wildcard-import
+from OPSI.Object import *  # this is needed for dynamic loading # noqa: F401,F403
 from OPSI.Types import (
 	forceDict,
 	forceFilename,
@@ -41,7 +43,6 @@ from OPSI.Types import (
 	forceUnicodeList,
 )
 from OPSI.Util import compareVersions, getPublicKey
-from opsicommon.logging import get_logger
 
 __all__ = ("describeInterface", "Backend")
 
@@ -52,7 +53,7 @@ OPSI_LICENSE_PATH = "/etc/opsi/licenses"
 logger = get_logger("opsi.general")
 
 
-def describeInterface(instance):  # pylint: disable=too-many-locals
+def describeInterface(instance):
 	"""
 	Describes what public methods are available and the signatures they use.
 
@@ -92,7 +93,12 @@ def describeInterface(instance):  # pylint: disable=too-many-locals
 				stars = "*" * index
 				params.extend([f"{stars}{arg}" for arg in forceList(element)])
 
-		logger.trace("%s interface method: name %s, params %s", instance.__class__.__name__, methodName, params)
+		logger.trace(
+			"%s interface method: name %s, params %s",
+			instance.__class__.__name__,
+			methodName,
+			params,
+		)
 		doc = function.__doc__
 		if doc:
 			doc = dedent(doc).lstrip() or None
@@ -107,7 +113,7 @@ def describeInterface(instance):  # pylint: disable=too-many-locals
 			"deprecated": getattr(function, "deprecated", False),
 			"alternative_method": getattr(function, "alternative_method", None),
 			"doc": doc,
-			"annotations": annotations_
+			"annotations": annotations_,
 		}
 
 	return [methods[name] for name in sorted(list(methods.keys()))]
@@ -118,7 +124,9 @@ class BackendOptions:
 	A class used to combine option defaults and changed options
 	"""
 
-	def __init__(self, option_defaults: dict, option_store: Union[dict, callable] = None):
+	def __init__(
+		self, option_defaults: dict, option_store: Union[dict, callable] = None
+	):
 		"""
 		:param option_defaults: The default option items as dict
 		:param options_store: A dict or a callable to retrieve a dict to store changed options
@@ -159,7 +167,7 @@ class BackendOptions:
 		return dict(self.items())
 
 
-class Backend:  # pylint: disable=too-many-instance-attributes
+class Backend:
 	"""
 	Base backend.
 	"""
@@ -187,7 +195,7 @@ This defaults to ``self``.
 		self._opsi_license_path = OPSI_LICENSE_PATH
 		option_store = {}
 
-		for (option, value) in kwargs.items():
+		for option, value in kwargs.items():
 			option = option.lower()
 			if option == "name":
 				self._name = value
@@ -224,27 +232,35 @@ This defaults to ``self``.
 		"""Getting the context backend."""
 		return self._context
 
-	def _objectHashMatches(self, objHash, **filter):  # pylint: disable=redefined-builtin,too-many-branches,no-self-use
+	def _objectHashMatches(self, objHash, **filter):
 		"""
 		Checks if the opsi object hash matches the filter.
 
 		:rtype: bool
 		"""
-		for attribute, value in objHash.items():  # pylint: disable=too-many-nested-blocks
+		for attribute, value in objHash.items():
 			if not filter.get(attribute):
 				continue
 			matched = False
 
 			try:
-				logger.debug("Testing match of filter %s of attribute %s with value %s", filter[attribute], attribute, value)
+				logger.debug(
+					"Testing match of filter %s of attribute %s with value %s",
+					filter[attribute],
+					attribute,
+					value,
+				)
 				filterValues = forceUnicodeList(filter[attribute])
-				if forceUnicodeList(value) == filterValues or forceUnicode(value) in filterValues:
+				if (
+					forceUnicodeList(value) == filterValues
+					or forceUnicode(value) in filterValues
+				):
 					matched = True
 				else:
 					for filterValue in filterValues:
 						if attribute == "type":
 							match = False
-							Class = eval(filterValue)  # pylint: disable=eval-used
+							Class = eval(filterValue)
 							for subClass in Class.subClasses:
 								if subClass == value:
 									matched = True
@@ -261,35 +277,45 @@ This defaults to ``self``.
 						if value is None or isinstance(value, bool):
 							continue
 
-						if isinstance(value, (float, int)) or re.search(r"^\s*([>=<]+)\s*([\d.]+)", forceUnicode(filterValue)):
+						if isinstance(value, (float, int)) or re.search(
+							r"^\s*([>=<]+)\s*([\d.]+)", forceUnicode(filterValue)
+						):
 							operator = "=="
 							val = forceUnicode(filterValue)
 							match = re.search(r"^\s*([>=<]+)\s*([\d.]+)", filterValue)
 							if match:
-								operator = match.group(1)  # pylint: disable=maybe-no-member
-								val = match.group(2)  # pylint: disable=maybe-no-member
+								operator = match.group(1)
+								val = match.group(2)
 
 							try:
 								matched = compareVersions(value, operator, val)
 								if matched:
 									break
-							except Exception:  # pylint: disable=broad-except
+							except Exception:
 								pass
 
 							continue
 
-						if "*" in filterValue and re.search(f"^{filterValue.replace('*', '.*')}$", value):
+						if "*" in filterValue and re.search(
+							f"^{filterValue.replace('*', '.*')}$", value
+						):
 							matched = True
 							break
 
 				if matched:
-					logger.debug("Value %s matched filter %s, attribute %s", value, filter[attribute], attribute)
+					logger.debug(
+						"Value %s matched filter %s, attribute %s",
+						value,
+						filter[attribute],
+						attribute,
+					)
 				else:
 					# No match, we can stop further checks.
 					return False
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				raise BackendError(
-					f"Testing match of filter {filter[attribute]} of attribute '{attribute}' " f"with value {value} failed: {err}"
+					f"Testing match of filter {filter[attribute]} of attribute '{attribute}' "
+					f"with value {value} failed: {err}"
 				) from err
 
 		return True
@@ -302,12 +328,17 @@ This defaults to ``self``.
 		:type options: dict
 		"""
 		options = forceDict(options)
-		for (key, value) in options.items():
+		for key, value in options.items():
 			if key not in self._options:
 				continue
 
 			if not isinstance(value, self._options[key].__class__):
-				logger.debug("Wrong type %s for option %s, expecting type %s", type(value), key, type(self._options[key]))
+				logger.debug(
+					"Wrong type %s for option %s, expecting type %s",
+					type(value),
+					key,
+					type(self._options[key]),
+				)
 				continue
 
 			self._options[key] = value
@@ -332,7 +363,7 @@ This defaults to ``self``.
 		"""
 		return describeInterface(self)
 
-	def backend_info(self):  # pylint: disable=too-many-branches,too-many-statements
+	def backend_info(self):
 		"""
 		Get info about the used opsi version and the licensed modules.
 
@@ -347,7 +378,11 @@ This defaults to ``self``.
 					for line in modulesFile:
 						line = line.strip()
 						if "=" not in line:
-							logger.error("Found bad line '%s' in modules file '%s'", line, self._opsiModulesFile)
+							logger.error(
+								"Found bad line '%s' in modules file '%s'",
+								line,
+								self._opsiModulesFile,
+							)
 							continue
 						(module, state) = line.split("=", 1)
 						module = module.strip().lower()
@@ -361,7 +396,11 @@ This defaults to ``self``.
 								helpermodules[module] = state
 								state = int(state)
 							except ValueError:
-								logger.error("Found bad line '%s' in modules file '%s'", line, self._opsiModulesFile)
+								logger.error(
+									"Found bad line '%s' in modules file '%s'",
+									line,
+									self._opsiModulesFile,
+								)
 								continue
 						if isinstance(state, int):
 							modules[module] = state > 0
@@ -376,7 +415,11 @@ This defaults to ``self``.
 					raise ValueError("Customer not found")
 				if (
 					modules.get("expires", "") != "never"
-					and time.mktime(time.strptime(modules.get("expires", "2000-01-01"), "%Y-%m-%d")) - time.time() <= 0
+					and time.mktime(
+						time.strptime(modules.get("expires", "2000-01-01"), "%Y-%m-%d")
+					)
+					- time.time()
+					<= 0
 				):
 					modules = {"valid": False}
 					raise ValueError("Signature expired")
@@ -405,7 +448,9 @@ This defaults to ``self``.
 
 				modules["valid"] = False
 				if modules["signature"].startswith("{"):
-					s_bytes = int(modules["signature"].split("}", 1)[-1]).to_bytes(256, "big")
+					s_bytes = int(modules["signature"].split("}", 1)[-1]).to_bytes(
+						256, "big"
+					)
 					try:
 						pkcs1_15.new(publicKey).verify(MD5.new(data.encode()), s_bytes)
 						modules["valid"] = True
@@ -414,15 +459,23 @@ This defaults to ``self``.
 						pass
 				else:
 					h_int = int.from_bytes(md5(data.encode()).digest(), "big")
-					s_int = publicKey._encrypt(int(modules["signature"]))  # pylint: disable=protected-access
+					s_int = publicKey._encrypt(int(modules["signature"]))
 					modules["valid"] = h_int == s_int
 
-			except Exception as err:  # pylint: disable=broad-except
-				logger.error("Failed to read opsi modules file '%s': %s", self._opsiModulesFile, err)
+			except Exception as err:
+				logger.error(
+					"Failed to read opsi modules file '%s': %s",
+					self._opsiModulesFile,
+					err,
+				)
 		else:
 			logger.info("Opsi modules file '%s' not found", self._opsiModulesFile)
 
-		return {"opsiVersion": self._opsiVersion, "modules": modules, "realmodules": helpermodules}
+		return {
+			"opsiVersion": self._opsiVersion,
+			"modules": modules,
+			"realmodules": helpermodules,
+		}
 
 	def backend_exit(self):
 		"""

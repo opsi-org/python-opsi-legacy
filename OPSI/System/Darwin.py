@@ -293,9 +293,7 @@ def parse_ioreg_output(lines: List) -> Dict:
 	return hwdata
 
 
-def hardwareInventory(
-	config, progressSubject=None
-):  # pylint: disable=unused-argument, too-many-locals, too-many-branches, too-many-statements
+def hardwareInventory(config, progressSubject=None):
 	"""
 	Collect hardware information on OSX.
 
@@ -317,11 +315,13 @@ def hardwareInventory(
 	hardwareList = []
 	# Read output from system_profiler
 	logger.debug("calling system_profiler command")
-	getHardwareCommand = "system_profiler SPParallelATADataType SPAudioDataType SPBluetoothDataType SPCameraDataType \
+	getHardwareCommand = (
+		"system_profiler SPParallelATADataType SPAudioDataType SPBluetoothDataType SPCameraDataType \
 			SPCardReaderDataType SPEthernetDataType SPDiscBurningDataType SPFibreChannelDataType SPFireWireDataType \
 			SPDisplaysDataType SPHardwareDataType SPHardwareRAIDDataType SPMemoryDataType SPNVMeDataType \
 			SPNetworkDataType SPParallelSCSIDataType SPPowerDataType SPSASDataType SPSerialATADataType \
 			SPStorageDataType SPThunderboltDataType SPUSBDataType SPSoftwareDataType"
+	)
 	cmd = "{}".format(getHardwareCommand)
 	with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) as proc:
 		logger.debug("reading stdout stream from system_profiler")
@@ -367,7 +367,7 @@ def hardwareInventory(
 	logger.debug(objectToBeautifiedText(ioreg))
 
 	# Build hw info structure
-	for hwClass in config:  # pylint: disable=too-many-nested-blocks
+	for hwClass in config:
 		if not hwClass.get("Class"):
 			continue
 		opsiClass = hwClass["Class"].get("Opsi")
@@ -404,7 +404,11 @@ def hardwareInventory(
 				if not isinstance(dev, dict):
 					continue
 				logger.debug("found device %s for singleclass %s", key, singleclass)
-				if filterAttr and dev.get(filterAttr) and not eval(f"str(dev.get(filterAttr)).{filterExp}"):  # pylint: disable=eval-used
+				if (
+					filterAttr
+					and dev.get(filterAttr)
+					and not eval(f"str(dev.get(filterAttr)).{filterExp}")
+				):
 					continue
 				device = {}
 				for attribute in hwClass["Values"]:
@@ -420,10 +424,16 @@ def hardwareInventory(
 						if method:
 							try:
 								logger.debug("Eval: %s.%s", value, method)
-								device[attribute["Opsi"]] = eval(f"value.{method}")  # pylint: disable=eval-used
-							except Exception as err:  # pylint: disable=broad-except
+								device[attribute["Opsi"]] = eval(f"value.{method}")
+							except Exception as err:
 								device[attribute["Opsi"]] = ""
-								logger.warning("Class %s: Failed to excecute '%s.%s': %s", opsiClass, value, method, err)
+								logger.warning(
+									"Class %s: Failed to excecute '%s.%s': %s",
+									opsiClass,
+									value,
+									method,
+									err,
+								)
 						else:
 							device[attribute["Opsi"]] = value
 						if device[attribute["Opsi"]]:
@@ -470,21 +480,29 @@ def is_mounted(devOrMountpoint):
 Posix.is_mounted = is_mounted
 
 
-def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals
+def mount(dev, mountpoint, **options):
 	dev = forceUnicode(dev)
 	mountpoint = forceFilename(mountpoint)
 	if not os.path.isdir(mountpoint):
 		os.makedirs(mountpoint)
 
 	if is_mounted(mountpoint):
-		logger.debug("Mountpoint '%s' already mounted, umounting before mount", mountpoint)
+		logger.debug(
+			"Mountpoint '%s' already mounted, umounting before mount", mountpoint
+		)
 		umount(mountpoint)
 
-	for (key, value) in options.items():
+	for key, value in options.items():
 		options[key] = forceUnicode(value)
 
-	if dev.lower().startswith(("smb://", "cifs://", "webdav://", "webdavs://", "http://", "https://")):
-		match = re.search(r"^(smb|cifs|webdav|webdavs|http|https)://([^/]+)/([^/].*)$", dev, re.IGNORECASE)
+	if dev.lower().startswith(
+		("smb://", "cifs://", "webdav://", "webdavs://", "http://", "https://")
+	):
+		match = re.search(
+			r"^(smb|cifs|webdav|webdavs|http|https)://([^/]+)/([^/].*)$",
+			dev,
+			re.IGNORECASE,
+		)
 		if match:
 			scheme = match.group(1).lower().replace("webdav", "http")
 			server = match.group(2)
@@ -492,7 +510,9 @@ def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals
 		else:
 			raise ValueError(f"Bad {match.group(1)} uri '{dev}'")
 
-		username = re.sub(r"\\+", r"\\", options.get("username", "guest")).replace("\\", ";")
+		username = re.sub(r"\\+", r"\\", options.get("username", "guest")).replace(
+			"\\", ";"
+		)
 		password = options.get("password", "")  # no urlencode needed for stdin
 		command = f"mount_smbfs '//{username}@{server}/{share}' '{mountpoint}'"
 		if scheme in ("http", "https"):
@@ -515,7 +535,9 @@ def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals
 			exit_code = process.exitstatus
 			logger.debug("Command exit code is %s, output: %s", exit_code, output)
 			if exit_code != 0:
-				raise RuntimeError(f"Command {command!r} failed with exit code {exit_code}: {output}")
+				raise RuntimeError(
+					f"Command {command!r} failed with exit code {exit_code}: {output}"
+				)
 			# If expect hits timeout it throws a TIMEOUT exception
 		except Exception as err:
 			# Exit code 19 on mount_webdav means ssl cert not accepted

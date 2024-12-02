@@ -47,7 +47,7 @@ def is_pigz_available() -> bool:
 		if compareVersions(ver, "<", "2.2.3"):
 			raise RuntimeError("pigz version >= 2.2.3 needed, but {ver} found")
 		return True
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.debug("pigz not available: %s", err)
 	return False
 
@@ -58,7 +58,7 @@ def is_zstd_available() -> bool:
 		ver = System.execute("zstd --version")
 		logger.debug("Detected zstd version: %s", ver)
 		return True
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.debug("zstd not available: %s", err)
 	return False
 
@@ -78,7 +78,9 @@ def getFileType(filename):
 		return ".cpio"
 	if head[257 : 257 + 5] == b"\x75\x73\x74\x61\x72":
 		return ".tar"
-	raise NotImplementedError("getFileType only accepts .gz, .bzip2, .zst, .cpio and .tar files.")
+	raise NotImplementedError(
+		"getFileType only accepts .gz, .bzip2, .zst, .cpio and .tar files."
+	)
 
 
 class BaseArchive:
@@ -109,8 +111,9 @@ class BaseArchive:
 	def _extract(self, command, fileCount):
 		try:
 			logger.info("Executing: %s", command)
-			with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
-
+			with subprocess.Popen(
+				command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+			) as proc:
 				flags = fcntl.fcntl(proc.stdout, fcntl.F_GETFL)
 				fcntl.fcntl(proc.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 				flags = fcntl.fcntl(proc.stderr, fcntl.F_GETFL)
@@ -130,7 +133,7 @@ class BaseArchive:
 							if filesExtracted > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesExtracted)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 					try:
 						chunk = proc.stderr.read()
@@ -140,7 +143,7 @@ class BaseArchive:
 							if filesExtracted > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesExtracted)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						time.sleep(0.001)
 					ret = proc.poll()
 
@@ -148,7 +151,9 @@ class BaseArchive:
 
 			if ret != 0:
 				logger.error(error)
-				raise RuntimeError("Command '%s' failed with code %s: %s" % (command, ret, error))
+				raise RuntimeError(
+					"Command '%s' failed with code %s: %s" % (command, ret, error)
+				)
 
 			if self._progressSubject:
 				self._progressSubject.setState(fileCount)
@@ -163,8 +168,13 @@ class BaseArchive:
 
 		with cd(baseDir):
 			logger.info("Executing: %s", command)
-			with subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
-
+			with subprocess.Popen(
+				command,
+				shell=True,
+				stdin=subprocess.PIPE,
+				stdout=subprocess.PIPE,
+				stderr=subprocess.PIPE,
+			) as proc:
 				flags = fcntl.fcntl(proc.stdout, fcntl.F_GETFL)
 				fcntl.fcntl(proc.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 				flags = fcntl.fcntl(proc.stderr, fcntl.F_GETFL)
@@ -195,7 +205,7 @@ class BaseArchive:
 							if filesAdded > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesAdded)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					try:
@@ -206,7 +216,7 @@ class BaseArchive:
 							if filesAdded > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesAdded)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						time.sleep(0.001)
 
 				proc.stdin.close()
@@ -215,7 +225,7 @@ class BaseArchive:
 					ret = proc.poll()
 					try:
 						chunk = proc.stdout.read()
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					try:
@@ -224,7 +234,7 @@ class BaseArchive:
 							if self._progressSubject:
 								self._progressSubject.addToState(chunk.count("\n"))
 							error += chunk
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 				logger.info("Exit code: %s", ret)
@@ -232,7 +242,9 @@ class BaseArchive:
 				if ret != 0:
 					error = error.decode()
 					logger.error(error)
-					raise RuntimeError("Command '%s' failed with code %s: %s" % (command, ret, error))
+					raise RuntimeError(
+						"Command '%s' failed with code %s: %s" % (command, ret, error)
+					)
 				if self._progressSubject:
 					self._progressSubject.setState(len(fileList))
 
@@ -259,13 +271,18 @@ class TarArchive(BaseArchive):
 					raise RuntimeError("Zstd not available")
 				options += "--use-compress-program=zstd"
 
-			for line in System.execute('%s %s --list --file "%s"' % (System.which("tar"), options, self._filename)):
+			for line in System.execute(
+				'%s %s --list --file "%s"'
+				% (System.which("tar"), options, self._filename)
+			):
 				if line:
 					names.append(line)
 
 			return names
 		except Exception as err:
-			raise RuntimeError(f"Failed to get archive content '{self._filename}': {err}") from err
+			raise RuntimeError(
+				f"Failed to get archive content '{self._filename}': {err}"
+			) from err
 
 	def extract(self, targetPath=".", patterns=None):
 		try:
@@ -274,8 +291,10 @@ class TarArchive(BaseArchive):
 			if not os.path.isdir(targetPath):
 				try:
 					os.mkdir(targetPath)
-				except Exception as err:  # pylint: disable=broad-except
-					raise IOError(f"Failed to create target dir '{targetPath}': {err}") from err
+				except Exception as err:
+					raise IOError(
+						f"Failed to create target dir '{targetPath}': {err}"
+					) from err
 
 			options = ""
 			if self._compression == "gzip":
@@ -303,7 +322,7 @@ class TarArchive(BaseArchive):
 								match = True
 								break
 							fileCount += 1
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							raise ValueError(f"Bad pattern '{pattern}': {err}") from err
 
 				if match:
@@ -311,10 +330,17 @@ class TarArchive(BaseArchive):
 				else:
 					options += ' --exclude="%s"' % filename
 
-			command = '%s %s --directory "%s" --extract --verbose --file "%s"' % (System.which("tar"), options, targetPath, self._filename)
+			command = '%s %s --directory "%s" --extract --verbose --file "%s"' % (
+				System.which("tar"),
+				options,
+				targetPath,
+				self._filename,
+			)
 			self._extract(command, fileCount)
-		except Exception as err:  # pylint: disable=broad-except
-			raise RuntimeError(f"Failed to extract archive '{self._filename}': {err}") from err
+		except Exception as err:
+			raise RuntimeError(
+				f"Failed to extract archive '{self._filename}': {err}"
+			) from err
 
 	def create(self, fileList, baseDir=".", dereference=False):
 		try:
@@ -325,7 +351,10 @@ class TarArchive(BaseArchive):
 			if not os.path.isdir(baseDir):
 				raise IOError("Base dir '%s' not found" % baseDir)
 
-			command = "%s --no-recursion --verbose --create --files-from -" % System.which("tar")
+			command = (
+				"%s --no-recursion --verbose --create --files-from -"
+				% System.which("tar")
+			)
 			if dereference:
 				command += " --dereference"
 			if self._compression == "gzip":
@@ -342,8 +371,10 @@ class TarArchive(BaseArchive):
 			command += ' > "%s"' % self._filename
 
 			self._create(fileList, baseDir, command)
-		except Exception as err:  # pylint: disable=broad-except
-			raise RuntimeError(f"Failed to create archive '{self._filename}': {err}") from err
+		except Exception as err:
+			raise RuntimeError(
+				f"Failed to create archive '{self._filename}': {err}"
+			) from err
 
 
 class CpioArchive(BaseArchive):
@@ -358,7 +389,9 @@ class CpioArchive(BaseArchive):
 			cat = System.which("cat")
 			if self._compression == "gzip":
 				if is_pigz_available():
-					cat = "{pigz} --stdout --decompress".format(pigz=System.which("pigz"))
+					cat = "{pigz} --stdout --decompress".format(
+						pigz=System.which("pigz")
+					)
 				else:
 					cat = System.which("zcat")
 			elif self._compression == "bzip2":
@@ -376,8 +409,10 @@ class CpioArchive(BaseArchive):
 				)
 				if line
 			]
-		except Exception as err:  # pylint: disable=broad-except
-			raise RuntimeError(f"Failed to get archive content '{self._filename}': {err}") from err
+		except Exception as err:
+			raise RuntimeError(
+				f"Failed to get archive content '{self._filename}': {err}"
+			) from err
 
 	def extract(self, targetPath=".", patterns=None):
 		try:
@@ -386,8 +421,10 @@ class CpioArchive(BaseArchive):
 			if not os.path.isdir(targetPath):
 				try:
 					os.mkdir(targetPath)
-				except Exception as err:  # pylint: disable=broad-except
-					raise IOError(f"Failed to create target dir '{targetPath}': {err}") from err
+				except Exception as err:
+					raise IOError(
+						f"Failed to create target dir '{targetPath}': {err}"
+					) from err
 
 			cat = System.which("cat")
 			if self._compression == "gzip":
@@ -415,7 +452,7 @@ class CpioArchive(BaseArchive):
 								match = True
 								break
 							fileCount += 1
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							raise ValueError(f"Bad pattern '{pattern}': {err}") from err
 				if match:
 					fileCount += 1
@@ -428,8 +465,10 @@ class CpioArchive(BaseArchive):
 					% (cat, self._filename, System.which("cpio"), include)
 				)
 				self._extract(command, fileCount)
-		except Exception as err:  # pylint: disable=broad-except
-			raise RuntimeError(f"Failed to extract archive '{self._filename}': {err}") from err
+		except Exception as err:
+			raise RuntimeError(
+				f"Failed to extract archive '{self._filename}': {err}"
+			) from err
 
 	def create(self, fileList, baseDir=".", dereference=False):
 		try:
@@ -440,7 +479,9 @@ class CpioArchive(BaseArchive):
 			if not os.path.isdir(baseDir):
 				raise IOError(f"Base dir '{baseDir}' not found")
 
-			command = "%s --create --quiet --verbose --format crc" % System.which("cpio")
+			command = "%s --create --quiet --verbose --format crc" % System.which(
+				"cpio"
+			)
 			if dereference:
 				command += " --dereference"
 			if self._compression == "gzip":
@@ -455,11 +496,13 @@ class CpioArchive(BaseArchive):
 			command += ' > "%s"' % self._filename
 
 			self._create(fileList, baseDir, command)
-		except Exception as err:  # pylint: disable=broad-except
-			raise RuntimeError(f"Failed to create archive '{self._filename}': {err}") from err
+		except Exception as err:
+			raise RuntimeError(
+				f"Failed to create archive '{self._filename}': {err}"
+			) from err
 
 
-def Archive(filename, format=None, compression=None, progressSubject=None):  # pylint: disable=redefined-builtin
+def Archive(filename, format=None, compression=None, progressSubject=None):
 	filename = forceFilename(filename)
 	Class = None
 	if format:
@@ -486,4 +529,6 @@ def Archive(filename, format=None, compression=None, progressSubject=None):  # p
 	if not Class:
 		raise RuntimeError("Failed to guess archive type of '%s'" % filename)
 
-	return Class(filename=filename, compression=compression, progressSubject=progressSubject)
+	return Class(
+		filename=filename, compression=compression, progressSubject=progressSubject
+	)

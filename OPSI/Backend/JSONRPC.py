@@ -30,7 +30,7 @@ class JSONRPCBackend(Backend, ServiceConnectionListener):
 	This Backend gives remote access to a Backend reachable via jsonrpc.
 	"""
 
-	def __init__(self, address: str, **kwargs: Any) -> None:  # pylint: disable=too-many-branches,too-many-statements
+	def __init__(self, address: str, **kwargs: Any) -> None:
 		"""
 		Backend for JSON-RPC access to another opsi service.
 

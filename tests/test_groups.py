@@ -17,24 +17,21 @@ def getGroups():
 
 def getHostGroups():
 	group1 = HostGroup(
-		id='host_group_1',
-		description='Group 1',
-		notes='First group',
-		parentGroupId=None
+		id="host_group_1",
+		description="Group 1",
+		notes="First group",
+		parentGroupId=None,
 	)
 
 	group2 = HostGroup(
-		id=u'host group 2',
-		description='Group 2',
-		notes='Test\nTest\nTest',
-		parentGroupId=group1.id
+		id="host group 2",
+		description="Group 2",
+		notes="Test\nTest\nTest",
+		parentGroupId=group1.id,
 	)
 
 	group3 = HostGroup(
-		id=u'host group 3',
-		description='Group 3',
-		notes='',
-		parentGroupId=None
+		id="host group 3", description="Group 3", notes="", parentGroupId=None
 	)
 
 	return group1, group2, group3
@@ -42,10 +39,7 @@ def getHostGroups():
 
 def getProductGroup():
 	return ProductGroup(
-		id=u'products group 4',
-		description='Group 4',
-		notes='',
-		parentGroupId=None
+		id="products group 4", description="Group 4", notes="", parentGroupId=None
 	)
 
 
@@ -54,21 +48,15 @@ def getObjectToGroups(groups, clients):
 	client1, client2 = clients[:2]
 
 	objectToGroup1 = ObjectToGroup(
-		groupType=group1.getType(),
-		groupId=group1.getId(),
-		objectId=client1.getId()
+		groupType=group1.getType(), groupId=group1.getId(), objectId=client1.getId()
 	)
 
 	objectToGroup2 = ObjectToGroup(
-		groupType=group1.getType(),
-		groupId=group1.getId(),
-		objectId=client2.getId()
+		groupType=group1.getType(), groupId=group1.getId(), objectId=client2.getId()
 	)
 
 	objectToGroup3 = ObjectToGroup(
-		groupType=group2.getType(),
-		groupId=group2.getId(),
-		objectId=client2.getId()
+		groupType=group2.getType(), groupId=group2.getId(), objectId=client2.getId()
 	)
 
 	return objectToGroup1, objectToGroup2, objectToGroup3
@@ -107,12 +95,12 @@ def testUpdatingGroup(extendedConfigDataBackend):
 	groupsIn = fillBackendWithGroups(extendedConfigDataBackend)
 
 	group1 = groupsIn[0]
-	group1.setDescription(u'new description')
+	group1.setDescription("new description")
 	extendedConfigDataBackend.group_updateObject(group1)
 
 	groups = extendedConfigDataBackend.group_getObjects(description=group1.description)
 	assert 1 == len(groups)
-	assert groups[0].getDescription() == u'new description'
+	assert groups[0].getDescription() == "new description"
 
 
 def testDeletingGroup(extendedConfigDataBackend):
@@ -173,16 +161,24 @@ def testSelectingObjectToGroupByObjectId(extendedConfigDataBackend):
 	client1 = clients[0]
 	client2 = clients[1]
 
-	client1ObjectToGroups = [objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client1.id]
-	client2ObjectToGroups = [objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client2.id]
+	client1ObjectToGroups = [
+		objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client1.id
+	]
+	client2ObjectToGroups = [
+		objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client2.id
+	]
 
-	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(objectId=client1.getId())
+	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(
+		objectId=client1.getId()
+	)
 	assert len(objectToGroups) == len(client1ObjectToGroups)
 
 	for objectToGroup in objectToGroups:
 		assert objectToGroup.objectId == client1.id
 
-	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(objectId=client2.getId())
+	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(
+		objectId=client2.getId()
+	)
 	assert len(objectToGroups) == len(client2ObjectToGroups)
 
 	for objectToGroup in objectToGroups:

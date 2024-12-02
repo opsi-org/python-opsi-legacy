@@ -24,6 +24,7 @@ from contextlib import contextmanager
 import pytest
 import urllib3
 from _pytest.logging import LogCaptureHandler
+
 from OPSI.Backend.Backend import ExtendedConfigDataBackend
 from OPSI.Backend.BackendManager import BackendManager
 
@@ -50,7 +51,7 @@ def dist_data_path():
 	return DIST_DATA_PATH
 
 
-def emit(*args, **kwargs) -> None:  # pylint: disable=unused-argument
+def emit(*args, **kwargs) -> None:
 	pass
 
 
@@ -63,7 +64,9 @@ def pytest_configure(config):
 	# When the mode is auto, all discovered async tests are considered
 	# asyncio-driven even if they have no @pytest.mark.asyncio marker.
 	config.option.asyncio_mode = "auto"
-	config.addinivalue_line("markers", "obsolete: mark test that are obsolete for 4.2 development")
+	config.addinivalue_line(
+		"markers", "obsolete: mark test that are obsolete for 4.2 development"
+	)
 
 
 @pytest.fixture(autouse=True)
@@ -104,7 +107,7 @@ def _backendBase(backend):
 
 
 @pytest.fixture
-def extendedConfigDataBackend(configDataBackend):  # pylint: disable=redefined-outer-name
+def extendedConfigDataBackend(configDataBackend):
 	"""
 	Returns an `OPSI.Backend.ExtendedConfigDataBackend` for testing.
 
@@ -153,7 +156,7 @@ def replicationDestinationBackend(request):
 
 
 @pytest.fixture
-def backendManager(_serverBackend, tempDir, dist_data_path):  # pylint: disable=redefined-outer-name
+def backendManager(_serverBackend, tempDir, dist_data_path):
 	"""
 	Returns an `OPSI.Backend.BackendManager.BackendManager` for testing.
 
@@ -161,7 +164,12 @@ def backendManager(_serverBackend, tempDir, dist_data_path):  # pylint: disable=
 	"""
 	shutil.copytree(dist_data_path, os.path.join(tempDir, "etc", "opsi"))
 
-	yield BackendManager(backend=_serverBackend, extensionconfigdir=os.path.join(tempDir, "etc", "opsi", "backendManager", "extend.d"))
+	yield BackendManager(
+		backend=_serverBackend,
+		extensionconfigdir=os.path.join(
+			tempDir, "etc", "opsi", "backendManager", "extend.d"
+		),
+	)
 
 
 @pytest.fixture
@@ -174,7 +182,7 @@ def tempDir():
 
 
 @pytest.fixture
-def licenseManagementBackend(sqlBackendCreationContextManager):  # pylint: disable=redefined-outer-name
+def licenseManagementBackend(sqlBackendCreationContextManager):
 	"""Returns a backend that can handle License Management."""
 	with sqlBackendCreationContextManager() as backend:
 		with _backendBase(backend):
@@ -200,14 +208,14 @@ def multithreadingBackend(request):
 
 
 @pytest.fixture(params=[getMySQLBackend, getSQLiteBackend], ids=["mysql", "sqlite"])
-def hardwareAuditBackendWithHistory(request, hardwareAuditConfigPath):  # pylint: disable=redefined-outer-name
+def hardwareAuditBackendWithHistory(request, hardwareAuditConfigPath):
 	with request.param(auditHardwareConfigFile=hardwareAuditConfigPath) as backend:
 		with _backendBase(backend):
 			yield ExtendedConfigDataBackend(backend)
 
 
 @pytest.fixture
-def hardwareAuditConfigPath(dist_data_path):  # pylint: disable=redefined-outer-name
+def hardwareAuditConfigPath(dist_data_path):
 	"""
 	Copies the opsihwaudit.conf that is usually distributed for
 	installation to a temporary folder and then returns the new absolute
@@ -219,8 +227,11 @@ def hardwareAuditConfigPath(dist_data_path):  # pylint: disable=redefined-outer-
 		yield fileCopy
 
 
-@pytest.fixture(params=[getFileBackend, getMySQLBackend, getSQLiteBackend], ids=["file", "mysql", "sqlite"])
-def auditDataBackend(request, hardwareAuditConfigPath):  # pylint: disable=redefined-outer-name
+@pytest.fixture(
+	params=[getFileBackend, getMySQLBackend, getSQLiteBackend],
+	ids=["file", "mysql", "sqlite"],
+)
+def auditDataBackend(request, hardwareAuditConfigPath):
 	with request.param(auditHardwareConfigFile=hardwareAuditConfigPath) as backend:
 		with _backendBase(backend):
 			yield ExtendedConfigDataBackend(backend)

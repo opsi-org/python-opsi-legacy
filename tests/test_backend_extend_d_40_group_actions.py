@@ -14,26 +14,32 @@ This tests what usually is found under
 import pytest
 
 from OPSI.Exceptions import BackendMissingDataError
-from OPSI.Object import (HostGroup, LocalbootProduct, ProductOnDepot,
-	ObjectToGroup, OpsiClient, OpsiDepotserver)
+from OPSI.Object import (
+	HostGroup,
+	LocalbootProduct,
+	ProductOnDepot,
+	ObjectToGroup,
+	OpsiClient,
+	OpsiDepotserver,
+)
 
 
 def testSetProductActionRequestForHostGroup(backendManager):
-	testGroup = HostGroup(id='host_group_1')
+	testGroup = HostGroup(id="host_group_1")
 
-	client1 = OpsiClient(id='client1.test.invalid')
-	client2 = OpsiClient(id='client2.test.invalid')
+	client1 = OpsiClient(id="client1.test.invalid")
+	client2 = OpsiClient(id="client2.test.invalid")
 
 	client1ToGroup = ObjectToGroup(testGroup.getType(), testGroup.id, client1.id)
 	client2ToGroup = ObjectToGroup(testGroup.getType(), testGroup.id, client2.id)
 
-	depot = OpsiDepotserver(id='depotserver1.test.invalid')
+	depot = OpsiDepotserver(id="depotserver1.test.invalid")
 
 	product2 = LocalbootProduct(
-		id='product2',
-		name=u'Product 2',
-		productVersion='2.0',
-		packageVersion='test',
+		id="product2",
+		name="Product 2",
+		productVersion="2.0",
+		packageVersion="test",
 		setupScript="setup.ins",
 	)
 
@@ -42,7 +48,7 @@ def testSetProductActionRequestForHostGroup(backendManager):
 		productType=product2.getType(),
 		productVersion=product2.getProductVersion(),
 		packageVersion=product2.getPackageVersion(),
-		depotId=depot.getId()
+		depotId=depot.getId(),
 	)
 
 	backendManager.host_insertObject(client1)
@@ -50,13 +56,19 @@ def testSetProductActionRequestForHostGroup(backendManager):
 	backendManager.host_insertObject(depot)
 	backendManager.group_insertObject(testGroup)
 	backendManager.objectToGroup_createObjects([client1ToGroup, client2ToGroup])
-	backendManager.config_create(u'clientconfig.depot.id')
-	backendManager.configState_create(u'clientconfig.depot.id', client1.getId(), values=[depot.getId()])
-	backendManager.configState_create(u'clientconfig.depot.id', client2.getId(), values=[depot.getId()])
+	backendManager.config_create("clientconfig.depot.id")
+	backendManager.configState_create(
+		"clientconfig.depot.id", client1.getId(), values=[depot.getId()]
+	)
+	backendManager.configState_create(
+		"clientconfig.depot.id", client2.getId(), values=[depot.getId()]
+	)
 	backendManager.product_insertObject(product2)
 	backendManager.productOnDepot_insertObject(prodOnDepot)
 
-	backendManager.setProductActionRequestForHostGroup('host_group_1', 'product2', 'setup')
+	backendManager.setProductActionRequestForHostGroup(
+		"host_group_1", "product2", "setup"
+	)
 
 	pocs = backendManager.productOnClient_getObjects()
 	assert pocs
@@ -71,13 +83,13 @@ def testGroupnameExists(backendManager):
 	testGroup, _ = fillBackendForRenaming(backendManager)
 
 	assert backendManager.groupname_exists(testGroup.id)
-	assert not backendManager.groupname_exists(u'testgruppe')
+	assert not backendManager.groupname_exists("testgruppe")
 
 
 def testRenamingGroupToAlreadyExistingGroupFails(backendManager):
 	testGroup, _ = fillBackendForRenaming(backendManager)
 
-	newGroup = HostGroup(id='new_group_1')
+	newGroup = HostGroup(id="new_group_1")
 	backendManager.group_insertObject(newGroup)
 
 	with pytest.raises(Exception):
@@ -86,7 +98,7 @@ def testRenamingGroupToAlreadyExistingGroupFails(backendManager):
 
 def testRenamingNonexistingGroupFails(backendManager):
 	with pytest.raises(BackendMissingDataError):
-		backendManager.group_rename(u'notExisting', 'newGroupId')
+		backendManager.group_rename("notExisting", "newGroupId")
 
 
 def testRenamingKeepsSettingsOfOldGroup(backendManager):
@@ -94,12 +106,12 @@ def testRenamingKeepsSettingsOfOldGroup(backendManager):
 	After a rename non-key attributes of the new object must be the same.
 	"""
 	testGroup, _ = fillBackendForRenaming(backendManager)
-	newGroupId = 'new_group_1'
+	newGroupId = "new_group_1"
 
 	backendManager.group_rename(testGroup.id, newGroupId)
 
 	group = backendManager.group_getObjects(id=newGroupId)[0]
-	assert group.id == 'new_group_1'
+	assert group.id == "new_group_1"
 	assert group.description == testGroup.description
 	assert group.notes == testGroup.notes
 	assert group.parentGroupId == testGroup.parentGroupId
@@ -110,7 +122,7 @@ def testRenamingKeepsSettingsOfOldGroup(backendManager):
 def testGroupRenameUpdatesObjectToGroups(backendManager):
 	testGroup, clients = fillBackendForRenaming(backendManager)
 	client1, client2 = clients[:2]
-	newGroupId = 'new_group_1'
+	newGroupId = "new_group_1"
 
 	backendManager.group_rename(testGroup.id, newGroupId)
 
@@ -128,10 +140,10 @@ def testGroupRenameUpdatesObjectToGroups(backendManager):
 
 
 def fillBackendForRenaming(backend):
-	group = HostGroup(id='host_group_1')
+	group = HostGroup(id="host_group_1")
 
-	client1 = OpsiClient(id='client1.test.invalid')
-	client2 = OpsiClient(id='client2.test.invalid')
+	client1 = OpsiClient(id="client1.test.invalid")
+	client2 = OpsiClient(id="client2.test.invalid")
 
 	client1ToGroup = ObjectToGroup(group.getType(), group.id, client1.id)
 	client2ToGroup = ObjectToGroup(group.getType(), group.id, client2.id)
@@ -141,7 +153,4 @@ def fillBackendForRenaming(backend):
 	backend.group_insertObject(group)
 	backend.objectToGroup_createObjects([client1ToGroup, client2ToGroup])
 
-	return (
-		group,
-		(client1, client2)
-	)
+	return (group, (client1, client2))

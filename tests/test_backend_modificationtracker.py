@@ -22,7 +22,7 @@ import pytest
 		(getSQLiteBackend, getSQLiteModificationTracker),
 		(getMySQLBackend, getMySQLModificationTracker),
 	],
-	ids=['sqlite', 'mysql']
+	ids=["sqlite", "mysql"],
 )
 def backendAndTracker(request):
 	backendFunc, trackerFunc = request.param
@@ -45,21 +45,21 @@ def backendAndTracker(request):
 def testTrackingOfInsertObject(backendAndTracker):
 	backend, tracker = backendAndTracker
 
-	host = OpsiClient(id='client1.test.invalid')
+	host = OpsiClient(id="client1.test.invalid")
 	backend.host_insertObject(host)
 
 	modifications = tracker.getModifications()
 	assert 1 == len(modifications)
 	mod = modifications[0]
-	assert mod['objectClass'] == host.__class__.__name__
-	assert mod['command'] == 'insert'
-	assert mod['ident'] == host.getIdent()
+	assert mod["objectClass"] == host.__class__.__name__
+	assert mod["command"] == "insert"
+	assert mod["ident"] == host.getIdent()
 
 
 def testTrackingOfUpdatingObject(backendAndTracker):
 	backend, tracker = backendAndTracker
 
-	host = OpsiClient(id='client1.test.invalid')
+	host = OpsiClient(id="client1.test.invalid")
 
 	backend.host_insertObject(host)
 	tracker.clearModifications()
@@ -68,16 +68,16 @@ def testTrackingOfUpdatingObject(backendAndTracker):
 	modifications = tracker.getModifications()
 	assert 1 == len(modifications)
 	mod = modifications[0]
-	assert mod['objectClass'] == host.__class__.__name__
-	assert mod['command'] == 'update'
-	assert mod['ident'] == host.getIdent()
+	assert mod["objectClass"] == host.__class__.__name__
+	assert mod["command"] == "update"
+	assert mod["ident"] == host.getIdent()
 
 
 @pytest.mark.requires_license_file
 def testTrackingOfDeletingObject(backendAndTracker):
 	backend, tracker = backendAndTracker
 
-	host = OpsiClient(id='client1.test.invalid')
+	host = OpsiClient(id="client1.test.invalid")
 
 	backend.host_insertObject(host)
 	tracker.clearModifications()
@@ -88,6 +88,6 @@ def testTrackingOfDeletingObject(backendAndTracker):
 	assert 1 == len(modifications)
 	modification = modifications[0]
 
-	assert modification['objectClass'] == host.__class__.__name__
-	assert modification['command'] == 'delete'
-	assert modification['ident'] == host.getIdent()
+	assert modification["objectClass"] == host.__class__.__name__
+	assert modification["command"] == "delete"
+	assert modification["ident"] == host.getIdent()
