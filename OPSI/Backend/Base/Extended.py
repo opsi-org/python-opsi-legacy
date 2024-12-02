@@ -121,7 +121,7 @@ class ExtendedBackend(Backend):
 				exec(
 					f'def {methodName}{sig}: return self._executeMethod("{methodName}", {arg})',
 					None,
-					locals,
+					exec_locals,
 				)
 
 			new_function = exec_locals[methodName]
