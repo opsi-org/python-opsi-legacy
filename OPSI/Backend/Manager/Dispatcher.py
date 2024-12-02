@@ -245,7 +245,8 @@ class BackendDispatcher(Backend):
 				exec_locals: dict[str, object] = {}
 				exec(  # pylint: disable=exec-used
 					f'def {methodName}{sig}: return self._dispatchMethod({methodBackends}, "{methodName}", {arg})',
-					locals=exec_locals,
+					None,
+					exec_locals,
 				)
 				new_function = exec_locals[methodName]
 				if getattr(functionRef, "deprecated", False):

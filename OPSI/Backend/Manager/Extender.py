@@ -101,7 +101,8 @@ class BackendExtender(ExtendedBackend):
 				exec_locals: dict[str, object] = {}
 				exec(  # pylint: disable=exec-used
 					f'def {methodName}{sig}: return self._executeMethodOnExtensionClass("{methodName}", {arg})',
-					locals=exec_locals,
+					None,
+					exec_locals,
 				)
 				new_function = exec_locals[methodName]
 				setattr(self, methodName, types.MethodType(new_function, self))

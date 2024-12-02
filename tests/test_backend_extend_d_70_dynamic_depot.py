@@ -100,7 +100,7 @@ def testDepotSelectionAlgorithmByMasterDepotAndLatency(
 	random.shuffle(alternativeDepots)
 
 	loc = {}
-	exec(depotSelectionAlgorithmByMasterDepotAndLatency, locals=loc)
+	exec(depotSelectionAlgorithmByMasterDepotAndLatency, None, loc)
 	selectDepot = loc["selectDepot"]
 	assert wantedRepo == selectDepot({}, masterDepot, alternativeDepots)
 
@@ -111,7 +111,7 @@ def testDepotSelectionAlgorithmByRandom(depotSelectionAlgorithmByRandom):
 	NUM_RUNS = 300
 
 	loc = {}
-	exec(depotSelectionAlgorithmByRandom, locals=loc)
+	exec(depotSelectionAlgorithmByRandom, None, loc)
 	selectDepot = loc["selectDepot"]
 
 	masterDepot = FakeDepot("clients.master.depot")

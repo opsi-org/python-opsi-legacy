@@ -122,7 +122,8 @@ class ExtendedBackend(Backend):
 			with warnings.catch_warnings():
 				exec(
 					f'def {methodName}{sig}: return self._executeMethod("{methodName}", {arg})',
-					locals=exec_locals,
+					None,
+					locals,
 				)
 
 			new_function = exec_locals[methodName]

@@ -405,13 +405,15 @@ class BackendAccessControl:
 				logger.trace("Protecting method '%s'", methodName)
 				exec(  # pylint: disable=exec-used
 					f'def {methodName}{sig}: return self._executeMethodProtected("{methodName}", {arg})',
-					locals=exec_locals,
+					None,
+					exec_locals,
 				)
 			else:
 				logger.trace("Not protecting method '%s'", methodName)
 				exec(  # pylint: disable=exec-used
 					f'def {methodName}{sig}: return self._executeMethod("{methodName}", {arg})',
-					locals=exec_locals,
+					None,
+					exec_locals,
 				)
 
 			new_function = exec_locals[methodName]

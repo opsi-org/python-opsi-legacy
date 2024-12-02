@@ -267,7 +267,8 @@ class BackendManager(ExtendedBackend):
 		with warnings.catch_warnings():
 			exec(
 				f"from OPSI.Backend.{moduleName} import {backendClassName}",
-				locals=exec_locals,
+				None,
+				exec_locals,
 			)
 		return exec_locals[backendClassName](**config["config"])
 
