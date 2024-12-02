@@ -33,7 +33,7 @@ def disableSystemCallsForConfigureDHCPD():
 		):
 			with mock.patch("OPSI.Util.Task.ConfigureBackend.DHCPD.execute"):
 
-				def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
+				def getFakeRestartCommand(default=None):
 					return FAKE_RESTART_COMMAND
 
 				with mock.patch(
@@ -50,7 +50,7 @@ def disableSystemCallsForConfigureDHCPD():
 								yield
 
 
-def testConfigureDHCPWorksIfFileIsMissing(tempDir):  # pylint: disable=unused-argument
+def testConfigureDHCPWorksIfFileIsMissing(tempDir):
 	configureDHCPD("not.here")
 
 
@@ -82,7 +82,7 @@ subnet 192.168.0.0 netmask 255.255.0.0 {
 		), "next-server not fonud in new file."
 
 
-def testConfiguringDHCPDBackendWithEmptyFile(tempDir):  # pylint: disable=unused-argument
+def testConfiguringDHCPDBackendWithEmptyFile(tempDir):
 	filename = "dhcpd_test.conf"
 	with open(filename, "x", encoding="utf-8"):
 		pass
@@ -97,7 +97,7 @@ def testConfiguringDHCPDBackendWithEmptyFile(tempDir):  # pylint: disable=unused
 	assert oldHash != newHash
 
 
-def testConfiguringPatchesDHCPDBackendConfig(tempDir):  # pylint: disable=unused-argument
+def testConfiguringPatchesDHCPDBackendConfig(tempDir):
 	filename = "dhcpd_test.conf"
 	with open(filename, "x", encoding="utf-8"):
 		pass
@@ -166,7 +166,7 @@ config = {
 """
 		)
 
-	def getFakeRestartCommand(default=None):  # pylint: disable=unused-argument
+	def getFakeRestartCommand(default=None):
 		return FAKE_RESTART_COMMAND
 
 	with mock.patch(

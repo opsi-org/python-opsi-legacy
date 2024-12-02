@@ -57,7 +57,7 @@ class DeferredCall:
 	def waitForResult(self) -> Any:
 		self.finished.wait()
 		if self.error:
-			raise self.error  # pylint: disable=raising-bad-type
+			raise self.error
 		return self.result
 
 	def setCallback(self, callback: Callable, *args, **kwargs) -> None:

@@ -80,7 +80,7 @@ def dhcpd_lock(lock_type: str = "") -> Generator[None, None, None]:
 	# os.remove(lock_file)
 
 
-class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attributes
+class DHCPDBackend(ConfigDataBackend):
 	"""This Backend holds information for DHCP functionality"""
 
 	def __init__(self, **kwargs) -> None:
@@ -136,7 +136,7 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 	def _get_opsi_host_key(self, backend: Backend = None) -> None:
 		if backend is None:
 			backend = self._context
-		depots = backend.host_getObjects(id=self._depotId)  # pylint: disable=maybe-no-member
+		depots = backend.host_getObjects(id=self._depotId)
 		if not depots or not depots[0].getOpsiHostKey():
 			raise BackendMissingDataError(
 				f"Failed to get opsi host key for depot '{self._depotId}'"
@@ -147,7 +147,7 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 	def _init_backend(self, config_data_backend: Backend) -> None:
 		try:
 			self._get_opsi_host_key(config_data_backend)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			# This can fail if backend is not yet initialized, continue!
 			logger.info(err)
 
@@ -188,7 +188,7 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 								for line in result:
 									if "error" in line:
 										raise RuntimeError("\n".join(result))
-							except Exception as err:  # pylint: disable=broad-except
+							except Exception as err:
 								logger.critical(
 									"Failed to reload dhcpd config: %s", err
 								)
@@ -227,11 +227,11 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 		"""This method returns the depot a client is assigned to."""
 		configStates = self._context.configState_getObjects(
 			configId="clientconfig.depot.id", objectId=clientId
-		)  # pylint: disable=maybe-no-member
+		)
 		try:
 			depotId = configStates[0].values[0]
 		except IndexError as err:
-			configs = self._context.config_getObjects(id="clientconfig.depot.id")  # pylint: disable=maybe-no-member
+			configs = self._context.config_getObjects(id="clientconfig.depot.id")
 			if not configs or not configs[0].defaultValues:
 				raise BackendUnaccomplishableError(
 					f"Failed to get depotserver for client '{clientId}', config 'clientconfig.depot.id' not set and no defaults found"
@@ -251,37 +251,37 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 		host = forceObjectClass(host, Host)
 
 		if self._dhcpdOnDepot:
-			depotId = self._getResponsibleDepotId(host.id)  # pylint: disable=maybe-no-member
+			depotId = self._getResponsibleDepotId(host.id)
 			if depotId != self._depotId:
 				logger.info(
 					"Not responsible for client '%s', forwarding request to depot '%s'",
 					host.id,
 					depotId,
-				)  # pylint: disable=maybe-no-member
-				return self._getDepotConnection(depotId).dhcpd_updateHost(host)  # pylint: disable=maybe-no-member
+				)
+				return self._getDepotConnection(depotId).dhcpd_updateHost(host)
 		return self.dhcpd_updateHost(host)
 
-	def dhcpd_updateHost(self, host: Host) -> None:  # pylint: disable=too-many-branches
+	def dhcpd_updateHost(self, host: Host) -> None:
 		host = forceObjectClass(host, Host)
 
-		if not host.hardwareAddress:  # pylint: disable=maybe-no-member
+		if not host.hardwareAddress:
 			logger.warning(
 				"Cannot update dhcpd configuration for client %s: hardware address unknown",
 				host,
 			)
 			return
 
-		hostname = _getHostname(host.id)  # pylint: disable=maybe-no-member
+		hostname = _getHostname(host.id)
 
-		ipAddress = host.ipAddress  # pylint: disable=maybe-no-member
+		ipAddress = host.ipAddress
 		if not ipAddress:
 			try:
 				logger.info(
 					"Ip addess of client %s unknown, trying to get host by name", host
 				)
-				ipAddress = socket.gethostbyname(host.id)  # pylint: disable=maybe-no-member
+				ipAddress = socket.gethostbyname(host.id)
 				logger.info("Client fqdn resolved to %s", ipAddress)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.debug("Failed to get IP by hostname: %s", err)
 				with dhcpd_lock("config_read"):
 					self._dhcpdConfFile.parse()
@@ -308,17 +308,17 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 
 		fixedAddress = ipAddress
 		if self._fixedAddressFormat == "FQDN":
-			fixedAddress = host.id  # pylint: disable=maybe-no-member
+			fixedAddress = host.id
 
 		parameters = forceDict(self._defaultClientParameters)
 		if not self._dhcpdOnDepot:
 			try:
 				depot = self._context.host_getObjects(
 					id=self._getResponsibleDepotId(host.id)
-				)[0]  # pylint: disable=maybe-no-member
+				)[0]
 				if depot.ipAddress:
 					parameters["next-server"] = depot.ipAddress
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error("Failed to get depot info: %s", err)
 
 		with dhcpd_lock("config_update"):
@@ -345,13 +345,13 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 
 				self._dhcpdConfFile.addHost(
 					hostname=hostname,
-					hardwareAddress=host.hardwareAddress,  # pylint: disable=maybe-no-member
+					hardwareAddress=host.hardwareAddress,
 					ipAddress=ipAddress,
 					fixedAddress=fixedAddress,
 					parameters=parameters,
 				)
 				self._dhcpdConfFile.generate()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(err, exc_info=True)
 
 		self._triggerReload()
@@ -359,9 +359,9 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 	def _dhcpd_deleteHost(self, host: Host) -> None:
 		host = forceObjectClass(host, Host)
 		if self._dhcpdOnDepot:
-			for depot in self._context.host_getObjects(id=self._depotId):  # pylint: disable=maybe-no-member
+			for depot in self._context.host_getObjects(id=self._depotId):
 				if depot.id != self._depotId:
-					self._getDepotConnection(depot.id).dhcpd_deleteHost(host)  # pylint: disable=maybe-no-member
+					self._getDepotConnection(depot.id).dhcpd_deleteHost(host)
 		self.dhcpd_deleteHost(host)
 
 	def dhcpd_deleteHost(self, host: Host) -> None:
@@ -371,11 +371,11 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 			try:
 				self._dhcpdConfFile.parse()
 				hostname = _getHostname(host.id)
-				if not self._dhcpdConfFile.getHost(hostname):  # pylint: disable=maybe-no-member
+				if not self._dhcpdConfFile.getHost(hostname):
 					return
-				self._dhcpdConfFile.deleteHost(hostname)  # pylint: disable=maybe-no-member
+				self._dhcpdConfFile.deleteHost(hostname)
 				self._dhcpdConfFile.generate()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(err, exc_info=True)
 
 		self._triggerReload()
@@ -398,7 +398,7 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 		logger.debug("Updating host: %s", host)
 		try:
 			self._dhcpd_updateHost(host)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err, exc_info=True)
 
 	def host_deleteObjects(self, hosts: Host) -> None:
@@ -411,7 +411,7 @@ class DHCPDBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attr
 
 			try:
 				self._dhcpd_deleteHost(host)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				errors.append(str(err))
 
 		if errors:

@@ -206,7 +206,7 @@ logger.addConfidentialString = addConfidentialString
 def setLogFormat(
 	logFormat: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setLogFormat is deprecated, use opsicommon.logging.set_format instead.",
@@ -220,7 +220,7 @@ logger.setLogFormat = setLogFormat
 def setConsoleFormat(
 	format: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setConsoleFormat is deprecated, use opsicommon.logging.set_format instead.",
@@ -234,7 +234,7 @@ logger.setConsoleFormat = setConsoleFormat
 def setComponentName(
 	componentName: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setComponentName is deprecated, use opsicommon.logging.context instead.",
@@ -245,7 +245,7 @@ def setComponentName(
 logger.setComponentName = setComponentName
 
 
-def logToStdout(stdout: Any) -> None:  # pylint: disable=unused-argument
+def logToStdout(stdout: Any) -> None:
 	warnings.warn("OPSI.Logger.logToStdout is deprecated", DeprecationWarning)
 
 
@@ -255,7 +255,7 @@ logger.logToStdout = logToStdout
 def setSyslogFormat(
 	format: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setSyslogFormat is deprecated, use opsicommon.logging.set_format instead.",
@@ -269,7 +269,7 @@ logger.setSyslogFormat = setSyslogFormat
 def setFileFormat(
 	format: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setFileFormat is deprecated, use opsicommon.logging.set_format instead.",
@@ -283,7 +283,7 @@ logger.setFileFormat = setFileFormat
 def setUniventionFormat(
 	format: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setUniventionFormat is deprecated, use opsicommon.logging.set_format instead.",
@@ -297,7 +297,7 @@ logger.setUniventionFormat = setUniventionFormat
 def setMessageSubjectFormat(
 	format: str,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn(
 		"OPSI.Logger.setMessageSubjectFormat is deprecated", DeprecationWarning
@@ -307,14 +307,14 @@ def setMessageSubjectFormat(
 logger.setMessageSubjectFormat = setMessageSubjectFormat
 
 
-def setUniventionLogger(logger: Any) -> None:  # pylint: disable=unused-argument,redefined-outer-name
+def setUniventionLogger(logger: Any) -> None:
 	warnings.warn("OPSI.Logger.setUniventionLogger is deprecated", DeprecationWarning)
 
 
 logger.setUniventionLogger = setUniventionLogger
 
 
-def setUniventionClass(c: Any) -> None:  # pylint: disable=unused-argument,invalid-name
+def setUniventionClass(c: Any) -> None:
 	warnings.warn("OPSI.Logger.setUniventionClass is deprecated", DeprecationWarning)
 
 
@@ -339,7 +339,7 @@ def setColor(color: Any) -> None:
 logger.setColor = setColor
 
 
-def setFileColor(color: Any) -> None:  # pylint: disable=unused-argument
+def setFileColor(color: Any) -> None:
 	warnings.warn(
 		"OPSI.Logger.setFileColor is deprecated, use opsicommon.logging.logging_config instead",
 		DeprecationWarning,
@@ -358,7 +358,7 @@ def setConsoleColor(color: Any) -> None:
 logger.setConsoleColor = setConsoleColor
 
 
-def setSyslogLevel(level: int = LOG_NONE) -> None:  # pylint: disable=unused-argument
+def setSyslogLevel(level: int = LOG_NONE) -> None:
 	warnings.warn("OPSI.Logger.setSyslogLevel is deprecated", DeprecationWarning)
 
 
@@ -371,13 +371,13 @@ def setMessageSubjectLevel(level: int = LOG_NONE) -> None:
 		DeprecationWarning,
 	)
 	for handler in get_all_handlers(ObservableHandler):
-		handler.setLevel(OPSI_LEVEL_TO_LEVEL[level])  # pylint: disable=protected-access
+		handler.setLevel(OPSI_LEVEL_TO_LEVEL[level])
 
 
 logger.setMessageSubjectLevel = setMessageSubjectLevel
 
 
-def setConsoleLevel(logLevel: int, object: Any = None) -> None:  # pylint: disable=unused-argument,redefined-builtin
+def setConsoleLevel(logLevel: int, object: Any = None) -> None:
 	warnings.warn(
 		"OPSI.Logger.setConsoleLevel is deprecated, instead modify the StreamHandler loglevel.",
 		DeprecationWarning,
@@ -408,14 +408,14 @@ def getFileLevel() -> None:
 logger.getFileLevel = getFileLevel
 
 
-def getLogFile(currentThread: bool = False, object: Any = None) -> None:  # pylint: disable=unused-argument,redefined-builtin
+def getLogFile(currentThread: bool = False, object: Any = None) -> None:
 	warnings.warn("OPSI.Logger.getLogFile is deprecated", DeprecationWarning)
 
 
 logger.getLogFile = getLogFile
 
 
-def setLogFile(logFile: Any, currentThread: bool = False, object: bool = None) -> None:  # pylint: disable=unused-argument,redefined-builtin
+def setLogFile(logFile: Any, currentThread: bool = False, object: bool = None) -> None:
 	warnings.warn(
 		"OPSI.Logger.setLogFile is deprecated, instead add a FileHandler to logger.",
 		DeprecationWarning,
@@ -429,7 +429,7 @@ logger.setLogFile = setLogFile
 def linkLogFile(
 	linkFile: Any,
 	currentThread: bool = False,
-	object: Any = None,  # pylint: disable=unused-argument,redefined-builtin
+	object: Any = None,
 ) -> None:
 	warnings.warn("OPSI.Logger.linkLogFile is deprecated", DeprecationWarning)
 
@@ -437,7 +437,7 @@ def linkLogFile(
 logger.linkLogFile = linkLogFile
 
 
-def setFileLevel(logLevel: int, object: Any = None) -> None:  # pylint: disable=unused-argument,redefined-builtin
+def setFileLevel(logLevel: int, object: Any = None) -> None:
 	warnings.warn(
 		"OPSI.Logger.setFileLevel is deprecated, instead modify the FileHandler loglevel.",
 		DeprecationWarning,
@@ -448,42 +448,42 @@ def setFileLevel(logLevel: int, object: Any = None) -> None:  # pylint: disable=
 logger.setFileLevel = setFileLevel
 
 
-def exit(object: Any = None) -> None:  # pylint: disable=unused-argument,redefined-builtin
+def exit(object: Any = None) -> None:
 	warnings.warn("OPSI.Logger.exit is deprecated", DeprecationWarning)
 
 
 logger.exit = exit
 
 
-def _setThreadConfig(key: Any, value: Any) -> None:  # pylint: disable=unused-argument
+def _setThreadConfig(key: Any, value: Any) -> None:
 	warnings.warn("OPSI.Logger._setThreadConfig is deprecated", DeprecationWarning)
 
 
-logger._setThreadConfig = _setThreadConfig  # pylint: disable=protected-access
+logger._setThreadConfig = _setThreadConfig
 
 
-def _getThreadConfig(key: Any = None) -> None:  # pylint: disable=unused-argument
+def _getThreadConfig(key: Any = None) -> None:
 	warnings.warn("OPSI.Logger._getThreadConfig is deprecated", DeprecationWarning)
 
 
-logger._getThreadConfig = _getThreadConfig  # pylint: disable=protected-access
+logger._getThreadConfig = _getThreadConfig
 
 
-def _setObjectConfig(objectId: Any, key: Any, value: Any) -> None:  # pylint: disable=unused-argument
+def _setObjectConfig(objectId: Any, key: Any, value: Any) -> None:
 	warnings.warn("OPSI.Logger._setObjectConfig is deprecated", DeprecationWarning)
 
 
-logger._setObjectConfig = _setObjectConfig  # pylint: disable=protected-access
+logger._setObjectConfig = _setObjectConfig
 
 
-def _getObjectConfig(objectId: Any, key: Any = None) -> None:  # pylint: disable=unused-argument
+def _getObjectConfig(objectId: Any, key: Any = None) -> None:
 	warnings.warn("OPSI.Logger._getObjectConfig is deprecated", DeprecationWarning)
 
 
-logger._getObjectConfig = _getObjectConfig  # pylint: disable=protected-access
+logger._getObjectConfig = _getObjectConfig
 
 
-def logException(e: Exception, logLevel: int = logging.CRITICAL) -> None:  # pylint: disable=invalid-name
+def logException(e: Exception, logLevel: int = logging.CRITICAL) -> None:
 	warnings.warn(
 		"OPSI.Logger.logException is deprecated, instead use logger.log with exc_info=True.",
 		DeprecationWarning,
@@ -494,14 +494,14 @@ def logException(e: Exception, logLevel: int = logging.CRITICAL) -> None:  # pyl
 logger.logException = logException
 
 
-def logFailure(failure: Any, logLevel: int = LOG_CRITICAL) -> None:  # pylint: disable=unused-argument
+def logFailure(failure: Any, logLevel: int = LOG_CRITICAL) -> None:
 	warnings.warn("OPSI.Logger.logFailure is deprecated", DeprecationWarning)
 
 
 logger.logFailure = logFailure
 
 
-def logTraceback(tb: Any, logLevel: int = LOG_CRITICAL) -> None:  # pylint: disable=unused-argument,invalid-name
+def logTraceback(tb: Any, logLevel: int = LOG_CRITICAL) -> None:
 	warnings.warn("OPSI.Logger.logTraceback is deprecated", DeprecationWarning)
 
 

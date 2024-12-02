@@ -39,7 +39,7 @@ logger = get_logger("opsi.general")
 
 
 class Subject:
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin,unused-argument
+	def __init__(self, id, type="", title="", **args):
 		self._id = forceUnicode(id)
 		self._type = forceUnicode(type)
 		self._title = forceUnicode(title)
@@ -87,7 +87,7 @@ class Subject:
 
 
 class MessageSubject(Subject):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):
 		Subject.__init__(self, id, type, title, **args)
 		self.reset()
 		try:
@@ -130,7 +130,7 @@ class MessageSubject(Subject):
 
 
 class ChoiceSubject(MessageSubject):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):
 		MessageSubject.__init__(self, id, type, title, **args)
 		self.reset()
 		self._callbacks = []
@@ -220,7 +220,7 @@ class ChoiceSubject(MessageSubject):
 
 
 class ProgressSubject(MessageSubject):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin,unused-argument
+	def __init__(self, id, type="", title="", **args):
 		MessageSubject.__init__(self, id, type, title, **args)
 		self.reset()
 		self._fireAlways = True
@@ -408,7 +408,7 @@ class ChoiceObserver(MessageObserver):
 
 
 class ProgressObserver(MessageObserver):
-	def __init__(self):  # pylint: disable=super-init-not-called
+	def __init__(self):
 		pass
 
 	def progressChanged(self, subject, state, percent, timeSpend, timeLeft, speed):
@@ -419,7 +419,7 @@ class ProgressObserver(MessageObserver):
 
 
 class SubjectsObserver(ChoiceObserver, ProgressObserver):
-	def __init__(self):  # pylint: disable=super-init-not-called
+	def __init__(self):
 		self._subjects = []
 
 	def setSubjects(self, subjects):
@@ -452,7 +452,7 @@ class SubjectsObserver(ChoiceObserver, ProgressObserver):
 class MessageSubjectProxy(
 	ProgressSubject, ProgressObserver, ChoiceSubject, ChoiceObserver
 ):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):
 		ChoiceSubject.__init__(self, id, type, title, **args)
 		ChoiceObserver.__init__(self)
 		ProgressSubject.__init__(self, id, type, title, **args)
@@ -475,10 +475,10 @@ class MessageSubjectProxy(
 
 
 class ChoiceSubjectProxy(MessageSubjectProxy):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):
 		MessageSubjectProxy.__init__(self, id, type, title, **args)
 
 
 class ProgressSubjectProxy(MessageSubjectProxy):
-	def __init__(self, id, type="", title="", **args):  # pylint: disable=redefined-builtin
+	def __init__(self, id, type="", title="", **args):
 		MessageSubjectProxy.__init__(self, id, type, title, **args)

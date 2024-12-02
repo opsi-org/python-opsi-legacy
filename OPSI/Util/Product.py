@@ -118,7 +118,7 @@ class ProductPackageFile:
 		self.runPostinst()
 		self.cleanup()
 
-	def unpackSource(self, destinationDir=".", newProductId=None, progressSubject=None):  # pylint: disable=too-many-branches,too-many-statements
+	def unpackSource(self, destinationDir=".", newProductId=None, progressSubject=None):
 		logger.info("Extracting package source from '%s'", self.packageFile)
 		if progressSubject:
 			progressSubject.setMessage(
@@ -171,7 +171,7 @@ class ProductPackageFile:
 			if newProductId:
 				self.getMetaData()
 				product = self.packageControlFile.getProduct()
-				if self.packageControlFile._filename.endswith("control.toml"):  # pylint: disable=protected-access
+				if self.packageControlFile._filename.endswith("control.toml"):
 					control_filename = "control.toml"
 				else:
 					control_filename = "control"
@@ -214,7 +214,7 @@ class ProductPackageFile:
 				f"Failed to extract package source from '{self.packageFile}': {err}"
 			) from err
 
-	def getMetaData(self, output_dir=None):  # pylint: disable=inconsistent-return-statements,too-many-branches
+	def getMetaData(self, output_dir=None):
 		if self.packageControlFile:
 			# Already done
 			return
@@ -279,7 +279,7 @@ class ProductPackageFile:
 		logger.debug("Got meta data from package '%s'", self.packageFile)
 		return self.packageControlFile
 
-	def extractData(self):  # pylint: disable=too-many-branches
+	def extractData(self):
 		logger.info("Extracting data from package '%s'", self.packageFile)
 
 		try:
@@ -355,7 +355,7 @@ class ProductPackageFile:
 				archive.extract(targetPath=productClientDataDir)
 
 			logger.debug("Finished extracting data from package")
-		except Exception as err:  # pylint: disable:broad-except
+		except Exception as err:
 			self.cleanup()
 			raise RuntimeError(
 				f"Failed to extract data from package '{self.packageFile}': {err}"
@@ -374,7 +374,7 @@ class ProductPackageFile:
 		)
 		return self.clientDataFiles
 
-	def setAccessRights(self):  # pylint: disable=too-many-branches
+	def setAccessRights(self):
 		logger.info("Setting access rights of client-data files")
 
 		if os.name != "posix":
@@ -423,7 +423,7 @@ class ProductPackageFile:
 
 					if mode is not None:
 						os.chmod(path, mode)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					if mode is None:
 						raise RuntimeError(
 							f"Failed to set access rights of '{path}': {err}"
@@ -432,7 +432,7 @@ class ProductPackageFile:
 						f"Failed to set access rights of '{path}' to '{mode}': {err}"
 					) from err
 			logger.debug("Finished setting access rights of client-data files")
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			self.cleanup()
 			raise RuntimeError(
 				f"Failed to set access rights of client-data files of package '{self.packageFile}': {err}"
@@ -499,7 +499,7 @@ class ProductPackageFile:
 			if data.startswith(b"#!"):
 				new_data = re.sub(
 					rb"(^|\s|/)python3?(\s+)", rb"\g<1>opsi-python\g<2>", data
-				)  # pylint: disable=anomalous-backslash-in-string
+				)
 				if b"\r\n" in data:
 					logger.info("Replacing dos line breaks in %s", script)
 					new_data = new_data.replace(b"\r\n", b"\n")
@@ -536,15 +536,15 @@ class ProductPackageFile:
 		return self._runPackageScript("postinst", env=env or {})
 
 
-class ProductPackageSource:  # pylint: disable=too-many-instance-attributes
-	def __init__(  # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
+class ProductPackageSource:
+	def __init__(
 		self,
 		packageSourceDir,
 		tempDir=None,
 		customName=None,
 		customOnly=False,
 		packageFileDestDir=None,
-		format="cpio",  # pylint: disable=redefined-builtin
+		format="cpio",
 		compression="gzip",
 		dereference=False,
 	):
@@ -631,7 +631,7 @@ class ProductPackageSource:  # pylint: disable=too-many-instance-attributes
 			shutil.rmtree(self.tmpPackDir)
 		logger.debug("Finished cleaning up")
 
-	def pack(self, progressSubject=None):  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+	def pack(self, progressSubject=None):
 		# Create temporary directory
 		if os.path.exists(self.tmpPackDir):
 			shutil.rmtree(self.tmpPackDir)

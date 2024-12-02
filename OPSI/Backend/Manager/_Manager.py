@@ -56,7 +56,7 @@ class BackendManager(ExtendedBackend):
 		"hostControlSafeBackend": True,
 	}
 
-	def __init__(self, **kwargs):  # pylint: disable=super-init-not-called,too-many-locals,too-many-branches,too-many-statements
+	def __init__(self, **kwargs):
 		"""
 		Creating a BackendManager.
 
@@ -115,7 +115,7 @@ class BackendManager(ExtendedBackend):
 					bmc[key] = val
 		kwargs = bmc
 
-		Backend.__init__(self, **kwargs)  # pylint: disable=non-parent-init-called
+		Backend.__init__(self, **kwargs)
 
 		dispatch = False
 		extend = False
@@ -198,7 +198,7 @@ class BackendManager(ExtendedBackend):
 				hostControlBackendConfig.update(
 					self.__loadBackendConfig("hostcontrol")["config"]
 				)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(
 					"Failed to load configuration for HostControlBackend: %s", err
 				)
@@ -213,7 +213,7 @@ class BackendManager(ExtendedBackend):
 				hostControlSafeBackendConfig.update(
 					self.__loadBackendConfig("hostcontrol")["config"]
 				)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(
 					"Failed to load configuration for HostControlSafeBackend: %s", err
 				)
@@ -235,7 +235,7 @@ class BackendManager(ExtendedBackend):
 
 	def get_jsonrpc_backend(self):
 		dispatcher = self._get_backend_dispatcher()
-		return dispatcher._backends.get("jsonrpc", {}).get("instance")  # pylint: disable=no-member,protected-access
+		return dispatcher._backends.get("jsonrpc", {}).get("instance")
 
 	def __loadBackendConfig(self, name):
 		if not self._backendConfigDir:
@@ -286,7 +286,7 @@ def backendManagerFactory(
 	postpath,
 	context,
 	**kwargs,
-):  # pylint: disable=too-many-arguments
+):
 	backendManager = None
 	if len(postpath) == 2 and postpath[0] == "backend":
 		backendManager = BackendManager(

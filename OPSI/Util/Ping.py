@@ -96,7 +96,7 @@ ICMP_ECHO_REQUEST = 8  # Seems to be the same on Solaris.
 def checksum(source_bytes):
 	# I'm not too confident that this is right but testing seems
 	# to suggest that it gives the same answers as in_cksum in ping.c
-	sum = 0  # pylint: disable=redefined-builtin
+	sum = 0
 	countTo = (len(source_bytes) / 2) * 2
 	count = 0
 	while count < countTo:
@@ -152,7 +152,7 @@ def receive_one_ping(my_socket, ID, timeout):
 			return
 
 
-def send_one_ping(my_socket, dest_addr, ID):  # pylint: disable=invalid-name
+def send_one_ping(my_socket, dest_addr, ID):
 	"""
 	Send one ping to the given >dest_addr<.
 	"""

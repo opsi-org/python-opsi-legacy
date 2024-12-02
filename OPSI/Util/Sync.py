@@ -140,12 +140,12 @@ def _execute(job, input_handle, output_handle=None):
 		block = input_handle.read(RS_JOB_BLOCKSIZE)
 		buff = Buffer()
 		# provide the data block via input buffer.
-		buff.next_in = ctypes.c_char_p(block)  # pylint: disable=attribute-defined-outside-init
-		buff.avail_in = ctypes.c_size_t(len(block))  # pylint: disable=attribute-defined-outside-init
-		buff.eof_in = ctypes.c_int(not block)  # pylint: disable=attribute-defined-outside-init
+		buff.next_in = ctypes.c_char_p(block)
+		buff.avail_in = ctypes.c_size_t(len(block))
+		buff.eof_in = ctypes.c_int(not block)
 		# Set up our buffer for output.
-		buff.next_out = ctypes.cast(out, ctypes.c_char_p)  # pylint: disable=attribute-defined-outside-init
-		buff.avail_out = ctypes.c_size_t(RS_JOB_BLOCKSIZE)  # pylint: disable=attribute-defined-outside-init
+		buff.next_out = ctypes.cast(out, ctypes.c_char_p)
+		buff.avail_out = ctypes.c_size_t(RS_JOB_BLOCKSIZE)
 		res = _librsync.rs_job_iter(job, ctypes.byref(buff))
 		if output_handle:
 			output_handle.write(out.raw[: RS_JOB_BLOCKSIZE - buff.avail_out])

@@ -6,9 +6,9 @@
 Testing the Host Control backend.
 """
 
-from ipaddress import IPv4Network, IPv4Address
-import pytest
+from ipaddress import IPv4Address, IPv4Network
 
+import pytest
 from opsicommon.objects import OpsiClient
 
 from OPSI.Backend.HostControl import HostControlBackend
@@ -64,9 +64,9 @@ def host_control_backend(extendedConfigDataBackend):
 		),
 	),
 )
-def test_set_broadcast_addresses(host_control_backend, config, expected_result):  # pylint: disable=redefined-outer-name
-	host_control_backend._set_broadcast_addresses(config)  # pylint: disable=protected-access
-	assert host_control_backend._broadcastAddresses == expected_result  # pylint: disable=protected-access
+def test_set_broadcast_addresses(host_control_backend, config, expected_result):
+	host_control_backend._set_broadcast_addresses(config)
+	assert host_control_backend._broadcastAddresses == expected_result
 
 
 @pytest.mark.parametrize(
@@ -122,16 +122,16 @@ def test_set_broadcast_addresses(host_control_backend, config, expected_result):
 )
 def test_get_broadcast_addresses_for_host(
 	host_control_backend, config, ip_address, expected_result
-):  # pylint: disable=redefined-outer-name
-	host_control_backend._set_broadcast_addresses(config)  # pylint: disable=protected-access
+):
+	host_control_backend._set_broadcast_addresses(config)
 	host = OpsiClient(id="test.opsi.org", ipAddress=ip_address)
 	assert (
 		list(host_control_backend._get_broadcast_addresses_for_host(host))
 		== expected_result
-	)  # pylint: disable=protected-access
+	)
 
 
-def test_calling_start_and_stop_method(host_control_backend):  # pylint: disable=redefined-outer-name
+def test_calling_start_and_stop_method(host_control_backend):
 	"""
 	Test if calling the methods works.
 
@@ -140,13 +140,11 @@ def test_calling_start_and_stop_method(host_control_backend):  # pylint: disable
 	"""
 	clients = getClients()
 	host_control_backend.host_createObjects(clients)
-	host_control_backend._hostRpcTimeout = (
-		1  # for faster finishing of the test # pylint: disable=protected-access
-	)
+	host_control_backend._hostRpcTimeout = 1  # for faster finishing of the test
 	host_control_backend.hostControl_start(["client1.test.invalid"])
 	host_control_backend.hostControl_shutdown(["client1.test.invalid"])
 
 
-def test_host_control_reachable_without_hosts(host_control_backend):  # pylint: disable=redefined-outer-name
+def test_host_control_reachable_without_hosts(host_control_backend):
 	with pytest.raises(BackendMissingDataError):
 		host_control_backend.hostControl_reachable()

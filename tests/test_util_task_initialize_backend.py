@@ -18,7 +18,7 @@ def testGettingServerConfig():
 	}
 	fqdn = "blackwidow.test.invalid"
 
-	config = initBackend._getServerConfig(fqdn, networkConfig)  # pylint: disable=protected-access
+	config = initBackend._getServerConfig(fqdn, networkConfig)
 
 	assert config["id"] == fqdn
 	for key in (

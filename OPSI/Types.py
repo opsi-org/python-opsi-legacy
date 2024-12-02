@@ -10,4 +10,4 @@ on an object.
 Deprecated, use opsicommon.types instead.
 """
 
-from opsicommon.types import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from opsicommon.types import *

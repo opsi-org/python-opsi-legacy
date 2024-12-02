@@ -5,7 +5,6 @@
 """
 Utilites to handle files specific to opsi.
 """
-# pylint: disable=too-many-lines
 
 import bz2
 import codecs
@@ -194,8 +193,8 @@ class BackendACLFile(ConfigFile):
 	def __init__(self, filename, lockFailTimeout=2000):
 		ConfigFile.__init__(self, filename, lockFailTimeout, commentChars=["#"])
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
-		from OPSI.Config import (  # pylint: disable=import-outside-toplevel
+	def parse(self, lines=None):
+		from OPSI.Config import (
 			FILE_ADMIN_GROUP,
 			OPSI_ADMIN_GROUP,
 		)
@@ -211,7 +210,7 @@ class BackendACLFile(ConfigFile):
 		#    abc:      self(attributes(!opsiHostKey));sys_group(admin, group 2, attributes(!opsiHostKey))
 
 		acl = []
-		for line in ConfigFile.parse(self):  # pylint: disable=too-many-nested-blocks
+		for line in ConfigFile.parse(self):
 			match = re.search(self.aclEntryRegex, line)
 			if not match:
 				raise ValueError(
@@ -435,7 +434,7 @@ class PackageContentFile(TextFile):
 	def setProductClientDataDir(self, productClientDataDir):
 		self._productClientDataDir = forceFilename(productClientDataDir)
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches
+	def parse(self, lines=None):
 		if lines:
 			self._lines = forceUnicodeList(lines)
 		else:
@@ -509,7 +508,7 @@ class PackageContentFile(TextFile):
 				self._lines.append(
 					f"{entryType} '{maskQuoteChars(filename)}' {size} {additional}"
 				)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(err, exc_info=True)
 
 		self.open("w")
@@ -517,7 +516,7 @@ class PackageContentFile(TextFile):
 		self.close()
 
 
-class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attributes
+class PackageControlFile(TextFile):
 	sectionRegex = re.compile(r"^\s*\[([^\]]+)\]\s*$")
 	valueContinuationRegex = re.compile(r"^\s(.*)$")
 	optionRegex = re.compile(r"^([^\:]+)\s*\:\s*(.*)$")
@@ -531,7 +530,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 		self._productProperties = []
 		self._packageDependencies = []
 
-	def parse(self, lines=None):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def parse(self, lines=None):
 		if lines:
 			self._lines = forceUnicodeList(lines)
 		else:
@@ -751,13 +750,13 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 						self._sections[sectionType][-1][option] += "\n"
 					self._sections[sectionType][-1][option] += value.lstrip()
 
-		for sectionType, secs in self._sections.items():  # pylint: disable=too-many-nested-blocks
+		for sectionType, secs in self._sections.items():
 			if sectionType == "changelog":
 				continue
 
 			for i, currentSection in enumerate(secs):
 				for option, value in currentSection.items():
-					if (  # pylint: disable=too-many-boolean-expressions
+					if (
 						(sectionType == "product" and option == "productclasses")
 						or (sectionType == "package" and option == "depends")
 						or (
@@ -774,7 +773,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 							value = fromJson(value.strip())
 							# Remove duplicates
 							value = forceUniqueList(value)
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							logger.trace(
 								"Failed to read json string '%s': %s",
 								value.strip(),
@@ -794,7 +793,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 					if isinstance(value, str):
 						value = value.rstrip()
 
-					self._sections[sectionType][i][option] = value  # pylint: disable=unnecessary-dict-index-lookup
+					self._sections[sectionType][i][option] = value
 
 		if not self._sections.get("product"):
 			raise ValueError(
@@ -923,7 +922,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 		self._parsed = True
 		return self._sections
 
-	def parse_toml(self):  # pylint: disable=too-many-locals
+	def parse_toml(self):
 		data_dict = tomlkit.loads("".join(self._lines)).unwrap()
 
 		# kept _section stuff for compatibility
@@ -1161,7 +1160,7 @@ class PackageControlFile(TextFile):  # pylint: disable=too-many-instance-attribu
 		else:
 			self.generate_old()
 
-	def generate_old(self):  # pylint: disable=too-many-branches,too-many-statements
+	def generate_old(self):
 		self._lines = ["[Package]"]
 		self._lines.append(f"version: {self._product.getPackageVersion()}")
 		depends = ""
@@ -1403,15 +1402,15 @@ class OpsiConfFile(IniFile):
 	sectionRegex = re.compile(r"^\s*\[([^\]]+)\]\s*$")
 	optionRegex = re.compile(r"^([^\:]+)\s*\=\s*(.*)$")
 
-	def __init__(self, filename="/etc/opsi/opsi.conf", lockFailTimeout=2000):  # pylint: disable=super-init-not-called
-		ConfigFile.__init__(self, filename, lockFailTimeout, commentChars=[";", "#"])  # pylint: disable=non-parent-init-called
+	def __init__(self, filename="/etc/opsi/opsi.conf", lockFailTimeout=2000):
+		ConfigFile.__init__(self, filename, lockFailTimeout, commentChars=[";", "#"])
 		self._parsed = False
 		self._sections = {}
 		self._opsiGroups = {}
 		self.parsed = False
 		self._opsiConfig = {}
 
-	def parse(self, lines=None):  # pylint: disable=arguments-differ,too-many-branches
+	def parse(self, lines=None):
 		if lines:
 			self._lines = forceUnicodeList(lines)
 		else:
@@ -1539,7 +1538,7 @@ class OpsiBackupArchive(tarfile.TarFile):
 		tempdir=tempfile.gettempdir(),
 		fileobj=None,
 		**kwargs,
-	):  # pylint: disable=too-many-branches
+	):
 		self.tempdir = tempdir
 		self.mode = mode
 		self.sysinfo = None
@@ -1591,7 +1590,7 @@ class OpsiBackupArchive(tarfile.TarFile):
 				dispatchedBackends = BackendDispatchConfigFile(
 					self.DISPATCH_CONF
 				).getUsedBackends()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.warning("Could not read dispatch configuration: %s", err)
 				dispatchedBackends = []
 
@@ -1613,7 +1612,7 @@ class OpsiBackupArchive(tarfile.TarFile):
 				backendFile = os.path.join(self.BACKEND_CONF_DIR, entry)
 				try:
 					with open(backendFile, encoding="utf-8") as confFile:
-						exec(confFile.read(), backendGlobals)  # pylint: disable=exec-used
+						exec(confFile.read(), backendGlobals)
 
 					backends[name] = {
 						"name": name,
@@ -1621,12 +1620,12 @@ class OpsiBackupArchive(tarfile.TarFile):
 						"module": backendGlobals["module"],
 						"dispatch": (name in dispatchedBackends),
 					}
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.warning('Failed to read backend config "%s": %s', entry, err)
 
 		return backends
 
-	def _getBackends(self, type=None):  # pylint: disable=redefined-builtin
+	def _getBackends(self, type=None):
 		if not self._backends:
 			self._backends = self._readBackendConfiguration()
 
@@ -1807,7 +1806,7 @@ element of the tuple is replace with the second element.
 				os.chown(
 					dest, pwd.getpwnam(member.uname)[2], grp.getgrnam(member.gname)[2]
 				)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.warning(
 					"Failed to restore file permissions on %s: %s", dest, err
 				)
@@ -1892,7 +1891,7 @@ element of the tuple is replace with the second element.
 		if not self.hasFileBackend():
 			raise OpsiBackupBackendNotFound("No File Backend found in backup archive")
 
-		for backend in self._getBackends("file"):  # pylint: disable=too-many-nested-blocks
+		for backend in self._getBackends("file"):
 			if not auto or backend["dispatch"]:
 				backendBackupPath = os.path.join(
 					self.CONTENT_DIR, f"BACKENDS/FILE/{backend['name']}"
@@ -1967,8 +1966,8 @@ element of the tuple is replace with the second element.
 	def hasMySQLBackend(self, name=None):
 		return self._hasBackend("MYSQL", name=name)
 
-	def backupMySQLBackend(self, flushLogs=False, auto=False):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-		for backend in self._getBackends("mysql"):  # pylint: disable=too-many-nested-blocks
+	def backupMySQLBackend(self, flushLogs=False, auto=False):
+		for backend in self._getBackends("mysql"):
 			if not auto or backend["dispatch"]:
 				if not backend["dispatch"]:
 					logger.warning(
@@ -2023,7 +2022,7 @@ element of the tuple is replace with the second element.
 							collectedErrors = [
 								proc.stderr.readline().decode("utf-8", "replace")
 							]
-						except Exception:  # pylint: disable=broad-except
+						except Exception:
 							collectedErrors = []
 						lastErrors = collections.deque(collectedErrors, maxlen=10)
 
@@ -2040,7 +2039,7 @@ element of the tuple is replace with the second element.
 								if currentError:
 									lastErrors.append(currentError)
 									collectedErrors.append(currentError)
-							except Exception:  # pylint: disable=broad-except
+							except Exception:
 								continue
 
 							if lastErrors.maxlen == len(lastErrors):
@@ -2072,7 +2071,7 @@ element of the tuple is replace with the second element.
 					os.remove(name)
 					os.remove(defaultsFile)
 
-	def restoreMySQLBackend(self, auto=False):  # pylint: disable=too-many-branches
+	def restoreMySQLBackend(self, auto=False):
 		if not self.hasMySQLBackend():
 			raise OpsiBackupBackendNotFound("No MySQL Backend found in backup archive")
 

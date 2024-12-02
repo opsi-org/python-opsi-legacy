@@ -37,7 +37,7 @@ class ModificationTrackingBackend(ExtendedBackend):
 			try:
 				meth = getattr(bcl, event)
 				meth(self, *args)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(err)
 
 	def _executeMethod(self, methodName, **kwargs):

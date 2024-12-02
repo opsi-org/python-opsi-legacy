@@ -66,12 +66,12 @@ def twistedDAVXMLPath(test_data_path):
 
 
 @pytest.fixture
-def twistedDAVXML(twistedDAVXMLPath):  # pylint: disable=redefined-outer-name
+def twistedDAVXML(twistedDAVXMLPath):
 	with open(twistedDAVXMLPath, "r", encoding="utf8") as file:
 		return file.read()
 
 
-def testGetFileInfosFromDavXML(twistedDAVXML):  # pylint: disable=redefined-outer-name
+def testGetFileInfosFromDavXML(twistedDAVXML):
 	content = getFileInfosFromDavXML(twistedDAVXML)
 	assert len(content) == 4
 
@@ -149,19 +149,19 @@ def test_limit_download(tmpdir, repo_type, dynamic):
 		if not dynamic:
 			assert abs(round(end - start) - round(len(data) / limit)) <= 1
 
-	def get_network_usage(self):  # pylint: disable=unused-argument
-		traffic_ratio = repo.speed_limiter._dynamic_bandwidth_threshold_no_limit  # pylint: disable=protected-access
+	def get_network_usage(self):
+		traffic_ratio = repo.speed_limiter._dynamic_bandwidth_threshold_no_limit
 		if simulate_other_traffic:
-			traffic_ratio = repo.speed_limiter._dynamic_bandwidth_limit_rate  # pylint: disable=protected-access
+			traffic_ratio = repo.speed_limiter._dynamic_bandwidth_limit_rate
 
-		bandwidth = int(repo.speed_limiter._average_speed / traffic_ratio)  # pylint: disable=protected-access
-		if repo._bytesTransfered >= len(data) * 0.8:  # pylint: disable=protected-access
+		bandwidth = int(repo.speed_limiter._average_speed / traffic_ratio)
+		if repo._bytesTransfered >= len(data) * 0.8:
 			if simulate_other_traffic:
 				assert (
-					repo.speed_limiter._dynamic_bandwidth_limit / bandwidth  # pylint: disable=protected-access
-				) <= repo.speed_limiter._dynamic_bandwidth_limit_rate * 2  # pylint: disable=protected-access
+					repo.speed_limiter._dynamic_bandwidth_limit / bandwidth
+				) <= repo.speed_limiter._dynamic_bandwidth_limit_rate * 2
 			else:
-				assert repo.speed_limiter._dynamic_bandwidth_limit == 0  # pylint: disable=protected-access
+				assert repo.speed_limiter._dynamic_bandwidth_limit == 0
 		return bandwidth
 
 	# Setting DEFAULT_BUFFER_SIZE to slow down transfer
@@ -219,7 +219,7 @@ def test_limit_upload(tmpdir, repo_type):
 		upload(f"{repo_type}://{dst_dir}")
 
 
-def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-many-locals,too-many-statements
+def test_depot_to_local_sync(tmp_path: pathlib.Path):
 	product_id = "test1"
 
 	depot_path = tmp_path / "depot"
@@ -272,9 +272,9 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 				destinationDirectory=str(local_path),
 				productIds=[product_id],
 			)
-			sync._productId = product_id  # pylint: disable=protected-access
-			sync._fileInfo = packageContentFile.parse()  # pylint: disable=protected-access
-			sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
+			sync._productId = product_id
+			sync._fileInfo = packageContentFile.parse()
+			sync._synchronizeDirectories(product_id, str(local_product_path))
 
 			file = local_product_path / "file1.txt"
 			assert file.exists()
@@ -288,14 +288,14 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 			if depot == webdav_depot:
 				# Test no transfer needed (no server request)
 				server_log_file.unlink()
-				sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
+				sync._synchronizeDirectories(product_id, str(local_product_path))
 				assert not server_log_file.exists()
 
 				# Test correct but incomplete file part
 				(local_product_path / "subdir" / "file2.txt").write_text(
 					"0123456789" * 50_000
 				)
-				sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
+				sync._synchronizeDirectories(product_id, str(local_product_path))
 				request = json.loads(server_log_file.read_text())
 				assert request["headers"]["range"] == "bytes=500000-"
 
@@ -304,7 +304,7 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):  # pylint: disable=too-man
 				(local_product_path / "subdir" / "file2.txt").write_text(
 					"xxxxxxxxxx" * 50_000
 				)
-				sync._synchronizeDirectories(product_id, str(local_product_path))  # pylint: disable=protected-access
+				sync._synchronizeDirectories(product_id, str(local_product_path))
 
 				requests = server_log_file.read_text().split("\n")
 				request = json.loads(requests[0])

@@ -12,7 +12,7 @@ Deprecated, use opsicommon.objects instead.
 
 from typing import Any
 
-from opsicommon.objects import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from opsicommon.objects import *
 
 mandatoryConstructorArgs = mandatory_constructor_args
 getIdentAttributes = get_ident_attributes

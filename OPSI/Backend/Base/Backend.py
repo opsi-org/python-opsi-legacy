@@ -34,7 +34,7 @@ from opsicommon.logging import get_logger
 
 from OPSI import __version__ as LIBRARY_VERSION
 from OPSI.Exceptions import BackendError
-from OPSI.Object import *  # this is needed for dynamic loading # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Object import *  # this is needed for dynamic loading # noqa: F401,F403
 from OPSI.Types import (
 	forceDict,
 	forceFilename,
@@ -53,7 +53,7 @@ OPSI_LICENSE_PATH = "/etc/opsi/licenses"
 logger = get_logger("opsi.general")
 
 
-def describeInterface(instance):  # pylint: disable=too-many-locals
+def describeInterface(instance):
 	"""
 	Describes what public methods are available and the signatures they use.
 
@@ -167,7 +167,7 @@ class BackendOptions:
 		return dict(self.items())
 
 
-class Backend:  # pylint: disable=too-many-instance-attributes
+class Backend:
 	"""
 	Base backend.
 	"""
@@ -232,13 +232,13 @@ This defaults to ``self``.
 		"""Getting the context backend."""
 		return self._context
 
-	def _objectHashMatches(self, objHash, **filter):  # pylint: disable=redefined-builtin,too-many-branches,no-self-use
+	def _objectHashMatches(self, objHash, **filter):
 		"""
 		Checks if the opsi object hash matches the filter.
 
 		:rtype: bool
 		"""
-		for attribute, value in objHash.items():  # pylint: disable=too-many-nested-blocks
+		for attribute, value in objHash.items():
 			if not filter.get(attribute):
 				continue
 			matched = False
@@ -260,7 +260,7 @@ This defaults to ``self``.
 					for filterValue in filterValues:
 						if attribute == "type":
 							match = False
-							Class = eval(filterValue)  # pylint: disable=eval-used
+							Class = eval(filterValue)
 							for subClass in Class.subClasses:
 								if subClass == value:
 									matched = True
@@ -284,14 +284,14 @@ This defaults to ``self``.
 							val = forceUnicode(filterValue)
 							match = re.search(r"^\s*([>=<]+)\s*([\d.]+)", filterValue)
 							if match:
-								operator = match.group(1)  # pylint: disable=maybe-no-member
-								val = match.group(2)  # pylint: disable=maybe-no-member
+								operator = match.group(1)
+								val = match.group(2)
 
 							try:
 								matched = compareVersions(value, operator, val)
 								if matched:
 									break
-							except Exception:  # pylint: disable=broad-except
+							except Exception:
 								pass
 
 							continue
@@ -312,7 +312,7 @@ This defaults to ``self``.
 				else:
 					# No match, we can stop further checks.
 					return False
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				raise BackendError(
 					f"Testing match of filter {filter[attribute]} of attribute '{attribute}' "
 					f"with value {value} failed: {err}"
@@ -363,7 +363,7 @@ This defaults to ``self``.
 		"""
 		return describeInterface(self)
 
-	def backend_info(self):  # pylint: disable=too-many-branches,too-many-statements
+	def backend_info(self):
 		"""
 		Get info about the used opsi version and the licensed modules.
 
@@ -459,10 +459,10 @@ This defaults to ``self``.
 						pass
 				else:
 					h_int = int.from_bytes(md5(data.encode()).digest(), "big")
-					s_int = publicKey._encrypt(int(modules["signature"]))  # pylint: disable=protected-access
+					s_int = publicKey._encrypt(int(modules["signature"]))
 					modules["valid"] = h_int == s_int
 
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(
 					"Failed to read opsi modules file '%s': %s",
 					self._opsiModulesFile,

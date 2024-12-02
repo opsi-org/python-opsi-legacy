@@ -22,8 +22,6 @@ tests/Backends/config.py
 .coverage
 coverage.xml
 nosetests.xml
-pylint.txt
-pep8.txt
 testreport-OPSI.xml
 
 build/

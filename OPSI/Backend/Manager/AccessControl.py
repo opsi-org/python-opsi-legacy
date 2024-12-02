@@ -36,7 +36,7 @@ from OPSI.Exceptions import (
 	BackendPermissionDeniedError,
 	BackendUnaccomplishableError,
 )
-from OPSI.Object import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Object import *  # This is needed for dynamic loading
 from OPSI.Types import forceBool, forceList, forceUnicodeList, forceUnicodeLowerList
 from OPSI.Util.File.Opsi import BackendACLFile, OpsiConfFile
 
@@ -45,7 +45,7 @@ __all__ = ("BackendAccessControl",)
 logger = get_logger("opsi.general")
 
 
-class UserStore:  # pylint: disable=too-few-public-methods
+class UserStore:
 	"""Stores user information"""
 
 	def __init__(self):
@@ -61,7 +61,7 @@ class UserStore:  # pylint: disable=too-few-public-methods
 class BackendAccessControl:
 	"""Access control for a Backend"""
 
-	def __init__(self, backend, **kwargs):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def __init__(self, backend, **kwargs):
 		self._backend = backend
 		self._context = backend
 		self._acl = None
@@ -93,7 +93,7 @@ class BackendAccessControl:
 				"Cannot use BackendAccessControl instance as backend"
 			)
 
-		if not self._auth_module:  # pylint: disable=too-many-nested-blocks
+		if not self._auth_module:
 			try:
 				ldap_conf = OpsiConfFile().get_ldap_auth_config()
 				if ldap_conf:
@@ -103,7 +103,7 @@ class BackendAccessControl:
 						"available_modules"
 					]
 					if "directory-connector" in available_modules:
-						import OPSI.Backend.Manager.Authentication.LDAP  # pylint: disable=import-outside-toplevel
+						import OPSI.Backend.Manager.Authentication.LDAP
 
 						self._auth_module = (
 							OPSI.Backend.Manager.Authentication.LDAP.LDAPAuthentication(
@@ -115,11 +115,11 @@ class BackendAccessControl:
 							"Disabling ldap authentication: directory-connector module not available"
 						)
 
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.debug(err)
 			if not self._auth_module:
 				if os.name == "posix":
-					import OPSI.Backend.Manager.Authentication.PAM  # pylint: disable=import-outside-toplevel
+					import OPSI.Backend.Manager.Authentication.PAM
 
 					self._auth_module = (
 						OPSI.Backend.Manager.Authentication.PAM.PAMAuthentication(
@@ -127,7 +127,7 @@ class BackendAccessControl:
 						)
 					)
 				elif os.name == "nt":
-					import OPSI.Backend.Manager.Authentication.NT  # pylint: disable=import-outside-toplevel
+					import OPSI.Backend.Manager.Authentication.NT
 
 					self._auth_module = (
 						OPSI.Backend.Manager.Authentication.NT.NTAuthentication()
@@ -180,7 +180,7 @@ class BackendAccessControl:
 		password: str,
 		forceGroups: list[str] = None,
 		auth_type: str = None,
-	):  # pylint: disable=too-many-branches,too-many-statements
+	):
 		if not auth_type:
 			if re.search(r"^[^.]+\.[^.]+\.\S+$", username) or re.search(
 				r"^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", username
@@ -403,14 +403,14 @@ class BackendAccessControl:
 			exec_locals: dict[str, object] = {}
 			if methodName in protectedMethods:
 				logger.trace("Protecting method '%s'", methodName)
-				exec(  # pylint: disable=exec-used
+				exec(
 					f'def {methodName}{sig}: return self._executeMethodProtected("{methodName}", {arg})',
 					None,
 					exec_locals,
 				)
 			else:
 				logger.trace("Not protecting method '%s'", methodName)
-				exec(  # pylint: disable=exec-used
+				exec(
 					f'def {methodName}{sig}: return self._executeMethod("{methodName}", {arg})',
 					None,
 					exec_locals,
@@ -477,7 +477,7 @@ class BackendAccessControl:
 		meth = getattr(self._backend, methodName)
 		return meth(**kwargs)
 
-	def _executeMethodProtected(self, methodName, **kwargs):  # pylint: disable=too-many-branches,too-many-statements
+	def _executeMethodProtected(self, methodName, **kwargs):
 		granted = False
 		newKwargs = {}
 		acls = []
@@ -485,8 +485,8 @@ class BackendAccessControl:
 		for regex, acl in self._acl:
 			logger.trace(
 				"Testing if ACL pattern %s matches method %s", regex.pattern, methodName
-			)  # pylint: disable=no-member
-			if not regex.search(methodName):  # pylint: disable=no-member
+			)
+			if not regex.search(methodName):
 				logger.trace("No match -> skipping.")
 				continue
 
@@ -610,7 +610,7 @@ class BackendAccessControl:
 
 	def _filterObjects(
 		self, objects, acls, exceptionOnTruncate=True, exceptionIfAllRemoved=True
-	):  # pylint: disable=too-many-branches,too-many-locals
+	):
 		logger.info("Filtering objects by acls")
 		is_list = type(objects) in (tuple, list)
 		newObjects = []

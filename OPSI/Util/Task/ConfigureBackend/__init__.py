@@ -44,7 +44,7 @@ please pass them here. If this is None defaults will be used.
 
 	logger.info("Loading backend config '%s'", backendConfigFile)
 	with open(backendConfigFile, encoding="utf-8") as configFile:
-		exec(configFile.read(), customGlobals)  # pylint: disable=exec-used
+		exec(configFile.read(), customGlobals)
 
 	config = customGlobals["config"]
 	logger.debug("Current backend config: %s", config)

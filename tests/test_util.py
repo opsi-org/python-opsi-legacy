@@ -5,7 +5,6 @@
 """
 Testing functionality of OPSI.Util.
 """
-# pylint: disable=too-many-lines
 
 import os
 import os.path
@@ -570,7 +569,7 @@ def testSerialisingDict(inputValues):
 
 
 def testUnserialisableThingsFail():
-	class Foo:  # pylint: disable=too-few-public-methods
+	class Foo:
 		pass
 
 	with pytest.raises(TypeError):
@@ -760,7 +759,7 @@ def test_blowfish_encryption():
 	)
 
 
-def testBlowfishEncryption(randomText, blowfishKey):  # pylint: disable=redefined-outer-name
+def testBlowfishEncryption(randomText, blowfishKey):
 	encodedText = blowfishEncrypt(blowfishKey, randomText)
 	assert encodedText != randomText
 
@@ -768,21 +767,21 @@ def testBlowfishEncryption(randomText, blowfishKey):  # pylint: disable=redefine
 	assert randomText == decodedText
 
 
-def testBlowfishEncryptionFailures(randomText, blowfishKey):  # pylint: disable=redefined-outer-name
+def testBlowfishEncryptionFailures(randomText, blowfishKey):
 	encodedText = blowfishEncrypt(blowfishKey, randomText)
 
 	with pytest.raises(BlowfishError):
 		blowfishDecrypt(blowfishKey + "f00b4", encodedText)
 
 
-def testBlowfishDecryptionFailsWithNoKey(randomText, blowfishKey):  # pylint: disable=redefined-outer-name
+def testBlowfishDecryptionFailsWithNoKey(randomText, blowfishKey):
 	encodedText = blowfishEncrypt(blowfishKey, randomText)
 
 	with pytest.raises(BlowfishError):
 		blowfishDecrypt(None, encodedText)
 
 
-def testBlowfishEncryptionFailsWithNoKey(randomText, blowfishKey):  # pylint: disable=redefined-outer-name,unused-argument
+def testBlowfishEncryptionFailsWithNoKey(randomText, blowfishKey):
 	with pytest.raises(BlowfishError):
 		blowfishEncrypt(None, randomText)
 
@@ -841,8 +840,8 @@ def testObjectToBashOutput():
 
 	expected = {
 		"RESULT": "(\nRESULT1=${RESULT1[*]}\nRESULT2=${RESULT2[*]}\n)",
-		"RESULT1": '(\nonceScript="once.ins"\nwindowsSoftwareIds=""\ndescription="asdf"\nadvice="lolnope"\nalwaysScript="always.ins"\nupdateScript="update.ins"\nproductClassIds=""\nid="htmltestproduct"\nlicenseRequired="False"\nident="htmltestproduct;3.1;1"\nname="Product HTML Test"\nchangelog=""\ncustomScript=""\nuninstallScript="uninstall.ins"\nuserLoginScript=""\npriority="0"\nproductVersion="3.1"\npackageVersion="1"\ntype="LocalbootProduct"\nsetupScript="setup.ins"\n)',  # pylint: disable=line-too-long
-		"RESULT2": '(\nonceScript="once.ins"\nwindowsSoftwareIds=""\ndescription="asdf"\nadvice="lolnope"\nalwaysScript="always.ins"\nupdateScript="update.ins"\nproductClassIds=""\nid="htmltestproduct"\nlicenseRequired="False"\nident="htmltestproduct;3.1;1"\nname="Product HTML Test"\nchangelog=""\ncustomScript=""\nuninstallScript="uninstall.ins"\nuserLoginScript=""\npriority="0"\nproductVersion="3.1"\npackageVersion="1"\ntype="LocalbootProduct"\nsetupScript="setup.ins"\n)',  # pylint: disable=line-too-long
+		"RESULT1": '(\nonceScript="once.ins"\nwindowsSoftwareIds=""\ndescription="asdf"\nadvice="lolnope"\nalwaysScript="always.ins"\nupdateScript="update.ins"\nproductClassIds=""\nid="htmltestproduct"\nlicenseRequired="False"\nident="htmltestproduct;3.1;1"\nname="Product HTML Test"\nchangelog=""\ncustomScript=""\nuninstallScript="uninstall.ins"\nuserLoginScript=""\npriority="0"\nproductVersion="3.1"\npackageVersion="1"\ntype="LocalbootProduct"\nsetupScript="setup.ins"\n)',
+		"RESULT2": '(\nonceScript="once.ins"\nwindowsSoftwareIds=""\ndescription="asdf"\nadvice="lolnope"\nalwaysScript="always.ins"\nupdateScript="update.ins"\nproductClassIds=""\nid="htmltestproduct"\nlicenseRequired="False"\nident="htmltestproduct;3.1;1"\nname="Product HTML Test"\nchangelog=""\ncustomScript=""\nuninstallScript="uninstall.ins"\nuserLoginScript=""\npriority="0"\nproductVersion="3.1"\npackageVersion="1"\ntype="LocalbootProduct"\nsetupScript="setup.ins"\n)',
 	}
 
 	result = objectToBash([product, product])

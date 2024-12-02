@@ -53,8 +53,8 @@ yield the path to the new file.
 def getLocalFQDN():
 	"Get the FQDN of the local machine."
 	# Lazy imports to not hinder other tests.
-	from OPSI.Types import forceHostId  # pylint: disable=import-outside-toplevel
-	from OPSI.Util import getfqdn  # pylint: disable=import-outside-toplevel
+	from OPSI.Types import forceHostId
+	from OPSI.Util import getfqdn
 
 	return forceHostId(getfqdn())
 
@@ -99,7 +99,7 @@ def patchEnvironmentVariables(**environmentVariables):
 
 
 @contextmanager
-def fakeGlobalConf(fqdn="opsi.test.invalid", dir=None):  # pylint: disable=redefined-builtin
+def fakeGlobalConf(fqdn="opsi.test.invalid", dir=None):
 	"Fake a global.conf and return the path to the file."
 
 	with workInTemporaryDirectory(dir) as tempDir:

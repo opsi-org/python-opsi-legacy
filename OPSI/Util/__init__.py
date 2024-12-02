@@ -53,7 +53,7 @@ from opsicommon.types import (  # noqa: F401
 from opsicommon.utils import (
 	Singleton,
 	compare_versions,
-	monkeypatch_subprocess_for_frozen,  # pylint: disable=unused-import  # noqa: F401
+	monkeypatch_subprocess_for_frozen,
 )
 from opsicommon.utils import generate_opsi_host_key as generateOpsiHostKey
 from opsicommon.utils import timestamp as oc_timestamp
@@ -115,10 +115,10 @@ class PickleString(str):
 		return base64.standard_b64encode(self)
 
 	def __setstate__(self, state):
-		self = base64.standard_b64decode(state)  # pylint: disable=self-cls-assignment  # noqa: F841
+		self = base64.standard_b64decode(state)
 
 
-def formatFileSize(sizeInBytes, base: int = 2):  # pylint: disable=too-many-return-statements
+def formatFileSize(sizeInBytes, base: int = 2):
 	"""
 	https://wiki.ubuntu.com/UnitsPolicy
 
@@ -201,7 +201,7 @@ def objectToBeautifiedText(obj):
 	return json.dumps(serialize(obj), indent=4)
 
 
-def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branches
+def objectToBash(obj, bashVars=None, level=0):
 	"""
 	Converts `obj` into bash-compatible format.
 
@@ -267,7 +267,7 @@ def objectToBash(obj, bashVars=None, level=0):  # pylint: disable=too-many-branc
 	return bashVars
 
 
-def objectToHtml(obj, level=0):  # pylint: disable=too-many-branches
+def objectToHtml(obj, level=0):
 	if level == 0:
 		obj = serialize(obj)
 
@@ -328,7 +328,7 @@ def replaceSpecialHTMLCharacters(text):
 compareVersions = compare_versions
 
 
-def removeUnit(value: str) -> int:  # pylint: disable=invalid-name,too-many-return-statements
+def removeUnit(value: str) -> int:
 	"""
 	Take a string representing a byte-based size and return the
 	value in bytes.
@@ -448,7 +448,7 @@ def _prepareBlowfishKey(key: str) -> bytes:
 		raise BlowfishError(f"Unable to prepare key: {err}") from err
 
 
-def findFilesGenerator(  # pylint: disable=too-many-branches,too-many-locals,too-many-arguments,too-many-statements
+def findFilesGenerator(
 	directory,
 	prefix="",
 	excludeDir=None,
@@ -549,7 +549,7 @@ def findFilesGenerator(  # pylint: disable=too-many-branches,too-many-locals,too
 		yield pp
 
 
-def findFiles(  # pylint: disable=too-many-arguments
+def findFiles(
 	directory,
 	prefix="",
 	excludeDir=None,
@@ -579,12 +579,12 @@ def findFiles(  # pylint: disable=too-many-arguments
 
 if sys.version_info >= (3, 7):
 
-	def isRegularExpressionPattern(object):  # pylint: disable=redefined-builtin
+	def isRegularExpressionPattern(object):
 		return isinstance(object, re.Pattern)
 
 else:
 
-	def isRegularExpressionPattern(object):  # pylint: disable=redefined-builtin
+	def isRegularExpressionPattern(object):
 		return "SRE_Pattern" in str(type(object))
 
 
@@ -655,7 +655,7 @@ def removeDirectory(directory):
 		)
 
 		# late import to avoid circular dependency
-		import OPSI.System  # pylint: disable=import-outside-toplevel
+		import OPSI.System
 
 		OPSI.System.execute("rm -rf {directory}")
 

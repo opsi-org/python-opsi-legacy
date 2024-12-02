@@ -14,27 +14,18 @@ from __future__ import absolute_import
 import inspect
 import os
 import types
-import typing  # this is needed exec in __createExtensions  # pylint: disable=unused-import # noqa: F401
 from functools import lru_cache
 
-import opsicommon  # This is needed exec in __createExtensions  # pylint: disable=unused-import # noqa: F401
 from opsicommon.logging import get_logger
 
 from OPSI.Backend.Base import ExtendedBackend
 from OPSI.Backend.Base.Extended import get_function_signature_and_args
 from OPSI.Backend.Manager.AccessControl import BackendAccessControl
-from OPSI.Exceptions import *  # This is needed for dynamic extension loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Exceptions import *  # This is needed for dynamic extension loading
 from OPSI.Exceptions import BackendConfigurationError
-from OPSI.Object import *  # This is needed for dynamic extension loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
-from OPSI.Types import *  # This is needed for dynamic extension loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
-from OPSI.Util import (  # used in extensions  # pylint: disable=unusedimport # noqa: F401
-	getfqdn,
-	objectToBeautifiedText,
-)
+from OPSI.Object import *  # This is needed for dynamic extension loading
+from OPSI.Types import *  # This is needed for dynamic extension loading
 
-from .. import (
-	deprecated,  # used in extensions  # pylint: disable=unused-import # noqa: F401
-)
 from .Dispatcher import BackendDispatcher
 
 __all__ = ("BackendExtender",)
@@ -99,7 +90,7 @@ class BackendExtender(ExtendedBackend):
 				sig, arg = get_function_signature_and_args(functionRef)
 				sig = "(self)" if sig == "()" else f"(self, {sig[1:]}"
 				exec_locals: dict[str, object] = {}
-				exec(  # pylint: disable=exec-used
+				exec(
 					f'def {methodName}{sig}: return self._executeMethodOnExtensionClass("{methodName}", {arg})',
 					None,
 					exec_locals,

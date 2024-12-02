@@ -9,8 +9,8 @@ PAM authentication.
 from typing import Set
 
 # pyright: reportMissingImports=false
-import win32net  # pylint: disable=import-error
-import win32security  # pylint: disable=import-error
+import win32net
+import win32security
 from opsicommon.logging import get_logger
 
 from OPSI.Backend.Manager.Authentication import AuthenticationModule
@@ -30,7 +30,7 @@ class NTAuthentication(AuthenticationModule):
 				self._admin_groupname = win32security.LookupAccountSid(
 					None, win32security.ConvertStringSidToSid(self._admin_group_sid)
 				)[0]
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(
 					"Failed to lookup group with sid '%s': %s",
 					self._admin_group_sid,
@@ -60,7 +60,7 @@ class NTAuthentication(AuthenticationModule):
 				win32security.LOGON32_LOGON_NETWORK,
 				win32security.LOGON32_PROVIDER_DEFAULT,
 			)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise BackendAuthenticationError(
 				f"Win32security authentication failed for user '{username}': {err}"
 			) from err

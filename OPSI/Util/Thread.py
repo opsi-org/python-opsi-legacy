@@ -14,7 +14,7 @@ from queue import Empty, Queue
 from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
-global_pool = None  # pylint: disable=invalid-name
+global_pool = None
 
 
 class ThreadPoolException(Exception):
@@ -22,7 +22,7 @@ class ThreadPoolException(Exception):
 
 
 def getGlobalThreadPool(*args, **kwargs):
-	global global_pool  # pylint: disable=global-statement,invalid-name
+	global global_pool
 	if not global_pool:
 		global_pool = ThreadPool(*args, **kwargs)
 	else:
@@ -57,12 +57,12 @@ class KillableThread(threading.Thread):
 		"""determines this (self's) thread id"""
 		# do we have it cached?
 		if hasattr(self, "_thread_id"):
-			return self._thread_id  # pylint: disable=access-member-before-definition
+			return self._thread_id
 
 		# no, look for it in the _active dict
-		for tid, tobj in threading._active.items():  # pylint: disable=protected-access
+		for tid, tobj in threading._active.items():
 			if tobj is self:
-				self._thread_id = tid  # pylint: disable=attribute-defined-outside-init
+				self._thread_id = tid
 				return tid
 
 		logger.warning("Cannot terminate, could not determine the thread's id")
@@ -189,7 +189,7 @@ class Worker(threading.Thread):
 						result = function(*args, **kwargs)
 						success = True
 						errors = None
-					except Exception as error:  # pylint: disable=broad-except
+					except Exception as error:
 						logger.debug("Problem running function: '%s'", error)
 						result = None
 						errors = error

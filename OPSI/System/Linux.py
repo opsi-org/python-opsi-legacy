@@ -141,7 +141,7 @@ __all__ = (
 logger = get_logger("opsi.general")
 
 
-def getActiveSessionIds(protocol=None, states=None):  # pylint: disable=unused-argument
+def getActiveSessionIds(protocol=None, states=None):
 	"""
 	Getting the IDs of the currently active sessions.
 	Prefer user sessions, fallback to gdm/1024 and other greeter processes.
@@ -262,7 +262,7 @@ def is_mounted(devOrMountpoint):
 Posix.is_mounted = is_mounted
 
 
-def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def mount(dev, mountpoint, **options):
 	dev = forceUnicode(dev)
 	mountpoint = forceFilename(mountpoint)
 	if not os.path.isdir(mountpoint):
@@ -296,7 +296,7 @@ def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals,too-ma
 
 			tf = tempfile.NamedTemporaryFile(
 				mode="w", delete=False, encoding="iso-8859-15"
-			)  # pylint: disable=consider-using-with
+			)
 			tf.write(
 				f"username={options['username']}\npassword={options['password']}\n"
 			)
@@ -399,7 +399,7 @@ def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals,too-ma
 					stdin_data=stdin_data,
 				)
 				break
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				if (
 					fs == "-t cifs"
 					and "vers=2.0" not in mount_options

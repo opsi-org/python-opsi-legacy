@@ -12,12 +12,12 @@ import os
 import re
 import types
 from functools import lru_cache
-from typing import (  # This is needed for dynamic loading pylint: disable=unused-import  # noqa: F401
+from typing import (  # This is needed for dynamic loading  # noqa: F401
 	Any,
 	Generator,
 )
 
-import opsicommon  # This is needed for dynamic loading pylint: disable=unused-import  # noqa: F401
+import opsicommon  # This is needed for dynamic loading  # noqa: F401
 from opsicommon.logging import get_logger
 
 from OPSI.Backend.Base import Backend, ConfigDataBackend
@@ -27,7 +27,7 @@ from OPSI.Backend.Base.Extended import (
 )
 from OPSI.Backend.JSONRPC import JSONRPCBackend
 from OPSI.Exceptions import BackendConfigurationError
-from OPSI.Object import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Object import *  # This is needed for dynamic loading
 from OPSI.Types import forceList
 from OPSI.Util.File.Opsi import BackendDispatchConfigFile
 
@@ -165,7 +165,7 @@ class BackendDispatcher(Backend):
 			)(**cargs)
 		logger.info("Dispatcher backends: %s", list(self._backends.keys()))
 
-	def _createInstanceMethods(self):  # pylint: disable=too-many-branches
+	def _createInstanceMethods(self):
 		logger.debug("BackendDispatcher is creating instance methods")
 		classes = [ConfigDataBackend]
 		classes.extend(
@@ -176,7 +176,7 @@ class BackendDispatcher(Backend):
 			classes.append(ExtendedConfigDataBackend)
 			self.is_extended_config_data_backend = True
 
-		for Class in classes:  # pylint: disable=too-many-nested-blocks
+		for Class in classes:
 			for methodName, functionRef in inspect.getmembers(
 				Class, inspect.isfunction
 			):
@@ -243,7 +243,7 @@ class BackendDispatcher(Backend):
 				sig, arg = get_function_signature_and_args(functionRef)
 				sig = "(self)" if sig == "()" else f"(self, {sig[1:]}"
 				exec_locals: dict[str, object] = {}
-				exec(  # pylint: disable=exec-used
+				exec(
 					f'def {methodName}{sig}: return self._dispatchMethod({methodBackends}, "{methodName}", {arg})',
 					None,
 					exec_locals,

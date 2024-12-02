@@ -37,7 +37,7 @@ logger = get_logger("opsi.general")
 DHCPD_CONF = locateDHCPDConfig(default="/etc/dhcp/dhcpd.conf")
 
 
-def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def configureDHCPD(configFile=DHCPD_CONF):
 	"""
 	Configure the configuration file for DHCPD.
 
@@ -150,7 +150,7 @@ def configureDHCPD(configFile=DHCPD_CONF):  # pylint: disable=too-many-locals,to
 		logger.notice("  Restarting dhcpd")
 		try:
 			execute(restartCommand)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning(err)
 
 	opsiconfdUid = pwd.getpwnam(OPSICONFD_USER)[2]

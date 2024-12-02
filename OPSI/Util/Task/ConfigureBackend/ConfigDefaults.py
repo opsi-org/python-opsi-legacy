@@ -8,20 +8,20 @@ CLI Utility to change the config defaults.
 .. versionadded:: 4.1.1.57
 """
 
+import logging
 from contextlib import contextmanager
+
+from opsicommon.logging import LOG_CONFIDENTIAL, LOG_CRITICAL, OPSI_LEVEL_TO_LEVEL
 
 from OPSI.Backend.BackendManager import BackendManager
 from OPSI.Exceptions import BackendMissingDataError
 from OPSI.Types import forceUnicodeList
 from OPSI.UI import UIFactory
 
-import logging
-from opsicommon.logging import LOG_CONFIDENTIAL, LOG_CRITICAL, OPSI_LEVEL_TO_LEVEL
-
 __all__ = ("editConfigDefaults",)
 
 
-def editConfigDefaults():  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def editConfigDefaults():
 	bmconfig = dict(
 		dispatchConfigFile="/etc/opsi/backendManager/dispatch.conf",
 		backendConfigDir="/etc/opsi/backends",
@@ -30,7 +30,7 @@ def editConfigDefaults():  # pylint: disable=too-many-locals,too-many-branches,t
 	)
 
 	with BackendManager(**bmconfig) as backend:
-		configs = backend.config_getObjects()  # pylint: disable=no-member
+		configs = backend.config_getObjects()
 		configs = [
 			config
 			for config in configs
@@ -150,7 +150,7 @@ def editConfigDefaults():  # pylint: disable=too-many-locals,too-many-branches,t
 						configs[selectedConfig].setPossibleValues(possibleValues)
 					configs[selectedConfig].setDefaultValues(value)
 
-				backend.config_updateObjects([configs[selectedConfig]])  # pylint: disable=no-member
+				backend.config_updateObjects([configs[selectedConfig]])
 
 
 @contextmanager

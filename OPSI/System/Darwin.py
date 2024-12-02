@@ -293,7 +293,7 @@ def parse_ioreg_output(lines: List) -> Dict:
 	return hwdata
 
 
-def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-argument, too-many-locals, too-many-branches, too-many-statements
+def hardwareInventory(config, progressSubject=None):
 	"""
 	Collect hardware information on OSX.
 
@@ -367,7 +367,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 	logger.debug(objectToBeautifiedText(ioreg))
 
 	# Build hw info structure
-	for hwClass in config:  # pylint: disable=too-many-nested-blocks
+	for hwClass in config:
 		if not hwClass.get("Class"):
 			continue
 		opsiClass = hwClass["Class"].get("Opsi")
@@ -408,7 +408,7 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 					filterAttr
 					and dev.get(filterAttr)
 					and not eval(f"str(dev.get(filterAttr)).{filterExp}")
-				):  # pylint: disable=eval-used
+				):
 					continue
 				device = {}
 				for attribute in hwClass["Values"]:
@@ -424,8 +424,8 @@ def hardwareInventory(config, progressSubject=None):  # pylint: disable=unused-a
 						if method:
 							try:
 								logger.debug("Eval: %s.%s", value, method)
-								device[attribute["Opsi"]] = eval(f"value.{method}")  # pylint: disable=eval-used
-							except Exception as err:  # pylint: disable=broad-except
+								device[attribute["Opsi"]] = eval(f"value.{method}")
+							except Exception as err:
 								device[attribute["Opsi"]] = ""
 								logger.warning(
 									"Class %s: Failed to excecute '%s.%s': %s",
@@ -480,7 +480,7 @@ def is_mounted(devOrMountpoint):
 Posix.is_mounted = is_mounted
 
 
-def mount(dev, mountpoint, **options):  # pylint: disable=too-many-locals
+def mount(dev, mountpoint, **options):
 	dev = forceUnicode(dev)
 	mountpoint = forceFilename(mountpoint)
 	if not os.path.isdir(mountpoint):

@@ -16,11 +16,11 @@ from OPSI.Object import NetbootProduct, ProductOnDepot, UnicodeProductProperty
 from .helpers import getLocalFQDN, mock, patchAddress, patchEnvironmentVariables
 from .test_hosts import getConfigServer
 from .test_util_wim import (
-	fakeWimPath,  # required fixture # pylint: disable=unused-import  # noqa: F401
+	fakeWimPath,  # required fixture  # noqa: F401
 )
 
 
-def test_update_wim(backendManager, fakeWimPath):  # pylint: disable=unused-argument,redefined-outer-name  # noqa: F811
+def test_update_wim(backendManager, fakeWimPath):
 	backend = backendManager
 	localFqdn = getLocalFQDN()
 	if "[mysql]" in os.environ["PYTEST_CURRENT_TEST"]:

@@ -59,7 +59,7 @@ def cleanDatabase(database):
 						drop_command = f"DROP TABLE `{table_name}`"
 						try:
 							database.execute(session, drop_command)
-						except Exception:  # pylint: disable=broad-except
+						except Exception:
 							success = False
 							error_count += 1
 							if error_count > 10:

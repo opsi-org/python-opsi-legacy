@@ -154,7 +154,7 @@ started but never ended.
 	except DatabaseMigrationUnfinishedError as err:
 		logger.warning("Migration probably gone wrong: %s", err)
 		raise err
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.warning("Reading database schema version failed: %s", err)
 		version = None
 
@@ -188,7 +188,7 @@ def _finishSchemaVersionUpdate(database, session, version):
 	database.execute(session, query)
 
 
-def _processOpsi40migrations(mysql, session):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def _processOpsi40migrations(mysql, session):
 	"""
 	Process migrations done before opsi 4.1.
 
@@ -408,7 +408,7 @@ def _processOpsi40migrations(mysql, session):  # pylint: disable=too-many-locals
 				if res.get("vendorId"):
 					try:
 						forceHardwareVendorId(res["vendorId"])
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						logger.warning("Dropping bad vendorId '%s'", res["vendorId"])
 						mysql.execute(
 							session,
@@ -419,7 +419,7 @@ def _processOpsi40migrations(mysql, session):  # pylint: disable=too-many-locals
 				if res.get("subsystemVendorId"):
 					try:
 						forceHardwareVendorId(res["subsystemVendorId"])
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						logger.warning(
 							"Dropping bad subsystemVendorId id '%s'",
 							res["subsystemVendorId"],
@@ -433,7 +433,7 @@ def _processOpsi40migrations(mysql, session):  # pylint: disable=too-many-locals
 				if res.get("deviceId"):
 					try:
 						forceHardwareDeviceId(res["deviceId"])
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						logger.warning("Dropping bad deviceId '%s'", res["deviceId"])
 						mysql.execute(
 							session,
@@ -444,7 +444,7 @@ def _processOpsi40migrations(mysql, session):  # pylint: disable=too-many-locals
 				if res.get("subsystemDeviceId"):
 					try:
 						forceHardwareDeviceId(res["subsystemDeviceId"])
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						logger.warning(
 							"Dropping bad subsystemDeviceId '%s'",
 							res["subsystemDeviceId"],
@@ -1026,7 +1026,7 @@ def _drop_table_boot_configuration(database, session):
 
 def _add_index_product_property_value(database, session):
 	logger.info("Adding index on table PRODUCT_PROPERTY_VALUE.")
-	table_schema = database._database  # pylint: disable=protected-access
+	table_schema = database._database
 	index_list = [
 		row[0]
 		for row in database.getRows(
@@ -1090,7 +1090,7 @@ def _change_software_config_configid_to_bigint(database, session):
 
 def _add_index_productid_product_and_windows_softwareid_to_product(database, session):
 	logger.info("Adding productId index on PRODUCT and WINDOWS_SOFTWARE_ID_TO_PRODUCT")
-	table_schema = database._database  # pylint: disable=protected-access
+	table_schema = database._database
 	index_list = [
 		row[0]
 		for row in database.getRows(

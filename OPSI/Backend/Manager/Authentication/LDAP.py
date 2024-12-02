@@ -9,9 +9,10 @@ LDAP authentication
 from typing import Set
 
 import ldap3
+from opsicommon.logging import get_logger
+
 from OPSI.Backend.Manager.Authentication import AuthenticationModule
 from OPSI.Exceptions import BackendAuthenticationError
-from opsicommon.logging import get_logger
 
 logger = get_logger("opsi.general")
 
@@ -100,7 +101,7 @@ class LDAPAuthentication(AuthenticationModule):
 				f"LDAP authentication failed for user '{username}': {err}"
 			) from err
 
-	def get_groupnames(self, username: str) -> Set[str]:  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def get_groupnames(self, username: str) -> Set[str]:
 		groupnames = set()
 		if not self._ldap:
 			raise RuntimeError("Failed to get groupnames, not connected to ldap")
@@ -202,5 +203,5 @@ class LDAPAuthentication(AuthenticationModule):
 		if self._ldap:
 			try:
 				self._ldap.unbind()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.warning(err)

@@ -13,7 +13,7 @@ from opsicommon.logging import get_logger
 from OPSI.Backend.Base import Backend, ExtendedConfigDataBackend
 
 # Wildcard import is necessary for eval-statement
-from OPSI.Object import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Object import *
 from OPSI.Types import forceBool, forceHostId, forceList
 from OPSI.Util.Message import ProgressSubject
 
@@ -22,7 +22,7 @@ __all__ = ("BackendReplicator",)
 logger = get_logger("opsi.general")
 
 
-class BackendReplicator:  # pylint: disable=too-many-instance-attributes
+class BackendReplicator:
 	OBJECT_CLASSES = [
 		"Host",
 		"Product",
@@ -47,7 +47,7 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 		"AuditSoftwareToLicensePool",
 	]
 
-	def __init__(  # pylint: disable=too-many-arguments
+	def __init__(
 		self,
 		readBackend: Backend,
 		writeBackend: Backend,
@@ -66,11 +66,11 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 
 		self.__cleanupFirst = forceBool(cleanupFirst)
 		self.__strict = False
-		self.__serverIds = []  # pylint: disable=unused-private-member
-		self.__depotIds = []  # pylint: disable=unused-private-member
-		self.__clientIds = []  # pylint: disable=unused-private-member
-		self.__groupIds = []  # pylint: disable=unused-private-member
-		self.__productIds = []  # pylint: disable=unused-private-member
+		self.__serverIds = []
+		self.__depotIds = []
+		self.__clientIds = []
+		self.__groupIds = []
+		self.__productIds = []
 
 		if newServerId:
 			self.__newServerId = forceHostId(newServerId)
@@ -90,7 +90,7 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 	def getOverallProgressSubject(self) -> ProgressSubject:
 		return self.__overallProgressSubject
 
-	def replicate(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+	def replicate(
 		self,
 		serverIds: list[str] = None,
 		depotIds: list[str] = None,
@@ -176,7 +176,7 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 			if depotIds:
 				productOnDepots = rb.productOnDepot_getObjects(
 					depotId=depotIds, productId=productIds, productType=productTypes
-				)  # pylint: disable=no-member
+				)
 				productIdsOnDepot = set()
 				for productOnDepot in productOnDepots:
 					productIdsOnDepot.add(productOnDepot.productId)
@@ -222,12 +222,12 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 				if objClass == "Host":
 					subClasses = ["OpsiConfigserver", "OpsiDepotserver", "OpsiClient"]
 
-				eval(f"{objClass}.backendMethodPrefix")  # pylint: disable=eval-used,unused-variable
+				eval(f"{objClass}.backendMethodPrefix")
 
 				self.__overallProgressSubject.setMessage(f"Replicating {objClass}")
 				self.__currentProgressSubject.setTitle(f"Replicating {objClass}")
 				for subClass in subClasses:
-					filter = {}  # pylint: disable=redefined-builtin
+					filter = {}
 					if subClass == "OpsiConfigserver":
 						filter = {"type": subClass, "id": serverIds}
 					elif subClass == "OpsiDepotserver":
@@ -276,7 +276,7 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 					)
 					if not subClass:
 						subClass = objClass
-					Class = eval(subClass)  # pylint: disable=eval-used
+					Class = eval(subClass)
 
 					self.__currentProgressSubject.reset()
 					self.__currentProgressSubject.setMessage("Reading objects")
@@ -353,7 +353,7 @@ class BackendReplicator:  # pylint: disable=too-many-instance-attributes
 						for obj in objs:
 							try:
 								meth(obj)
-							except Exception as err:  # pylint: disable=broad-except
+							except Exception as err:
 								logger.debug(err, exc_info=True)
 								logger.error(
 									"Failed to replicate object %s: %s", obj, err

@@ -19,7 +19,7 @@ from .helpers import mock
 
 
 @pytest.fixture
-def logBackend(patchLogDir):  # pylint: disable=redefined-outer-name,unused-argument
+def logBackend(patchLogDir):
 	yield OPSI.Backend.Backend.ConfigDataBackend()
 
 
@@ -29,7 +29,7 @@ def patchLogDir(tempDir):
 		yield tempDir
 
 
-def testReadingLogFailsIfTypeUnknown(logBackend):  # pylint: disable=redefined-outer-name
+def testReadingLogFailsIfTypeUnknown(logBackend):
 	with pytest.raises(BackendBadValueError):
 		logBackend.log_read("unknowntype")
 
@@ -37,17 +37,17 @@ def testReadingLogFailsIfTypeUnknown(logBackend):  # pylint: disable=redefined-o
 @pytest.mark.parametrize(
 	"logType", ["bootimage", "clientconnect", "instlog", "userlogin", "winpe"]
 )
-def testReadingLogRequiresObjectId(logBackend, logType):  # pylint: disable=redefined-outer-name
+def testReadingLogRequiresObjectId(logBackend, logType):
 	with pytest.raises(BackendBadValueError):
 		logBackend.log_read(logType)
 
 
-def testReadingOpsiconfdLogDoesNotRequireObjectId(logBackend):  # pylint: disable=redefined-outer-name
+def testReadingOpsiconfdLogDoesNotRequireObjectId(logBackend):
 	logBackend.log_read("opsiconfd")
 
 
 @pytest.mark.parametrize("objectId", [None, "unknown_object"])
-def testReadingNonExistingLogReturnsEmptyString(logBackend, objectId):  # pylint: disable=redefined-outer-name
+def testReadingNonExistingLogReturnsEmptyString(logBackend, objectId):
 	"""
 	Valid calls to read logs should return empty strings if no file
 	does exist.
@@ -55,7 +55,7 @@ def testReadingNonExistingLogReturnsEmptyString(logBackend, objectId):  # pylint
 	assert logBackend.log_read("opsiconfd", objectId) == ""
 
 
-def testOnlyValidLogTypesAreWritten(logBackend):  # pylint: disable=redefined-outer-name
+def testOnlyValidLogTypesAreWritten(logBackend):
 	with pytest.raises(BackendBadValueError):
 		logBackend.log_write("foobar", "")
 
@@ -80,11 +80,11 @@ def testOnlyValidLogTypesAreWritten(logBackend):  # pylint: disable=redefined-ou
 		"winpe",
 	],
 )
-def testWritingLogRequiresValidObjectId(logBackend, logType, objectId):  # pylint: disable=redefined-outer-name
+def testWritingLogRequiresValidObjectId(logBackend, logType, objectId):
 	logBackend.log_write(logType, "logdata", objectId)
 
 
-def testWritingAndThenReadingDataFromLog(logBackend):  # pylint: disable=redefined-outer-name
+def testWritingAndThenReadingDataFromLog(logBackend):
 	logBackend.log_write("opsiconfd", "data", objectId="foo.bar.baz")
 
 	assert logBackend.log_read("opsiconfd", "foo.bar.baz") == "data"
@@ -94,7 +94,7 @@ def testWritingAndThenReadingDataFromLog(logBackend):  # pylint: disable=redefin
 	"logType",
 	["bootimage", "clientconnect", "instlog", "opsiconfd", "userlogin", "winpe"],
 )
-def testWritingLogCreatesFile(patchLogDir, logType):  # pylint: disable=redefined-outer-name
+def testWritingLogCreatesFile(patchLogDir, logType):
 	cdb = OPSI.Backend.Backend.ConfigDataBackend()
 	cdb.log_write(logType, "logdata", objectId="foo.bar.baz")
 
@@ -123,7 +123,7 @@ def testTruncatingLogData(text, length, expected):
 	assert expected == truncateLogData(text, length)
 
 
-def test_log_file_rotation_keep_0(patchLogDir):  # pylint: disable=redefined-outer-name
+def test_log_file_rotation_keep_0(patchLogDir):
 	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=0)
 	object_id = "foo.bar.baz"
 
@@ -138,7 +138,7 @@ def test_log_file_rotation_keep_0(patchLogDir):  # pylint: disable=redefined-out
 	assert data == cdb.log_read("opsiconfd", object_id)
 
 
-def test_log_file_rotation_append(patchLogDir):  # pylint: disable=redefined-outer-name
+def test_log_file_rotation_append(patchLogDir):
 	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=2)
 	object_id = "foo.bar.baz"
 
@@ -183,7 +183,7 @@ def test_log_file_rotation_append(patchLogDir):  # pylint: disable=redefined-out
 		assert file.read() == "ccccccccccc"
 
 
-def testWritingAndThenReadingDataFromLogWithLimitedRead(logBackend):  # pylint: disable=redefined-outer-name
+def testWritingAndThenReadingDataFromLogWithLimitedRead(logBackend):
 	objId = "foo.bar.baz"
 	longData = "data1\ndata2\ndata3\ndata4\n"
 	logBackend.log_write("opsiconfd", longData, objectId=objId)
@@ -191,7 +191,7 @@ def testWritingAndThenReadingDataFromLogWithLimitedRead(logBackend):  # pylint: 
 	assert logBackend.log_read("opsiconfd", objId, maxSize=10) == "data4\n"
 
 
-def testAppendingLog(patchLogDir):  # pylint: disable=redefined-outer-name,unused-argument
+def testAppendingLog(patchLogDir):
 	data1 = "data1\ndata2\ndata3\ndata4\n"
 	data2 = "data5\n"
 
@@ -205,7 +205,7 @@ def testAppendingLog(patchLogDir):  # pylint: disable=redefined-outer-name,unuse
 	assert data1 + data2 == logData
 
 
-def testWritingAndReadingLogWithoutLimits(patchLogDir):  # pylint: disable=redefined-outer-name,unused-argument
+def testWritingAndReadingLogWithoutLimits(patchLogDir):
 	# 0 means no limit.
 	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=0)
 
@@ -217,7 +217,7 @@ def testWritingAndReadingLogWithoutLimits(patchLogDir):  # pylint: disable=redef
 	assert longData == cdb.log_read("opsiconfd", "foo.bar.baz", maxSize=0)
 
 
-def testOverwritingOldDataInAppendMode(patchLogDir):  # pylint: disable=redefined-outer-name,unused-argument
+def testOverwritingOldDataInAppendMode(patchLogDir):
 	"""
 	With size limits in place old data should be overwritten.
 
@@ -271,7 +271,7 @@ def longText(request):
 		pytest.param("8kb", marks=pytest.mark.skip(reason="Todo: Fails but why?")),
 	],
 )
-def testLimitingTheReadTextInSize(patchLogDir, longText, sizeLimit):  # pylint: disable=redefined-outer-name,unused-argument
+def testLimitingTheReadTextInSize(patchLogDir, longText, sizeLimit):
 	"""
 	Limiting text must work with all unicode characters.
 

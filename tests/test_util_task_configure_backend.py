@@ -8,9 +8,10 @@ Testing the backend configuration.
 
 import os
 
+import pytest
+
 import OPSI.Util.Task.ConfigureBackend as backendConfigUtils
 import OPSI.Util.Task.ConfigureBackend.ConfigurationData as confData
-import pytest
 from OPSI.Object import UnicodeConfig
 from OPSI.System.Posix import CommandNotFoundException
 
@@ -26,7 +27,7 @@ def exampleMySQLBackendConfig(dist_data_path):
 		yield fileName
 
 
-def testReadingMySQLConfigFile(exampleMySQLBackendConfig):  # pylint: disable=redefined-outer-name
+def testReadingMySQLConfigFile(exampleMySQLBackendConfig):
 	defaultMySQLConfig = {
 		"address": "127.0.0.1",
 		"database": "opsi",
@@ -39,7 +40,7 @@ def testReadingMySQLConfigFile(exampleMySQLBackendConfig):  # pylint: disable=re
 	assert config == defaultMySQLConfig
 
 
-def testUpdatingTestConfigFile(exampleMySQLBackendConfig):  # pylint: disable=redefined-outer-name
+def testUpdatingTestConfigFile(exampleMySQLBackendConfig):
 	fileName = exampleMySQLBackendConfig
 	config = backendConfigUtils.getBackendConfiguration(fileName)
 

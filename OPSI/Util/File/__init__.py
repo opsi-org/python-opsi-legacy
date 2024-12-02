@@ -8,7 +8,6 @@ Working with files.
 This includes classes not only useful for reading and writing but
 parsing files for information.
 """
-# pylint: disable=too-many-lines
 
 import builtins
 import codecs
@@ -18,7 +17,7 @@ import os
 import re
 import threading
 import time
-from configparser import (  # pylint: disable=deprecated-class
+from configparser import (
 	ConfigParser,
 	RawConfigParser,
 )
@@ -61,16 +60,16 @@ if os.name == "posix":
 
 if os.name == "nt":
 	# pyright: reportMissingImports=false
-	import pywintypes  # pylint: disable=import-error
-	import win32con  # pylint: disable=import-error
-	import win32file  # pylint: disable=import-error
+	import pywintypes
+	import win32con
+	import win32file
 
 	pywintypeserror = pywintypes.error
 else:
-	win32con = None  # pylint: disable=invalid-name
-	win32file = None  # pylint: disable=invalid-name
-	pywintypes = None  # pylint: disable=invalid-name
-	pywintypeserror = IOError  # pylint: disable=invalid-name
+	win32con = None
+	win32file = None
+	pywintypes = None
+	pywintypeserror = IOError
 
 logger = get_logger("opsi.general")
 
@@ -82,7 +81,7 @@ def requiresParsing(function):
 
 	@functools.wraps(function)
 	def parsedFile(self, *args, **kwargs):
-		if not self._parsed:  # pylint: disable=protected-access
+		if not self._parsed:
 			self.parse()
 
 		return function(self, *args, **kwargs)
@@ -150,7 +149,7 @@ class File:
 			self.chmod(mode)
 
 	def open(self, mode="r"):
-		self._fileHandle = builtins.open(self._filename, mode)  # pylint: disable=unspecified-encoding,consider-using-with
+		self._fileHandle = builtins.open(self._filename, mode)
 		return self._fileHandle
 
 	def close(self):
@@ -198,7 +197,7 @@ class LockableFile(File):
 		File.__init__(self, filename)
 		self._lockFailTimeout = forceInt(lockFailTimeout)
 
-	def open(self, mode="r", encoding=None, errors="replace"):  # pylint: disable=arguments-differ
+	def open(self, mode="r", encoding=None, errors="replace"):
 		truncate = False
 		if mode in ("w", "wb") and os.path.exists(self._filename):
 			if mode == "w":
@@ -210,7 +209,7 @@ class LockableFile(File):
 		if encoding:
 			self._fileHandle = codecs.open(self._filename, mode, encoding, errors)
 		else:
-			self._fileHandle = builtins.open(self._filename, mode)  # pylint: disable=unspecified-encoding,consider-using-with
+			self._fileHandle = builtins.open(self._filename, mode)
 		self._lockFile(mode)
 		if truncate:
 			self._fileHandle.seek(0)
@@ -248,7 +247,7 @@ class LockableFile(File):
 					)
 					if mode in ("r", "rb"):
 						flags = win32con.LOCKFILE_FAIL_IMMEDIATELY
-					hfile = win32file._get_osfhandle(self._fileHandle.fileno())  # pylint: disable=protected-access
+					hfile = win32file._get_osfhandle(self._fileHandle.fileno())
 					win32file.LockFileEx(
 						hfile, flags, 0, 0x7FFF0000, pywintypes.OVERLAPPED()
 					)
@@ -273,7 +272,7 @@ class LockableFile(File):
 		if os.name == "posix":
 			fcntl.flock(self._fileHandle.fileno(), fcntl.LOCK_UN)
 		elif os.name == "nt":
-			hfile = win32file._get_osfhandle(self._fileHandle.fileno())  # pylint: disable=protected-access
+			hfile = win32file._get_osfhandle(self._fileHandle.fileno())
 			win32file.UnlockFileEx(hfile, 0, 0x7FFF0000, pywintypes.OVERLAPPED())
 
 
@@ -286,7 +285,7 @@ class TextFile(LockableFile):
 	def open(self, mode="r", encoding="utf-8", errors="replace"):
 		return LockableFile.open(self, mode, encoding, errors)
 
-	def write(self, str):  # pylint: disable=redefined-builtin
+	def write(self, str):
 		if not self._fileHandle:
 			raise IOError("File not opened")
 		str = forceUnicode(str)
@@ -314,7 +313,7 @@ class TextFile(LockableFile):
 	def getLines(self):
 		return self._lines
 
-	def writelines(self, sequence=[]):  # pylint: disable=dangerous-default-value
+	def writelines(self, sequence=[]):
 		if not self._fileHandle:
 			raise IOError("File not opened")
 		if sequence:
@@ -349,7 +348,7 @@ class ChangelogFile(TextFile):
 		self._parsed = False
 		self._entries = []
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches,too-many-statements
+	def parse(self, lines=None):
 		if lines:
 			self._lines = forceUnicodeList(lines)
 		else:
@@ -454,7 +453,7 @@ class ChangelogFile(TextFile):
 			if loc:
 				try:
 					locale.setlocale(locale.LC_ALL, loc)
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					pass
 
 	@requiresParsing
@@ -498,13 +497,13 @@ class ChangelogFile(TextFile):
 class ConfigFile(TextFile):
 	def __init__(
 		self, filename, lockFailTimeout=2000, commentChars=[";", "#"], lstrip=True
-	):  # pylint: disable=dangerous-default-value
+	):
 		TextFile.__init__(self, filename, lockFailTimeout)
 		self._commentChars = forceList(commentChars)
 		self._lstrip = forceBool(lstrip)
 		self._parsed = False
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches
+	def parse(self, lines=None):
 		if lines:
 			self._lines = forceUnicodeList(lines)
 		else:
@@ -569,7 +568,7 @@ class IniFile(ConfigFile):
 	def setKeepOrdering(self, keepOrdering):
 		self._keepOrdering = forceBool(keepOrdering)
 
-	def parse(self, lines=None, returnComments=False):  # pylint: disable=arguments-differ,too-many-branches,too-many-statements,too-many-locals
+	def parse(self, lines=None, returnComments=False):
 		logger.debug("Parsing ini file '%s'", self._filename)
 		start = time.time()
 		if lines:
@@ -656,7 +655,7 @@ class IniFile(ConfigFile):
 			return (self._configParser, comments)
 		return self._configParser
 
-	def generate(self, configParser, comments={}):  # pylint: disable=dangerous-default-value,too-many-branches
+	def generate(self, configParser, comments={}):
 		self._configParser = configParser
 
 		if not self._configParser:
@@ -752,7 +751,7 @@ class InfFile(ConfigFile):
 		try:
 			vendorId = forceHardwareVendorId(vendorId)
 			deviceId = forceHardwareDeviceId(deviceId)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err)
 			return False
 		if not self._parsed:
@@ -766,7 +765,7 @@ class InfFile(ConfigFile):
 				return True
 		return False
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def parse(self, lines=None):
 		logger.debug("Parsing inf file %s", self._filename)
 		lines = ConfigFile.parse(self, lines)
 		self._parsed = False
@@ -805,7 +804,7 @@ class InfFile(ConfigFile):
 						if string.startswith('"') and string.endswith('"'):
 							string = string[1:-1]
 						strings[var.strip().lower()] = string
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 		logger.trace("        got strings: %s", strings)
 
@@ -830,7 +829,7 @@ class InfFile(ConfigFile):
 		# Get devices
 		logger.trace("   - Getting devices")
 		section = ""
-		for line in lines:  # pylint: disable=too-many-locals,too-many-nested-blocks
+		for line in lines:
 			match = re.search(self.sectionRegex, line)
 			if match:
 				if section.lower() == "manufacturer":
@@ -878,7 +877,7 @@ class InfFile(ConfigFile):
 		found = set()
 		section = ""
 		sectionsParsed = []
-		for line in lines:  # pylint: disable=too-many-locals,too-many-nested-blocks
+		for line in lines:
 			try:
 				match = re.search(self.sectionRegex, line)
 				if match:
@@ -937,7 +936,7 @@ class InfFile(ConfigFile):
 								line,
 								self._filename,
 							)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(
 					"Parse error in inf file '%s' line '%s': %s",
 					self._filename,
@@ -1040,7 +1039,7 @@ class PciidsFile(ConfigFile):
 						self._subDevices[vendorId] = {}
 
 					self._vendors[vendorId] = vendorName.strip()
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error(err)
 		self._parsed = True
 
@@ -1048,7 +1047,7 @@ class PciidsFile(ConfigFile):
 UsbidsFile = PciidsFile
 
 
-class TxtSetupOemFile(ConfigFile):  # pylint: disable=too-many-instance-attributes
+class TxtSetupOemFile(ConfigFile):
 	sectionRegex = re.compile(r"\[\s*([^\]]+)\s*\]")
 	pciDeviceRegex = re.compile(r"VEN_([\da-fA-F]+)(&DEV_([\da-fA-F]+))?(\S*)\s*$")
 	usbDeviceRegex = re.compile(
@@ -1136,7 +1135,7 @@ class TxtSetupOemFile(ConfigFile):  # pylint: disable=too-many-instance-attribut
 
 	def getFilesForDevice(
 		self, vendorId, deviceId, deviceType=None, fileTypes=[], architecture="x86"
-	):  # pylint: disable=dangerous-default-value,too-many-arguments
+	):
 		vendorId = forceHardwareVendorId(vendorId)
 		deviceId = forceHardwareDeviceId(deviceId)
 		fileTypes = forceUnicodeLowerList(fileTypes)
@@ -1224,7 +1223,7 @@ class TxtSetupOemFile(ConfigFile):  # pylint: disable=too-many-instance-attribut
 			files.append(file)
 		self._files = files
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def parse(self, lines=None):
 		logger.debug("Parsing txtsetup.oem file %s", self._filename)
 
 		lines = ConfigFile.parse(self, lines)
@@ -1471,7 +1470,7 @@ class TxtSetupOemFile(ConfigFile):  # pylint: disable=too-many-instance-attribut
 		logger.debug("Found configs: %s", self._configs)
 		self._parsed = True
 
-	def generate(self):  # pylint: disable=too-many-branches,too-many-statements
+	def generate(self):
 		lines = []
 		lines.append("[Disks]\r\n")
 		for disk in self._driverDisks:
@@ -1551,7 +1550,7 @@ class TxtSetupOemFile(ConfigFile):  # pylint: disable=too-many-instance-attribut
 				)
 
 		self._lines = lines
-		self._fileHandle = codecs.open(self._filename, "w", "cp1250")  # pylint: disable=consider-using-with
+		self._fileHandle = codecs.open(self._filename, "w", "cp1250")
 		self.writelines()
 		self.close()
 
@@ -1563,7 +1562,7 @@ class ZsyncFile(LockableFile):
 		self._data = ""
 		self._parsed = False
 
-	def parse(self, lines=None):  # pylint: disable=unused-argument
+	def parse(self, lines=None):
 		logger.debug("Parsing zsync file %s", self._filename)
 
 		self._parsed = False
@@ -1594,7 +1593,7 @@ class ZsyncFile(LockableFile):
 			file.write(self._data)
 
 
-class DHCPDConf_Component:  # pylint: disable=invalid-name
+class DHCPDConf_Component:
 	def __init__(self, startLine, parentBlock):
 		self.startLine = startLine
 		self.endLine = startLine
@@ -1620,7 +1619,7 @@ class DHCPDConf_Component:  # pylint: disable=invalid-name
 		return self.__str__()
 
 
-class DHCPDConf_Parameter(DHCPDConf_Component):  # pylint: disable=invalid-name
+class DHCPDConf_Parameter(DHCPDConf_Component):
 	def __init__(self, startLine, parentBlock, key, value):
 		DHCPDConf_Component.__init__(self, startLine, parentBlock)
 		self.key = key
@@ -1651,7 +1650,7 @@ class DHCPDConf_Parameter(DHCPDConf_Component):  # pylint: disable=invalid-name
 		return {self.key: self.value}
 
 
-class DHCPDConf_Option(DHCPDConf_Component):  # pylint: disable=invalid-name
+class DHCPDConf_Option(DHCPDConf_Component):
 	def __init__(self, startLine, parentBlock, key, value):
 		DHCPDConf_Component.__init__(self, startLine, parentBlock)
 		self.key = key
@@ -1699,7 +1698,7 @@ class DHCPDConf_Option(DHCPDConf_Component):  # pylint: disable=invalid-name
 		return {self.key: self.value}
 
 
-class DHCPDConf_Comment(DHCPDConf_Component):  # pylint: disable=invalid-name
+class DHCPDConf_Comment(DHCPDConf_Component):
 	def __init__(self, startLine, parentBlock, data):
 		DHCPDConf_Component.__init__(self, startLine, parentBlock)
 		self._data = data
@@ -1708,13 +1707,13 @@ class DHCPDConf_Comment(DHCPDConf_Component):  # pylint: disable=invalid-name
 		return f"{self.getShifting()}#{self._data}"
 
 
-class DHCPDConf_EmptyLine(DHCPDConf_Component):  # pylint: disable=invalid-name
+class DHCPDConf_EmptyLine(DHCPDConf_Component):
 	def __init__(self, startLine, parentBlock):
 		DHCPDConf_Component.__init__(self, startLine, parentBlock)
 
 
-class DHCPDConf_Block(DHCPDConf_Component):  # pylint: disable=invalid-name
-	def __init__(self, startLine, parentBlock, type, settings=[]):  # pylint: disable=redefined-builtin,dangerous-default-value
+class DHCPDConf_Block(DHCPDConf_Component):
+	def __init__(self, startLine, parentBlock, type, settings=[]):
 		DHCPDConf_Component.__init__(self, startLine, parentBlock)
 		self.type = type
 		self.settings = settings
@@ -1803,7 +1802,7 @@ class DHCPDConf_Block(DHCPDConf_Component):  # pylint: disable=invalid-name
 
 		return parameters
 
-	def getBlocks(self, type, recursive=False):  # pylint: disable=redefined-builtin
+	def getBlocks(self, type, recursive=False):
 		blocks = []
 		for component in self.components:
 			if not isinstance(component, DHCPDConf_Block):
@@ -1849,12 +1848,12 @@ class DHCPDConf_Block(DHCPDConf_Component):  # pylint: disable=invalid-name
 		return text
 
 
-class DHCPDConf_GlobalBlock(DHCPDConf_Block):  # pylint: disable=invalid-name
+class DHCPDConf_GlobalBlock(DHCPDConf_Block):
 	def __init__(self):
 		DHCPDConf_Block.__init__(self, 1, None, "global")
 
 
-class DHCPDConfFile(TextFile):  # pylint: disable=too-many-instance-attributes
+class DHCPDConfFile(TextFile):
 	def __init__(self, filename, lockFailTimeout=2000):
 		TextFile.__init__(self, filename, lockFailTimeout)
 
@@ -1871,7 +1870,7 @@ class DHCPDConfFile(TextFile):  # pylint: disable=too-many-instance-attributes
 	def getGlobalBlock(self):
 		return self._globalBlock
 
-	def parse(self, lines=None):  # pylint: disable=too-many-branches
+	def parse(self, lines=None):
 		self._currentLine = 0
 		self._currentToken = None
 		self._currentIndex = -1
@@ -1941,7 +1940,7 @@ class DHCPDConfFile(TextFile):  # pylint: disable=too-many-instance-attributes
 	@requiresParsing
 	def addHost(
 		self, hostname, hardwareAddress, ipAddress, fixedAddress, parameters=None
-	):  # pylint: disable=too-many-branches,too-many-locals,too-many-arguments
+	):
 		if not parameters:
 			parameters = {}
 
@@ -2178,7 +2177,7 @@ class DHCPDConfFile(TextFile):  # pylint: disable=too-many-instance-attributes
 		)
 		self._data = self._data[: self._currentIndex]
 
-	def _parse_semicolon(self):  # pylint: disable=too-many-branches
+	def _parse_semicolon(self):
 		logger.trace("_parse_semicolon")
 		data = self._data[: self._currentIndex]
 		self._data = self._data[self._currentIndex + 1 :]

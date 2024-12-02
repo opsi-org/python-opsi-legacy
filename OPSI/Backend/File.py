@@ -8,8 +8,6 @@ File-Backend.
 This backend stores all it's data in plaintext files.
 """
 
-# pylint: disable=too-many-lines
-
 import grp
 import os
 import pwd
@@ -29,7 +27,7 @@ from OPSI.Exceptions import (
 	BackendMissingDataError,
 	BackendUnaccomplishableError,
 )
-from OPSI.Object import *  # needed for calls to "eval"  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Object import *  # needed for calls to "eval"
 from OPSI.Types import (
 	forceBool,
 	forceFilename,
@@ -51,7 +49,7 @@ __all__ = ("FileBackend",)
 logger = get_logger("opsi.general")
 
 
-class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
+class FileBackend(ConfigDataBackend):
 	"""Backend holding information in Plain textfile form."""
 
 	PRODUCT_FILENAME_REGEX = re.compile(
@@ -59,7 +57,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 	)
 	PLACEHOLDER_REGEX = re.compile(r"^(.*)<([^>]+)>(.*)$")
 
-	def __init__(self, **kwargs) -> None:  # pylint: disable=too-many-statements
+	def __init__(self, **kwargs) -> None:
 		self._name = "file"
 
 		ConfigDataBackend.__init__(self, **kwargs)
@@ -481,7 +479,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 					"section": "<productType>_product_states",
 					"option": "<productId>",
 					"json": False,
-				},  # pylint: disable=line-too-long
+				},
 				{
 					"fileType": "ini",
 					"attribute": "actionRequest",
@@ -614,7 +612,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 					os.chown(path, self.__dirUid, self.__dirGid)
 				else:
 					os.chown(path, -1, self.__dirGid)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning("Failed to set rights for path '%s': %s", path, err)
 
 	def _mkdir(self, path: str) -> None:
@@ -653,7 +651,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 			.replace("%%", "%")
 		)
 
-	def _getConfigFile(self, objType: str, ident: dict[str, Any], fileType: str) -> str:  # pylint: disable=too-many-branches,too-many-statements
+	def _getConfigFile(self, objType: str, ident: dict[str, Any], fileType: str) -> str:
 		logger.debug(
 			"Getting config file for '%s', '%s', '%s'", objType, ident, fileType
 		)
@@ -795,7 +793,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		logger.trace("Returning config file '%s'", filename)
 		return filename
 
-	def _getIdents(self, objType: str, **filter) -> list[dict[str, Any]]:  # pylint: disable=redefined-builtin,too-many-locals,too-many-branches,too-many-statements
+	def _getIdents(self, objType: str, **filter) -> list[dict[str, Any]]:
 		logger.debug("Getting idents for '%s' with filter '%s'", objType, filter)
 		objIdents = []
 
@@ -822,7 +820,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 				try:
 					hostId = forceHostId(entry[:-4])
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					logger.warning("Ignoring invalid client file '%s'", entry)
 					continue
 
@@ -866,7 +864,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 				try:
 					hostId = forceHostId(entry[:-4])
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					logger.warning("Ignoring invalid depot file '%s'", entry)
 					continue
 
@@ -980,7 +978,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 								productProperty.getIdent(returnType="dict")
 							)
 
-		elif objType in ("ConfigState", "ProductPropertyState"):  # pylint: disable=too-many-nested-blocks
+		elif objType in ("ConfigState", "ProductPropertyState"):
 			for path in (self.__depotConfigDir, self.__clientConfigDir):
 				for entry in os.listdir(path):
 					filename = os.path.join(path, entry)
@@ -991,7 +989,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 					try:
 						objectId = forceHostId(entry[:-4])
-					except Exception as err:  # pylint: disable=broad-except
+					except Exception as err:
 						logger.warning("Ignoring invalid file '%s': %s", filename, err)
 						continue
 
@@ -1018,7 +1016,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 									}
 								)
 
-		elif objType in ("Group", "HostGroup", "ProductGroup", "ObjectToGroup"):  # pylint: disable=too-many-nested-blocks
+		elif objType in ("Group", "HostGroup", "ProductGroup", "ObjectToGroup"):
 			if objType == "ObjectToGroup":
 				if filter.get("groupType"):
 					passes = [
@@ -1110,7 +1108,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 										"objectId": option,
 									}
 								)
-							except Exception as err:  # pylint: disable=broad-except
+							except Exception as err:
 								logger.error(
 									"Found invalid option '%s' in section '%s' in file '%s': %s",
 									option,
@@ -1126,7 +1124,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 			"AuditSoftwareOnClient",
 			"AuditHardware",
 			"AuditHardwareOnHost",
-		):  # pylint: disable=too-many-nested-blocks
+		):
 			if objType in ("AuditHardware", "AuditHardwareOnHost"):
 				fileType = "hw"
 			else:
@@ -1159,7 +1157,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 							{"id": forceHostId(entry[:-3])}, **idFilter
 						):
 							continue
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						logger.warning("Ignoring invalid file '%s'", entry)
 						continue
 
@@ -1238,19 +1236,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		return objHash
 
-	def _read(self, objType: str, attributes: list[str], **filter) -> list[Any]:  # pylint: disable=redefined-builtin,too-many-branches,too-many-locals,too-many-statements
+	def _read(self, objType: str, attributes: list[str], **filter) -> list[Any]:
 		if filter.get("type"):
 			match = False
 			for objectType in forceList(filter["type"]):
 				if objectType == objType:
 					match = True
 					break
-				Class = eval(objectType)  # pylint: disable=eval-used
+				Class = eval(objectType)
 				for subClass in Class.subClasses:
 					if subClass == objType:
 						match = True
 						break
-				Class = eval(objType)  # pylint: disable=eval-used
+				Class = eval(objType)
 				for subClass in Class.subClasses:
 					if subClass == objectType:
 						match = True
@@ -1290,7 +1288,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		hostKeys = None
 
 		objects = []
-		for ident in self._getIdents(objType, **filter):  # pylint: disable=too-many-nested-blocks
+		for ident in self._getIdents(objType, **filter):
 			objHash = dict(ident)
 
 			for fileType, mapping in mappings.items():
@@ -1350,7 +1348,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 								match.group(1),
 								objHash[match.group(2)],
 								match.group(3),
-							)  # pylint: disable=maybe-no-member
+							)
 							if (
 								objType == "ProductOnClient"
 							):  # <productType>_product_states
@@ -1364,7 +1362,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 								match.group(1),
 								objHash[match.group(2)],
 								match.group(3),
-							)  # pylint: disable=maybe-no-member
+							)
 
 						if cp.has_option(section, option):
 							value = cp.get(section, option)
@@ -1377,7 +1375,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 							if objType == "ProductOnClient" and section.endswith(
 								"_product_states"
 							):
-								index = value.find(":")  # pylint: disable=maybe-no-member
+								index = value.find(":")
 								if index == -1:
 									raise BackendBadValueError(
 										f"No ':' found in section '{section}' in option '{option}' in '{filename}'"
@@ -1438,7 +1436,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 								objHash = obj.toHash()
 								break
 
-			Class = eval(objType)  # pylint: disable=eval-used
+			Class = eval(objType)
 			if self._objectHashMatches(Class.fromHash(objHash).toHash(), **filter):
 				if (
 					Class is Config
@@ -1486,7 +1484,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		return objects
 
-	def _write(self, obj: Any, mode: str = "create") -> None:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def _write(self, obj: Any, mode: str = "create") -> None:
 		objType = obj.getType()
 
 		if objType == "OpsiConfigserver":
@@ -1506,7 +1504,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 				mappings[mapping["fileType"]] = {}
 			mappings[mapping["fileType"]][mapping["attribute"]] = mapping
 
-		for fileType, mapping in mappings.items():  # pylint: disable=too-many-nested-blocks
+		for fileType, mapping in mappings.items():
 			filename = self._getConfigFile(
 				objType, obj.getIdent(returnType="dict"), fileType
 			)
@@ -1684,7 +1682,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 									if value is not None:
 										newHash[attribute] = value
 
-								Class = eval(objType)  # pylint: disable=eval-used
+								Class = eval(objType)
 								currentObjects[i] = Class.fromHash(newHash)
 							found = True
 							break
@@ -1699,7 +1697,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 				packageControlFile.generate()
 
-	def _delete(self, objList: list[Any]) -> None:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+	def _delete(self, objList: list[Any]) -> None:
 		if not objList:
 			return
 
@@ -1929,17 +1927,17 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		host = forceObjectClass(host, Host)
 		ConfigDataBackend.host_insertObject(self, host)
 
-		logger.debug("Inserting host: '%s'", host.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting host: '%s'", host.getIdent())
 		self._write(host, mode="create")
 
 	def host_updateObject(self, host: Host) -> None:
 		host = forceObjectClass(host, Host)
 		ConfigDataBackend.host_updateObject(self, host)
 
-		logger.debug("Updating host: '%s'", host.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating host: '%s'", host.getIdent())
 		self._write(host, mode="update")
 
-	def host_getObjects(self, attributes: list[str] = None, **filter) -> list[Host]:  # pylint: disable=redefined-builtin
+	def host_getObjects(self, attributes: list[str] = None, **filter) -> list[Host]:
 		attributes = attributes or []
 		ConfigDataBackend.host_getObjects(self, attributes, **filter)
 
@@ -1982,7 +1980,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		logger.debug("Updating config: '%s'", config.getIdent())
 		self._write(config, mode="update")
 
-	def config_getObjects(self, attributes: list[str] = None, **filter):  # pylint: disable=redefined-builtin
+	def config_getObjects(self, attributes: list[str] = None, **filter):
 		attributes = attributes or []
 		ConfigDataBackend.config_getObjects(self, attributes, **filter)
 
@@ -2000,17 +1998,17 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		configState = forceObjectClass(configState, ConfigState)
 		ConfigDataBackend.configState_insertObject(self, configState)
 
-		logger.debug("Inserting configState: '%s'", configState.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting configState: '%s'", configState.getIdent())
 		self._write(configState, mode="create")
 
 	def configState_updateObject(self, configState: ConfigState) -> None:
 		configState = forceObjectClass(configState, ConfigState)
 		ConfigDataBackend.configState_updateObject(self, configState)
 
-		logger.debug("Updating configState: '%s'", configState.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating configState: '%s'", configState.getIdent())
 		self._write(configState, mode="update")
 
-	def configState_getObjects(self, attributes: list[str] = None, **filter):  # pylint: disable=redefined-builtin
+	def configState_getObjects(self, attributes: list[str] = None, **filter):
 		attributes = attributes or []
 		ConfigDataBackend.configState_getObjects(self, attributes, **filter)
 
@@ -2028,19 +2026,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		product = forceObjectClass(product, Product)
 		ConfigDataBackend.product_insertObject(self, product)
 
-		logger.debug("Inserting product: '%s'", product.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting product: '%s'", product.getIdent())
 		self._write(product, mode="create")
 
 	def product_updateObject(self, product: Product) -> None:
 		product = forceObjectClass(product, Product)
 		ConfigDataBackend.product_updateObject(self, product)
 
-		logger.debug("Updating product: '%s'", product.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating product: '%s'", product.getIdent())
 		self._write(product, mode="update")
 
 	def product_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[Product]:  # pylint: disable=redefined-builtin
+	) -> list[Product]:
 		attributes = attributes or []
 		ConfigDataBackend.product_getObjects(self, attributes, **filter)
 
@@ -2061,19 +2059,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		productProperty = forceObjectClass(productProperty, ProductProperty)
 		ConfigDataBackend.productProperty_insertObject(self, productProperty)
 
-		logger.debug("Inserting productProperty: '%s'", productProperty.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting productProperty: '%s'", productProperty.getIdent())
 		self._write(productProperty, mode="create")
 
 	def productProperty_updateObject(self, productProperty: ProductProperty) -> None:
 		productProperty = forceObjectClass(productProperty, ProductProperty)
 		ConfigDataBackend.productProperty_updateObject(self, productProperty)
 
-		logger.debug("Updating productProperty: '%s'", productProperty.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating productProperty: '%s'", productProperty.getIdent())
 		self._write(productProperty, mode="update")
 
 	def productProperty_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ProductProperty]:  # pylint: disable=redefined-builtin
+	) -> list[ProductProperty]:
 		attributes = attributes or []
 		ConfigDataBackend.productProperty_getObjects(self, attributes, **filter)
 
@@ -2095,7 +2093,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		productDependency = forceObjectClass(productDependency, ProductDependency)
 		ConfigDataBackend.productDependency_insertObject(self, productDependency)
 
-		logger.debug("Inserting productDependency: '%s'", productDependency.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting productDependency: '%s'", productDependency.getIdent())
 		self._write(productDependency, mode="create")
 
 	def productDependency_updateObject(
@@ -2104,12 +2102,12 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		productDependency = forceObjectClass(productDependency, ProductDependency)
 		ConfigDataBackend.productDependency_updateObject(self, productDependency)
 
-		logger.debug("Updating productDependency: '%s'", productDependency.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating productDependency: '%s'", productDependency.getIdent())
 		self._write(productDependency, mode="update")
 
 	def productDependency_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ProductDependency]:  # pylint: disable=redefined-builtin
+	) -> list[ProductDependency]:
 		attributes = attributes or []
 		ConfigDataBackend.productDependency_getObjects(self, attributes=[], **filter)
 
@@ -2129,19 +2127,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		productOnDepot = forceObjectClass(productOnDepot, ProductOnDepot)
 		ConfigDataBackend.productOnDepot_insertObject(self, productOnDepot)
 
-		logger.debug("Inserting productOnDepot: '%s'", productOnDepot.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting productOnDepot: '%s'", productOnDepot.getIdent())
 		self._write(productOnDepot, mode="create")
 
 	def productOnDepot_updateObject(self, productOnDepot: ProductOnDepot) -> None:
 		productOnDepot = forceObjectClass(productOnDepot, ProductOnDepot)
 		ConfigDataBackend.productOnDepot_updateObject(self, productOnDepot)
 
-		logger.debug("Updating productOnDepot: '%s'", productOnDepot.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating productOnDepot: '%s'", productOnDepot.getIdent())
 		self._write(productOnDepot, mode="update")
 
 	def productOnDepot_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ProductOnDepot]:  # pylint: disable=redefined-builtin
+	) -> list[ProductOnDepot]:
 		attributes = attributes or []
 		ConfigDataBackend.productOnDepot_getObjects(self, attributes=[], **filter)
 
@@ -2161,19 +2159,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		productOnClient = forceObjectClass(productOnClient, ProductOnClient)
 		ConfigDataBackend.productOnClient_insertObject(self, productOnClient)
 
-		logger.debug("Inserting productOnClient: '%s'", productOnClient.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting productOnClient: '%s'", productOnClient.getIdent())
 		self._write(productOnClient, mode="create")
 
 	def productOnClient_updateObject(self, productOnClient: ProductOnClient) -> None:
 		productOnClient = forceObjectClass(productOnClient, ProductOnClient)
 		ConfigDataBackend.productOnClient_updateObject(self, productOnClient)
 
-		logger.debug("Updating productOnClient: '%s'", productOnClient.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating productOnClient: '%s'", productOnClient.getIdent())
 		self._write(productOnClient, mode="update")
 
 	def productOnClient_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ProductOnClient]:  # pylint: disable=redefined-builtin
+	) -> list[ProductOnClient]:
 		attributes = attributes or []
 		ConfigDataBackend.productOnClient_getObjects(self, attributes=[], **filter)
 
@@ -2197,7 +2195,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		logger.debug(
 			"Inserting productPropertyState: '%s'", productPropertyState.getIdent()
-		)  # pylint: disable=maybe-no-member
+		)
 		self._write(productPropertyState, mode="create")
 
 	def productPropertyState_updateObject(
@@ -2210,12 +2208,12 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		logger.debug(
 			"Updating productPropertyState: '%s'", productPropertyState.getIdent()
-		)  # pylint: disable=maybe-no-member
+		)
 		self._write(productPropertyState, mode="update")
 
 	def productPropertyState_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ProductPropertyState]:  # pylint: disable=redefined-builtin
+	) -> list[ProductPropertyState]:
 		attributes = attributes or []
 		ConfigDataBackend.productPropertyState_getObjects(self, attributes=[], **filter)
 
@@ -2237,17 +2235,17 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		group = forceObjectClass(group, Group)
 		ConfigDataBackend.group_insertObject(self, group)
 
-		logger.debug("Inserting group: '%s'", group.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting group: '%s'", group.getIdent())
 		self._write(group, mode="create")
 
 	def group_updateObject(self, group: Group) -> None:
 		group = forceObjectClass(group, Group)
 		ConfigDataBackend.group_updateObject(self, group)
 
-		logger.debug("Updating group: '%s'", group.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating group: '%s'", group.getIdent())
 		self._write(group, mode="update")
 
-	def group_getObjects(self, attributes: list[str] = None, **filter):  # pylint: disable=redefined-builtin
+	def group_getObjects(self, attributes: list[str] = None, **filter):
 		attributes = attributes or []
 		ConfigDataBackend.group_getObjects(self, attributes=[], **filter)
 
@@ -2265,19 +2263,19 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		objectToGroup = forceObjectClass(objectToGroup, ObjectToGroup)
 		ConfigDataBackend.objectToGroup_insertObject(self, objectToGroup)
 
-		logger.debug("Inserting objectToGroup: '%s'", objectToGroup.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting objectToGroup: '%s'", objectToGroup.getIdent())
 		self._write(objectToGroup, mode="create")
 
 	def objectToGroup_updateObject(self, objectToGroup: ObjectToGroup) -> None:
 		objectToGroup = forceObjectClass(objectToGroup, ObjectToGroup)
 		ConfigDataBackend.objectToGroup_updateObject(self, objectToGroup)
 
-		logger.debug("Updating objectToGroup: '%s'", objectToGroup.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating objectToGroup: '%s'", objectToGroup.getIdent())
 		self._write(objectToGroup, mode="update")
 
 	def objectToGroup_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[ObjectToGroup]:  # pylint: disable=redefined-builtin
+	) -> list[ObjectToGroup]:
 		attributes = attributes or []
 		ConfigDataBackend.objectToGroup_getObjects(self, attributes=[], **filter)
 
@@ -2291,11 +2289,11 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		self._delete(forceObjectClassList(objectToGroups, ObjectToGroup))
 
 	# AuditSoftwares
-	def auditSoftware_insertObject(self, auditSoftware: AuditSoftware) -> None:  # pylint: disable=too-many-branches
+	def auditSoftware_insertObject(self, auditSoftware: AuditSoftware) -> None:
 		auditSoftware = forceObjectClass(auditSoftware, AuditSoftware)
 		ConfigDataBackend.auditSoftware_insertObject(self, auditSoftware)
 
-		logger.debug("Inserting auditSoftware: '%s'", auditSoftware.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Inserting auditSoftware: '%s'", auditSoftware.getIdent())
 		filename = self._getConfigFile("AuditSoftware", {}, "sw")
 
 		if not os.path.exists(filename):
@@ -2304,7 +2302,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		iniFile = IniFile(filename=filename)
 		ini = iniFile.parse()
 
-		auditSoftware = auditSoftware.toHash()  # pylint: disable=maybe-no-member
+		auditSoftware = auditSoftware.toHash()
 		for attribute in auditSoftware.keys():
 			if (auditSoftware[attribute] is None) or (attribute == "type"):
 				continue
@@ -2358,11 +2356,11 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		auditSoftware = forceObjectClass(auditSoftware, AuditSoftware)
 		ConfigDataBackend.auditSoftware_updateObject(self, auditSoftware)
 
-		logger.debug("Updating auditSoftware: '%s'", auditSoftware.getIdent())  # pylint: disable=maybe-no-member
+		logger.debug("Updating auditSoftware: '%s'", auditSoftware.getIdent())
 		filename = self._getConfigFile("AuditSoftware", {}, "sw")
 		iniFile = IniFile(filename=filename)
 		ini = iniFile.parse()
-		ident = auditSoftware.getIdent(returnType="dict")  # pylint: disable=maybe-no-member
+		ident = auditSoftware.getIdent(returnType="dict")
 
 		for section in ini.sections():
 			found = True
@@ -2372,7 +2370,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 					break
 
 			if found:
-				for key, value in auditSoftware.toHash().items():  # pylint: disable=maybe-no-member
+				for key, value in auditSoftware.toHash().items():
 					if value is None:
 						continue
 					ini.set(section, key, self.__escape(value))
@@ -2383,7 +2381,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 	def auditSoftware_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[AuditSoftware]:  # pylint: disable=redefined-builtin,unused-argument
+	) -> list[AuditSoftware]:
 		attributes = attributes or []
 		ConfigDataBackend.auditSoftware_getObjects(self, attributes=[], **filter)
 
@@ -2433,7 +2431,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 						fastFiltered = True
 						break
 					objHash[key] = value
-				except Exception:  # pylint: disable=broad-except
+				except Exception:
 					pass
 			if not fastFiltered and self._objectHashMatches(objHash, **filter):
 				# TODO: adaptObjHash?
@@ -2475,7 +2473,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 	# AuditSoftwareOnClients
 	def auditSoftwareOnClient_insertObject(
 		self, auditSoftwareOnClient: AuditSoftwareOnClient
-	) -> None:  # pylint: disable=too-many-branches
+	) -> None:
 		auditSoftwareOnClient = forceObjectClass(
 			auditSoftwareOnClient, AuditSoftwareOnClient
 		)
@@ -2485,10 +2483,10 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		logger.debug(
 			"Inserting auditSoftwareOnClient: '%s'", auditSoftwareOnClient.getIdent()
-		)  # pylint: disable=maybe-no-member
+		)
 		filename = self._getConfigFile(
 			"AuditSoftwareOnClient", {"clientId": auditSoftwareOnClient.clientId}, "sw"
-		)  # pylint: disable=maybe-no-member
+		)
 
 		if not os.path.exists(filename):
 			self._touch(filename)
@@ -2496,7 +2494,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 		iniFile = IniFile(filename=filename)
 		ini = iniFile.parse()
 
-		auditSoftwareOnClient = auditSoftwareOnClient.toHash()  # pylint: disable=maybe-no-member
+		auditSoftwareOnClient = auditSoftwareOnClient.toHash()
 		for attribute in auditSoftwareOnClient.keys():
 			if auditSoftwareOnClient[attribute] is None:
 				continue
@@ -2559,13 +2557,13 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 		logger.debug(
 			"Updating auditSoftwareOnClient: '%s'", auditSoftwareOnClient.getIdent()
-		)  # pylint: disable=maybe-no-member
+		)
 		filename = self._getConfigFile(
 			"AuditSoftwareOnClient", {"clientId": auditSoftwareOnClient.clientId}, "sw"
-		)  # pylint: disable=maybe-no-member
+		)
 		iniFile = IniFile(filename=filename)
 		ini = iniFile.parse()
-		ident = auditSoftwareOnClient.getIdent(returnType="dict")  # pylint: disable=maybe-no-member
+		ident = auditSoftwareOnClient.getIdent(returnType="dict")
 
 		for section in ini.sections():
 			found = True
@@ -2575,7 +2573,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 					break
 
 			if found:
-				for key, value in auditSoftwareOnClient.toHash().items():  # pylint: disable=maybe-no-member
+				for key, value in auditSoftwareOnClient.toHash().items():
 					if value is None:
 						continue
 					ini.set(section, key, self.__escape(value))
@@ -2588,7 +2586,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 	def auditSoftwareOnClient_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[AuditSoftwareOnClient]:  # pylint: disable=redefined-builtin,unused-argument
+	) -> list[AuditSoftwareOnClient]:
 		attributes = attributes or []
 		ConfigDataBackend.auditSoftwareOnClient_getObjects(
 			self, attributes=[], **filter
@@ -2628,7 +2626,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 				for key in list(objHash):
 					try:
 						objHash[key] = self.__unescape(ini.get(section, key.lower()))
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 				if self._objectHashMatches(objHash, **filter):
@@ -2696,7 +2694,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 	def auditHardware_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[AuditHardware]:  # pylint: disable=redefined-builtin,unused-argument
+	) -> list[AuditHardware]:
 		attributes = attributes or []
 		ConfigDataBackend.auditHardware_getObjects(self, attributes=[], **filter)
 
@@ -2755,7 +2753,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 	def auditHardwareOnHost_getObjects(
 		self, attributes: list[str] = None, **filter
-	) -> list[AuditHardwareOnHost]:  # pylint: disable=redefined-builtin, unused-argument
+	) -> list[AuditHardwareOnHost]:
 		attributes = attributes or []
 		ConfigDataBackend.auditHardwareOnHost_getObjects(self, attributes=[], **filter)
 
@@ -2804,7 +2802,7 @@ class FileBackend(ConfigDataBackend):  # pylint: disable=too-many-instance-attri
 
 	def __doAuditHardwareObj(
 		self, auditHardwareObj: Union[AuditHardware, AuditHardwareOnHost], mode: str
-	) -> None:  # pylint: disable=too-many-branches,too-many-statements
+	) -> None:
 		if mode not in ("insert", "update", "delete"):
 			raise ValueError("Unknown mode: %s" % mode)
 

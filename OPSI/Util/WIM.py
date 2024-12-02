@@ -113,7 +113,7 @@ def writeImageInformation(
 	"""
 	if hasattr(backend, "_get_backend_dispatcher"):
 		# Use unprotected backend dispatcher if available
-		backend_dispatcher = backend._get_backend_dispatcher()  # pylint: disable=protected-access
+		backend_dispatcher = backend._get_backend_dispatcher()
 		if backend_dispatcher:
 			backend = backend_dispatcher
 

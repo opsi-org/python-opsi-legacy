@@ -52,7 +52,7 @@ def patch_dispatch_conf():
 
 def migrate_file_to_mysql(
 	create_backup: bool = True, restart_services: bool = True
-) -> bool:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+) -> bool:
 	bm_config = {
 		"dispatchConfigFile": "/etc/opsi/backendManager/dispatch.conf",
 		"backendConfigDir": "/etc/opsi/backends",
@@ -64,9 +64,9 @@ def migrate_file_to_mysql(
 	backend_manager = backend = BackendManager(**bm_config)
 	backends = None
 	while getattr(backend, "_backend", None):
-		backend = backend._backend  # pylint: disable=protected-access
+		backend = backend._backend
 		if backend.__class__.__name__ == "BackendDispatcher":
-			backends = backend._backends  # pylint: disable=protected-access
+			backends = backend._backends
 
 	if not backends:
 		raise BackendConfigurationError("Failed to get backends from dispatcher")
@@ -75,7 +75,7 @@ def migrate_file_to_mysql(
 		logger.info("File backend not active, nothing to do")
 		return False
 
-	licensing_info = backend_manager.backend_getLicensingInfo()  # pylint: disable=no-member
+	licensing_info = backend_manager.backend_getLicensingInfo()
 	mysql_module = licensing_info["modules"].get("mysql_backend")
 	clients = licensing_info["client_numbers"]["all"]
 	logger.info("Licensing info: clients=%d, MySQL module=%s", clients, mysql_module)
@@ -93,7 +93,7 @@ def migrate_file_to_mysql(
 		set_rights(backup_file)
 
 	service_running = {}
-	if restart_services:  # pylint: disable=too-many-nested-blocks
+	if restart_services:
 		for service in ("opsipxeconfd", "opsiconfd"):
 			try:
 				execute(["systemctl", "is-active", "--quiet", service], shell=False)
@@ -137,10 +137,10 @@ def migrate_file_to_mysql(
 
 	updateMySQLBackend()
 
-	read_backend = backend_manager._loadBackend("file")  # pylint: disable=protected-access
+	read_backend = backend_manager._loadBackend("file")
 	read_backend.backend_createBase()
 
-	write_backend = backend_manager._loadBackend("mysql")  # pylint: disable=protected-access
+	write_backend = backend_manager._loadBackend("mysql")
 	write_backend.unique_hardware_addresses = False
 	write_backend.backend_createBase()
 

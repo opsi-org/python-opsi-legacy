@@ -8,8 +8,6 @@ Extended backends.
 They provide extended functionality.
 """
 
-# pylint: disable=too-many-lines
-
 from __future__ import absolute_import
 
 import collections
@@ -28,9 +26,9 @@ from typing import (  # This is needed for dynamic loading  # noqa: F401
 import opsicommon  # This is needed for dynamic loading  # noqa: F401
 from opsicommon.logging import get_logger
 
-from OPSI.Exceptions import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
-from OPSI.Object import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
-from OPSI.Types import *  # This is needed for dynamic loading  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from OPSI.Exceptions import *  # This is needed for dynamic loading
+from OPSI.Object import *  # This is needed for dynamic loading
+from OPSI.Types import *  # This is needed for dynamic loading
 from OPSI.Util import timestamp
 
 from .Backend import Backend
@@ -146,7 +144,7 @@ class ExtendedBackend(Backend):
 		return meth(**kwargs)
 
 	def _get_backend_dispatcher(self):
-		from OPSI.Backend.Manager.Dispatcher import (  # pylint: disable=import-outside-toplevel
+		from OPSI.Backend.Manager.Dispatcher import (
 			BackendDispatcher,
 		)
 
@@ -189,7 +187,7 @@ class ExtendedBackend(Backend):
 			self._backend.backend_exit()
 
 
-class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-public-methods
+class ExtendedConfigDataBackend(ExtendedBackend):
 	option_defaults = {
 		**Backend.option_defaults,
 		**{
@@ -223,19 +221,19 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 	def __repr__(self):
 		return f"<{self.__class__.__name__}(configDataBackend={self._backend})>"
 
-	def host_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def host_getIdents(self, returnType="unicode", **filter):
 		return [
 			host.getIdent(returnType)
 			for host in self.host_getObjects(attributes=["id"], **filter)
-		]  # pylint: disable=no-member
+		]
 
-	def config_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def config_getIdents(self, returnType="unicode", **filter):
 		return [
 			config.getIdent(returnType)
 			for config in self.config_getObjects(attributes=["id"], **filter)
-		]  # pylint: disable=no-member
+		]
 
-	def configState_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def configState_getIdents(self, returnType="unicode", **filter):
 		return [
 			configState.getIdent(returnType)
 			for configState in self.configState_getObjects(
@@ -243,16 +241,16 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def product_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def product_getIdents(self, returnType="unicode", **filter):
 		return [
 			product.getIdent(returnType)
-			for product in self.product_getObjects(attributes=["id"], **filter)  # pylint: disable=no-member
+			for product in self.product_getObjects(attributes=["id"], **filter)
 		]
 
-	def productProperty_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def productProperty_getIdents(self, returnType="unicode", **filter):
 		return [
 			productProperty.getIdent(returnType)
-			for productProperty in self.productProperty_getObjects(  # pylint: disable=no-member
+			for productProperty in self.productProperty_getObjects(
 				attributes=[
 					"productId",
 					"productVersion",
@@ -263,10 +261,10 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def productDependency_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def productDependency_getIdents(self, returnType="unicode", **filter):
 		return [
 			productDependency.getIdent(returnType)
-			for productDependency in self.productDependency_getObjects(  # pylint: disable=no-member
+			for productDependency in self.productDependency_getObjects(
 				attributes=[
 					"productId",
 					"productVersion",
@@ -278,15 +276,15 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def productOnDepot_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def productOnDepot_getIdents(self, returnType="unicode", **filter):
 		return [
 			productOnDepot.getIdent(returnType)
-			for productOnDepot in self.productOnDepot_getObjects(  # pylint: disable=no-member
+			for productOnDepot in self.productOnDepot_getObjects(
 				attributes=["productId", "productType", "depotId"], **filter
 			)
 		]
 
-	def productOnClient_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def productOnClient_getIdents(self, returnType="unicode", **filter):
 		return [
 			productOnClient.getIdent(returnType)
 			for productOnClient in self.productOnClient_getObjects(
@@ -294,7 +292,7 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def productPropertyState_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def productPropertyState_getIdents(self, returnType="unicode", **filter):
 		return [
 			productPropertyState.getIdent(returnType)
 			for productPropertyState in self.productPropertyState_getObjects(
@@ -302,62 +300,62 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def group_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def group_getIdents(self, returnType="unicode", **filter):
 		return [
 			group.getIdent(returnType)
 			for group in self.group_getObjects(attributes=["id"], **filter)
-		]  # pylint: disable=no-member
+		]
 
-	def objectToGroup_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def objectToGroup_getIdents(self, returnType="unicode", **filter):
 		return [
 			objectToGroup.getIdent(returnType)
-			for objectToGroup in self.objectToGroup_getObjects(  # pylint: disable=no-member
+			for objectToGroup in self.objectToGroup_getObjects(
 				attributes=["groupType", "groupId", "objectId"], **filter
 			)
 		]
 
-	def licenseContract_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def licenseContract_getIdents(self, returnType="unicode", **filter):
 		return [
 			licenseContract.getIdent(returnType)
 			for licenseContract in self.licenseContract_getObjects(
 				attributes=["id"], **filter
-			)  # pylint: disable=no-member
+			)
 		]
 
-	def softwareLicense_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def softwareLicense_getIdents(self, returnType="unicode", **filter):
 		return [
 			softwareLicense.getIdent(returnType)
-			for softwareLicense in self.softwareLicense_getObjects(  # pylint: disable=no-member
+			for softwareLicense in self.softwareLicense_getObjects(
 				attributes=["id", "licenseContractId"], **filter
 			)
 		]
 
-	def licensePool_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def licensePool_getIdents(self, returnType="unicode", **filter):
 		return [
 			licensePool.getIdent(returnType)
-			for licensePool in self.licensePool_getObjects(attributes=["id"], **filter)  # pylint: disable=no-member
+			for licensePool in self.licensePool_getObjects(attributes=["id"], **filter)
 		]
 
-	def softwareLicenseToLicensePool_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def softwareLicenseToLicensePool_getIdents(self, returnType="unicode", **filter):
 		return [
 			softwareLicenseToLicensePool.getIdent(returnType)
-			for softwareLicenseToLicensePool in self.softwareLicenseToLicensePool_getObjects(  # pylint: disable=no-member
+			for softwareLicenseToLicensePool in self.softwareLicenseToLicensePool_getObjects(
 				attributes=["softwareLicenseId", "licensePoolId"], **filter
 			)
 		]
 
-	def licenseOnClient_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def licenseOnClient_getIdents(self, returnType="unicode", **filter):
 		return [
 			licenseOnClient.getIdent(returnType)
-			for licenseOnClient in self.licenseOnClient_getObjects(  # pylint: disable=no-member
+			for licenseOnClient in self.licenseOnClient_getObjects(
 				attributes=["softwareLicenseId", "licensePoolId", "clientId"], **filter
 			)
 		]
 
-	def auditSoftware_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def auditSoftware_getIdents(self, returnType="unicode", **filter):
 		return [
 			auditSoftware.getIdent(returnType)
-			for auditSoftware in self.auditSoftware_getObjects(  # pylint: disable=no-member
+			for auditSoftware in self.auditSoftware_getObjects(
 				attributes=[
 					"name",
 					"version",
@@ -369,10 +367,10 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def auditSoftwareToLicensePool_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def auditSoftwareToLicensePool_getIdents(self, returnType="unicode", **filter):
 		return [
 			auditSoftwareToLicensePool.getIdent(returnType)
-			for auditSoftwareToLicensePool in self.auditSoftwareToLicensePool_getObjects(  # pylint: disable=no-member
+			for auditSoftwareToLicensePool in self.auditSoftwareToLicensePool_getObjects(
 				attributes=[
 					"name",
 					"version",
@@ -385,10 +383,10 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def auditSoftwareOnClient_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def auditSoftwareOnClient_getIdents(self, returnType="unicode", **filter):
 		return [
 			auditSoftwareOnClient.getIdent(returnType)
-			for auditSoftwareOnClient in self.auditSoftwareOnClient_getObjects(  # pylint: disable=no-member
+			for auditSoftwareOnClient in self.auditSoftwareOnClient_getObjects(
 				attributes=[
 					"name",
 					"version",
@@ -401,16 +399,16 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		]
 
-	def auditHardware_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def auditHardware_getIdents(self, returnType="unicode", **filter):
 		return [
 			auditHardware.getIdent(returnType)
-			for auditHardware in self.auditHardware_getObjects(**filter)  # pylint: disable=no-member
+			for auditHardware in self.auditHardware_getObjects(**filter)
 		]
 
-	def auditHardwareOnHost_getIdents(self, returnType="unicode", **filter):  # pylint: disable=redefined-builtin
+	def auditHardwareOnHost_getIdents(self, returnType="unicode", **filter):
 		return [
 			auditHardwareOnHost.getIdent(returnType)
-			for auditHardwareOnHost in self.auditHardwareOnHost_getObjects(**filter)  # pylint: disable=no-member
+			for auditHardwareOnHost in self.auditHardwareOnHost_getObjects(**filter)
 		]
 
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -443,8 +441,8 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			return self._backend.host_getObjects(id=[host.id for host in hostList])
 		return []
 
-	def host_renameOpsiClient(self, id, newId):  # pylint: disable=redefined-builtin,invalid-name,too-many-locals,too-many-branches,too-many-statements
-		id = forceHostId(id)  # pylint: disable=invalid-name  # noqa: F405
+	def host_renameOpsiClient(self, id, newId):
+		id = forceHostId(id)
 		newId = forceHostId(newId)  # noqa: F405
 
 		logger.info("Renaming client %s to %s...", id, newId)
@@ -554,7 +552,7 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			logger.info("Updating software licenses...")
 			self.softwareLicense_createObjects(softwareLicenses)
 
-	def host_renameOpsiDepotserver(self, oldId, newId):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+	def host_renameOpsiDepotserver(self, oldId, newId):
 		"""
 		Rename OpsiDepotserver with id `oldId` to `newId`.
 
@@ -746,74 +744,74 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			logger.info("Updating depots...")
 			self.host_updateObjects(modifiedDepots)
 
-	def host_createOpsiClient(  # pylint: disable=too-many-arguments,invalid-name
+	def host_createOpsiClient(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		opsiHostKey=None,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		notes=None,  # pylint: disable=unused-argument
-		hardwareAddress=None,  # pylint: disable=unused-argument
-		ipAddress=None,  # pylint: disable=unused-argument
-		inventoryNumber=None,  # pylint: disable=unused-argument
-		oneTimePassword=None,  # pylint: disable=unused-argument
-		created=None,  # pylint: disable=unused-argument
-		lastSeen=None,  # pylint: disable=unused-argument
+		id,
+		opsiHostKey=None,
+		description=None,
+		notes=None,
+		hardwareAddress=None,
+		ipAddress=None,
+		inventoryNumber=None,
+		oneTimePassword=None,
+		created=None,
+		lastSeen=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.host_createObjects(OpsiClient.fromHash(_hash))
 
-	def host_createOpsiDepotserver(  # pylint: disable=too-many-arguments,invalid-name,too-many-locals
+	def host_createOpsiDepotserver(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		opsiHostKey=None,  # pylint: disable=unused-argument
-		depotLocalUrl=None,  # pylint: disable=unused-argument
-		depotRemoteUrl=None,  # pylint: disable=unused-argument
-		depotWebdavUrl=None,  # pylint: disable=unused-argument
-		repositoryLocalUrl=None,  # pylint: disable=unused-argument
-		repositoryRemoteUrl=None,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		notes=None,  # pylint: disable=unused-argument
-		hardwareAddress=None,  # pylint: disable=unused-argument
-		ipAddress=None,  # pylint: disable=unused-argument
-		inventoryNumber=None,  # pylint: disable=unused-argument
-		networkAddress=None,  # pylint: disable=unused-argument
-		maxBandwidth=None,  # pylint: disable=unused-argument
-		isMasterDepot=None,  # pylint: disable=unused-argument
-		masterDepotId=None,  # pylint: disable=unused-argument
-		workbenchLocalUrl=None,  # pylint: disable=unused-argument
-		workbenchRemoteUrl=None,  # pylint: disable=unused-argument
+		id,
+		opsiHostKey=None,
+		depotLocalUrl=None,
+		depotRemoteUrl=None,
+		depotWebdavUrl=None,
+		repositoryLocalUrl=None,
+		repositoryRemoteUrl=None,
+		description=None,
+		notes=None,
+		hardwareAddress=None,
+		ipAddress=None,
+		inventoryNumber=None,
+		networkAddress=None,
+		maxBandwidth=None,
+		isMasterDepot=None,
+		masterDepotId=None,
+		workbenchLocalUrl=None,
+		workbenchRemoteUrl=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.host_createObjects(OpsiDepotserver.fromHash(_hash))
 
-	def host_createOpsiConfigserver(  # pylint: disable=too-many-arguments,invalid-name,too-many-locals
+	def host_createOpsiConfigserver(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		opsiHostKey=None,  # pylint: disable=unused-argument
-		depotLocalUrl=None,  # pylint: disable=unused-argument
-		depotRemoteUrl=None,  # pylint: disable=unused-argument
-		depotWebdavUrl=None,  # pylint: disable=unused-argument
-		repositoryLocalUrl=None,  # pylint: disable=unused-argument
-		repositoryRemoteUrl=None,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		notes=None,  # pylint: disable=unused-argument
-		hardwareAddress=None,  # pylint: disable=unused-argument
-		ipAddress=None,  # pylint: disable=unused-argument
-		inventoryNumber=None,  # pylint: disable=unused-argument
-		networkAddress=None,  # pylint: disable=unused-argument
-		maxBandwidth=None,  # pylint: disable=unused-argument
-		isMasterDepot=None,  # pylint: disable=unused-argument
-		masterDepotId=None,  # pylint: disable=unused-argument
-		workbenchLocalUrl=None,  # pylint: disable=unused-argument
-		workbenchRemoteUrl=None,  # pylint: disable=unused-argument
+		id,
+		opsiHostKey=None,
+		depotLocalUrl=None,
+		depotRemoteUrl=None,
+		depotWebdavUrl=None,
+		repositoryLocalUrl=None,
+		repositoryRemoteUrl=None,
+		description=None,
+		notes=None,
+		hardwareAddress=None,
+		ipAddress=None,
+		inventoryNumber=None,
+		networkAddress=None,
+		maxBandwidth=None,
+		isMasterDepot=None,
+		masterDepotId=None,
+		workbenchLocalUrl=None,
+		workbenchRemoteUrl=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.host_createObjects(OpsiConfigserver.fromHash(_hash))
 
-	def host_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def host_delete(self, id):
 		if id is None:
 			id = []
 		return self._backend.host_deleteObjects(self._backend.host_getObjects(id=id))
@@ -849,51 +847,51 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 			)
 		return []
 
-	def config_create(  # pylint: disable=too-many-arguments,invalid-name
+	def config_create(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		description=None,  # pylint: disable=unused-argument
-		possibleValues=None,  # pylint: disable=unused-argument
-		defaultValues=None,  # pylint: disable=unused-argument
-		editable=None,  # pylint: disable=unused-argument
-		multiValue=None,  # pylint: disable=unused-argument
+		id,
+		description=None,
+		possibleValues=None,
+		defaultValues=None,
+		editable=None,
+		multiValue=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.config_createObjects(Config.fromHash(_hash))
 
-	def config_createUnicode(  # pylint: disable=too-many-arguments,invalid-name
+	def config_createUnicode(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		description=None,  # pylint: disable=unused-argument
-		possibleValues=None,  # pylint: disable=unused-argument
-		defaultValues=None,  # pylint: disable=unused-argument
-		editable=None,  # pylint: disable=unused-argument
-		multiValue=None,  # pylint: disable=unused-argument
+		id,
+		description=None,
+		possibleValues=None,
+		defaultValues=None,
+		editable=None,
+		multiValue=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.config_createObjects(UnicodeConfig.fromHash(_hash))
 
-	def config_createBool(  # pylint: disable=invalid-name
+	def config_createBool(
 		self,
 		id,
 		description=None,
-		defaultValues=None,  # pylint: disable=redefined-builtin,unused-argument
+		defaultValues=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.config_createObjects(BoolConfig.fromHash(_hash))
 
-	def config_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def config_delete(self, id):
 		if id is None:
 			id = []
-		return self._backend.config_deleteObjects(self.config_getObjects(id=id))  # pylint: disable=no-member
+		return self._backend.config_deleteObjects(self.config_getObjects(id=id))
 
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# -   ConfigStates                                                                              -
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	def configState_getObjects(self, attributes=[], **filter):  # pylint: disable=redefined-builtin,dangerous-default-value
+	def configState_getObjects(self, attributes=[], **filter):
 		"""
 		Add default objects to result for objects which do not exist in backend
 		"""
@@ -1032,7 +1030,7 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 
 		return result
 
-	def configState_create(self, configId, objectId, values=None):  # pylint: disable=unused-argument
+	def configState_create(self, configId, objectId, values=None):
 		_hash = locals()
 		del _hash["self"]
 		return self.configState_createObjects(ConfigState.fromHash(_hash))
@@ -1049,7 +1047,7 @@ class ExtendedConfigDataBackend(ExtendedBackend):  # pylint: disable=too-many-pu
 
 	def configState_getClientToDepotserver(
 		self, depotIds=[], clientIds=[], masterOnly=True, productIds=[]
-	):  # pylint: disable=dangerous-default-value,too-many-locals,too-many-branches
+	):
 		"""
 		Get a mapping of client and depots.
 
@@ -1123,7 +1121,7 @@ into the IDs of these depots are to be found in the list behind \
 			return result
 
 		poDepotsByDepotIdAndProductId = {}
-		for pod in self.productOnDepot_getObjects(productId=productIds):  # pylint: disable=no-member
+		for pod in self.productOnDepot_getObjects(productId=productIds):
 			try:
 				poDepotsByDepotIdAndProductId[pod.depotId][pod.productId] = pod
 			except KeyError:
@@ -1203,48 +1201,48 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def product_createLocalboot(  # pylint: disable=too-many-arguments,invalid-name,too-many-locals
+	def product_createLocalboot(
 		self,
-		id,  # pylint: disable=unused-argument,redefined-builtin
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		name=None,  # pylint: disable=unused-argument
-		licenseRequired=None,  # pylint: disable=unused-argument
-		setupScript=None,  # pylint: disable=unused-argument
-		uninstallScript=None,  # pylint: disable=unused-argument
-		updateScript=None,  # pylint: disable=unused-argument
-		alwaysScript=None,  # pylint: disable=unused-argument
-		onceScript=None,  # pylint: disable=unused-argument
-		priority=None,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		advice=None,  # pylint: disable=unused-argument
-		changelog=None,  # pylint: disable=unused-argument
-		productClassIds=None,  # pylint: disable=unused-argument
-		windowsSoftwareIds=None,  # pylint: disable=unused-argument
+		id,
+		productVersion,
+		packageVersion,
+		name=None,
+		licenseRequired=None,
+		setupScript=None,
+		uninstallScript=None,
+		updateScript=None,
+		alwaysScript=None,
+		onceScript=None,
+		priority=None,
+		description=None,
+		advice=None,
+		changelog=None,
+		productClassIds=None,
+		windowsSoftwareIds=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.product_createObjects(LocalbootProduct.fromHash(_hash))
 
-	def product_createNetboot(  # pylint: disable=too-many-arguments,invalid-name,too-many-locals
+	def product_createNetboot(
 		self,
-		id,  # pylint: disable=unused-argument,redefined-builtin
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		name=None,  # pylint: disable=unused-argument
-		licenseRequired=None,  # pylint: disable=unused-argument
-		setupScript=None,  # pylint: disable=unused-argument
-		uninstallScript=None,  # pylint: disable=unused-argument
-		updateScript=None,  # pylint: disable=unused-argument
-		alwaysScript=None,  # pylint: disable=unused-argument
-		onceScript=None,  # pylint: disable=unused-argument
-		priority=None,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		advice=None,  # pylint: disable=unused-argument
-		changelog=None,  # pylint: disable=unused-argument
-		productClassIds=None,  # pylint: disable=unused-argument
-		windowsSoftwareIds=None,  # pylint: disable=unused-argument
-		pxeConfigTemplate=None,  # pylint: disable=unused-argument
+		id,
+		productVersion,
+		packageVersion,
+		name=None,
+		licenseRequired=None,
+		setupScript=None,
+		uninstallScript=None,
+		updateScript=None,
+		alwaysScript=None,
+		onceScript=None,
+		priority=None,
+		description=None,
+		advice=None,
+		changelog=None,
+		productClassIds=None,
+		windowsSoftwareIds=None,
+		pxeConfigTemplate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -1269,7 +1267,7 @@ into the IDs of these depots are to be found in the list behind \
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# -   ProductProperties                                                                         -
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	def _adjustProductPropertyStates(self, productProperty):  # pylint: disable=too-many-branches
+	def _adjustProductPropertyStates(self, productProperty):
 		"""
 		A productProperty was created or updated
 		check if the current productPropertyStates are valid
@@ -1280,7 +1278,7 @@ into the IDs of these depots are to be found in the list behind \
 		# Check if productPropertyStates are possible
 		depotIds = {
 			productOnDepot.depotId
-			for productOnDepot in self.productOnDepot_getObjects(  # pylint: disable=no-member
+			for productOnDepot in self.productOnDepot_getObjects(
 				productId=productProperty.productId,
 				productVersion=productProperty.productVersion,
 				packageVersion=productProperty.packageVersion,
@@ -1352,7 +1350,7 @@ into the IDs of these depots are to be found in the list behind \
 					updateProductPropertyStates.append(productPropertyState)
 
 		if deleteProductPropertyStates:
-			self.productPropertyState_deleteObjects(deleteProductPropertyStates)  # pylint: disable=no-member
+			self.productPropertyState_deleteObjects(deleteProductPropertyStates)
 		if updateProductPropertyStates:
 			self.productPropertyState_updateObjects(updateProductPropertyStates)
 
@@ -1407,33 +1405,33 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def productProperty_create(  # pylint: disable=too-many-arguments
+	def productProperty_create(
 		self,
-		productId,  # pylint: disable=unused-argument
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		propertyId,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		possibleValues=None,  # pylint: disable=unused-argument
-		defaultValues=None,  # pylint: disable=unused-argument
-		editable=None,  # pylint: disable=unused-argument
-		multiValue=None,  # pylint: disable=unused-argument
+		productId,
+		productVersion,
+		packageVersion,
+		propertyId,
+		description=None,
+		possibleValues=None,
+		defaultValues=None,
+		editable=None,
+		multiValue=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.productProperty_createObjects(ProductProperty.fromHash(_hash))
 
-	def productProperty_createUnicode(  # pylint: disable=too-many-arguments
+	def productProperty_createUnicode(
 		self,
-		productId,  # pylint: disable=unused-argument
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		propertyId,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		possibleValues=None,  # pylint: disable=unused-argument
-		defaultValues=None,  # pylint: disable=unused-argument
-		editable=None,  # pylint: disable=unused-argument
-		multiValue=None,  # pylint: disable=unused-argument
+		productId,
+		productVersion,
+		packageVersion,
+		propertyId,
+		description=None,
+		possibleValues=None,
+		defaultValues=None,
+		editable=None,
+		multiValue=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -1441,14 +1439,14 @@ into the IDs of these depots are to be found in the list behind \
 			UnicodeProductProperty.fromHash(_hash)
 		)
 
-	def productProperty_createBool(  # pylint: disable=too-many-arguments
+	def productProperty_createBool(
 		self,
-		productId,  # pylint: disable=unused-argument
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		propertyId,  # pylint: disable=unused-argument
-		description=None,  # pylint: disable=unused-argument
-		defaultValues=None,  # pylint: disable=unused-argument
+		productId,
+		productVersion,
+		packageVersion,
+		propertyId,
+		description=None,
+		defaultValues=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -1536,24 +1534,24 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def productDependency_create(  # pylint: disable=too-many-arguments
+	def productDependency_create(
 		self,
-		productId,  # pylint: disable=unused-argument
-		productVersion,  # pylint: disable=unused-argument
-		packageVersion,  # pylint: disable=unused-argument
-		productAction,  # pylint: disable=unused-argument
-		requiredProductId,  # pylint: disable=unused-argument
-		requiredProductVersion=None,  # pylint: disable=unused-argument
-		requiredPackageVersion=None,  # pylint: disable=unused-argument
-		requiredAction=None,  # pylint: disable=unused-argument
-		requiredInstallationStatus=None,  # pylint: disable=unused-argument
-		requirementType=None,  # pylint: disable=unused-argument
+		productId,
+		productVersion,
+		packageVersion,
+		productAction,
+		requiredProductId,
+		requiredProductVersion=None,
+		requiredPackageVersion=None,
+		requiredAction=None,
+		requiredInstallationStatus=None,
+		requirementType=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.productDependency_createObjects(ProductDependency.fromHash(_hash))
 
-	def productDependency_delete(  # pylint: disable=too-many-arguments
+	def productDependency_delete(
 		self,
 		productId,
 		productVersion,
@@ -1655,14 +1653,14 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def productOnDepot_create(  # pylint: disable=too-many-arguments
+	def productOnDepot_create(
 		self,
 		productId,
 		productType,
 		productVersion,
 		packageVersion,
 		depotId,
-		locked=None,  # pylint: disable=unused-argument
+		locked=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -1729,7 +1727,7 @@ into the IDs of these depots are to be found in the list behind \
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# -   ProductOnClients                                                                          -
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	def _productOnClient_processWithFunction(self, productOnClients, function):  # pylint: disable=too-many-locals,too-many-branches
+	def _productOnClient_processWithFunction(self, productOnClients, function):
 		productOnClientsByClient = {}
 		productIds = set()
 		for poc in productOnClients:
@@ -1876,7 +1874,7 @@ into the IDs of these depots are to be found in the list behind \
 	def productOnClient_addDependencies(self, productOnClients):
 		return productOnClients
 
-	def productOnClient_getObjects(self, attributes=[], **filter):  # pylint: disable=redefined-builtin,dangerous-default-value,too-many-locals,too-many-branches
+	def productOnClient_getObjects(self, attributes=[], **filter):
 		"""
 		possible attributes/filter-keys of ProductOnClient are:
 			productId
@@ -2206,19 +2204,19 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def productOnClient_create(  # pylint: disable=too-many-arguments
+	def productOnClient_create(
 		self,
-		productId,  # pylint: disable=unused-argument
-		productType,  # pylint: disable=unused-argument
-		clientId,  # pylint: disable=unused-argument
-		installationStatus=None,  # pylint: disable=unused-argument
-		actionRequest=None,  # pylint: disable=unused-argument
-		lastAction=None,  # pylint: disable=unused-argument
-		actionProgress=None,  # pylint: disable=unused-argument
-		actionResult=None,  # pylint: disable=unused-argument
-		productVersion=None,  # pylint: disable=unused-argument
-		packageVersion=None,  # pylint: disable=unused-argument
-		modificationTime=None,  # pylint: disable=unused-argument
+		productId,
+		productType,
+		clientId,
+		installationStatus=None,
+		actionRequest=None,
+		lastAction=None,
+		actionProgress=None,
+		actionResult=None,
+		productVersion=None,
+		packageVersion=None,
+		modificationTime=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -2239,7 +2237,7 @@ into the IDs of these depots are to be found in the list behind \
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# -   ProductPropertyStates                                                                     -
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	def productPropertyState_getObjects(self, attributes=[], **filter):  # pylint: disable=redefined-builtin,dangerous-default-value
+	def productPropertyState_getObjects(self, attributes=[], **filter):
 		"""
 		Add default objects to result for objects which do not exist in backend
 		"""
@@ -2344,7 +2342,7 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def productPropertyState_create(self, productId, propertyId, objectId, values=None):  # pylint: disable=unused-argument
+	def productPropertyState_create(self, productId, propertyId, objectId, values=None):
 		_hash = locals()
 		del _hash["self"]
 		return self.productPropertyState_createObjects(
@@ -2392,29 +2390,29 @@ into the IDs of these depots are to be found in the list behind \
 			return self._backend.group_getObjects(id=[group.id for group in groups])
 		return []
 
-	def group_createHostGroup(  # pylint: disable=invalid-name
+	def group_createHostGroup(
 		self,
 		id,
 		description=None,
 		notes=None,
-		parentGroupId=None,  # pylint: disable=redefined-builtin,unused-argument
+		parentGroupId=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.group_createObjects(HostGroup.fromHash(_hash))
 
-	def group_createProductGroup(  # pylint: disable=invalid-name
+	def group_createProductGroup(
 		self,
 		id,
 		description=None,
 		notes=None,
-		parentGroupId=None,  # pylint: disable=redefined-builtin,unused-argument
+		parentGroupId=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.group_createObjects(ProductGroup.fromHash(_hash))
 
-	def group_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def group_delete(self, id):
 		if id is None:
 			id = []
 
@@ -2468,7 +2466,7 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def objectToGroup_create(self, groupType, groupId, objectId):  # pylint: disable=unused-argument
+	def objectToGroup_create(self, groupType, groupId, objectId):
 		_hash = locals()
 		del _hash["self"]
 		return self.objectToGroup_createObjects(ObjectToGroup.fromHash(_hash))
@@ -2520,21 +2518,21 @@ into the IDs of these depots are to be found in the list behind \
 			)
 		return []
 
-	def licenseContract_create(  # pylint: disable=too-many-arguments,invalid-name
+	def licenseContract_create(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		description=None,  # pylint: disable=unused-argument
-		notes=None,  # pylint: disable=unused-argument
-		partner=None,  # pylint: disable=unused-argument
-		conclusionDate=None,  # pylint: disable=unused-argument
-		notificationDate=None,  # pylint: disable=unused-argument
-		expirationDate=None,  # pylint: disable=redefined-builtin,unused-argument
+		id,
+		description=None,
+		notes=None,
+		partner=None,
+		conclusionDate=None,
+		notificationDate=None,
+		expirationDate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.licenseContract_createObjects(LicenseContract.fromHash(_hash))
 
-	def licenseContract_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def licenseContract_delete(self, id):
 		if id is None:
 			id = []
 
@@ -2576,49 +2574,49 @@ into the IDs of these depots are to be found in the list behind \
 			)
 		return []
 
-	def softwareLicense_createRetail(  # pylint: disable=too-many-arguments,invalid-name
+	def softwareLicense_createRetail(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		licenseContractId,  # pylint: disable=unused-argument
-		maxInstallations=None,  # pylint: disable=unused-argument
-		boundToHost=None,  # pylint: disable=unused-argument
-		expirationDate=None,  # pylint: disable=unused-argument
+		id,
+		licenseContractId,
+		maxInstallations=None,
+		boundToHost=None,
+		expirationDate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.softwareLicense_createObjects(RetailSoftwareLicense.fromHash(_hash))
 
-	def softwareLicense_createOEM(  # pylint: disable=too-many-arguments,invalid-name
+	def softwareLicense_createOEM(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		licenseContractId,  # pylint: disable=unused-argument
-		maxInstallations=None,  # pylint: disable=unused-argument
-		boundToHost=None,  # pylint: disable=unused-argument
-		expirationDate=None,  # pylint: disable=unused-argument
+		id,
+		licenseContractId,
+		maxInstallations=None,
+		boundToHost=None,
+		expirationDate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.softwareLicense_createObjects(OEMSoftwareLicense.fromHash(_hash))
 
-	def softwareLicense_createVolume(  # pylint: disable=too-many-arguments,invalid-name
+	def softwareLicense_createVolume(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		licenseContractId,  # pylint: disable=unused-argument
-		maxInstallations=None,  # pylint: disable=unused-argument
-		boundToHost=None,  # pylint: disable=unused-argument
-		expirationDate=None,  # pylint: disable=unused-argument
+		id,
+		licenseContractId,
+		maxInstallations=None,
+		boundToHost=None,
+		expirationDate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.softwareLicense_createObjects(VolumeSoftwareLicense.fromHash(_hash))
 
-	def softwareLicense_createConcurrent(  # pylint: disable=too-many-arguments,invalid-name
+	def softwareLicense_createConcurrent(
 		self,
-		id,  # pylint: disable=redefined-builtin,unused-argument
-		licenseContractId,  # pylint: disable=unused-argument
-		maxInstallations=None,  # pylint: disable=unused-argument
-		boundToHost=None,  # pylint: disable=unused-argument
-		expirationDate=None,  # pylint: disable=unused-argument
+		id,
+		licenseContractId,
+		maxInstallations=None,
+		boundToHost=None,
+		expirationDate=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -2626,7 +2624,7 @@ into the IDs of these depots are to be found in the list behind \
 			ConcurrentSoftwareLicense.fromHash(_hash)
 		)
 
-	def softwareLicense_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def softwareLicense_delete(self, id):
 		if id is None:
 			id = []
 
@@ -2665,12 +2663,12 @@ into the IDs of these depots are to be found in the list behind \
 			)
 		return []
 
-	def licensePool_create(self, id, description=None, productIds=None):  # pylint: disable=redefined-builtin,unused-argument,invalid-name
+	def licensePool_create(self, id, description=None, productIds=None):
 		_hash = locals()
 		del _hash["self"]
 		return self.licensePool_createObjects(LicensePool.fromHash(_hash))
 
-	def licensePool_delete(self, id):  # pylint: disable=redefined-builtin,invalid-name
+	def licensePool_delete(self, id):
 		if id is None:
 			id = []
 
@@ -2742,7 +2740,7 @@ into the IDs of these depots are to be found in the list behind \
 
 	def softwareLicenseToLicensePool_create(
 		self, softwareLicenseId, licensePoolId, licenseKey=None
-	):  # pylint: disable=unused-argument
+	):
 		_hash = locals()
 		del _hash["self"]
 		return self.softwareLicenseToLicensePool_createObjects(
@@ -2813,13 +2811,13 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def licenseOnClient_create(  # pylint: disable=too-many-arguments
+	def licenseOnClient_create(
 		self,
 		softwareLicenseId,
 		licensePoolId,
 		clientId,
 		licenseKey=None,
-		notes=None,  # pylint: disable=unused-argument
+		notes=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -2841,7 +2839,7 @@ into the IDs of these depots are to be found in the list behind \
 			)
 		)
 
-	def licenseOnClient_getOrCreateObject(  # pylint: disable=too-many-branches
+	def licenseOnClient_getOrCreateObject(
 		self, clientId, licensePoolId=None, productId=None, windowsSoftwareId=None
 	):
 		clientId = forceHostId(clientId)
@@ -2860,10 +2858,10 @@ into the IDs of these depots are to be found in the list behind \
 
 				auditSoftwares = self.auditSoftware_getObjects(
 					windowsSoftwareId=windowsSoftwareId
-				)  # pylint: disable=no-member
+				)
 				for auditSoftware in auditSoftwares:
 					auditSoftwareToLicensePools = (
-						self.auditSoftwareToLicensePool_getObjects(  # pylint: disable=no-member
+						self.auditSoftwareToLicensePool_getObjects(
 							name=auditSoftware.name,
 							version=auditSoftware.version,
 							subVersion=auditSoftware.subVersion,
@@ -2931,7 +2929,7 @@ into the IDs of these depots are to be found in the list behind \
 			self.licenseOnClient_createObjects(licenseOnClient)
 		return licenseOnClient
 
-	def _getUsableSoftwareLicense(self, clientId, licensePoolId):  # pylint: disable=too-many-branches
+	def _getUsableSoftwareLicense(self, clientId, licensePoolId):
 		softwareLicenseId = ""
 		licenseKey = ""
 
@@ -3080,23 +3078,23 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def auditSoftware_create(  # pylint: disable=too-many-arguments
+	def auditSoftware_create(
 		self,
-		name,  # pylint: disable=unused-argument
-		version,  # pylint: disable=unused-argument
-		subVersion,  # pylint: disable=unused-argument
-		language,  # pylint: disable=unused-argument
-		architecture,  # pylint: disable=unused-argument
-		windowsSoftwareId=None,  # pylint: disable=unused-argument
-		windowsDisplayName=None,  # pylint: disable=unused-argument
-		windowsDisplayVersion=None,  # pylint: disable=unused-argument
-		installSize=None,  # pylint: disable=unused-argument
+		name,
+		version,
+		subVersion,
+		language,
+		architecture,
+		windowsSoftwareId=None,
+		windowsDisplayName=None,
+		windowsDisplayVersion=None,
+		installSize=None,
 	):
 		_hash = locals()
 		del _hash["self"]
 		return self.auditSoftware_createObjects(AuditSoftware.fromHash(_hash))
 
-	def auditSoftware_delete(self, name, version, subVersion, language, architecture):  # pylint: disable=too-many-arguments
+	def auditSoftware_delete(self, name, version, subVersion, language, architecture):
 		if name is None:
 			name = []
 		if version is None:
@@ -3187,14 +3185,14 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def auditSoftwareToLicensePool_create(  # pylint: disable=too-many-arguments
+	def auditSoftwareToLicensePool_create(
 		self,
 		name,
 		version,
 		subVersion,
 		language,
 		architecture,
-		licensePoolId,  # pylint: disable=unused-argument
+		licensePoolId,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -3202,7 +3200,7 @@ into the IDs of these depots are to be found in the list behind \
 			AuditSoftwareToLicensePool.fromHash(_hash)
 		)
 
-	def auditSoftwareToLicensePool_delete(  # pylint: disable=too-many-arguments
+	def auditSoftwareToLicensePool_delete(
 		self, name, version, subVersion, language, architecture, licensePoolId
 	):
 		if name is None:
@@ -3295,22 +3293,22 @@ into the IDs of these depots are to be found in the list behind \
 
 		return result
 
-	def auditSoftwareOnClient_create(  # pylint: disable=too-many-arguments,too-many-locals
+	def auditSoftwareOnClient_create(
 		self,
-		name,  # pylint: disable=unused-argument
-		version,  # pylint: disable=unused-argument
-		subVersion,  # pylint: disable=unused-argument
-		language,  # pylint: disable=unused-argument
-		architecture,  # pylint: disable=unused-argument
-		clientId,  # pylint: disable=unused-argument
-		uninstallString=None,  # pylint: disable=unused-argument
-		binaryName=None,  # pylint: disable=unused-argument
-		firstseen=None,  # pylint: disable=unused-argument
-		lastseen=None,  # pylint: disable=unused-argument
-		state=None,  # pylint: disable=unused-argument
-		usageFrequency=None,  # pylint: disable=unused-argument
-		lastUsed=None,  # pylint: disable=unused-argument
-		licenseKey=None,  # pylint: disable=unused-argument
+		name,
+		version,
+		subVersion,
+		language,
+		architecture,
+		clientId,
+		uninstallString=None,
+		binaryName=None,
+		firstseen=None,
+		lastseen=None,
+		state=None,
+		usageFrequency=None,
+		lastUsed=None,
+		licenseKey=None,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -3318,7 +3316,7 @@ into the IDs of these depots are to be found in the list behind \
 			AuditSoftwareOnClient.fromHash(_hash)
 		)
 
-	def auditSoftwareOnClient_delete(  # pylint: disable=too-many-arguments
+	def auditSoftwareOnClient_delete(
 		self, name, version, subVersion, language, architecture, clientId
 	):
 		if name is None:
@@ -3363,17 +3361,17 @@ into the IDs of these depots are to be found in the list behind \
 	def auditHardware_createObjects(self, auditHardwares):
 		for auditHardware in forceObjectClassList(auditHardwares, AuditHardware):
 			logger.info("Creating auditHardware %s", auditHardware)
-			self.auditHardware_insertObject(auditHardware)  # pylint: disable=no-member
+			self.auditHardware_insertObject(auditHardware)
 		return []
 
 	def auditHardware_updateObjects(self, auditHardwares):
 		for auditHardware in forceObjectClassList(auditHardwares, AuditHardware):
 			logger.info("Updating auditHardware %s", auditHardware)
 			# You can't update auditHardwares, because the ident contains all attributes
-			self.auditHardware_insertObject(auditHardware)  # pylint: disable=no-member
+			self.auditHardware_insertObject(auditHardware)
 		return []
 
-	def auditHardware_create(self, hardwareClass, **kwargs):  # pylint: disable=unused-argument
+	def auditHardware_create(self, hardwareClass, **kwargs):
 		_hash = locals()
 		del _hash["self"]
 		return self.auditHardware_createObjects(AuditHardware.fromHash(_hash))
@@ -3429,7 +3427,7 @@ into the IDs of these depots are to be found in the list behind \
 				if attribute not in ("firstseen", "lastseen", "state")
 			}
 
-			if self.auditHardwareOnHost_getObjects(attributes=["hostId"], **_filter):  # pylint: disable=no-member
+			if self.auditHardwareOnHost_getObjects(attributes=["hostId"], **_filter):
 				logger.trace(
 					"Updating existing AuditHardwareOnHost %s", auditHardwareOnHost
 				)
@@ -3443,14 +3441,14 @@ into the IDs of these depots are to be found in the list behind \
 
 		return []
 
-	def auditHardwareOnHost_create(  # pylint: disable=too-many-arguments
+	def auditHardwareOnHost_create(
 		self,
 		hostId,
 		hardwareClass,
 		firstseen=None,
 		lastseen=None,
 		state=None,
-		**kwargs,  # pylint: disable=unused-argument
+		**kwargs,
 	):
 		_hash = locals()
 		del _hash["self"]
@@ -3458,7 +3456,7 @@ into the IDs of these depots are to be found in the list behind \
 			AuditHardwareOnHost.fromHash(_hash)
 		)
 
-	def auditHardwareOnHost_delete(  # pylint: disable=too-many-arguments
+	def auditHardwareOnHost_delete(
 		self, hostId, hardwareClass, firstseen=None, lastseen=None, state=None, **kwargs
 	):
 		if hostId is None:
@@ -3494,7 +3492,7 @@ into the IDs of these depots are to be found in the list behind \
 		if hostId is None:
 			hostId = []
 		hostId = forceHostIdList(hostId)
-		for ahoh in self.auditHardwareOnHost_getObjects(hostId=hostId, state=1):  # pylint: disable=no-member
+		for ahoh in self.auditHardwareOnHost_getObjects(hostId=hostId, state=1):
 			ahoh.setState(0)
 			self._backend.auditHardwareOnHost_updateObject(ahoh)
 		return None

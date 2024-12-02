@@ -7,7 +7,7 @@ OPSI Exceptions.
 Deprecated, use opsicommon.exceptions instead.
 """
 
-from opsicommon.exceptions import *  # pylint: disable=wildcard-import,unused-wildcard-import  # noqa: F401,F403
+from opsicommon.exceptions import *
 
 
 class CommandNotFoundException(RuntimeError):

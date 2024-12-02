@@ -2,7 +2,6 @@
 
 # Copyright (c) uib GmbH <info@uib.de>
 # License: AGPL-3.0
-# pylint: disable=too-many-lines
 """
 opsi python library - Windows
 """
@@ -17,7 +16,7 @@ import subprocess
 import sys
 import threading
 import time
-import winreg  # pylint: disable=import-error
+import winreg
 from ctypes import (
 	POINTER,
 	Structure,
@@ -37,24 +36,24 @@ from functools import lru_cache
 # pyright: reportMissingImports=false
 from typing import Literal
 
-import ntsecuritycon  # pylint: disable=import-error
+import ntsecuritycon
 import pefile
-import pywintypes  # pylint: disable=import-error
-import win32api  # pylint: disable=import-error
-import win32con  # pylint: disable=import-error
-import win32event  # pylint: disable=import-error
-import win32file  # pylint: disable=import-error
-import win32gui  # pylint: disable=import-error
-import win32net  # pylint: disable=import-error
-import win32netcon  # pylint: disable=import-error
-import win32pdh  # pylint: disable=import-error
-import win32pdhutil  # pylint: disable=import-error
-import win32process  # pylint: disable=import-error
-import win32profile  # pylint: disable=import-error
-import win32security  # pylint: disable=import-error
-import win32service  # pylint: disable=import-error
-import win32ts  # pylint: disable=import-error
-import win32wnet  # pylint: disable=import-error
+import pywintypes
+import win32api
+import win32con
+import win32event
+import win32file
+import win32gui
+import win32net
+import win32netcon
+import win32pdh
+import win32pdhutil
+import win32process
+import win32profile
+import win32security
+import win32service
+import win32ts
+import win32wnet
 from opsicommon.logging import get_logger, secret_filter
 from opsicommon.system.subprocess import (
 	get_subprocess_environment as opsicommon_get_subprocess_environment,
@@ -156,7 +155,7 @@ MAX_INTERFACES = 32
 logger = get_logger("opsi.general")
 
 
-class PROCESSENTRY32(Structure):  # pylint: disable=too-few-public-methods
+class PROCESSENTRY32(Structure):
 	_fields_ = [
 		("dwSize", c_ulong),
 		("cntUsage", c_ulong),
@@ -171,7 +170,7 @@ class PROCESSENTRY32(Structure):  # pylint: disable=too-few-public-methods
 	]
 
 
-class MIB_IFROW(Structure):  # pylint: disable=too-few-public-methods,invalid-name
+class MIB_IFROW(Structure):
 	_fields_ = [
 		("wszName", c_wchar * MAX_INTERFACE_NAME_LEN),
 		("dwIndex", c_uint),
@@ -200,14 +199,14 @@ class MIB_IFROW(Structure):  # pylint: disable=too-few-public-methods,invalid-na
 	]
 
 
-class MIB_IFTABLE(Structure):  # pylint: disable=too-few-public-methods,invalid-name
+class MIB_IFTABLE(Structure):
 	_fields_ = [
 		("dwNumEntries", c_uint),
 		("table", MIB_IFROW * MAX_INTERFACES),
 	]
 
 
-class SystemSpecificHook:  # pylint: disable=too-few-public-methods
+class SystemSpecificHook:
 	def __init__(self):
 		pass
 
@@ -230,17 +229,17 @@ def getArchitecture():
 		if win32process.IsWow64Process():
 			return "x64"
 		return "x86"
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.error(
 			"Error determining OS-Architecture: '%s'; returning default: 'x86'", err
 		)
 		return "x86"
 
 
-def getOpsiHotfixName(helper=None):  # pylint: disable=too-many-branches,too-many-statements,unused-argument
+def getOpsiHotfixName(helper=None):
 	arch = getArchitecture()
-	major = sys.getwindowsversion().major  # pylint: disable=no-member
-	minor = sys.getwindowsversion().minor  # pylint: disable=no-member
+	major = sys.getwindowsversion().major
+	minor = sys.getwindowsversion().minor
 	_os = "unknown"
 	lang = "glb"
 
@@ -355,22 +354,22 @@ def getNetworkInterfaces():
 		MAX_ADAPTER_NAME_LENGTH = 256
 		MAX_ADAPTER_ADDRESS_LENGTH = 8
 
-		class IP_ADDR_STRING(Structure):  # pylint: disable=too-few-public-methods,invalid-name
+		class IP_ADDR_STRING(Structure):
 			pass
 
 		LP_IP_ADDR_STRING = POINTER(IP_ADDR_STRING)
-		IP_ADDR_STRING._fields_ = [  # pylint: disable=protected-access
+		IP_ADDR_STRING._fields_ = [
 			("next", LP_IP_ADDR_STRING),
 			("ipAddress", c_char * 16),
 			("ipMask", c_char * 16),
 			("context", c_ulong),
 		]
 
-		class IP_ADAPTER_INFO(Structure):  # pylint: disable=too-few-public-methods,invalid-name
+		class IP_ADAPTER_INFO(Structure):
 			pass
 
 		LP_IP_ADAPTER_INFO = POINTER(IP_ADAPTER_INFO)
-		IP_ADAPTER_INFO._fields_ = [  # pylint: disable=protected-access
+		IP_ADAPTER_INFO._fields_ = [
 			("next", LP_IP_ADAPTER_INFO),
 			("comboIndex", c_ulong),
 			("adapterName", c_char * (MAX_ADAPTER_NAME_LENGTH + 4)),
@@ -416,7 +415,7 @@ def getSystemProxySetting():
 	return None
 
 
-class NetworkPerformanceCounter(threading.Thread):  # pylint: disable=too-many-instance-attributes
+class NetworkPerformanceCounter(threading.Thread):
 	def __init__(self, interface):
 		threading.Thread.__init__(self)
 		self.interface = None
@@ -510,7 +509,7 @@ class NetworkPerformanceCounter(threading.Thread):  # pylint: disable=too-many-i
 		return self._bytesOutPerSecond
 
 
-class NetworkPerformanceCounterWMI(threading.Thread):  # pylint: disable=too-many-instance-attributes
+class NetworkPerformanceCounterWMI(threading.Thread):
 	def __init__(self, interface):
 		threading.Thread.__init__(self)
 		self.interface = interface
@@ -534,8 +533,8 @@ class NetworkPerformanceCounterWMI(threading.Thread):  # pylint: disable=too-man
 		try:
 			interface = self.interface
 			self._running = True
-			import pythoncom  # pylint: disable=import-error,import-outside-toplevel
-			import wmi  # pylint: disable=import-error,import-outside-toplevel
+			import pythoncom
+			import wmi
 
 			pythoncom.CoInitialize()
 			self.wmi = wmi.WMI()
@@ -556,7 +555,7 @@ class NetworkPerformanceCounterWMI(threading.Thread):  # pylint: disable=too-man
 				self.interface,
 				bestRatio,
 			)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err, exc_info=True)
 
 		try:
@@ -565,10 +564,10 @@ class NetworkPerformanceCounterWMI(threading.Thread):  # pylint: disable=too-man
 				time.sleep(1)
 		finally:
 			try:
-				import pythoncom  # pylint: disable=import-error,import-outside-toplevel
+				import pythoncom
 
 				pythoncom.CoUninitialize()
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				pass
 
 	def _getStatistics(self):
@@ -602,7 +601,7 @@ class NetworkPerformanceCounterWMI(threading.Thread):  # pylint: disable=too-man
 		return self._bytesOutPerSecond
 
 
-class NetworkPerformanceCounterPDH(threading.Thread):  # pylint: disable=too-many-instance-attributes
+class NetworkPerformanceCounterPDH(threading.Thread):
 	def __init__(self, interface):
 		threading.Thread.__init__(self)
 		self.interface = None
@@ -668,7 +667,7 @@ class NetworkPerformanceCounterPDH(threading.Thread):  # pylint: disable=too-man
 			self._inCounterHandle = win32pdh.AddCounter(
 				self._queryHandle, self.bytesInPerSecondCounter
 			)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to add inCounterHandle {win32pdhutil.find_pdh_counter_localized_name('Network Interface')}->"
 				f"{win32pdhutil.find_pdh_counter_localized_name('Bytes In/sec')}: {err}"
@@ -677,7 +676,7 @@ class NetworkPerformanceCounterPDH(threading.Thread):  # pylint: disable=too-man
 			self._outCounterHandle = win32pdh.AddCounter(
 				self._queryHandle, self.bytesOutPerSecondCounter
 			)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to add inCounterHandle {win32pdhutil.find_pdh_counter_localized_name('Network Interface')}->"
 				f"{win32pdhutil.find_pdh_counter_localized_name('Bytes Sent/sec')}: {err}"
@@ -897,7 +896,7 @@ def get_available_drive_letter(start="c", end="z"):
 	return None
 
 
-def mount(dev, mountpoint, **options):  # pylint: disable=too-many-branches,too-many-statements
+def mount(dev, mountpoint, **options):
 	"""
 	Mount *dev* to the given *mountpoint*.
 
@@ -1009,7 +1008,7 @@ def getActiveConsoleSessionId():
 	"""
 	try:
 		return int(win32ts.WTSGetActiveConsoleSessionId())
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.warning(
 			"Failed to get WTSGetActiveConsoleSessionId: %s, returning 1", err
 		)
@@ -1042,7 +1041,7 @@ WTS_STATES = {
 }
 
 
-def getActiveSessionIds(protocol=None, states=None):  # pylint: disable=too-many-branches
+def getActiveSessionIds(protocol=None, states=None):
 	"""
 	Retrieves ids of all active user sessions.
 
@@ -1242,7 +1241,7 @@ def createDesktop(name, runCommand=None):
 			win32service.OpenDesktop("default", 0, 0, win32con.MAXIMUM_ALLOWED),
 			win32con.DACL_SECURITY_INFORMATION,
 		)
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.error(err)
 		sa.SECURITY_DESCRIPTOR = None
 
@@ -1424,14 +1423,14 @@ def get_subprocess_environment():
 	return os.environ.copy()
 
 
-def execute(  # pylint: disable=dangerous-default-value,too-many-branches,too-many-statements,too-many-arguments,too-many-locals
+def execute(
 	cmd,
 	waitForEnding=True,
 	getHandle=False,
 	ignoreExitCode=[],
 	exitOnStderr=False,
 	captureStderr=True,
-	encoding=None,  # pylint: disable=unused-argument
+	encoding=None,
 	timeout=0,
 	shell=True,
 	env={},
@@ -1507,7 +1506,7 @@ def execute(  # pylint: disable=dangerous-default-value,too-many-branches,too-ma
 				if time.time() - startTime >= timeout > 0:
 					try:
 						proc.kill()
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					raise IOError(
@@ -1560,7 +1559,7 @@ def getPids(process, sessionId=None):
 	CloseHandle = windll.kernel32.CloseHandle
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
 	pe32 = PROCESSENTRY32()
-	pe32.dwSize = sizeof(PROCESSENTRY32)  # pylint: disable=attribute-defined-outside-init
+	pe32.dwSize = sizeof(PROCESSENTRY32)
 	logger.trace("Getting first process")
 	if Process32First(hProcessSnap, byref(pe32)) == win32con.FALSE:
 		logger.error("Failed to get first process")
@@ -1571,7 +1570,7 @@ def getPids(process, sessionId=None):
 		sid = "unknown"
 		try:
 			sid = win32ts.ProcessIdToSessionId(pid)
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			pass
 		processName = pe32.szExeFile.decode("Windows-1252")
 		logger.trace(
@@ -1623,7 +1622,7 @@ def getProcessName(processId):
 	CloseHandle = windll.kernel32.CloseHandle
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
 	pe32 = PROCESSENTRY32()
-	pe32.dwSize = sizeof(PROCESSENTRY32)  # pylint: disable=attribute-defined-outside-init
+	pe32.dwSize = sizeof(PROCESSENTRY32)
 	logger.info("Getting first process")
 	if Process32First(hProcessSnap, byref(pe32)) == win32con.FALSE:
 		logger.error("Failed getting first process")
@@ -1733,7 +1732,7 @@ def getUserToken(sessionId=None, duplicateFrom="winlogon.exe"):
 	return hUserTokenDup
 
 
-def runCommandInSession(  # pylint: disable=too-many-arguments,too-many-locals,unused-argument
+def runCommandInSession(
 	command,
 	sessionId=None,
 	desktop="default",
@@ -1767,7 +1766,7 @@ def runCommandInSession(  # pylint: disable=too-many-arguments,too-many-locals,u
 		logger.info("Creating new desktop '%s'", desktop.split("\\")[-1])
 		try:
 			createDesktop(desktop.split("\\")[-1])
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.warning(err)
 
 	userToken = getUserToken(sessionId, duplicateFrom)
@@ -1817,7 +1816,7 @@ def runCommandInSession(  # pylint: disable=too-many-arguments,too-many-locals,u
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # -                                     USER / GROUP HANDLING                                         -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-def createUser(username, password, groups=[]):  # pylint: disable=dangerous-default-value
+def createUser(username, password, groups=[]):
 	username = forceUnicode(username)
 	password = forceUnicode(password)
 	groups = forceUnicodeList(groups)
@@ -1871,14 +1870,14 @@ def deleteUser(username, deleteProfile=True):
 			if sid:
 				try:
 					win32profile.DeleteProfile(sid)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.info(
 						"Failed to delete user profile '%s' (sid %s): %s",
 						username,
 						sid,
 						err,
 					)
-		except Exception:  # pylint: disable=broad-except
+		except Exception:
 			pass
 	try:
 		win32net.NetUserDel("\\\\" + domain, username)
@@ -1969,11 +1968,11 @@ def setLocalSystemTime(timestring):
 		win32api.SetSystemTime(
 			dt.year, dt.month, 0, dt.day, dt.hour, dt.minute, dt.second, 0
 		)
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.error("Failed to set System Time: '%s'", err)
 
 
-class Impersonate:  # pylint: disable=too-many-instance-attributes
+class Impersonate:
 	def __init__(self, username="", password="", userToken=None, desktop="default"):
 		self.userProfile = None
 		self.userEnvironment = None
@@ -2005,7 +2004,7 @@ class Impersonate:  # pylint: disable=too-many-instance-attributes
 		self.desktop = forceUnicodeLower(self.desktop)
 		self.userToken = userToken
 
-	def start(self, logonType="INTERACTIVE", newDesktop=False, createEnvironment=False):  # pylint: disable=too-many-branches,too-many-statements
+	def start(self, logonType="INTERACTIVE", newDesktop=False, createEnvironment=False):
 		try:
 			logonType = forceUnicode(logonType)
 			winLogonType = None
@@ -2051,7 +2050,7 @@ class Impersonate:  # pylint: disable=too-many-instance-attributes
 					logger.info("Creating new desktop '%s'", self.desktop)
 					try:
 						self.newDesktop = createDesktop(self.desktop)
-					except Exception as err:  # pylint: disable=broad-except
+					except Exception as err:
 						logger.warning(err)
 
 				if not self.newDesktop:
@@ -2193,49 +2192,49 @@ class Impersonate:  # pylint: disable=too-many-instance-attributes
 		logger.notice("Process %s ended with exit code %s", dwProcessId, exitCode)
 		return (None, None, None, None)
 
-	def end(self):  # pylint: disable=too-many-branches
+	def end(self):
 		try:
 			try:
 				win32security.RevertToSelf()
-			except Exception:  # pylint: disable=broad-except
+			except Exception:
 				pass
 			if self.saveWindowStation:
 				try:
 					self.saveWindowStation.SetProcessWindowStation()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to set process WindowStation: %s", err)
 
 			if self.saveDesktop:
 				try:
 					self.saveDesktop.SetThreadDesktop()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to set thread Desktop: %s", err)
 
 			if self.newDesktop:
 				try:
 					self.newWindowStation.CloseDesktop()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to close Desktop: %s", err)
 
 			if self.newWindowStation:
 				try:
 					self.newWindowStation.CloseWindowStation()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to close WindowStation: %s", err)
 
 			if self.userProfile:
 				logger.debug("Unloading user profile")
 				try:
 					win32profile.UnloadUserProfile(self.userToken, self.userProfile)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to unload user profile: %s", err)
 
 			if self.userToken:
 				try:
 					self.userToken.Close()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.debug("Failed to close user token: %s", err)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error(err, exc_info=True)
 
 	def __del__(self):

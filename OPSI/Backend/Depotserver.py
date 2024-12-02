@@ -64,17 +64,17 @@ class DepotserverBackend(ExtendedBackend):
 		self._sshRSAPublicKeyFile = "/etc/ssh/ssh_host_rsa_key.pub"
 
 		self._depotId = forceHostId(getfqdn())
-		if not self._context.host_getIdents(id=self._depotId):  # pylint: disable=maybe-no-member
+		if not self._context.host_getIdents(id=self._depotId):
 			raise BackendMissingDataError(
 				f"Depot '{self._depotId}' not found in backend"
 			)
 		self._packageManager = DepotserverPackageManager(self)
 
-	def depot_getHostRSAPublicKey(self) -> str:  # pylint: disable=invalid-name
+	def depot_getHostRSAPublicKey(self) -> str:
 		with open(self._sshRSAPublicKeyFile, "r", encoding="utf-8") as publicKey:
 			return forceUnicode(publicKey.read())
 
-	def depot_getMD5Sum(self, filename: str, forceCalculation: bool = False) -> str:  # pylint: disable=invalid-name
+	def depot_getMD5Sum(self, filename: str, forceCalculation: bool = False) -> str:
 		"""
 		This method calculates the md5-sum of a file.
 		:param filename: File to compute checksum for.
@@ -101,8 +101,8 @@ class DepotserverBackend(ExtendedBackend):
 		except Exception as err:
 			raise BackendIOError(f"Failed to get md5sum: {err}") from err
 
-	def depot_librsyncSignature(self, filename: str) -> Union[str, Any]:  # pylint: disable=invalid-name
-		from OPSI.Util.Sync import (  # pylint: disable=import-outside-toplevel
+	def depot_librsyncSignature(self, filename: str) -> Union[str, Any]:
+		from OPSI.Util.Sync import (
 			librsyncSignature,
 		)
 
@@ -113,8 +113,8 @@ class DepotserverBackend(ExtendedBackend):
 
 	def depot_librsyncPatchFile(
 		self, oldfile: str, deltafile: str, newfile: str
-	) -> None:  # pylint: disable=invalid-name
-		from OPSI.Util.Sync import (  # pylint: disable=import-outside-toplevel
+	) -> None:
+		from OPSI.Util.Sync import (
 			librsyncPatchFile,
 		)
 
@@ -125,8 +125,8 @@ class DepotserverBackend(ExtendedBackend):
 
 	def depot_librsyncDeltaFile(
 		self, filename: str, signature: str, deltafile: str
-	) -> None:  # pylint: disable=invalid-name
-		from OPSI.Util.Sync import (  # pylint: disable=import-outside-toplevel
+	) -> None:
+		from OPSI.Util.Sync import (
 			librsyncDeltaFile,
 		)
 
@@ -137,7 +137,7 @@ class DepotserverBackend(ExtendedBackend):
 				f"Failed to create librsync delta file: {err}"
 			) from err
 
-	def depot_getDiskSpaceUsage(self, path: str) -> dict[str, Any]:  # pylint: disable=invalid-name
+	def depot_getDiskSpaceUsage(self, path: str) -> dict[str, Any]:
 		if os.name != "posix":
 			raise NotImplementedError("Not implemented for non-posix os")
 
@@ -146,7 +146,7 @@ class DepotserverBackend(ExtendedBackend):
 		except Exception as err:
 			raise BackendIOError("Failed to get disk space usage: {err}") from err
 
-	def depot_installPackage(  # pylint: disable=invalid-name,too-many-arguments
+	def depot_installPackage(
 		self,
 		filename: str,
 		force: bool = False,
@@ -170,10 +170,10 @@ class DepotserverBackend(ExtendedBackend):
 
 	def depot_uninstallPackage(
 		self, productId: str, force: bool = False, deleteFiles: bool = True
-	) -> None:  # pylint: disable=invalid-name
+	) -> None:
 		self._packageManager.uninstallPackage(productId, force, deleteFiles)
 
-	def depot_createPackageContentFile(self, productId: str) -> None:  # pylint: disable=invalid-name
+	def depot_createPackageContentFile(self, productId: str) -> None:
 		"""
 		Create a package content file in the products depot directory.
 		An existing file will be overriden.
@@ -182,7 +182,7 @@ class DepotserverBackend(ExtendedBackend):
 			self._context.host_getObjects(id=self._depotId)[0]
 			.getDepotLocalUrl()
 			.replace("file://", "")
-		)  # pylint: disable=protected-access
+		)
 		product_path = client_data_path / productId
 		if not product_path.is_dir():
 			raise BackendIOError(f"Product dir '{product_path}' not found")
@@ -202,7 +202,7 @@ class DepotserverBackend(ExtendedBackend):
 			os.chown(package_content_path, -1, grp.getgrnam(FILE_ADMIN_GROUP)[2])
 			os.chmod(package_content_path, 0o660)
 
-	def depot_createMd5SumFile(self, filename: str, md5sumFilename: str) -> None:  # pylint: disable=invalid-name
+	def depot_createMd5SumFile(self, filename: str, md5sumFilename: str) -> None:
 		if not os.path.exists(filename):
 			raise BackendIOError(f"File not found: {filename}")
 		logger.info("Creating md5sum file '%s'", md5sumFilename)
@@ -213,7 +213,7 @@ class DepotserverBackend(ExtendedBackend):
 			os.chown(md5sumFilename, -1, grp.getgrnam(FILE_ADMIN_GROUP)[2])
 			os.chmod(md5sumFilename, 0o660)
 
-	def depot_createZsyncFile(self, filename: str, zsyncFilename: str) -> None:  # pylint: disable=invalid-name
+	def depot_createZsyncFile(self, filename: str, zsyncFilename: str) -> None:
 		if not os.path.exists(filename):
 			raise BackendIOError(f"File not found: {filename}")
 		logger.info("Creating zsync file '%s'", zsyncFilename)
@@ -223,7 +223,7 @@ class DepotserverBackend(ExtendedBackend):
 			os.chown(zsyncFilename, -1, grp.getgrnam(FILE_ADMIN_GROUP)[2])
 			os.chmod(zsyncFilename, 0o660)
 
-	def workbench_buildPackage(self, package_dir: str) -> str:  # pylint: disable=invalid-name
+	def workbench_buildPackage(self, package_dir: str) -> str:
 		"""
 		Creates an opsi package from an opsi package source directory.
 		The function creates an opsi, md5 and zsync file in the source directory.
@@ -257,11 +257,11 @@ class DepotserverBackend(ExtendedBackend):
 				try:
 					os.chown(file, -1, grp.getgrnam(FILE_ADMIN_GROUP)[2])
 					os.chmod(file, 0o660)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.warning(err)
 		return package_file
 
-	def workbench_installPackage(self, package_file_or_dir: str) -> None:  # pylint: disable=invalid-name
+	def workbench_installPackage(self, package_file_or_dir: str) -> None:
 		"""
 		Install an opsi package into the repository.
 		If the path points to an opsi source directory,
@@ -296,7 +296,7 @@ class DepotserverPackageManager:
 			)
 		self._depotBackend = depotBackend
 
-	def installPackage(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+	def installPackage(
 		self,
 		filename: str,
 		force: bool = False,
@@ -312,7 +312,7 @@ class DepotserverPackageManager:
 			filename: str, tempDir: str, depotId: str
 		) -> Generator[ProductPackageFile, None, None]:
 			try:
-				depots = self._depotBackend._context.host_getObjects(id=depotId)  # pylint: disable=protected-access
+				depots = self._depotBackend._context.host_getObjects(id=depotId)
 				depot = depots[0]
 				del depots
 			except IndexError as err:
@@ -337,7 +337,7 @@ class DepotserverPackageManager:
 			finally:
 				try:
 					ppf.cleanup()
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					logger.error("Cleanup failed: %s", err)
 
 		@contextmanager
@@ -429,7 +429,7 @@ class DepotserverPackageManager:
 			if deleteProducts:
 				backend.product_deleteObjects(deleteProducts)
 
-		def cleanUpProductPropertyStates(  # pylint: disable=too-many-locals
+		def cleanUpProductPropertyStates(
 			backend: Backend,
 			productProperties: list[ProductProperty],
 			depotId: str,
@@ -441,7 +441,7 @@ class DepotserverPackageManager:
 					continue
 				productPropertiesToCleanup[productProperty.propertyId] = productProperty
 
-			if productPropertiesToCleanup:  # pylint: disable=too-many-nested-blocks
+			if productPropertiesToCleanup:
 				clientIds = set(
 					clientToDepot["clientId"]
 					for clientToDepot in backend.configState_getClientToDepotserver(
@@ -517,7 +517,7 @@ class DepotserverPackageManager:
 							updateProductPropertyStates
 						)
 
-		depotId = self._depotBackend._depotId  # pylint: disable=protected-access
+		depotId = self._depotBackend._depotId
 		logger.info(
 			"================================================================================================="
 		)
@@ -557,7 +557,7 @@ class DepotserverPackageManager:
 				)
 
 			try:
-				dataBackend = self._depotBackend._context  # pylint: disable=protected-access
+				dataBackend = self._depotBackend._context
 
 				with productPackageFile(filename, tempDir, depotId) as ppf:
 					product = ppf.packageControlFile.getProduct()
@@ -575,7 +575,7 @@ class DepotserverPackageManager:
 						)[0]
 						old_product_version = product_on_depot.getProductVersion()
 						old_package_version = product_on_depot.getPackageVersion()
-					except Exception as err:  # pylint: disable=broad-except
+					except Exception as err:
 						logger.debug(err)
 
 					logger.info("Creating product in backend")
@@ -756,7 +756,7 @@ class DepotserverPackageManager:
 												productPropertyState.propertyId
 											]
 										)
-									except Exception as installationError:  # pylint: disable=broad-except
+									except Exception as installationError:
 										logger.error(
 											"Failed to set default values to %s for productPropertyState %s: %s",
 											propertyDefaultValues[
@@ -792,18 +792,18 @@ class DepotserverPackageManager:
 
 	def uninstallPackage(
 		self, productId: str, force: bool = False, deleteFiles: bool = True
-	) -> None:  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
-		depotId = self._depotBackend._depotId  # pylint: disable=protected-access
+	) -> None:
+		depotId = self._depotBackend._depotId
 		logger.info(
 			"================================================================================================="
 		)
 		logger.notice("Uninstalling product '%s' on depot '%s'", productId, depotId)
-		try:  # pylint: disable=too-many-nested-blocks
+		try:
 			productId = forceProductIdFunc(productId)
 			force = forceBool(force)
 			deleteFiles = forceBool(deleteFiles)
 
-			dataBackend = self._depotBackend._context  # pylint: disable=protected-access
+			dataBackend = self._depotBackend._context
 			depot = dataBackend.host_getObjects(type="OpsiDepotserver", id=depotId)[0]
 
 			allow_remove_used = True
@@ -811,7 +811,7 @@ class DepotserverPackageManager:
 				allow_remove_used = forceBool(
 					dataBackend.config_getObjects(id="allow_to_remove_package_in_use")[
 						0
-					].getDefaultValues()[0]  # pylint: disable=maybe-no-member
+					].getDefaultValues()[0]
 				)
 			except IndexError:
 				pass
@@ -903,9 +903,9 @@ class DepotserverPackageManager:
 		for (
 			dependency
 		) in productPackageFile.packageControlFile.getPackageDependencies():
-			productOnDepots = self._depotBackend._context.productOnDepot_getObjects(  # pylint: disable=protected-access
+			productOnDepots = self._depotBackend._context.productOnDepot_getObjects(
 				depotId=self._depotBackend._depotId,
-				productId=dependency["package"],  # pylint: disable=protected-access
+				productId=dependency["package"],
 			)
 			if not productOnDepots:
 				raise BackendUnaccomplishableError(

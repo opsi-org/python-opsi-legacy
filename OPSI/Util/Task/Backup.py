@@ -36,7 +36,7 @@ try:
 	sp = os.path.join(sp, "python-opsi_data", "locale")
 	translation = gettext.translation("python-opsi", sp)
 	_ = translation.gettext
-except Exception as lerr:  # pylint: disable=broad-except
+except Exception as lerr:
 	logger.debug("Failed to load locale from %s: %s", sp, lerr)
 
 	def _(string):
@@ -62,7 +62,7 @@ class OpsiBackup:
 		else:
 			self.stdout = stdout
 
-	def _getArchive(self, mode, file=None, compression=None):  # pylint: disable=no-self-use
+	def _getArchive(self, mode, file=None, compression=None):
 		fileobj = None
 		if file and os.path.exists(file):
 			try:
@@ -95,7 +95,7 @@ class OpsiBackup:
 		compression="bz2",
 		flushLogs=False,
 		**kwargs,
-	):  # pylint: disable=unused-argument,dangerous-default-value,too-many-arguments,too-many-branches
+	):
 		if "all" in backends:
 			backends = ["all"]
 
@@ -175,7 +175,7 @@ class OpsiBackup:
 
 				logger.notice("%s contains: %s", archive.name, ", ".join(existingData))
 
-	def verify(self, file, **kwargs):  # pylint: disable=unused-argument
+	def verify(self, file, **kwargs):
 		"""
 		Verify a backup.
 
@@ -209,7 +209,7 @@ class OpsiBackup:
 			try:
 				firstCharacter = input(question)
 				return forceUnicode(firstCharacter) in ("y", "Y")
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.error("Error while reading user input: %s", err)
 			return False
 
@@ -268,7 +268,7 @@ If this is `None` information will be read from the current system.
 		force=False,
 		new_server_id=None,
 		**kwargs,
-	):  # pylint: disable=unused-argument,dangerous-default-value,too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+	):
 		if new_server_id:
 			new_server_id = forceHostId(new_server_id)
 
@@ -293,7 +293,7 @@ If this is `None` information will be read from the current system.
 		with self._getArchive(file=file[0], mode="r") as archive:
 			self.verify(archive.name)
 
-			if force or self._verifySysconfig(archive):  # pylint: disable=too-many-nested-blocks
+			if force or self._verifySysconfig(archive):
 				logger.notice("Restoring data from backup archive %s.", archive.name)
 
 				functions = []
@@ -377,7 +377,7 @@ If this is `None` information will be read from the current system.
 					logger.notice("Renaming config server to '%s'", new_server_id)
 					try:
 						from OPSI.Backend.BackendManager import (
-							BackendManager,  # pylint: disable=import-outside-toplevel
+							BackendManager,
 						)
 
 						managerConfig = {
@@ -389,24 +389,24 @@ If this is `None` information will be read from the current system.
 							],
 						}
 						with BackendManager(**managerConfig) as backend:
-							backend.backend_createBase()  # pylint: disable=no-member
+							backend.backend_createBase()
 							configserver = backend.host_getObjects(
 								type="OpsiConfigserver"
-							)  # pylint: disable=no-member
+							)
 							if len(configserver) == 0:
 								depotserver = backend.host_getObjects(
 									type="OpsiDepotserver"
-								)  # pylint: disable=no-member
+								)
 								if len(depotserver) == 1:
 									configserver = depotserver
-							host = backend.host_getObjects(id=new_server_id)  # pylint: disable=no-member
+							host = backend.host_getObjects(id=new_server_id)
 							if not configserver:
 								raise RuntimeError("No config server found in backend")
 							if host and host != configserver:
-								backend.host_deleteObjects(host)  # pylint: disable=no-member
+								backend.host_deleteObjects(host)
 							backend.host_renameOpsiDepotserver(
 								oldId=configserver[0].id, newId=new_server_id
-							)  # pylint: disable=no-member
+							)
 					except Exception as err:
 						raise RuntimeError(
 							f"Failed to rename config server to '{new_server_id}': {err}"
@@ -423,7 +423,7 @@ None if reading the configuration failed.
 	"""
 	try:
 		from OPSI.Backend.BackendManager import (
-			BackendDispatcher,  # pylint: disable=import-outside-toplevel
+			BackendDispatcher,
 		)
 	except ImportError as err:
 		logger.debug("Import failed: %s", err)

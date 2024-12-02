@@ -62,7 +62,7 @@ default. Supply this if ``clientconfig.configserver.url`` or \
 	if backend is None:
 		backendProvided = False
 		backend = bm.BackendManager()
-		backend.backend_createBase()  # pylint: disable=no-member
+		backend.backend_createBase()
 
 	logger.notice("Setting up default values.")
 	create_default_configs(backend, configServer, pathToSMBConf)
@@ -76,12 +76,12 @@ default. Supply this if ``clientconfig.configserver.url`` or \
 		backend.backend_exit()
 
 
-def create_default_configs(  # pylint: disable=too-many-branches,too-many-statements
+def create_default_configs(
 	backend: bm.BackendManager,
 	configServer: OpsiConfigserver = None,
 	pathToSMBConf: str = None,
 ) -> None:
-	configIdents = set(backend.config_getIdents(returnType="unicode"))  # pylint: disable=maybe-no-member
+	configIdents = set(backend.config_getIdents(returnType="unicode"))
 	configs = []
 	config_states = []
 

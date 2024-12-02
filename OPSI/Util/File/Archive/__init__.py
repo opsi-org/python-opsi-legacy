@@ -47,7 +47,7 @@ def is_pigz_available() -> bool:
 		if compareVersions(ver, "<", "2.2.3"):
 			raise RuntimeError("pigz version >= 2.2.3 needed, but {ver} found")
 		return True
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.debug("pigz not available: %s", err)
 	return False
 
@@ -58,7 +58,7 @@ def is_zstd_available() -> bool:
 		ver = System.execute("zstd --version")
 		logger.debug("Detected zstd version: %s", ver)
 		return True
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		logger.debug("zstd not available: %s", err)
 	return False
 
@@ -133,7 +133,7 @@ class BaseArchive:
 							if filesExtracted > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesExtracted)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 					try:
 						chunk = proc.stderr.read()
@@ -143,7 +143,7 @@ class BaseArchive:
 							if filesExtracted > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesExtracted)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						time.sleep(0.001)
 					ret = proc.poll()
 
@@ -205,7 +205,7 @@ class BaseArchive:
 							if filesAdded > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesAdded)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					try:
@@ -216,7 +216,7 @@ class BaseArchive:
 							if filesAdded > 0:
 								if self._progressSubject:
 									self._progressSubject.addToState(filesAdded)
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						time.sleep(0.001)
 
 				proc.stdin.close()
@@ -225,7 +225,7 @@ class BaseArchive:
 					ret = proc.poll()
 					try:
 						chunk = proc.stdout.read()
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 					try:
@@ -234,7 +234,7 @@ class BaseArchive:
 							if self._progressSubject:
 								self._progressSubject.addToState(chunk.count("\n"))
 							error += chunk
-					except Exception:  # pylint: disable=broad-except
+					except Exception:
 						pass
 
 				logger.info("Exit code: %s", ret)
@@ -291,7 +291,7 @@ class TarArchive(BaseArchive):
 			if not os.path.isdir(targetPath):
 				try:
 					os.mkdir(targetPath)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					raise IOError(
 						f"Failed to create target dir '{targetPath}': {err}"
 					) from err
@@ -322,7 +322,7 @@ class TarArchive(BaseArchive):
 								match = True
 								break
 							fileCount += 1
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							raise ValueError(f"Bad pattern '{pattern}': {err}") from err
 
 				if match:
@@ -337,7 +337,7 @@ class TarArchive(BaseArchive):
 				self._filename,
 			)
 			self._extract(command, fileCount)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to extract archive '{self._filename}': {err}"
 			) from err
@@ -371,7 +371,7 @@ class TarArchive(BaseArchive):
 			command += ' > "%s"' % self._filename
 
 			self._create(fileList, baseDir, command)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to create archive '{self._filename}': {err}"
 			) from err
@@ -409,7 +409,7 @@ class CpioArchive(BaseArchive):
 				)
 				if line
 			]
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to get archive content '{self._filename}': {err}"
 			) from err
@@ -421,7 +421,7 @@ class CpioArchive(BaseArchive):
 			if not os.path.isdir(targetPath):
 				try:
 					os.mkdir(targetPath)
-				except Exception as err:  # pylint: disable=broad-except
+				except Exception as err:
 					raise IOError(
 						f"Failed to create target dir '{targetPath}': {err}"
 					) from err
@@ -452,7 +452,7 @@ class CpioArchive(BaseArchive):
 								match = True
 								break
 							fileCount += 1
-						except Exception as err:  # pylint: disable=broad-except
+						except Exception as err:
 							raise ValueError(f"Bad pattern '{pattern}': {err}") from err
 				if match:
 					fileCount += 1
@@ -465,7 +465,7 @@ class CpioArchive(BaseArchive):
 					% (cat, self._filename, System.which("cpio"), include)
 				)
 				self._extract(command, fileCount)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to extract archive '{self._filename}': {err}"
 			) from err
@@ -496,13 +496,13 @@ class CpioArchive(BaseArchive):
 			command += ' > "%s"' % self._filename
 
 			self._create(fileList, baseDir, command)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			raise RuntimeError(
 				f"Failed to create archive '{self._filename}': {err}"
 			) from err
 
 
-def Archive(filename, format=None, compression=None, progressSubject=None):  # pylint: disable=redefined-builtin
+def Archive(filename, format=None, compression=None, progressSubject=None):
 	filename = forceFilename(filename)
 	Class = None
 	if format:

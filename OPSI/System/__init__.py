@@ -38,52 +38,52 @@ else:
 
 
 class SystemHook(SystemSpecificHook):
-	def __init__(self):  # pylint: disable=super-init-not-called
+	def __init__(self):
 		pass
 
-	def pre_getDirectorySize(self, path):  # pylint: disable=no-self-use
+	def pre_getDirectorySize(self, path):
 		return path
 
-	def post_getDirectorySize(self, path, result):  # pylint: disable=no-self-use,unused-argument
+	def post_getDirectorySize(self, path, result):
 		return result
 
-	def error_getDirectorySize(self, path, result, exception):  # pylint: disable=no-self-use
+	def error_getDirectorySize(self, path, result, exception):
 		pass
 
-	def pre_getSize(self, path):  # pylint: disable=no-self-use
+	def pre_getSize(self, path):
 		return path
 
-	def post_getSize(self, path, result):  # pylint: disable=no-self-use,unused-argument
+	def post_getSize(self, path, result):
 		return result
 
-	def error_getSize(self, path, result, exception):  # pylint: disable=no-self-use
+	def error_getSize(self, path, result, exception):
 		pass
 
-	def pre_countFiles(self, path):  # pylint: disable=no-self-use
+	def pre_countFiles(self, path):
 		return path
 
-	def post_countFiles(self, path, result):  # pylint: disable=no-self-use,unused-argument
+	def post_countFiles(self, path, result):
 		return result
 
-	def error_countFiles(self, path, result, exception):  # pylint: disable=no-self-use
+	def error_countFiles(self, path, result, exception):
 		pass
 
-	def pre_getCountAndSize(self, path):  # pylint: disable=no-self-use
+	def pre_getCountAndSize(self, path):
 		return path
 
-	def post_getCountAndSize(self, path, result):  # pylint: disable=no-self-use,unused-argument
+	def post_getCountAndSize(self, path, result):
 		return result
 
-	def error_getCountAndSize(self, path, result, exception):  # pylint: disable=no-self-use
+	def error_getCountAndSize(self, path, result, exception):
 		pass
 
-	def pre_copy(self, src, dst, progressSubject):  # pylint: disable=no-self-use
+	def pre_copy(self, src, dst, progressSubject):
 		return (src, dst, progressSubject)
 
-	def post_copy(self, src, dst, progressSubject):  # pylint: disable=no-self-use,unused-argument
+	def post_copy(self, src, dst, progressSubject):
 		return None
 
-	def error_copy(self, src, dst, progressSubject, exception):  # pylint: disable=no-self-use,unused-argument
+	def error_copy(self, src, dst, progressSubject, exception):
 		pass
 
 
@@ -284,7 +284,7 @@ def _copy(
 	totalFiles=0,
 	totalSize=0,
 	progressSubject=None,
-):  # pylint: disable=too-many-arguments,too-many-branches
+):
 	src = forceFilename(src)
 	dst = forceFilename(dst)
 
@@ -303,7 +303,7 @@ def _copy(
 
 			sizeString = formatFileSize(size)
 			progressSubject.setMessage(
-				"[%s/%s] %s (%s)"  # pylint: disable=consider-using-f-string
+				"[%s/%s] %s (%s)"
 				% (
 					countLenFormat % fileCount,
 					totalFiles,

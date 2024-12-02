@@ -31,11 +31,11 @@ logger = get_logger("opsi.general")
 
 def searchWindowsDrivers(
 	driverDir, auditHardwares, messageSubject=None, srcRepository=None
-):  # pylint: disable=too-many-branches,too-many-statements,too-many-arguments
+):
 	driverDir = forceFilename(driverDir)
 	try:
 		auditHardwares = forceObjectClassList(auditHardwares, AuditHardware)
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		auditHardwares = forceObjectClassList(auditHardwares, AuditHardwareOnHost)
 
 	exists = os.path.exists
@@ -137,7 +137,7 @@ def searchWindowsDrivers(
 	return drivers
 
 
-def integrateWindowsDrivers(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+def integrateWindowsDrivers(
 	driverSourceDirectories,
 	driverDestinationDirectory,
 	messageSubject=None,
@@ -316,7 +316,7 @@ def integrateWindowsHardwareDrivers(
 	driverDestinationDirectory = forceFilename(driverDestinationDirectory)
 	try:
 		auditHardwares = forceObjectClassList(auditHardwares, AuditHardware)
-	except Exception:  # pylint: disable=broad-except
+	except Exception:
 		auditHardwares = forceObjectClassList(auditHardwares, AuditHardwareOnHost)
 
 	drivers = searchWindowsDrivers(
@@ -367,7 +367,7 @@ def integrateWindowsHardwareDrivers(
 
 def integrateWindowsTextmodeDrivers(
 	driverDirectory, destination, devices, sifFile=None, messageSubject=None
-):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+):
 	driverDirectory = forceFilename(driverDirectory)
 	destination = forceFilename(destination)
 	devices = forceList(devices)
@@ -408,7 +408,7 @@ def integrateWindowsTextmodeDrivers(
 				deviceKnown = txtSetupOemFile.isDeviceKnown(
 					vendorId=device.get("vendorId"), deviceId=device.get("deviceId")
 				)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.critical(
 					"Error by integrating TextMode driver, error was: %s", err
 				)
@@ -508,7 +508,7 @@ def integrateWindowsTextmodeDrivers(
 				sif.writelines(lines)
 
 
-def integrateAdditionalWindowsDrivers(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+def integrateAdditionalWindowsDrivers(
 	driverSourceDirectory,
 	driverDestinationDirectory,
 	additionalDrivers,
@@ -553,7 +553,7 @@ def integrateAdditionalWindowsDrivers(  # pylint: disable=too-many-arguments,too
 
 	invalidCharactersRegex = re.compile(r'[<>?":|\\/*]')
 	byAuditIntegrated = False
-	if exists(rulesdir) and "COMPUTER_SYSTEM" in auditInfoByClass:  # pylint: disable=too-many-nested-blocks
+	if exists(rulesdir) and "COMPUTER_SYSTEM" in auditInfoByClass:
 		logger.info(
 			"Checking if automated integrating of additional drivers are possible"
 		)
@@ -616,7 +616,7 @@ def integrateAdditionalWindowsDrivers(  # pylint: disable=too-many-arguments,too
 						byAuditIntegrated = True
 					break
 
-	if not byAuditIntegrated and exists(rulesdir) and "BASE_BOARD" in auditInfoByClass:  # pylint: disable=too-many-nested-blocks
+	if not byAuditIntegrated and exists(rulesdir) and "BASE_BOARD" in auditInfoByClass:
 		logger.info(
 			"Checking if mainboard-fallback for automated integrating of additional drivers are possible"
 		)
@@ -695,7 +695,7 @@ def integrateAdditionalWindowsDrivers(  # pylint: disable=too-many-arguments,too
 					if entry.lower() == "txtsetup.oem":
 						additionalDriverDir = parentDir
 						break
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				logger.debug(err)
 
 			if additionalDriverDir in driverDirectories:

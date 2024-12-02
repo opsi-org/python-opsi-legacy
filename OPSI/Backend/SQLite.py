@@ -67,13 +67,13 @@ class SQLite(SQL):
 			)
 			self.delete_db()
 			self.init_connection()
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.error("Problem connecting to SQLite database: %s, recreating", err)
 			self.delete_db()
 			self.init_connection()
 
 	@staticmethod
-	def on_engine_connect(conn, branch) -> None:  # pylint: disable=unused-argument
+	def on_engine_connect(conn, branch) -> None:
 		# conn.execute('PRAGMA synchronous=OFF')
 		# conn.execute('PRAGMA temp_store=MEMORY')
 		# conn.execute('PRAGMA cache_size=5000')
@@ -85,15 +85,15 @@ class SQLite(SQL):
 		logger.info("Connecting to %s", uri)
 
 		self.engine = create_engine(uri, encoding=self._databaseCharset)
-		self.engine._should_log_info = lambda: self.log_queries  # pylint: disable=protected-access
+		self.engine._should_log_info = lambda: self.log_queries
 
 		listen(self.engine, "engine_connect", self.on_engine_connect)
 
 		self.session_factory = sessionmaker(
 			bind=self.engine, autocommit=False, autoflush=False
 		)
-		self.Session = scoped_session(self.session_factory)  # pylint: disable=invalid-name
-		# self.Session = self.session_factory  # pylint: disable=invalid-name
+		self.Session = scoped_session(self.session_factory)
+		# self.Session = self.session_factory
 
 		# Test connection
 		with self.session() as session:
@@ -163,7 +163,7 @@ class SQLiteBackend(SQLBackend):
 			self._sql.connect()
 			return SQLBackend.backend_createBase(self)
 
-	def _createAuditHardwareTables(self) -> str:  # pylint: disable=too-many-statements
+	def _createAuditHardwareTables(self) -> str:
 		"""
 		Creating tables for hardware audit data.
 
@@ -186,8 +186,8 @@ class SQLiteBackend(SQLBackend):
 					return " ;\n"
 				return f"\n) {self._sql.getTableCreationOptions(tableName)};\n"
 
-			def getSQLStatements() -> Generator[str, None, None]:  # pylint: disable=too-many-branches,too-many-statements
-				for hwClass, values in self._auditHardwareConfig.items():  # pylint: disable=too-many-nested-blocks
+			def getSQLStatements() -> Generator[str, None, None]:
+				for hwClass, values in self._auditHardwareConfig.items():
 					logger.debug("Processing hardware class '%s'", hwClass)
 					hardwareDeviceTableName = f"HARDWARE_DEVICE_{hwClass}"
 					hardwareConfigTableName = f"HARDWARE_CONFIG_{hwClass}"

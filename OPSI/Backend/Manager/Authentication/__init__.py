@@ -24,16 +24,16 @@ class AuthenticationModule:
 	def get_instance(self):
 		return self.__class__()
 
-	def authenticate(self, username: str, password: str) -> None:  # pylint: disable=no-self-use
+	def authenticate(self, username: str, password: str) -> None:
 		raise BackendAuthenticationError("Not implemented")
 
-	def get_groupnames(self, username: str) -> Set[str]:  # pylint: disable=unused-argument,no-self-use
+	def get_groupnames(self, username: str) -> Set[str]:
 		return set()
 
-	def get_admin_groupname(self) -> str:  # pylint: disable=no-self-use
+	def get_admin_groupname(self) -> str:
 		return OPSI_ADMIN_GROUP
 
-	def get_read_only_groupnames(self) -> Set[str]:  # pylint: disable=no-self-use
+	def get_read_only_groupnames(self) -> Set[str]:
 		return set(OpsiConfFile().getOpsiGroups("readonly") or [])
 
 	def user_is_admin(self, username: str) -> bool:

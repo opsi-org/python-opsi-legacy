@@ -104,9 +104,9 @@ on to. Defaults to ``logger.error``.
 	backend = MySQLBackend(**config)
 	try:
 		backend.backend_createBase()
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		if err.args[0] == INVALID_DEFAULT_VALUE:
-			errorFunction(  # pylint: disable=logging-fstring-interpolation
+			errorFunction(
 				f"It seems you have the MySQL strict mode enabled. Please read the opsi handbook.\n{err}"
 			)
 		raise err
@@ -142,7 +142,7 @@ def initializeDatabase(
 		try:
 			with closing(MySQLdb.connect(**conConfig)) as db:
 				yield db
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			if config["address"] == "127.0.0.1":
 				logger.info(
 					"Failed to connect with tcp/ip (%s), retrying with socket", err
@@ -151,7 +151,7 @@ def initializeDatabase(
 					conConfig["host"] = "localhost"
 					with closing(MySQLdb.connect(**conConfig)) as db:
 						yield db
-				except Exception as error:  # pylint: disable=broad-except
+				except Exception as error:
 					raise DatabaseConnectionFailedException(error) from error
 			else:
 				raise DatabaseConnectionFailedException(err) from err
@@ -165,13 +165,13 @@ def initializeDatabase(
 			db.query(
 				f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED WITH mysql_native_password BY '{config['password']}'"
 			)
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			logger.debug(err)
 			try:
 				db.query(
 					f"ALTER USER '{config['username']}'@'{host}' IDENTIFIED BY '{config['password']}'"
 				)
-			except Exception as error:  # pylint: disable=broad-except
+			except Exception as error:
 				logger.debug(error)
 				db.query(
 					f"SET PASSWORD FOR'{config['username']}'@'{host}' = PASSWORD('{config['password']}')"
@@ -189,7 +189,7 @@ def initializeDatabase(
 		errorFunction = logger.error
 
 	if systemConfig is None:
-		systemConfig = backendUtils._getSysConfig()  # pylint: disable=protected-access
+		systemConfig = backendUtils._getSysConfig()
 
 	# Connect to database host
 	notificationFunction(
@@ -250,7 +250,7 @@ def initializeDatabase(
 	try:
 		with closing(MySQLdb.connect(**userConnectionSettings)):
 			pass
-	except Exception as err:  # pylint: disable=broad-except
+	except Exception as err:
 		raise DatabaseConnectionFailedException(err) from err
 
 	notificationFunction(

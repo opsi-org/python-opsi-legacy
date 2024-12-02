@@ -42,7 +42,7 @@ def retry_on_deadlock(func: Callable) -> Callable:
 			trynum += 1
 			try:
 				return func(*args, **kwargs)
-			except Exception as err:  # pylint: disable=broad-except
+			except Exception as err:
 				if trynum >= 10 or "deadlock" not in str(err).lower():
 					raise
 				time.sleep(0.1)
@@ -50,7 +50,7 @@ def retry_on_deadlock(func: Callable) -> Callable:
 	return wrapper
 
 
-class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
+class MySQL(SQL):
 	"""Class handling basic MySQL functionality."""
 
 	AUTOINCREMENT = "AUTO_INCREMENT"
@@ -99,7 +99,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 
 		try:
 			self.init_connection()
-		except Exception as err:  # pylint: disable=broad-except
+		except Exception as err:
 			if self._address != "localhost":
 				raise
 			logger.info("Failed to connect to socket (%s), retrying with tcp/ip", err)
@@ -107,7 +107,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 			self.init_connection()
 
 	@staticmethod
-	def on_engine_connect(conn, branch) -> None:  # pylint: disable=unused-argument
+	def on_engine_connect(conn, branch) -> None:
 		conn.execute("""
 			SET SESSION sql_mode=(SELECT
 				REPLACE(
@@ -155,14 +155,14 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 			max_overflow=self._connectionPoolMaxOverflow,
 			pool_recycle=self._connectionPoolRecyclingSeconds,
 		)
-		self.engine._should_log_info = lambda: self.log_queries  # pylint: disable=protected-access
+		self.engine._should_log_info = lambda: self.log_queries
 
 		listen(self.engine, "engine_connect", self.on_engine_connect)
 
 		self.session_factory = sessionmaker(
 			bind=self.engine, autocommit=False, autoflush=False
 		)
-		self.Session = scoped_session(self.session_factory)  # pylint: disable=invalid-name
+		self.Session = scoped_session(self.session_factory)
 
 		# Test connection
 		with self.session() as session:
@@ -197,7 +197,7 @@ class MySQL(SQL):  # pylint: disable=too-many-instance-attributes
 		where: str,
 		valueHash: Any,
 		updateWhereNone: bool = False,
-	) -> Any:  # pylint: disable=too-many-arguments
+	) -> Any:
 		return super().update(session, table, where, valueHash, updateWhereNone)
 
 	@retry_on_deadlock
@@ -330,7 +330,7 @@ class MySQLBackend(SQLBackend):
 			)
 
 	# Overwriting product_getObjects to use JOIN for speedup
-	def product_getObjects(self, attributes: List = None, **filter) -> list[Product]:  # pylint: disable=redefined-builtin,dangerous-default-value
+	def product_getObjects(self, attributes: List = None, **filter) -> list[Product]:
 		attributes = attributes or []
 		ConfigDataBackend.product_getObjects(self, attributes=[], **filter)
 		logger.info("Getting products, filter: %s", filter)
@@ -377,7 +377,7 @@ class MySQLBackend(SQLBackend):
 	# Overwriting productProperty_getObjects to use JOIN for speedup
 	def productProperty_getObjects(
 		self, attributes: List = None, **filter
-	) -> list[ProductProperty]:  # pylint: disable=redefined-builtin
+	) -> list[ProductProperty]:
 		attributes = attributes or []
 		ConfigDataBackend.productProperty_getObjects(self, attributes=[], **filter)
 		logger.info("Getting product properties, filter: %s", filter)
