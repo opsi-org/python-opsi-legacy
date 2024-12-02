@@ -7,7 +7,7 @@ OPSI Exceptions.
 Deprecated, use opsicommon.exceptions instead.
 """
 
-from opsicommon.exceptions import *
+from opsicommon.exceptions import *  # noqa: F403
 
 
 class CommandNotFoundException(RuntimeError):

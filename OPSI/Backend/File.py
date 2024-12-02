@@ -27,7 +27,7 @@ from OPSI.Exceptions import (
 	BackendMissingDataError,
 	BackendUnaccomplishableError,
 )
-from OPSI.Object import *  # needed for calls to "eval"
+from OPSI.Object import *  # needed for calls to "eval"  # noqa: F403
 from OPSI.Types import (
 	forceBool,
 	forceFilename,

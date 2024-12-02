@@ -20,7 +20,7 @@ from .test_util_wim import (
 )
 
 
-def test_update_wim(backendManager, fakeWimPath):
+def test_update_wim(backendManager, fakeWimPath):  # noqa: F811
 	backend = backendManager
 	localFqdn = getLocalFQDN()
 	if "[mysql]" in os.environ["PYTEST_CURRENT_TEST"]:

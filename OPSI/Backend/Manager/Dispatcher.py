@@ -27,7 +27,7 @@ from OPSI.Backend.Base.Extended import (
 )
 from OPSI.Backend.JSONRPC import JSONRPCBackend
 from OPSI.Exceptions import BackendConfigurationError
-from OPSI.Object import *  # This is needed for dynamic loading
+from OPSI.Object import *  # This is needed for dynamic loading  # noqa: F403
 from OPSI.Types import forceList
 from OPSI.Util.File.Opsi import BackendDispatchConfigFile
 

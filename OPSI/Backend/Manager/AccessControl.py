@@ -36,7 +36,7 @@ from OPSI.Exceptions import (
 	BackendPermissionDeniedError,
 	BackendUnaccomplishableError,
 )
-from OPSI.Object import *  # This is needed for dynamic loading
+from OPSI.Object import *  # This is needed for dynamic loading  # noqa: F403
 from OPSI.Types import forceBool, forceList, forceUnicodeList, forceUnicodeLowerList
 from OPSI.Util.File.Opsi import BackendACLFile, OpsiConfFile
 

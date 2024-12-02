@@ -30,7 +30,7 @@ from signal import SIGKILL
 
 import psutil
 from opsicommon.logging import LOG_NONE, get_logger, logging_config
-from opsicommon.objects import *
+from opsicommon.objects import *  # noqa: F403
 from opsicommon.system.subprocess import (
 	get_subprocess_environment as opsicommon_get_subprocess_environment,
 )

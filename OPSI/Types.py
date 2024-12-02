@@ -10,4 +10,4 @@ on an object.
 Deprecated, use opsicommon.types instead.
 """
 
-from opsicommon.types import *
+from opsicommon.types import *  # noqa: F403

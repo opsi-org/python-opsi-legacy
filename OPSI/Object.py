@@ -12,7 +12,7 @@ Deprecated, use opsicommon.objects instead.
 
 from typing import Any
 
-from opsicommon.objects import *
+from opsicommon.objects import *  # noqa: F403
 
 mandatoryConstructorArgs = mandatory_constructor_args
 getIdentAttributes = get_ident_attributes

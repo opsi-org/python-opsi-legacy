@@ -13,7 +13,7 @@ from opsicommon.logging import get_logger
 from OPSI.Backend.Base import Backend, ExtendedConfigDataBackend
 
 # Wildcard import is necessary for eval-statement
-from OPSI.Object import *
+from OPSI.Object import *  # noqa: F403
 from OPSI.Types import forceBool, forceHostId, forceList
 from OPSI.Util.Message import ProgressSubject
 

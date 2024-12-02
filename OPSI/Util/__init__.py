@@ -53,7 +53,7 @@ from opsicommon.types import (  # noqa: F401
 from opsicommon.utils import (
 	Singleton,
 	compare_versions,
-	monkeypatch_subprocess_for_frozen,
+	monkeypatch_subprocess_for_frozen,  # noqa: F401
 )
 from opsicommon.utils import generate_opsi_host_key as generateOpsiHostKey
 from opsicommon.utils import timestamp as oc_timestamp
@@ -115,7 +115,7 @@ class PickleString(str):
 		return base64.standard_b64encode(self)
 
 	def __setstate__(self, state):
-		self = base64.standard_b64decode(state)
+		self = base64.standard_b64decode(state)  # noqa: F841
 
 
 def formatFileSize(sizeInBytes, base: int = 2):

@@ -21,10 +21,10 @@ from opsicommon.logging import get_logger
 from OPSI.Backend.Base import ExtendedBackend
 from OPSI.Backend.Base.Extended import get_function_signature_and_args
 from OPSI.Backend.Manager.AccessControl import BackendAccessControl
-from OPSI.Exceptions import *  # This is needed for dynamic extension loading
+from OPSI.Exceptions import *  # This is needed for dynamic extension loading  # noqa: F403
 from OPSI.Exceptions import BackendConfigurationError
-from OPSI.Object import *  # This is needed for dynamic extension loading
-from OPSI.Types import *  # This is needed for dynamic extension loading
+from OPSI.Object import *  # This is needed for dynamic extension loading  # noqa: F403
+from OPSI.Types import *  # This is needed for dynamic extension loading  # noqa: F403
 
 from .Dispatcher import BackendDispatcher
 
