@@ -12,6 +12,7 @@ import re
 import socket
 import subprocess
 import tempfile
+from pathlib import Path
 
 import psutil
 from opsicommon.logging import get_logger
@@ -262,6 +263,23 @@ def is_mounted(devOrMountpoint):
 Posix.is_mounted = is_mounted
 
 
+def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
+	config_file = Path("/root/.config/rclone/rclone.conf")
+	config_file.parent.mkdir(parents=True, exist_ok=True)
+	config_file.write_text(
+		f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\n",
+		encoding="utf-8",
+	)
+
+	execute(f"rclone config password opsi_depot pass {options['password']}")
+	if options.get("ca_cert_file"):
+		execute(
+			f"rclone mount --daemon --ca-cert={options['ca_cert_file']} opsi_depot:. {mountpoint}"
+		)
+	else:
+		execute(f"rclone mount opsi_depot:. {mountpoint}")
+
+
 def mount(dev, mountpoint, **options):
 	dev = forceUnicode(dev)
 	mountpoint = forceFilename(mountpoint)
@@ -323,11 +341,14 @@ def mount(dev, mountpoint, **options):
 			dev = f"http{match.group(2)}{match.group(3)}"
 		else:
 			raise ValueError(f"Bad webdav url '{dev}'")
-
 		if "username" not in options:
 			options["username"] = ""
 		if "password" not in options:
 			options["password"] = ""
+
+		if which("rclone"):
+			rclone_mount(dev, mountpoint, options)
+			return
 
 		with tempfile.NamedTemporaryFile(
 			mode="w", delete=False, encoding="utf-8"
