@@ -264,7 +264,7 @@ Posix.is_mounted = is_mounted
 
 
 def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
-	config_file = Path("/root/.config/rclone/rclone.conf")
+	config_file = Path.home() / ".config/rclone/rclone.conf"
 	config_file.parent.mkdir(parents=True, exist_ok=True)
 	config_file.write_text(
 		f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\n",
