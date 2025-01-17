@@ -264,20 +264,21 @@ Posix.is_mounted = is_mounted
 
 
 def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
-	config_file = Path.home() / ".config/rclone/rclone.conf"
-	config_file.parent.mkdir(parents=True, exist_ok=True)
-	config_file.write_text(
-		f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\n",
-		encoding="utf-8",
-	)
-
-	execute(f"rclone config password opsi_depot pass {options['password']}")
-	if options.get("ca_cert_file"):
-		execute(
-			f"rclone mount --daemon --ca-cert={options['ca_cert_file']} opsi_depot:. {mountpoint}"
+	with tempfile.TemporaryDirectory() as config_dir:
+		config_file = Path(config_dir) / "rclone.conf"
+		config_file.write_text(
+			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\n",
+			encoding="utf-8",
 		)
-	else:
-		execute(f"rclone mount opsi_depot:. {mountpoint}")
+		rclone = f"{which('rclone')} --config={config_file.absolute()}"
+
+		execute(f"{rclone} config password opsi_depot pass {options['password']}")
+		if options.get("ca_cert_file"):
+			execute(
+				f"{rclone} mount --daemon --ca-cert={options['ca_cert_file']} opsi_depot:. {mountpoint}"
+			)
+		else:
+			execute(f"{rclone} mount opsi_depot:. {mountpoint}")
 
 
 def mount(dev, mountpoint, **options):
