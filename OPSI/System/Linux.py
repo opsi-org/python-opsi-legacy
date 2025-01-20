@@ -9,6 +9,7 @@ Linux specific system functions
 import codecs
 import os
 import re
+import shlex
 import socket
 import subprocess
 import tempfile
@@ -267,18 +268,22 @@ def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 	with tempfile.TemporaryDirectory() as config_dir:
 		config_file = Path(config_dir) / "rclone.conf"
 		config_file.write_text(
-			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\n",
+			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\npass = {options['password']}\n",
 			encoding="utf-8",
 		)
-		rclone = f"{which('rclone')} --config={config_file.absolute()}"
-
-		execute(f"{rclone} config password opsi_depot pass {options['password']}")
+		rclone_cmd = [
+			which("rclone"),
+			"mount",
+			"--config",
+			str(config_file.absolute()),
+			"--daemon",
+			"--vfs-cache-mode",
+			"writes",
+		]
 		if options.get("ca_cert_file"):
-			execute(
-				f"{rclone} mount --daemon --ca-cert={options['ca_cert_file']} opsi_depot:. {mountpoint}"
-			)
-		else:
-			execute(f"{rclone} mount opsi_depot:. {mountpoint}")
+			rclone_cmd.extend(["--ca-cert", options["ca_cert_file"]])
+		rclone_cmd.extend(["opsi_depot:.", mountpoint])
+		execute(shlex.join(rclone_cmd))
 
 
 def mount(dev, mountpoint, **options):
