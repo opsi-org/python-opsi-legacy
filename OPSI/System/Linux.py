@@ -9,9 +9,11 @@ Linux specific system functions
 import codecs
 import os
 import re
+import shlex
 import socket
 import subprocess
 import tempfile
+from pathlib import Path
 
 import psutil
 from opsicommon.logging import get_logger
@@ -262,6 +264,28 @@ def is_mounted(devOrMountpoint):
 Posix.is_mounted = is_mounted
 
 
+def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
+	with tempfile.TemporaryDirectory() as config_dir:
+		config_file = Path(config_dir) / "rclone.conf"
+		config_file.write_text(
+			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\npass = {options['password']}\n",
+			encoding="utf-8",
+		)
+		rclone_cmd = [
+			which("rclone"),
+			"mount",
+			"--config",
+			str(config_file.absolute()),
+			"--daemon",
+			"--vfs-cache-mode",
+			"writes",
+		]
+		if options.get("ca_cert_file"):
+			rclone_cmd.extend(["--ca-cert", options["ca_cert_file"]])
+		rclone_cmd.extend(["opsi_depot:.", mountpoint])
+		execute(shlex.join(rclone_cmd))
+
+
 def mount(dev, mountpoint, **options):
 	dev = forceUnicode(dev)
 	mountpoint = forceFilename(mountpoint)
@@ -323,11 +347,14 @@ def mount(dev, mountpoint, **options):
 			dev = f"http{match.group(2)}{match.group(3)}"
 		else:
 			raise ValueError(f"Bad webdav url '{dev}'")
-
 		if "username" not in options:
 			options["username"] = ""
 		if "password" not in options:
 			options["password"] = ""
+
+		if which("rclone"):
+			rclone_mount(dev, mountpoint, options)
+			return
 
 		with tempfile.NamedTemporaryFile(
 			mode="w", delete=False, encoding="utf-8"

@@ -33,7 +33,7 @@ lint-and-test:
     apt-get update
     apt-get --yes install default-libmysqlclient-dev librsync1
     poetry env use 3.13
-    poetry lock --no-update
+    poetry lock
     poetry install
     poetry run ruff check OPSI tests
     poetry add mysqlclient==2.1.1
@@ -60,7 +60,7 @@ apidoc:
     - ssh-add <(echo "$BLOG_PUBLISH_PRIVATE_KEY")
   script:
     - poetry env use 3.13
-    - poetry lock --no-update
+    - poetry lock
     - poetry install
     - poetry run opsi-dev-cli apidoc makehtml --output python-opsi
     - ssh -o StrictHostKeyChecking=no "root@docker1.ext.uib.gmbh" "mkdir -p /var/lib/docker/volumes/docs_nginx_data/_data/python-docs"
@@ -71,7 +71,7 @@ uibpypi:
   stage: publish
   script:
     - poetry env use 3.13
-    - poetry lock --no-update
+    - poetry lock
     - poetry install
     - poetry run opsi-dev-tool -l info --uib-pypi-publish
   only:
