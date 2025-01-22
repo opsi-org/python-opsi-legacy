@@ -264,10 +264,15 @@ Posix.is_mounted = is_mounted
 
 
 def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
+	password = execute(
+		f"{which('rclone')} obscure -",
+		stdin_data=options["password"].encode("utf-8") + "\n".encode("utf-8"),
+		shell=True,
+	)
 	with tempfile.TemporaryDirectory() as config_dir:
 		config_file = Path(config_dir) / "rclone.conf"
 		config_file.write_text(
-			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\npass = {options['password']}\n",
+			f"[opsi_depot]\ntype = webdav\nurl = {dev}\nvendor = other\nuser = {options['username']}\npass = {password[0]}\n",
 			encoding="utf-8",
 		)
 		rclone_cmd = [
