@@ -9,7 +9,6 @@ Linux specific system functions
 import codecs
 import os
 import re
-import shlex
 import socket
 import subprocess
 import tempfile
@@ -282,8 +281,8 @@ def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 		]
 		if options.get("ca_cert_file"):
 			rclone_cmd.extend(["--ca-cert", options["ca_cert_file"]])
-		rclone_cmd.extend(["opsi_depot:.", mountpoint])
-		execute(shlex.join(rclone_cmd))
+		rclone_cmd.extend(["opsi_depot:", mountpoint])
+		execute(rclone_cmd, shell=False)
 
 
 def mount(dev, mountpoint, **options):
