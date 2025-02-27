@@ -265,7 +265,7 @@ Posix.is_mounted = is_mounted
 
 def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 	password = execute(
-		f"{which('rclone')} obscure -",
+		f"{which('opsi-rclone')} obscure -",
 		stdin_data=options["password"].encode("utf-8") + "\n".encode("utf-8"),
 		shell=True,
 	)
@@ -276,7 +276,7 @@ def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 			encoding="utf-8",
 		)
 		rclone_cmd = [
-			which("rclone"),
+			which("opsi-rclone"),
 			"mount",
 			"--config",
 			str(config_file.absolute()),
