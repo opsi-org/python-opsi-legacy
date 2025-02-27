@@ -356,7 +356,7 @@ def mount(dev, mountpoint, **options):
 		if "password" not in options:
 			options["password"] = ""
 
-		if which("rclone"):
+		if which("opsi-rclone"):
 			rclone_mount(dev, mountpoint, options)
 			return
 
