@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "poetry>=0.12",]
+requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry]
@@ -8,9 +8,9 @@ version = "4.3.8.2"
 description = "The opsi python library"
 homepage = "https://www.opsi.org"
 license = "AGPL-3.0"
-maintainers = [ "uib GmbH <info@uib.de>",]
-authors = [ "uib GmbH <info@uib.de>",]
-include = [ "python-opsi_data/**/*",]
+maintainers = ["uib GmbH <info@uib.de>"]
+authors = ["uib GmbH <info@uib.de>"]
+include = ["python-opsi_data/**/*"]
 [[tool.poetry.packages]]
 include = "OPSI"
 
@@ -31,7 +31,7 @@ ldap3 = ">=2.9"
 lz4 = ">=4.0"
 msgpack = ">=1.0"
 packaging = ">=24.1"
-pefile = ">=2024.8"
+pefile = ">=2022.5"
 pexpect = ">=4.8"
 psutil = ">=6.0"
 pyasn1 = ">=0.6"
@@ -50,7 +50,7 @@ typing-extensions = ">=4.12"
 indent-style = "tab"
 
 [tool.ruff.lint]
-ignore = [ "F405",]
+ignore = ["F405"]
 
 [tool.poetry.dependencies.distro]
 platform = "linux"
