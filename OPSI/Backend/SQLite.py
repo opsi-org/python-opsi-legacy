@@ -105,7 +105,7 @@ class SQLite(SQL):
 			os.remove(self._database)
 
 	def getTables(
-		self, session: scoped_session, allow_cached: bool = False
+		self, session: scoped_session | None = None, allow_cached: bool = False
 	) -> dict[str, Any]:
 		"""
 		Get what tables are present in the database.
@@ -117,6 +117,10 @@ class SQLite(SQL):
 		"""
 		if self._tables and allow_cached:
 			return self._tables
+		if not session:
+			raise RuntimeError(
+				"Session required to get tables, if allow_cached is False"
+			)
 		self._tables = {}
 		logger.trace("Current tables:")
 		for i in self.getSet(

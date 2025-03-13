@@ -238,7 +238,7 @@ class SQL:
 		result = session.execute(query)
 		return result.rowcount
 
-	def getTables(self, session: Any, allow_cached: bool = False) -> Dict:
+	def getTables(self, session: Any = None, allow_cached: bool = False) -> Dict:
 		self._tables = {}
 		return {}
 
