@@ -1095,6 +1095,7 @@ class SQLBackend(ConfigDataBackend):
 						`windowsDisplayVersion` varchar(100),
 						`type` varchar(30) NOT NULL,
 						`installSize` BIGINT,
+						`isOperatingSystem` bool,
 						PRIMARY KEY (`name`, `version`, `subVersion`, `language`, `architecture`)
 					) {self._sql.getTableCreationOptions("SOFTWARE")};
 					"""
