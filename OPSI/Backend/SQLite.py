@@ -21,11 +21,9 @@ from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.event import listen  # noqa: E402
 from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
 
-from OPSI.Backend.SQL import (  # noqa: E402
-	SQL,
-	SQLBackend,
-	SQLBackendObjectModificationTracker,
-)
+from OPSI.Backend.SQL import SQL  # noqa: E402
+from OPSI.Backend.SQL import SQLBackend  # noqa: E402
+from OPSI.Backend.SQL import SQLBackendObjectModificationTracker  # noqa: E402
 from OPSI.Types import forceFilename  # noqa: E402
 
 __all__ = ("SQLite", "SQLiteBackend", "SQLiteObjectBackendModificationTracker")
@@ -93,9 +91,7 @@ class SQLite(SQL):
 			bind=self.engine, autocommit=False, autoflush=False
 		)
 		self.Session = scoped_session(self.session_factory)
-		# self.Session = self.session_factory
-
-		# Test connection
+		# Test connection and get tables
 		with self.session() as session:
 			self.getTables(session)
 		logger.debug("SQLite connected: %s", self)
@@ -108,7 +104,9 @@ class SQLite(SQL):
 		if os.path.exists(self._database):
 			os.remove(self._database)
 
-	def getTables(self, session: scoped_session) -> dict[str, Any]:
+	def getTables(
+		self, session: scoped_session, allow_cached: bool = False
+	) -> dict[str, Any]:
 		"""
 		Get what tables are present in the database.
 
@@ -117,7 +115,9 @@ class SQLite(SQL):
 		:returns: A dict with the tablename as key and the field names as value.
 		:rtype: dict
 		"""
-		tables = {}
+		if self._tables and allow_cached:
+			return self._tables
+		self._tables = {}
 		logger.trace("Current tables:")
 		for i in self.getSet(
 			session, 'SELECT name FROM sqlite_master WHERE type = "table";'
@@ -128,10 +128,10 @@ class SQLite(SQL):
 				j["name"]
 				for j in self.getSet(session, f"PRAGMA table_info(`{tableName}`);")
 			]
-			tables[tableName] = fields
+			self._tables[tableName] = fields
 			logger.trace("Fields in %s: %s", tableName, fields)
 
-		return tables
+		return self._tables
 
 	def getTableCreationOptions(self, table: Any) -> str:
 		return ""

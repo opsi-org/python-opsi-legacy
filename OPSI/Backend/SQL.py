@@ -102,7 +102,7 @@ def createSchemaVersionTable(database: Any, session: Any) -> None:
 		`updateStarted` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		`updateEnded` TIMESTAMP NULL DEFAULT NULL,
 		PRIMARY KEY (`version`)
-	) {database.getTableCreationOptions('OPSI_SCHEMA')};
+	) {database.getTableCreationOptions("OPSI_SCHEMA")};
 	"""
 	logger.debug(table)
 	database.execute(session, table)
@@ -125,6 +125,7 @@ class SQL:
 		self.session_factory = None
 		self.engine = None
 		self.log_queries = False
+		self._tables = {}
 		# Parse arguments
 		for option, value in kwargs.items():
 			option = option.lower()
@@ -237,7 +238,8 @@ class SQL:
 		result = session.execute(query)
 		return result.rowcount
 
-	def getTables(self, session: Any) -> Dict:
+	def getTables(self, session: Any, allow_cached: bool = False) -> Dict:
+		self._tables = {}
 		return {}
 
 	def getTableCreationOptions(self, table: str) -> str:
@@ -284,7 +286,7 @@ class SQLBackendObjectModificationTracker(BackendModificationListener):
 						`ident` varchar(1024) NOT NULL,
 						`date` TIMESTAMP,
 						PRIMARY KEY (`id`)
-					) {self._sql.getTableCreationOptions('OBJECT_MODIFICATION_TRACKER')};
+					) {self._sql.getTableCreationOptions("OBJECT_MODIFICATION_TRACKER")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -549,6 +551,14 @@ class SQLBackend(ConfigDataBackend):
 				del _hash["actionSequence"]
 			except KeyError:
 				pass  # not there - can be
+		elif object.getType() == "AuditSoftware":
+			fields = self._sql.getTables(allow_cached=True).get("SOFTWARE", [])
+			if (
+				fields
+				and "isOperatingSystem" not in fields
+				and "isOperatingSystem" in _hash
+			):
+				del _hash["isOperatingSystem"]
 
 		if issubclass(object.__class__, Product):
 			try:
@@ -691,7 +701,7 @@ class SQLBackend(ConfigDataBackend):
 						`multiValue` bool NOT NULL,
 						`editable` bool NOT NULL,
 						PRIMARY KEY (`configId`)
-					) {self._sql.getTableCreationOptions('CONFIG')};
+					) {self._sql.getTableCreationOptions("CONFIG")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -708,7 +718,7 @@ class SQLBackend(ConfigDataBackend):
 						`isDefault` bool,
 						PRIMARY KEY (`config_value_id`),
 						FOREIGN KEY (`configId`) REFERENCES `CONFIG` (`configId`)
-					) {self._sql.getTableCreationOptions('CONFIG_VALUE')};
+					) {self._sql.getTableCreationOptions("CONFIG_VALUE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -721,7 +731,7 @@ class SQLBackend(ConfigDataBackend):
 						`objectId` varchar(255) NOT NULL,
 						`values` text,
 						PRIMARY KEY (`config_state_id`)
-					) {self._sql.getTableCreationOptions('CONFIG_STATE')};
+					) {self._sql.getTableCreationOptions("CONFIG_STATE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -756,7 +766,7 @@ class SQLBackend(ConfigDataBackend):
 						`pxeConfigTemplate` varchar(50),
 						`changelog` TEXT,
 						PRIMARY KEY (`productId`, `productVersion`, `packageVersion`)
-					) {self._sql.getTableCreationOptions('PRODUCT')};
+					) {self._sql.getTableCreationOptions("PRODUCT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -775,7 +785,7 @@ class SQLBackend(ConfigDataBackend):
 						`windowsSoftwareId` VARCHAR(100) NOT NULL,
 						`productId` varchar(255) NOT NULL,
 						PRIMARY KEY (`windowsSoftwareId`, `productId`)
-					) {self._sql.getTableCreationOptions('WINDOWS_SOFTWARE_ID_TO_PRODUCT')};
+					) {self._sql.getTableCreationOptions("WINDOWS_SOFTWARE_ID_TO_PRODUCT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -796,7 +806,7 @@ class SQLBackend(ConfigDataBackend):
 						PRIMARY KEY (`productId`, `depotId`),
 						FOREIGN KEY (`productId`, `productVersion`, `packageVersion` ) REFERENCES `PRODUCT` (`productId`, `productVersion`, `packageVersion`),
 						FOREIGN KEY (`depotId`) REFERENCES `HOST` (`hostId`)
-					) {self._sql.getTableCreationOptions('PRODUCT_ON_DEPOT')};
+					) {self._sql.getTableCreationOptions("PRODUCT_ON_DEPOT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -818,7 +828,7 @@ class SQLBackend(ConfigDataBackend):
 						`editable` bool NOT NULL,
 						PRIMARY KEY (`productId`, `productVersion`, `packageVersion`, `propertyId`),
 						FOREIGN KEY (`productId`, `productVersion`, `packageVersion`) REFERENCES `PRODUCT` (`productId`, `productVersion`, `packageVersion`)
-					) {self._sql.getTableCreationOptions('PRODUCT_PROPERTY')};
+					) {self._sql.getTableCreationOptions("PRODUCT_PROPERTY")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -840,7 +850,7 @@ class SQLBackend(ConfigDataBackend):
 						PRIMARY KEY (`product_property_id`),
 						FOREIGN KEY (`productId`, `productVersion`, `packageVersion`, `propertyId`)
 							REFERENCES `PRODUCT_PROPERTY` (`productId`, `productVersion`, `packageVersion`, `propertyId`)
-					) {self._sql.getTableCreationOptions('PRODUCT_PROPERTY_VALUE')};
+					) {self._sql.getTableCreationOptions("PRODUCT_PROPERTY_VALUE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -865,7 +875,7 @@ class SQLBackend(ConfigDataBackend):
 						`requirementType` varchar(16),
 						PRIMARY KEY (`productId`, `productVersion`, `packageVersion`, `productAction`, `requiredProductId`),
 						FOREIGN KEY (`productId`, `productVersion`, `packageVersion`) REFERENCES `PRODUCT` (`productId`, `productVersion`, `packageVersion`)
-					) {self._sql.getTableCreationOptions('PRODUCT_DEPENDENCY')};
+					) {self._sql.getTableCreationOptions("PRODUCT_DEPENDENCY")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -888,7 +898,7 @@ class SQLBackend(ConfigDataBackend):
 						`modificationTime` TIMESTAMP,
 						PRIMARY KEY (`productId`, `clientId`),
 						FOREIGN KEY (`clientId`) REFERENCES `HOST` (`hostId`)
-					) {self._sql.getTableCreationOptions('PRODUCT_ON_CLIENT')};
+					) {self._sql.getTableCreationOptions("PRODUCT_ON_CLIENT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -903,7 +913,7 @@ class SQLBackend(ConfigDataBackend):
 						`objectId` varchar(255) NOT NULL,
 						`values` text,
 						PRIMARY KEY (`product_property_state_id`)
-					) {self._sql.getTableCreationOptions('PRODUCT_PROPERTY_STATE')};
+					) {self._sql.getTableCreationOptions("PRODUCT_PROPERTY_STATE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -921,7 +931,7 @@ class SQLBackend(ConfigDataBackend):
 						`description` varchar(100),
 						`notes` varchar(500),
 						PRIMARY KEY (`type`, `groupId`)
-					) {self._sql.getTableCreationOptions('GROUP')};
+					) {self._sql.getTableCreationOptions("GROUP")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -939,7 +949,7 @@ class SQLBackend(ConfigDataBackend):
 						`objectId` varchar(255) NOT NULL,
 						PRIMARY KEY (`object_to_group_id`),
 						FOREIGN KEY (`groupType`, `groupId`) REFERENCES `GROUP` (`type`, `groupId`)
-					) {self._sql.getTableCreationOptions('OBJECT_TO_GROUP')};
+					) {self._sql.getTableCreationOptions("OBJECT_TO_GROUP")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -960,7 +970,7 @@ class SQLBackend(ConfigDataBackend):
 						`notificationDate` TIMESTAMP NULL DEFAULT NULL,
 						`expirationDate` TIMESTAMP NULL DEFAULT NULL,
 						PRIMARY KEY (`licenseContractId`)
-					) {self._sql.getTableCreationOptions('LICENSE_CONTRACT')};
+					) {self._sql.getTableCreationOptions("LICENSE_CONTRACT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -980,7 +990,7 @@ class SQLBackend(ConfigDataBackend):
 						`expirationDate` TIMESTAMP NULL DEFAULT NULL,
 						PRIMARY KEY (`softwareLicenseId`),
 						FOREIGN KEY (`licenseContractId`) REFERENCES `LICENSE_CONTRACT` (`licenseContractId`)
-					) {self._sql.getTableCreationOptions('SOFTWARE_LICENSE')};
+					) {self._sql.getTableCreationOptions("SOFTWARE_LICENSE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1000,7 +1010,7 @@ class SQLBackend(ConfigDataBackend):
 						`type` varchar(30) NOT NULL,
 						`description` varchar(200),
 						PRIMARY KEY (`licensePoolId`)
-					) {self._sql.getTableCreationOptions('LICENSE_POOL')};
+					) {self._sql.getTableCreationOptions("LICENSE_POOL")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1020,7 +1030,7 @@ class SQLBackend(ConfigDataBackend):
 						`architecture` varchar(3) NOT NULL,
 						PRIMARY KEY (`name`, `version`, `subVersion`, `language`, `architecture`),
 						FOREIGN KEY (`licensePoolId`) REFERENCES `LICENSE_POOL` (`licensePoolId`)
-					) {self._sql.getTableCreationOptions('AUDIT_SOFTWARE_TO_LICENSE_POOL')};
+					) {self._sql.getTableCreationOptions("AUDIT_SOFTWARE_TO_LICENSE_POOL")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1032,7 +1042,7 @@ class SQLBackend(ConfigDataBackend):
 						`productId` VARCHAR(255) NOT NULL,
 						PRIMARY KEY (`licensePoolId`, `productId`),
 						FOREIGN KEY (`licensePoolId`) REFERENCES `LICENSE_POOL` (`licensePoolId`)
-					) {self._sql.getTableCreationOptions('PRODUCT_ID_TO_LICENSE_POOL')};
+					) {self._sql.getTableCreationOptions("PRODUCT_ID_TO_LICENSE_POOL")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1046,7 +1056,7 @@ class SQLBackend(ConfigDataBackend):
 						PRIMARY KEY (`softwareLicenseId`, `licensePoolId`),
 						FOREIGN KEY (`softwareLicenseId`) REFERENCES `SOFTWARE_LICENSE` (`softwareLicenseId`),
 						FOREIGN KEY (`licensePoolId`) REFERENCES `LICENSE_POOL` (`licensePoolId`)
-					) {self._sql.getTableCreationOptions('SOFTWARE_LICENSE_TO_LICENSE_POOL')};
+					) {self._sql.getTableCreationOptions("SOFTWARE_LICENSE_TO_LICENSE_POOL")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1062,7 +1072,7 @@ class SQLBackend(ConfigDataBackend):
 						`notes` VARCHAR(1024),
 						PRIMARY KEY (`license_on_client_id`),
 						FOREIGN KEY (`softwareLicenseId`, `licensePoolId`) REFERENCES `SOFTWARE_LICENSE_TO_LICENSE_POOL` (`softwareLicenseId`, `licensePoolId`)
-					) {self._sql.getTableCreationOptions('LICENSE_ON_CLIENT')};
+					) {self._sql.getTableCreationOptions("LICENSE_ON_CLIENT")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1086,7 +1096,7 @@ class SQLBackend(ConfigDataBackend):
 						`type` varchar(30) NOT NULL,
 						`installSize` BIGINT,
 						PRIMARY KEY (`name`, `version`, `subVersion`, `language`, `architecture`)
-					) {self._sql.getTableCreationOptions('SOFTWARE')};
+					) {self._sql.getTableCreationOptions("SOFTWARE")};
 					"""
 				logger.debug(table)
 				self._sql.execute(session, table)
@@ -1139,7 +1149,7 @@ class SQLBackend(ConfigDataBackend):
 				`workbenchLocalUrl` varchar(128),
 				`workbenchRemoteUrl` varchar(255),
 				PRIMARY KEY (`hostId`)
-			) {self._sql.getTableCreationOptions('HOST')};
+			) {self._sql.getTableCreationOptions("HOST")};
 			"""
 
 		logger.debug(table)
@@ -1168,7 +1178,7 @@ class SQLBackend(ConfigDataBackend):
 				`lastUsed` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:00',
 				`licenseKey` VARCHAR(1024),
 				PRIMARY KEY (`config_id`)
-			) {self._sql.getTableCreationOptions('SOFTWARE_CONFIG')};
+			) {self._sql.getTableCreationOptions("SOFTWARE_CONFIG")};
 			"""
 
 		logger.debug(table)
@@ -1232,11 +1242,11 @@ class SQLBackend(ConfigDataBackend):
 							else:
 								# Column does not exist => add
 								hardwareDeviceTable += (
-									f'ADD `{value}` {valueInfo["Type"]} NULL,\n'
+									f"ADD `{value}` {valueInfo['Type']} NULL,\n"
 								)
 						else:
 							hardwareDeviceTable += (
-								f'`{value}` {valueInfo["Type"]} NULL,\n'
+								f"`{value}` {valueInfo['Type']} NULL,\n"
 							)
 						hardwareDeviceValuesProcessed += 1
 					elif valueInfo["Scope"] == "i":
@@ -1245,15 +1255,15 @@ class SQLBackend(ConfigDataBackend):
 								# Column exists => change
 								if not self._sql.ALTER_TABLE_CHANGE_SUPPORTED:
 									continue
-								hardwareConfigTable += f'CHANGE `{value}` `{value}` {valueInfo["Type"]} NULL,\n'
+								hardwareConfigTable += f"CHANGE `{value}` `{value}` {valueInfo['Type']} NULL,\n"
 							else:
 								# Column does not exist => add
 								hardwareConfigTable += (
-									f'ADD `{value}` {valueInfo["Type"]} NULL,\n'
+									f"ADD `{value}` {valueInfo['Type']} NULL,\n"
 								)
 						else:
 							hardwareConfigTable += (
-								f'`{value}` {valueInfo["Type"]} NULL,\n'
+								f"`{value}` {valueInfo['Type']} NULL,\n"
 							)
 						hardwareConfigValuesProcessed += 1
 
@@ -2537,7 +2547,6 @@ class SQLBackend(ConfigDataBackend):
 	def auditSoftware_insertObject(self, auditSoftware: AuditSoftware) -> None:
 		ConfigDataBackend.auditSoftware_insertObject(self, auditSoftware)
 		data = self._objectToDatabaseHash(auditSoftware)
-
 		where = self._uniqueCondition(auditSoftware)
 		with self._sql.session() as session:
 			if self._sql.getRow(session, f"select * from `SOFTWARE` where {where}"):

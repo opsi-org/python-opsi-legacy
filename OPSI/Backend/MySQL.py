@@ -21,11 +21,9 @@ from sqlalchemy.event import listen  # noqa: E402
 from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
 
 from OPSI.Backend.Base import ConfigDataBackend  # noqa: E402
-from OPSI.Backend.SQL import (  # noqa: E402
-	SQL,
-	SQLBackend,
-	SQLBackendObjectModificationTracker,
-)
+from OPSI.Backend.SQL import SQL  # noqa: E402
+from OPSI.Backend.SQL import SQLBackend  # noqa: E402
+from OPSI.Backend.SQL import SQLBackendObjectModificationTracker  # noqa: E402
 from OPSI.Object import Product, ProductProperty  # noqa: E402
 from OPSI.Types import forceHostIdList, forceInt, forceUnicode  # noqa: E402
 from OPSI.Util import compareVersions  # noqa: E402
@@ -164,7 +162,7 @@ class MySQL(SQL):
 		)
 		self.Session = scoped_session(self.session_factory)
 
-		# Test connection
+		# Test connection and get tables
 		with self.session() as session:
 			version_string = self.getRow(session, "SELECT @@VERSION")[0]
 			logger.info("Connected to server version: %s", version_string)
@@ -181,6 +179,7 @@ class MySQL(SQL):
 					)
 					logger.error(error)
 					raise RuntimeError(error)
+			self.getTables(session)
 
 	def __repr__(self) -> str:
 		return f"<{self.__class__.__name__}(address={self._address})>"
@@ -204,7 +203,9 @@ class MySQL(SQL):
 	def delete(self, session: scoped_session, table: str, where: str) -> Any:
 		return super().delete(session, table, where)
 
-	def getTables(self, session: scoped_session) -> dict[str, Any]:
+	def getTables(
+		self, session: scoped_session, allow_cached: bool = False
+	) -> dict[str, Any]:
 		"""
 		Get what tables are present in the database (do not return views).
 
@@ -213,7 +214,9 @@ class MySQL(SQL):
 		:returns: A dict with the table_name as key and the field names as value.
 		:rtype: dict
 		"""
-		tables = {}
+		if self._tables and allow_cached:
+			return self._tables
+		self._tables = {}
 		logger.trace("Current tables:")
 		for i in self.getSet(
 			session,
@@ -226,10 +229,10 @@ class MySQL(SQL):
 					j["Field"]
 					for j in self.getSet(session, f"SHOW COLUMNS FROM `{table_name}`")
 				]
-				tables[table_name] = fields
+				self._tables[table_name] = fields
 				logger.trace("Fields in %s: %s", table_name, fields)
 
-		return tables
+		return self._tables
 
 	def getTableCreationOptions(self, table: str) -> str:
 		if table in ("SOFTWARE", "SOFTWARE_CONFIG") or table.startswith(
