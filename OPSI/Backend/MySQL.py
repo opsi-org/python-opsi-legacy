@@ -312,7 +312,7 @@ class MySQLBackend(SQLBackend):
 				`version` varchar(100) NOT NULL,
 				`subVersion` varchar(100) NOT NULL,
 				`language` varchar(10) NOT NULL,
-				`architecture` varchar(3) NOT NULL,
+				`architecture` varchar(5) NOT NULL,
 				`uninstallString` varchar(200),
 				`binaryName` varchar(100),
 				`firstseen` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

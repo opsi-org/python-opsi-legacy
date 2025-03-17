@@ -1027,7 +1027,7 @@ class SQLBackend(ConfigDataBackend):
 						`version` varchar(100) NOT NULL,
 						`subVersion` varchar(100) NOT NULL,
 						`language` varchar(10) NOT NULL,
-						`architecture` varchar(3) NOT NULL,
+						`architecture` varchar(5) NOT NULL,
 						PRIMARY KEY (`name`, `version`, `subVersion`, `language`, `architecture`),
 						FOREIGN KEY (`licensePoolId`) REFERENCES `LICENSE_POOL` (`licensePoolId`)
 					) {self._sql.getTableCreationOptions("AUDIT_SOFTWARE_TO_LICENSE_POOL")};
@@ -1089,7 +1089,7 @@ class SQLBackend(ConfigDataBackend):
 						`version` varchar(100) NOT NULL,
 						`subVersion` varchar(100) NOT NULL,
 						`language` varchar(10) NOT NULL,
-						`architecture` varchar(3) NOT NULL,
+						`architecture` varchar(5) NOT NULL,
 						`windowsSoftwareId` varchar(100),
 						`windowsDisplayName` varchar(100),
 						`windowsDisplayVersion` varchar(100),
@@ -1169,7 +1169,7 @@ class SQLBackend(ConfigDataBackend):
 				`version` varchar(100) NOT NULL,
 				`subVersion` varchar(100) NOT NULL,
 				`language` varchar(10) NOT NULL,
-				`architecture` varchar(3) NOT NULL,
+				`architecture` varchar(5) NOT NULL,
 				`uninstallString` varchar(200),
 				`binaryName` varchar(100),
 				`firstseen` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
