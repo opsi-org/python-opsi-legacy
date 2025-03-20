@@ -283,6 +283,8 @@ def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 			"--daemon",
 			"--vfs-cache-mode",
 			"writes",
+			"--use-cookies",
+			# "--read-only"
 		]
 		if options.get("ca_cert_file"):
 			rclone_cmd.extend(["--ca-cert", options["ca_cert_file"]])
