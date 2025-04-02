@@ -358,10 +358,12 @@ def mount(dev, mountpoint, **options):
 		if "password" not in options:
 			options["password"] = ""
 
-		if which("opsi-rclone"):
+		try:
+			which("opsi-rclone")
 			rclone_mount(dev, mountpoint, options)
 			return
-
+		except CommandNotFoundException:
+			logger.debug("opsi-rclone not found, using fallback behaviour with davfs2")
 		with tempfile.NamedTemporaryFile(
 			mode="w", delete=False, encoding="utf-8"
 		) as conf_file:
