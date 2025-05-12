@@ -577,10 +577,10 @@ class Repository:
 				transferTime = 0.0000001
 			self.speed_limiter.transfer_ended()
 			logger.info(
-				"Transfered %0.2fkByte in %0.2f minutes, average speed was %0.2fkByte/s",
-				float(self._bytesTransfered) / 1000,
-				float(transferTime) / 60,
-				(float(self._bytesTransfered) / transferTime) / 1000,
+				"Transferred %0.3f MB in %0.2f seconds, average speed was %0.2f MB/s",
+				float(self._bytesTransfered) / 1_000_000,
+				int(transferTime),
+				(float(self._bytesTransfered) / transferTime) / 1_000_000,
 			)
 			return self._bytesTransfered
 		except Exception as error:
