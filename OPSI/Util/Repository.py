@@ -867,7 +867,7 @@ class FileRepository(Repository):
 	def __init__(self, url, **kwargs):
 		Repository.__init__(self, url, **kwargs)
 
-		match = re.search(r"^file://(/[^/]+.*)$", self._url, re.IGNORECASE)
+		match = re.search(r"^file://(\S.*)$", self._url, re.IGNORECASE)
 		if not match:
 			raise RepositoryError(f"Bad file url: '{self._url}'")
 		self._path = match.group(1)
