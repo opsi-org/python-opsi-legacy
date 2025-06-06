@@ -553,7 +553,9 @@ class Repository:
 					buf = src.read(self.bufferSize)
 				else:
 					break
-
+				if not buf:  # to avoid NoneType has no len()
+					logger.warning("No more data to read, breaking transfer loop")
+					break
 				read = len(buf)
 
 				if read > 0:
