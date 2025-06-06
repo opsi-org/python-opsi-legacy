@@ -558,21 +558,20 @@ class Repository:
 					break
 				read = len(buf)
 
-				if read > 0:
-					if (self._bytesTransfered + read) > size >= 0:
-						buf = buf[: size - self._bytesTransfered]
-						read = len(buf)
-					self._bytesTransfered += read
+				if (self._bytesTransfered + read) > size >= 0:
+					buf = buf[: size - self._bytesTransfered]
+					read = len(buf)
+				self._bytesTransfered += read
 
-					if hasattr(dst, "send"):
-						dst.send(buf)
-					else:
-						dst.write(buf)
+				if hasattr(dst, "send"):
+					dst.send(buf)
+				else:
+					dst.write(buf)
 
-					if progressSubject:
-						progressSubject.addToState(read)
+				if progressSubject:
+					progressSubject.addToState(read)
 
-					self.bufferSize = self.speed_limiter.limit(read)
+				self.bufferSize = self.speed_limiter.limit(read)
 
 			transferTime = time.time() - transferStartTime
 			if transferTime == 0:
