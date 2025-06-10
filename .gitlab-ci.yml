@@ -24,11 +24,6 @@ lint-and-test:
     [ -z "${OPSILICSRV_TOKEN}" ] && (echo "OPSILICSRV_TOKEN not set" 1>&2 ; exit 1)
     wget --header="Authorization: Bearer ${OPSILICSRV_TOKEN}" "https://opsi-license-server.uib.gmbh/api/v1/licenses/test?usage=python-opsi-gitlab-ci" -O /etc/opsi/licenses/test.opsilic
 
-    # cloning opsi-server for data directory
-    rm -rf ../opsi-server
-    rm -rf data
-    git clone -b v4.2 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.uib.gmbh/uib/opsi-server.git ../opsi-server
-    ln -s ../opsi-server/opsi-server_data/etc data
     cp tests/Backends/config.py.gitlabci tests/Backends/config.py
     apt-get update
     apt-get --yes install default-libmysqlclient-dev librsync1

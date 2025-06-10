@@ -1,7 +1,6 @@
 /.venv
 /build
 /dist
-/data
 /python-opsi_*.dsc
 /python-opsi_*.tar.gz
 /python-opsi_*.deb
