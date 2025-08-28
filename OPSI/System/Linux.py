@@ -168,7 +168,7 @@ def getActiveSessionIds(protocol=None, states=None):
 					login_sessions.add(env["DISPLAY"])
 				else:
 					user_sessions.add(env["DISPLAY"])
-		except psutil.AccessDenied as err:
+		except (psutil.AccessDenied, psutil.NoSuchProcess) as err:
 			logger.debug(err)
 
 	sessions = list(user_sessions if user_sessions else login_sessions)
