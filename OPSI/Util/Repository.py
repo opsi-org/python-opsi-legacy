@@ -512,13 +512,15 @@ class Repository:
 		except ValueError:  # element not in list
 			pass
 
-	def _transferDown(self, src, dst, size, progressSubject=None):
-		return self._transfer("in", src, dst, size, progressSubject)
+	def _transferDown(self, src, dst, size, progressSubject=None, pauseEvent=None):
+		return self._transfer("in", src, dst, size, progressSubject, pauseEvent)
 
-	def _transferUp(self, src, dst, size, progressSubject=None):
-		return self._transfer("out", src, dst, size, progressSubject)
+	def _transferUp(self, src, dst, size, progressSubject=None, pauseEvent=None):
+		return self._transfer("out", src, dst, size, progressSubject, pauseEvent)
 
-	def _transfer(self, transferDirection, src, dst, size, progressSubject=None):
+	def _transfer(
+		self, transferDirection, src, dst, size, progressSubject=None, pauseEvent=None
+	):
 		logger.debug(
 			"Transfer %s from %s to %s (size=%s, dynamic bandwidth=%s, max bandwidth=%s)",
 			transferDirection,
@@ -536,6 +538,10 @@ class Repository:
 			buf = True
 
 			while buf and self._bytesTransfered < size:
+				if pauseEvent is not None:
+					while not pauseEvent.is_set():
+						logger.debug("Transfer paused")
+						time.sleep(0.5)
 				remainingBytes = size - self._bytesTransfered
 				logger.trace(
 					"self.bufferSize: %d, self._bytesTransfered: %d, size: %d, remainingBytes: %d, dynamic bandwidth=%s, max bandwidth=%s",
@@ -845,6 +851,7 @@ class Repository:
 		progressSubject=None,
 		startByteNumber=-1,
 		endByteNumber=-1,
+		pauseEvent=None,
 	):
 		raise RepositoryError("Not implemented")
 
@@ -956,6 +963,7 @@ class FileRepository(Repository):
 		progressSubject=None,
 		startByteNumber=-1,
 		endByteNumber=-1,
+		pauseEvent=None,
 	):
 		"""
 		startByteNumber: position of first byte to be read
@@ -982,7 +990,7 @@ class FileRepository(Repository):
 				if startByteNumber > -1:
 					src.seek(startByteNumber)
 				with open(destination, "wb") as dst:
-					self._transferDown(src, dst, size, progressSubject)
+					self._transferDown(src, dst, size, progressSubject, pauseEvent)
 		except Exception as err:
 			raise RepositoryError(
 				f"Failed to download '{source}' to '{destination}': {err}"
@@ -1188,6 +1196,7 @@ class HTTPRepository(Repository):
 		progressSubject=None,
 		startByteNumber=-1,
 		endByteNumber=-1,
+		pauseEvent=None,
 	):
 		"""
 		startByteNumber: position of first byte to be read
@@ -1227,7 +1236,7 @@ class HTTPRepository(Repository):
 				# Do not decompress files, otherwise files stored compressed on the
 				# server side will be stored uncompressed on the client side.
 				response.raw.decode_content = False
-				self._transferDown(response.raw, dst, size, progressSubject)
+				self._transferDown(response.raw, dst, size, progressSubject, pauseEvent)
 
 		except Exception as err:
 			logger.error(err, exc_info=True)
