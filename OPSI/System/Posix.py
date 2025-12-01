@@ -3130,11 +3130,11 @@ class SysInfo:
 
 	@property
 	def hostname(self):
-		return forceHostname(socket.gethostname().split(".")[0])
+		return forceHostname(getfqdn().split(".")[0])
 
 	@property
 	def fqdn(self):
-		return forceUnicodeLower(socket.getfqdn())
+		return forceUnicodeLower(getfqdn())
 
 	@property
 	def domainname(self):
