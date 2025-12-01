@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
-# Copyright (c) uib GmbH <info@uib.de>
-# License: AGPL-3.0
-
-# forked from: https://pypi.python.org/pypi/python-librsync/0.1-5
-# inspiration: https://github.com/dvas0004/py_rdiff
-# librsync in c: http://rproxy.samba.org/doxygen/librsync/refman.pdf
-# notes: https://docs.python.org/2/library/ctypes.html
+# python-opsi is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
+# License: AGPL-3.0-only
 
 import base64
 import ctypes

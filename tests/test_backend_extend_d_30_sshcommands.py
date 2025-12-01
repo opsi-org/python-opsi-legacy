@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
+# python-opsi is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
+# License: AGPL-3.0-only
 
-# Copyright (c) uib GmbH <info@uib.de>
-# License: AGPL-3.0
 """
 Testing CRUD Methods for sshcommands (read from / write to jsonfile).
 """
