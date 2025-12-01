@@ -7,23 +7,16 @@ Testing the functionality of working with hosts.
 """
 
 import itertools
-import socket
 
 import pytest
 
 from OPSI.Exceptions import BackendError, BackendMissingDataError
-from OPSI.Object import (
-	HostGroup,
-	ObjectToGroup,
-	OpsiClient,
-	OpsiConfigserver,
-	OpsiDepotserver,
-)
-from OPSI.Util import randomString
+from OPSI.Object import HostGroup, ObjectToGroup, OpsiClient, OpsiConfigserver, OpsiDepotserver
+from OPSI.Util import getfqdn, randomString
 
 
 def getLocalHostFqdn():
-	fqdn = socket.getfqdn()
+	fqdn = getfqdn()
 	if fqdn.count(".") < 2:
 		raise RuntimeError("Failed to get fqdn: %s" % fqdn)
 
@@ -226,9 +219,7 @@ def test_selectClientsOnBackend(extendedConfigDataBackend):
 
 	client1, client2 = clients[:2]
 
-	hosts = extendedConfigDataBackend.host_getObjects(
-		id=[client1.getId(), client2.getId()]
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(id=[client1.getId(), client2.getId()])
 	assert len(hosts) == 2
 
 	ids = [host.getId() for host in hosts]
@@ -243,9 +234,7 @@ def test_hostAttributes(extendedConfigDataBackend):
 	hostsOriginal = list(clients) + [configServer] + list(depots)
 	extendedConfigDataBackend.host_createObjects(hostsOriginal)
 
-	hosts = extendedConfigDataBackend.host_getObjects(
-		attributes=["description", "notes"], ipAddress=[None]
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(attributes=["description", "notes"], ipAddress=[None])
 	count = sum(1 for host in hostsOriginal if host.getIpAddress() is None)
 
 	assert len(hosts) == count
@@ -255,9 +244,7 @@ def test_hostAttributes(extendedConfigDataBackend):
 		assert host.getNotes() is not None
 		assert host.getDescription() is not None
 
-	hosts = extendedConfigDataBackend.host_getObjects(
-		attributes=["description", "notes"], ipAddress=None
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(attributes=["description", "notes"], ipAddress=None)
 	assert len(hosts) == len(hostsOriginal)
 
 	for host in hosts:
@@ -274,9 +261,7 @@ def test_selectClientsByDescription(extendedConfigDataBackend):
 
 	client2 = clients[1]
 
-	hosts = extendedConfigDataBackend.host_getObjects(
-		type=["OpsiClient"], description=client2.getDescription()
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(type=["OpsiClient"], description=client2.getDescription())
 
 	assert len(hosts) == 1
 	assert hosts[0].id == client2.getId()
@@ -288,9 +273,7 @@ def test_selectClientById(extendedConfigDataBackend):
 	extendedConfigDataBackend.host_createObjects(clients)
 	client1 = clients[0]
 
-	hosts = extendedConfigDataBackend.host_getObjects(
-		attributes=["id", "description"], id=client1.getId()
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(attributes=["id", "description"], id=client1.getId())
 
 	assert len(hosts) == 1
 	assert hosts[0].id == client1.getId()
@@ -339,9 +322,7 @@ def test_createObjectOnBackend(extendedConfigDataBackend):
 
 	client2.setDescription("Test client 2")
 	extendedConfigDataBackend.host_createObjects(client2)
-	hosts = extendedConfigDataBackend.host_getObjects(
-		attributes=["id", "description"], id=client2.getId()
-	)
+	hosts = extendedConfigDataBackend.host_getObjects(attributes=["id", "description"], id=client2.getId())
 	assert len(hosts) == 1
 	assert hosts[0].getId() == client2.getId()
 	assert hosts[0].getDescription() == "Test client 2"
@@ -371,10 +352,7 @@ def testHost_GetIdents(extendedConfigDataBackend):
 	extendedConfigDataBackend.host_createOpsiClient(id="client100.test.invalid")
 	extendedConfigDataBackend.host_createOpsiDepotserver(id="depot100.test.invalid")
 
-	knownIdents = [
-		host.getIdent(returnType="dict")
-		for host in itertools.chain(clients, depots, [configserver1])
-	]
+	knownIdents = [host.getIdent(returnType="dict") for host in itertools.chain(clients, depots, [configserver1])]
 	knownIdents.append({"id": "depot100.test.invalid"})
 	knownIdents.append({"id": "client100.test.invalid"})
 	knownIdents = set(selfIdent["id"] for selfIdent in knownIdents)
@@ -415,9 +393,7 @@ def testRenamingOpsiClientFailsIfNewIdAlreadyExisting(extendedConfigDataBackend)
 
 def testRenamingOpsiClientFailsIfOldClientMissing(extendedConfigDataBackend):
 	with pytest.raises(BackendMissingDataError):
-		extendedConfigDataBackend.host_renameOpsiClient(
-			"nonexisting.test.invalid", "new.test.invalid"
-		)
+		extendedConfigDataBackend.host_renameOpsiClient("nonexisting.test.invalid", "new.test.invalid")
 
 
 def testRenamingOpsiClient(extendedConfigDataBackend):
@@ -429,9 +405,7 @@ def testRenamingOpsiClient(extendedConfigDataBackend):
 	protagonists = HostGroup("protagonists")
 	backend.group_insertObject(protagonists)
 
-	backend.objectToGroup_insertObject(
-		ObjectToGroup(protagonists.getType(), protagonists.id, host.id)
-	)
+	backend.objectToGroup_insertObject(ObjectToGroup(protagonists.getType(), protagonists.id, host.id))
 
 	oldId = host.id
 	newId = "richard.test.invalid"
@@ -483,9 +457,7 @@ def testWorkbenchAddressAtDepots(
 ):
 	extendedConfigDataBackend.host_insertObject(workbenchConfigServer)
 
-	serverFromBackend = extendedConfigDataBackend.host_getObjects(
-		id=workbenchConfigServer.id
-	)[0]
+	serverFromBackend = extendedConfigDataBackend.host_getObjects(id=workbenchConfigServer.id)[0]
 
 	assert serverFromBackend.workbenchLocalUrl == localWorkbenchPath
 	assert serverFromBackend.workbenchRemoteUrl == remoteWorkbenchPath
@@ -502,9 +474,7 @@ def testWorkbenchAddressAtDepotsInJson(
 ):
 	extendedConfigDataBackend.host_insertObject(workbenchConfigServer)
 
-	serverFromBackend = extendedConfigDataBackend.host_getObjects(
-		id=workbenchConfigServer.id
-	)[0]
+	serverFromBackend = extendedConfigDataBackend.host_getObjects(id=workbenchConfigServer.id)[0]
 
 	serverDict = serverFromBackend.toHash()
 	assert serverDict["workbenchLocalUrl"] == localWorkbenchPath
@@ -520,9 +490,7 @@ def testWorkbenchAddressHasNoDefault(extendedConfigDataBackend, localHostFqdn):
 	assert serverFromBackend.workbenchRemoteUrl is None
 
 
-@pytest.fixture(
-	scope="session", params=[30, 64], ids=["inventoryNumber-30", "inventoryNumber-64"]
-)
+@pytest.fixture(scope="session", params=[30, 64], ids=["inventoryNumber-30", "inventoryNumber-64"])
 def inventoryNumber(request):
 	return randomString(request.param)
 
