@@ -26,11 +26,9 @@ import time
 import warnings
 from functools import lru_cache
 from itertools import islice
-from pathlib import Path
 from signal import SIGKILL
 
 import psutil
-from cryptography import x509
 from opsicommon.logging import LOG_NONE, get_logger, logging_config
 from opsicommon.objects import *  # noqa: F403
 from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
@@ -52,7 +50,6 @@ from opsicommon.types import (
 from opsicommon.utils import frozen_lru_cache
 
 from OPSI.Exceptions import CommandNotFoundException
-from OPSI.System.util import _get_secure_boot_certificates_from_efivar_payload
 from OPSI.Util import getfqdn, objectToBeautifiedText, removeUnit
 
 distro_module = None
@@ -95,7 +92,6 @@ __all__ = (
 	"getSambaServiceName",
 	"getServiceNames",
 	"getSystemProxySetting",
-	"getUEFISecureBootCertificates",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
@@ -4248,11 +4244,3 @@ def setLocalSystemTime(timestring):
 		subprocess.call([systemTime])
 	except Exception as err:
 		logger.error("Failed to set System Time: %s", err)
-
-
-def getUEFISecureBootCertificates() -> list[x509.Certificate]:
-	db_files = list(Path("/sys/firmware/efi/efivars").glob("db-*"))
-	if not db_files:
-		return []
-	data = db_files[0].read_bytes()[4:]
-	return _get_secure_boot_certificates_from_efivar_payload(data)

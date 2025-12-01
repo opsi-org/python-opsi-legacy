@@ -15,6 +15,7 @@ import time
 from typing import Any, Dict, List
 
 import pexpect
+from cryptography import x509
 from opsicommon.logging import get_logger
 
 from OPSI.System import Posix
@@ -52,7 +53,6 @@ from OPSI.System.Posix import (
 	getServiceNames,
 	getSessionInformation,
 	getSystemProxySetting,
-	getUEFISecureBootCertificates,
 	halt,
 	hardwareExtendedInventory,
 	hooks,
@@ -116,11 +116,13 @@ __all__ = (
 	"getServiceNames",
 	"getSystemProxySetting",
 	"getUEFISecureBootCertificates",
+	"getUEFISecureBootEnabled",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
 	"hooks",
 	"ifconfig",
+	"inUEFIMode",
 	"isCentOS",
 	"isDebian",
 	"isOpenSUSE",
@@ -536,3 +538,15 @@ def mount(dev, mountpoint, **options):
 
 
 Posix.mount = mount
+
+
+def inUEFIMode() -> bool:
+	return True
+
+
+def getUEFISecureBootEnabled() -> bool:
+	return False
+
+
+def getUEFISecureBootCertificates() -> list[x509.Certificate]:
+	return []

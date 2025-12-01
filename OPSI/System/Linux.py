@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 import psutil
+from cryptography import x509
 from opsicommon.logging import get_logger
 from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
 
@@ -52,7 +53,6 @@ from OPSI.System.Posix import (
 	getSambaServiceName,
 	getServiceNames,
 	getSystemProxySetting,
-	getUEFISecureBootCertificates,
 	halt,
 	hardwareExtendedInventory,
 	hardwareInventory,
@@ -76,6 +76,7 @@ from OPSI.System.Posix import (
 	umount,
 	which,
 )
+from OPSI.System.util import _get_secure_boot_certificates_from_efivar_payload
 from OPSI.Types import forceFilename, forceUnicode
 
 __all__ = (
@@ -114,11 +115,13 @@ __all__ = (
 	"getServiceNames",
 	"getSystemProxySetting",
 	"getUEFISecureBootCertificates",
+	"getUEFISecureBootEnabled",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
 	"hooks",
 	"ifconfig",
+	"inUEFIMode",
 	"isCentOS",
 	"isDebian",
 	"isOpenSUSE",
@@ -433,3 +436,23 @@ def mount(dev, mountpoint, **options):
 
 
 Posix.mount = mount
+
+
+def inUEFIMode():
+	return Path("/sys/firmware/efi").exists()
+
+
+def getUEFISecureBootEnabled() -> bool:
+	files = list(Path("/sys/firmware/efi/efivars").glob("SecureBoot-*"))
+	if not files:
+		return False
+	data = files[0].read_bytes()[4:]
+	return data[0] == 1
+
+
+def getUEFISecureBootCertificates() -> list[x509.Certificate]:
+	db_files = list(Path("/sys/firmware/efi/efivars").glob("db-*"))
+	if not db_files:
+		return []
+	data = db_files[0].read_bytes()[4:]
+	return _get_secure_boot_certificates_from_efivar_payload(data)

@@ -90,6 +90,8 @@ __all__ = (
 	"getActiveSessionInformation",
 	"getUserSessionIds",
 	"getUEFISecureBootCertificates",
+	"getUEFISecureBootEnabled",
+	"inUEFIMode",
 	"logoffSession",
 	"logoffCurrentUser",
 	"lockSession",
@@ -2105,6 +2107,14 @@ class Impersonate:
 
 	def __del__(self):
 		self.end()
+
+
+def inUEFIMode():
+	return subprocess.check_output("Write-Host $env:firmware_type").strip() == b"UEFI"
+
+
+def getUEFISecureBootEnabled() -> bool:
+	return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Confirm-SecureBootUEFI"').strip() == b"True"
 
 
 def getUEFISecureBootCertificates() -> list[x509.Certificate]:
