@@ -15,6 +15,7 @@ lint-and-test:
   variables:
     MYSQL_ROOT_PASSWORD: "opsi"
     MYSQL_DATABASE: "opsi"
+    OPSI_HOST_ID: "server.opsi.test"
   stage: test
   script: |
     mkdir -p /etc/opsi/licenses
