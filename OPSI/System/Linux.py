@@ -16,9 +16,7 @@ from pathlib import Path
 
 import psutil
 from opsicommon.logging import get_logger
-from opsicommon.system.subprocess import (
-	get_subprocess_environment as opsicommon_get_subprocess_environment,
-)
+from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
 
 from OPSI.System import Posix
 from OPSI.System.Posix import (
@@ -299,9 +297,7 @@ def mount(dev, mountpoint, **options):
 		os.makedirs(mountpoint)
 
 	if is_mounted(mountpoint):
-		logger.debug(
-			"Mountpoint '%s' already mounted, umounting before mount", mountpoint
-		)
+		logger.debug("Mountpoint '%s' already mounted, umounting before mount", mountpoint)
 		umount(mountpoint)
 
 	fs = ""
@@ -320,16 +316,10 @@ def mount(dev, mountpoint, **options):
 				options["password"] = ""
 			if "\\" in options["username"]:
 				options["username"] = re.sub(r"\\+", r"\\", options["username"])
-				(options["domain"], options["username"]) = options["username"].split(
-					"\\", 1
-				)
+				(options["domain"], options["username"]) = options["username"].split("\\", 1)
 
-			tf = tempfile.NamedTemporaryFile(
-				mode="w", delete=False, encoding="iso-8859-15"
-			)
-			tf.write(
-				f"username={options['username']}\npassword={options['password']}\n"
-			)
+			tf = tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="iso-8859-15")
+			tf.write(f"username={options['username']}\npassword={options['password']}\n")
 			tf.close()
 			tmp_files.append(tf.name)
 			options["credentials"] = tf.name
@@ -364,15 +354,11 @@ def mount(dev, mountpoint, **options):
 			return
 		except CommandNotFoundException:
 			logger.debug("opsi-rclone not found, using fallback behaviour with davfs2")
-		with tempfile.NamedTemporaryFile(
-			mode="w", delete=False, encoding="utf-8"
-		) as conf_file:
+		with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as conf_file:
 			tmp_files.append(conf_file.name)
 			os.chmod(conf_file.name, 0o644)
 			options["conf"] = conf_file.name
-			conf_file.write(
-				"n_cookies 1\ncache_size 0\ntable_size 16384\nuse_locks 0\n"
-			)
+			conf_file.write("n_cookies 1\ncache_size 0\ntable_size 16384\nuse_locks 0\n")
 			if options.get("ca_cert_file"):
 				ca_cert_file = os.path.abspath(options["ca_cert_file"])
 				if not os.path.exists(ca_cert_file):
@@ -380,9 +366,7 @@ def mount(dev, mountpoint, **options):
 
 				# Make sure ca file is readable by davfs2
 				with open(ca_cert_file, "r", encoding="utf-8") as infile:
-					with tempfile.NamedTemporaryFile(
-						mode="w", delete=False, encoding="utf-8"
-					) as tmp_cert_file:
+					with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tmp_cert_file:
 						tmp_files.append(tmp_cert_file.name)
 						os.chmod(tmp_cert_file.name, 0o644)
 						conf_file.write(f"trust_ca_cert {tmp_cert_file.name}\n")
@@ -391,11 +375,7 @@ def mount(dev, mountpoint, **options):
 
 		# Username, Password, Accept certificate for this session? [y,N]
 		accept_cert = "n" if options.get("verify_server_cert") else "y"
-		stdin_data = (
-			f"{options['username']}\n{options['password']}\n{accept_cert}\n".encode(
-				"utf-8"
-			)
-		)
+		stdin_data = f"{options['username']}\n{options['password']}\n{accept_cert}\n".encode("utf-8")
 
 		del options["username"]
 		del options["password"]
@@ -435,11 +415,7 @@ def mount(dev, mountpoint, **options):
 				)
 				break
 			except Exception as err:
-				if (
-					fs == "-t cifs"
-					and "vers=2.0" not in mount_options
-					and "error(95)" in str(err)
-				):
+				if fs == "-t cifs" and "vers=2.0" not in mount_options and "error(95)" in str(err):
 					logger.warning(
 						"Failed to mount '%s': %s, retrying with option vers=2.0",
 						dev,

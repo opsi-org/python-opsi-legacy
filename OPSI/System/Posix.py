@@ -26,14 +26,14 @@ import time
 import warnings
 from functools import lru_cache
 from itertools import islice
+from pathlib import Path
 from signal import SIGKILL
 
 import psutil
+from cryptography import x509
 from opsicommon.logging import LOG_NONE, get_logger, logging_config
 from opsicommon.objects import *  # noqa: F403
-from opsicommon.system.subprocess import (
-	get_subprocess_environment as opsicommon_get_subprocess_environment,
-)
+from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
 from opsicommon.types import (
 	forceBool,
 	forceDomain,
@@ -52,6 +52,7 @@ from opsicommon.types import (
 from opsicommon.utils import frozen_lru_cache
 
 from OPSI.Exceptions import CommandNotFoundException
+from OPSI.System.util import _get_secure_boot_certificates_from_efivar_payload
 from OPSI.Util import getfqdn, objectToBeautifiedText, removeUnit
 
 distro_module = None
@@ -94,6 +95,7 @@ __all__ = (
 	"getSambaServiceName",
 	"getServiceNames",
 	"getSystemProxySetting",
+	"getUEFISecureBootCertificates",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
@@ -194,9 +196,7 @@ class SystemSpecificHook:
 	def post_Harddisk_setPartitionBootable(self, harddisk, partition, bootable):
 		return None
 
-	def error_Harddisk_setPartitionBootable(
-		self, harddisk, partition, bootable, exception
-	):
+	def error_Harddisk_setPartitionBootable(self, harddisk, partition, bootable, exception):
 		pass
 
 	def pre_Harddisk_setPartitionId(self, harddisk, partition, id):
@@ -241,9 +241,7 @@ class SystemSpecificHook:
 	def post_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType):
 		return None
 
-	def error_Harddisk_writePartitionBootRecord(
-		self, harddisk, partition, fsType, exception
-	):
+	def error_Harddisk_writePartitionBootRecord(self, harddisk, partition, fsType, exception):
 		pass
 
 	def pre_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):
@@ -252,9 +250,7 @@ class SystemSpecificHook:
 	def post_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector):
 		return None
 
-	def error_Harddisk_setNTFSPartitionStartSector(
-		self, harddisk, partition, sector, exception
-	):
+	def error_Harddisk_setNTFSPartitionStartSector(self, harddisk, partition, sector, exception):
 		pass
 
 	def pre_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):
@@ -263,9 +259,7 @@ class SystemSpecificHook:
 	def post_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba):
 		return None
 
-	def error_Harddisk_createPartition(
-		self, harddisk, start, end, fs, type, boot, lba, exception
-	):
+	def error_Harddisk_createPartition(self, harddisk, start, end, fs, type, boot, lba, exception):
 		pass
 
 	def pre_Harddisk_deletePartition(self, harddisk, partition):
@@ -283,9 +277,7 @@ class SystemSpecificHook:
 	def post_Harddisk_mountPartition(self, harddisk, partition, mountpoint, **options):
 		return None
 
-	def error_Harddisk_mountPartition(
-		self, harddisk, partition, mountpoint, exception, **options
-	):
+	def error_Harddisk_mountPartition(self, harddisk, partition, mountpoint, exception, **options):
 		pass
 
 	def pre_Harddisk_umountPartition(self, harddisk, partition):
@@ -321,9 +313,7 @@ class SystemSpecificHook:
 	def post_Harddisk_shred(self, harddisk, partition, iterations, progressSubject):
 		return None
 
-	def error_Harddisk_shred(
-		self, harddisk, partition, iterations, progressSubject, exception
-	):
+	def error_Harddisk_shred(self, harddisk, partition, iterations, progressSubject, exception):
 		pass
 
 	def pre_Harddisk_fill(self, harddisk, partition, infile, progressSubject):
@@ -332,9 +322,7 @@ class SystemSpecificHook:
 	def post_Harddisk_fill(self, harddisk, partition, infile, progressSubject):
 		return None
 
-	def error_Harddisk_fill(
-		self, harddisk, partition, infile, progressSubject, exception
-	):
+	def error_Harddisk_fill(self, harddisk, partition, infile, progressSubject, exception):
 		pass
 
 	def pre_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):
@@ -343,24 +331,16 @@ class SystemSpecificHook:
 	def post_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject):
 		return None
 
-	def error_Harddisk_saveImage(
-		self, harddisk, partition, imageFile, progressSubject, exception
-	):
+	def error_Harddisk_saveImage(self, harddisk, partition, imageFile, progressSubject, exception):
 		pass
 
-	def pre_Harddisk_restoreImage(
-		self, harddisk, partition, imageFile, progressSubject
-	):
+	def pre_Harddisk_restoreImage(self, harddisk, partition, imageFile, progressSubject):
 		return (partition, imageFile, progressSubject)
 
-	def post_Harddisk_restoreImage(
-		self, harddisk, partition, imageFile, progressSubject
-	):
+	def post_Harddisk_restoreImage(self, harddisk, partition, imageFile, progressSubject):
 		return None
 
-	def error_Harddisk_restoreImage(
-		self, harddisk, partition, imageFile, progressSubject, exception
-	):
+	def error_Harddisk_restoreImage(self, harddisk, partition, imageFile, progressSubject, exception):
 		pass
 
 	def pre_auditHardware(self, config, hostId, progressSubject):
@@ -489,9 +469,7 @@ def getNetworkDeviceConfig(device):
 
 	for line in execute(f"{which('ip')} route"):
 		line = line.lower().strip()
-		match = re.search(
-			r"via\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\sdev\s(\S+)\s*", line
-		)
+		match = re.search(r"via\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\sdev\s(\S+)\s*", line)
 		if match and match.group(2).lower() == device.lower():
 			result["gateway"] = forceIpAddress(match.group(1))
 
@@ -500,18 +478,13 @@ def getNetworkDeviceConfig(device):
 			val = int(file.read().strip(), 16)
 
 		result["vendorId"] = forceHardwareVendorId(f"{val:>04x}")
-		logger.notice(f'device {device} vendor ID is {result["vendorId"]}')
+		logger.notice(f"device {device} vendor ID is {result['vendorId']}")
 	except Exception:
-		logger.debug(
-			"Failed to get vendor id for network device %s, trying alternative", device
-		)
+		logger.debug("Failed to get vendor id for network device %s, trying alternative", device)
 		try:
-			valList = execute(
-				'udevadm info /sys/class/net/%s | grep VENDOR_ID | cut -d "=" -f 2'
-				% device
-			)
+			valList = execute('udevadm info /sys/class/net/%s | grep VENDOR_ID | cut -d "=" -f 2' % device)
 			result["vendorId"] = forceHardwareVendorId(f"{int(valList[0], 16):>04x}")
-			logger.notice(f'device {device} vendor ID is {result["vendorId"]}')
+			logger.notice(f"device {device} vendor ID is {result['vendorId']}")
 		except Exception:
 			logger.debug("Alternative failed, no vendor ID for device %s found", device)
 
@@ -524,22 +497,18 @@ def getNetworkDeviceConfig(device):
 			val += 0xFFF
 
 		result["deviceId"] = forceHardwareDeviceId(f"{val:>04x}")
-		logger.notice(f'device {device} device ID is {result["deviceId"]}')
+		logger.notice(f"device {device} device ID is {result['deviceId']}")
 	except Exception:
-		logger.debug(
-			"Failed to get device id for network device %s, trying alternative", device
-		)
+		logger.debug("Failed to get device id for network device %s, trying alternative", device)
 		try:
-			valList = execute(
-				f'udevadm info /sys/class/net/{device} | grep MODEL_ID | cut -d "=" -f 2'
-			)
+			valList = execute(f'udevadm info /sys/class/net/{device} | grep MODEL_ID | cut -d "=" -f 2')
 			val = int(valList[0], 16)
 
 			if result["vendorId"] == "1AF4":
 				val += 0xFFF
 
 			result["deviceId"] = forceHardwareDeviceId(f"{val:>04x}")
-			logger.notice(f'device {device} device ID is {result["deviceId"]}')
+			logger.notice(f"device {device} device ID is {result['deviceId']}")
 		except Exception:
 			logger.debug("alternative failed, no vendor ID for device %s found", device)
 
@@ -601,14 +570,10 @@ class NetworkPerformanceCounter(threading.Thread):
 					if self._lastTime:
 						timeDiff = now - self._lastTime
 					if self._lastBytesIn:
-						self._bytesInPerSecond = (
-							bytesIn - self._lastBytesIn
-						) / timeDiff
+						self._bytesInPerSecond = (bytesIn - self._lastBytesIn) / timeDiff
 						self._bytesInPerSecond = max(self._bytesInPerSecond, 0)
 					if self._lastBytesOut:
-						self._bytesOutPerSecond = (
-							bytesOut - self._lastBytesOut
-						) / timeDiff
+						self._bytesOutPerSecond = (bytesOut - self._lastBytesOut) / timeDiff
 						self._bytesOutPerSecond = max(self._bytesOutPerSecond, 0)
 					self._lastBytesIn = bytesIn
 					self._lastBytesOut = bytesOut
@@ -661,39 +626,23 @@ keys are: ``ip``, ``netmask``, ``bootserver``, ``nextserver``, \
 						continue
 
 					if line.startswith("filename "):
-						dhcpResult["bootfile"] = dhcpResult["filename"] = line.split(
-							'"'
-						)[1].strip()
+						dhcpResult["bootfile"] = dhcpResult["filename"] = line.split('"')[1].strip()
 					elif line.startswith("option domain-name "):
-						dhcpResult["domain"] = dhcpResult["domain-name"] = line.split(
-							'"'
-						)[1].strip()
+						dhcpResult["domain"] = dhcpResult["domain-name"] = line.split('"')[1].strip()
 					elif line.startswith("option domain-name-servers "):
-						dhcpResult["nameservers"] = dhcpResult[
-							"domain-name-servers"
-						] = line.split(" ", 2)[-1]
+						dhcpResult["nameservers"] = dhcpResult["domain-name-servers"] = line.split(" ", 2)[-1]
 					elif line.startswith("fixed-address "):
-						dhcpResult["ip"] = dhcpResult["fixed-address"] = line.split(
-							" ", 1
-						)[-1]
+						dhcpResult["ip"] = dhcpResult["fixed-address"] = line.split(" ", 1)[-1]
 					elif line.startswith("option host-name "):
-						dhcpResult["hostname"] = dhcpResult["host-name"] = line.split(
-							'"'
-						)[1].strip()
+						dhcpResult["hostname"] = dhcpResult["host-name"] = line.split('"')[1].strip()
 					elif line.startswith("option subnet-mask "):
-						dhcpResult["netmask"] = dhcpResult["subnet-mask"] = line.split(
-							" ", 2
-						)[-1]
+						dhcpResult["netmask"] = dhcpResult["subnet-mask"] = line.split(" ", 2)[-1]
 					elif line.startswith("option routers "):
-						dhcpResult["gateways"] = dhcpResult["routers"] = line.split(
-							" ", 2
-						)[-1]
+						dhcpResult["gateways"] = dhcpResult["routers"] = line.split(" ", 2)[-1]
 					elif line.startswith("option netbios-name-servers "):
 						dhcpResult["netbios-name-servers"] = line.split(" ", 2)[-1]
 					elif line.startswith("option dhcp-server-identifier "):
-						dhcpResult["bootserver"] = dhcpResult[
-							"dhcp-server-identifier"
-						] = line.split(" ", 2)[-1]
+						dhcpResult["bootserver"] = dhcpResult["dhcp-server-identifier"] = line.split(" ", 2)[-1]
 					elif line.startswith("renew "):
 						dhcpResult["renew"] = line.split(" ", 1)[-1]
 					elif line.startswith("rebind "):
@@ -723,9 +672,7 @@ keys are: ``ip``, ``netmask``, ``bootserver``, ``nextserver``, \
 				# Some DHCP-Servers are returning multiple domain names
 				# seperated by whitespace, so we split all values at
 				# whitespace and take the first element
-				dhcpResult[keyValue[0].replace(" ", "").lower()] = (
-					keyValue[1].strip().split()[0]
-				)
+				dhcpResult[keyValue[0].replace(" ", "").lower()] = keyValue[1].strip().split()[0]
 		except Exception as error:
 			logger.warning(error)
 	return dhcpResult
@@ -765,9 +712,7 @@ def getLocalFqdn():
 	try:
 		return forceHostId(fqdn)
 	except ValueError as err:
-		raise ValueError(
-			f"Failed to get fully qualified domain name. Value '{fqdn}' is invalid."
-		) from err
+		raise ValueError(f"Failed to get fully qualified domain name. Value '{fqdn}' is invalid.") from err
 
 
 def getNetworkConfiguration(ipAddress=None):
@@ -833,13 +778,9 @@ def getNetworkConfiguration(ipAddress=None):
 		if networkConfig["subnet"]:
 			networkConfig["subnet"] += "."
 
-		networkConfig["subnet"] += "%d" % (
-			int(networkConfig["ipAddress"].split(".")[i])
-			& int(networkConfig["netmask"].split(".")[i])
-		)
+		networkConfig["subnet"] += "%d" % (int(networkConfig["ipAddress"].split(".")[i]) & int(networkConfig["netmask"].split(".")[i]))
 		networkConfig["broadcast"] += "%d" % (
-			int(networkConfig["ipAddress"].split(".")[i])
-			| int(networkConfig["netmask"].split(".")[i]) ^ 255
+			int(networkConfig["ipAddress"].split(".")[i]) | int(networkConfig["netmask"].split(".")[i]) ^ 255
 		)
 
 	return networkConfig
@@ -907,9 +848,7 @@ def which(cmd: str, env: dict = None) -> str:
 	return path
 
 
-def get_subprocess_environment(
-	env: dict = None, add_lc_all_C=False, add_path_sbin=False
-):
+def get_subprocess_environment(env: dict = None, add_lc_all_C=False, add_path_sbin=False):
 	sp_env = opsicommon_get_subprocess_environment(env)
 
 	if add_lc_all_C:
@@ -1079,9 +1018,7 @@ output will be returned.
 
 				if time.time() - startTime >= timeout > 0:
 					_terminateProcess(proc)
-					raise RuntimeError(
-						f"Command '{cmd}' timed out atfer {(time.time() - startTime)} seconds"
-					)
+					raise RuntimeError(f"Command '{cmd}' timed out atfer {(time.time() - startTime)} seconds")
 
 				time.sleep(0.001)
 
@@ -1101,10 +1038,7 @@ output will be returned.
 	if exitCode:
 		if isinstance(ignoreExitCode, bool) and ignoreExitCode:
 			pass
-		elif (
-			isinstance(ignoreExitCode, (list, tuple, set))
-			and exitCode in ignoreExitCode
-		):
+		elif isinstance(ignoreExitCode, (list, tuple, set)) and exitCode in ignoreExitCode:
 			pass
 		else:
 			result = "\n".join(result)
@@ -1127,9 +1061,7 @@ def _terminateProcess(process):
 		try:
 			os.kill(process.pid, SIGKILL)
 		except Exception as sigKillException:
-			logger.debug(
-				"Sending SIGKILL to pid %s failed: %s", process.pid, sigKillException
-			)
+			logger.debug("Sending SIGKILL to pid %s failed: %s", process.pid, sigKillException)
 
 
 def terminateProcess(processHandle=None, processId=None):
@@ -1163,9 +1095,7 @@ def getHarddisks(data=None):
 		# Get all available disks
 		if os.path.exists("/dev/cciss"):
 			result = []
-			logger.notice(
-				"HP Smart Array detected, trying to workarround scan problem."
-			)
+			logger.notice("HP Smart Array detected, trying to workarround scan problem.")
 			listing = os.listdir("/dev/cciss")
 			for entry in listing:
 				if len(entry) < 5:
@@ -1196,9 +1126,7 @@ def getHarddisks(data=None):
 
 		(dev, size) = line.split(":")
 		size = forceInt(size.strip())
-		logger.debug(
-			"Found disk =>>> dev: '%s', size: %0.2f GB", dev, size / (1000 * 1000)
-		)
+		logger.debug("Found disk =>>> dev: '%s', size: %0.2f GB", dev, size / (1000 * 1000))
 		hd = Harddisk(dev)
 		disks.append(hd)
 
@@ -1248,13 +1176,9 @@ def umount(devOrMountpoint, max_attempts=10):
 		except Exception as err:
 			if attempt >= max_attempts:
 				logger.error("Failed to umount '%s': %s", devOrMountpoint, err)
-				raise RuntimeError(
-					f"Failed to umount '{devOrMountpoint}': {err}"
-				) from err
+				raise RuntimeError(f"Failed to umount '{devOrMountpoint}': {err}") from err
 
-			logger.warning(
-				"Failed to umount '%s' (attempt #%d): %s", devOrMountpoint, attempt, err
-			)
+			logger.warning("Failed to umount '%s' (attempt #%d): %s", devOrMountpoint, attempt, err)
 			time.sleep(3)
 
 
@@ -1357,9 +1281,7 @@ def getBlockDeviceContollerInfo(device, lshwoutput=None):
 	# In this case return the first AHCI controller, that will be found
 	storageControllers = {}
 
-	storagePattern = re.compile(
-		r"^(/\S+)\s+storage\s+(\S+.*[Aa][Hh][Cc][Ii].*)\s\[([a-fA-F0-9]{1,4}):([a-fA-F0-9]{1,4})\]$"
-	)
+	storagePattern = re.compile(r"^(/\S+)\s+storage\s+(\S+.*[Aa][Hh][Cc][Ii].*)\s\[([a-fA-F0-9]{1,4}):([a-fA-F0-9]{1,4})\]$")
 	for line in lines:
 		match = storagePattern.search(line)
 		if match:
@@ -1481,9 +1403,7 @@ class Harddisk:
 					logger.info("Special device (cciss) detected")
 					devicename = "!".join(deviceparts[1:])
 					if not os.path.exists(f"/sys/block/{devicename}/queue/rotational"):
-						raise IOError(
-							f"rotational file '/sys/block/{devicename}/queue/rotational' not found!"
-						)
+						raise IOError(f"rotational file '/sys/block/{devicename}/queue/rotational' not found!")
 				else:
 					logger.error("Unknown device, fallback to default: rotational")
 					return
@@ -1497,9 +1417,7 @@ class Harddisk:
 				except Exception:
 					pass
 		except Exception as err:
-			logger.error(
-				"Checking if the device %s is rotational failed: %s", self.device, err
-			)
+			logger.error("Checking if the device %s is rotational failed: %s", self.device, err)
 
 	def getSignature(self):
 		hd = os.open(str(self.device), os.O_RDONLY)
@@ -1534,9 +1452,7 @@ class Harddisk:
 	def setPartitionId(self, partition, id):
 		part_id = id
 		for hook in hooks:
-			(partition, part_id) = hook.pre_Harddisk_setPartitionId(
-				self, partition, part_id
-			)
+			(partition, part_id) = hook.pre_Harddisk_setPartitionId(self, partition, part_id)
 		try:
 			partition = forceInt(partition)
 			part_id = forceUnicodeLower(part_id)
@@ -1578,9 +1494,7 @@ class Harddisk:
 
 	def setPartitionBootable(self, partition, bootable):
 		for hook in hooks:
-			(partition, bootable) = hook.pre_Harddisk_setPartitionBootable(
-				self, partition, bootable
-			)
+			(partition, bootable) = hook.pre_Harddisk_setPartitionBootable(self, partition, bootable)
 		try:
 			partition = forceInt(partition)
 			bootable = forceBool(bootable)
@@ -1639,9 +1553,7 @@ class Harddisk:
 					partTablefound = True
 					break
 			if not partTablefound:
-				logger.notice(
-					"unrecognized partition table type, writing empty partitiontable"
-				)
+				logger.notice("unrecognized partition table type, writing empty partitiontable")
 				execute(
 					f'{which("echo")} -e "0,0\n\n\n\n" | {which("sfdisk")} --no-reread {self.device}',
 					ignoreExitCode=[1],
@@ -1691,22 +1603,16 @@ class Harddisk:
 							gline,
 						)
 						if not match:
-							raise RuntimeError(
-								f"Unable to get geometry for disk '{self.device}'"
-							)
+							raise RuntimeError(f"Unable to get geometry for disk '{self.device}'")
 						self.cylinders = forceInt(match.group(1))
 						self.heads = forceInt(match.group(2))
 						self.sectors = forceInt(match.group(3))
 						self.totalCylinders = self.cylinders
 
 			elif line.lower().startswith("units"):
-				match = re.search(
-					r"sectors\s+of\s+\d\s+.\s+\d+\s+.\s+(\d+)\s+bytes", line
-				)
+				match = re.search(r"sectors\s+of\s+\d\s+.\s+\d+\s+.\s+(\d+)\s+bytes", line)
 				if not match:
-					raise RuntimeError(
-						f"Unable to get bytes/cylinder for disk '{self.device}'"
-					)
+					raise RuntimeError(f"Unable to get bytes/cylinder for disk '{self.device}'")
 				self.bytesPerCylinder = forceInt(match.group(1))
 				self.totalCylinders = int(self.size / self.bytesPerCylinder)
 				logger.info(
@@ -1722,9 +1628,7 @@ class Harddisk:
 					line,
 				)
 				if not match:
-					raise RuntimeError(
-						f"Unable to read partition table of disk '{self.device}'"
-					)
+					raise RuntimeError(f"Unable to read partition table of disk '{self.device}'")
 
 				if match.group(5):
 					boot = False
@@ -1741,9 +1645,7 @@ class Harddisk:
 					deviceName = forceFilename(match.group(1) + match.group(2))
 					try:
 						logger.debug("Trying using Blkid")
-						fsres = execute(
-							f"{which('blkid')} -o value -s TYPE {deviceName}"
-						)
+						fsres = execute(f"{which('blkid')} -o value -s TYPE {deviceName}")
 						if fsres:
 							for fsline in fsres:
 								fsline = fsline.strip()
@@ -1791,9 +1693,7 @@ class Harddisk:
 					)
 
 					if partitionData["device"]:
-						logger.debug(
-							"Waiting for device '%s' to appear", partitionData["device"]
-						)
+						logger.debug("Waiting for device '%s' to appear", partitionData["device"])
 						timeout = 15
 						while timeout > 0:
 							if os.path.exists(partitionData["device"]):
@@ -1803,9 +1703,7 @@ class Harddisk:
 						if os.path.exists(partitionData["device"]):
 							logger.debug("Device '%s' found", partitionData["device"])
 						else:
-							logger.warning(
-								"Device '%s' not found", partitionData["device"]
-							)
+							logger.warning("Device '%s' not found", partitionData["device"])
 
 	def _parseSectorData(self, outputFromSfDiskListing):
 		"""
@@ -1824,9 +1722,7 @@ class Harddisk:
 					line,
 				)
 				if not match:
-					raise RuntimeError(
-						f"Unable to read partition table (sectors) of disk '{self.device}'"
-					)
+					raise RuntimeError(f"Unable to read partition table (sectors) of disk '{self.device}'")
 
 				if match.group(4):
 					for pnum, partition in enumerate(self.partitions):
@@ -1845,14 +1741,10 @@ class Harddisk:
 							break
 
 			elif line.lower().startswith("units"):
-				match = re.search(
-					r"sectors\s+of\s+\d\s+.\s+\d+\s+.\s+(\d+)\s+bytes", line
-				)
+				match = re.search(r"sectors\s+of\s+\d\s+.\s+\d+\s+.\s+(\d+)\s+bytes", line)
 
 				if not match:
-					raise RuntimeError(
-						f"Unable to get bytes/sector for disk '{self.device}'"
-					)
+					raise RuntimeError(f"Unable to get bytes/sector for disk '{self.device}'")
 				self.bytesPerSector = forceInt(match.group(1))
 				self.totalSectors = int(self.size / self.bytesPerSector)
 				logger.info(
@@ -1873,9 +1765,7 @@ class Harddisk:
 					part = self.getPartition(pnum + 1)
 					if self.blockAlignment:
 						logger.debug(
-							"   number: %s, start: %s MB (%s sec), "
-							"end: %s MB (%s sec), size: %s MB (%s sec), "
-							"type: %s, fs: %s, boot: %s",
+							"   number: %s, start: %s MB (%s sec), end: %s MB (%s sec), size: %s MB (%s sec), type: %s, fs: %s, boot: %s",
 							part["number"],
 							(part["start"] / (1000 * 1000)),
 							part["secStart"],
@@ -1891,9 +1781,7 @@ class Harddisk:
 						cmd += f"{part['secStart']},{part['secSize']},{part['type']}"
 					else:
 						logger.debug(
-							"   number: %s, start: %s MB (%s cyl), "
-							"end: %s MB (%s cyl), size: %s MB (%s cyl), "
-							"type: %s, fs: %s, boot: %s",
+							"   number: %s, start: %s MB (%s cyl), end: %s MB (%s cyl), size: %s MB (%s cyl), type: %s, fs: %s, boot: %s",
 							part["number"],
 							(part["start"] / (1000 * 1000)),
 							part["cylStart"],
@@ -1944,9 +1832,7 @@ class Harddisk:
 		try:
 			execute(f"{which('partprobe')} {self.device}", env=sp_env)
 		except Exception:
-			logger.error(
-				"Forcing kernel reread partion table failed, waiting 5 sec. and try again"
-			)
+			logger.error("Forcing kernel reread partion table failed, waiting 5 sec. and try again")
 			try:
 				time.sleep(5)
 				execute(f"{which('partprobe')} {self.device}", ignoreExitCode=[1])
@@ -1976,9 +1862,7 @@ class Harddisk:
 
 	def shred(self, partition=0, iterations=25, progressSubject=None):
 		for hook in hooks:
-			(partition, iterations, progressSubject) = hook.pre_Harddisk_shred(
-				self, partition, iterations, progressSubject
-			)
+			(partition, iterations, progressSubject) = hook.pre_Harddisk_shred(self, partition, iterations, progressSubject)
 
 		try:
 			partition = forceInt(partition)
@@ -2013,9 +1897,7 @@ class Harddisk:
 						logger.debug("Position: %s, percent: %d", position, percent)
 						if progressSubject and (percent != progressSubject.getState()):
 							progressSubject.setState(percent)
-							progressSubject.setMessage(
-								f"Pass {iteration}/{iterations} ({dataType}), position: {position}"
-							)
+							progressSubject.setMessage(f"Pass {iteration}/{iterations} ({dataType}), position: {position}")
 				else:
 					error = line
 
@@ -2027,9 +1909,7 @@ class Harddisk:
 
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_shred(
-					self, partition, iterations, progressSubject, err
-				)
+				hook.error_Harddisk_shred(self, partition, iterations, progressSubject, err)
 			raise
 
 		for hook in hooks:
@@ -2043,9 +1923,7 @@ class Harddisk:
 
 	def fill(self, partition=0, infile="", progressSubject=None):
 		for hook in hooks:
-			(partition, infile, progressSubject) = hook.pre_Harddisk_fill(
-				self, partition, infile, progressSubject
-			)
+			(partition, infile, progressSubject) = hook.pre_Harddisk_fill(self, partition, infile, progressSubject)
 
 		try:
 			partition = forceInt(partition)
@@ -2112,9 +1990,7 @@ class Harddisk:
 						)
 						if percent != progressSubject.getState():
 							progressSubject.setState(percent)
-							progressSubject.setMessage(
-								f"Pos: {round((position) / 1024)} MB, average transfer rate: {rate} kB/s"
-							)
+							progressSubject.setMessage(f"Pos: {round((position) / 1024)} MB, average transfer rate: {rate} kB/s")
 
 			if progressSubject:
 				progressSubject.setState(100)
@@ -2178,9 +2054,7 @@ class Harddisk:
 			elif system in ("dos", "winnt"):
 				mbrType = "--mbrdos"
 
-			logger.info(
-				"Writing master boot record on '%s' (system: %s)", self.device, system
-			)
+			logger.info("Writing master boot record on '%s' (system: %s)", self.device, system)
 
 			cmd = f"{which('ms-sys')} {mbrType} {self.device}"
 			try:
@@ -2217,9 +2091,7 @@ class Harddisk:
 
 	def writePartitionBootRecord(self, partition=1, fsType="auto"):
 		for hook in hooks:
-			(partition, fsType) = hook.pre_Harddisk_writePartitionBootRecord(
-				self, partition, fsType
-			)
+			(partition, fsType) = hook.pre_Harddisk_writePartitionBootRecord(self, partition, fsType)
 
 		try:
 			partition = forceInt(partition)
@@ -2248,14 +2120,10 @@ class Harddisk:
 					raise RuntimeError(result)
 			except Exception as err:
 				logger.error("Cannot write partition boot record: %s", err)
-				raise RuntimeError(
-					f"Cannot write partition boot record: {err}"
-				) from err
+				raise RuntimeError(f"Cannot write partition boot record: {err}") from err
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_writePartitionBootRecord(
-					self, partition, fsType, err
-				)
+				hook.error_Harddisk_writePartitionBootRecord(self, partition, fsType, err)
 			raise
 
 		for hook in hooks:
@@ -2263,9 +2131,7 @@ class Harddisk:
 
 	def setNTFSPartitionStartSector(self, partition, sector=0):
 		for hook in hooks:
-			(partition, sector) = hook.pre_Harddisk_setNTFSPartitionStartSector(
-				self, partition, sector
-			)
+			(partition, sector) = hook.pre_Harddisk_setNTFSPartitionStartSector(self, partition, sector)
 
 		try:
 			partition = forceInt(partition)
@@ -2334,9 +2200,7 @@ class Harddisk:
 				os.close(hd)
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_setNTFSPartitionStartSector(
-					self, partition, sector, err
-				)
+				hook.error_Harddisk_setNTFSPartitionStartSector(self, partition, sector, err)
 			raise
 
 		for hook in hooks:
@@ -2352,13 +2216,9 @@ class Harddisk:
 				return part
 		raise ValueError(f"Partition {number} does not exist")
 
-	def createPartition(
-		self, start, end, fs, type="primary", boot=False, lba=False, number=None
-	):
+	def createPartition(self, start, end, fs, type="primary", boot=False, lba=False, number=None):
 		for hook in hooks:
-			(start, end, fs, type, boot, lba) = hook.pre_Harddisk_createPartition(
-				self, start, end, fs, type, boot, lba
-			)
+			(start, end, fs, type, boot, lba) = hook.pre_Harddisk_createPartition(self, start, end, fs, type, boot, lba)
 		try:
 			start = forceUnicodeLower(start)
 			end = forceUnicodeLower(end)
@@ -2402,141 +2262,70 @@ class Harddisk:
 			if start.endswith(("m", "mb")):
 				match = re.search(r"^(\d+)\D", start)
 				if self.blockAlignment:
-					start = int(
-						round((int(match.group(1)) * 1024 * 1024) / self.bytesPerSector)
-					)
+					start = int(round((int(match.group(1)) * 1024 * 1024) / self.bytesPerSector))
 				else:
-					start = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024) / self.bytesPerCylinder
-						)
-					)
+					start = int(round((int(match.group(1)) * 1024 * 1024) / self.bytesPerCylinder))
 			elif start.endswith(("g", "gb")):
 				match = re.search(r"^(\d+)\D", start)
 				if self.blockAlignment:
-					start = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024 * 1024)
-							/ self.bytesPerSector
-						)
-					)
+					start = int(round((int(match.group(1)) * 1024 * 1024 * 1024) / self.bytesPerSector))
 				else:
-					start = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024 * 1024)
-							/ self.bytesPerCylinder
-						)
-					)
+					start = int(round((int(match.group(1)) * 1024 * 1024 * 1024) / self.bytesPerCylinder))
 			elif start.lower().endswith("%"):
 				match = re.search(r"^(\d+)\D", start)
 				if self.blockAlignment:
-					start = int(
-						round((float(match.group(1)) / 100) * self.totalSectors)
-					)
+					start = int(round((float(match.group(1)) / 100) * self.totalSectors))
 				else:
-					start = int(
-						round((float(match.group(1)) / 100) * self.totalCylinders)
-					)
+					start = int(round((float(match.group(1)) / 100) * self.totalCylinders))
 			elif start.lower().endswith("s"):
 				match = re.search(r"^(\d+)\D", start)
 				start = int(match.group(1))
 				if not self.blockAlignment:
-					start = int(
-						round(
-							(
-								(float(start) * self.bytesPerSector)
-								/ self.bytesPerCylinder
-							)
-						)
-					)
+					start = int(round(((float(start) * self.bytesPerSector) / self.bytesPerCylinder)))
 			elif start.lower().endswith("c"):
 				# Cylinder!
 				start = int(start)
 				if self.blockAlignment:
-					start = int(
-						round(
-							(
-								(float(start) * self.bytesPerCylinder)
-								/ self.bytesPerSector
-							)
-						)
-					)
+					start = int(round(((float(start) * self.bytesPerCylinder) / self.bytesPerSector)))
 			else:
 				# Cylinder!
 				start = int(start)
 				if self.blockAlignment:
-					start = int(
-						round(
-							(
-								(float(start) * self.bytesPerCylinder)
-								/ self.bytesPerSector
-							)
-						)
-					)
+					start = int(round(((float(start) * self.bytesPerCylinder) / self.bytesPerSector)))
 
 			if end.endswith(("m", "mb")):
 				match = re.search(r"^(\d+)\D", end)
 				if self.blockAlignment:
-					end = int(
-						round((int(match.group(1)) * 1024 * 1024) / self.bytesPerSector)
-					)
+					end = int(round((int(match.group(1)) * 1024 * 1024) / self.bytesPerSector))
 				else:
-					end = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024) / self.bytesPerCylinder
-						)
-					)
+					end = int(round((int(match.group(1)) * 1024 * 1024) / self.bytesPerCylinder))
 			elif end.endswith(("g", "gb")):
 				match = re.search(r"^(\d+)\D", end)
 				if self.blockAlignment:
-					end = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024 * 1024)
-							/ self.bytesPerSector
-						)
-					)
+					end = int(round((int(match.group(1)) * 1024 * 1024 * 1024) / self.bytesPerSector))
 				else:
-					end = int(
-						round(
-							(int(match.group(1)) * 1024 * 1024 * 1024)
-							/ self.bytesPerCylinder
-						)
-					)
+					end = int(round((int(match.group(1)) * 1024 * 1024 * 1024) / self.bytesPerCylinder))
 			elif end.lower().endswith("%"):
 				match = re.search(r"^(\d+)\D", end)
 				if self.blockAlignment:
 					end = int(round((float(match.group(1)) / 100) * self.totalSectors))
 				else:
-					end = int(
-						round((float(match.group(1)) / 100) * self.totalCylinders)
-					)
+					end = int(round((float(match.group(1)) / 100) * self.totalCylinders))
 			elif end.lower().endswith("s"):
 				match = re.search(r"^(\d+)\D", end)
 				end = int(match.group(1))
 				if not self.blockAlignment:
-					end = int(
-						round(
-							((float(end) * self.bytesPerSector) / self.bytesPerCylinder)
-						)
-					)
+					end = int(round(((float(end) * self.bytesPerSector) / self.bytesPerCylinder)))
 			elif end.lower().endswith("c"):
 				# Cylinder!
 				end = int(end)
 				if self.blockAlignment:
-					end = int(
-						round(
-							((float(end) * self.bytesPerCylinder) / self.bytesPerSector)
-						)
-					)
+					end = int(round(((float(end) * self.bytesPerCylinder) / self.bytesPerSector)))
 			else:
 				# Cylinder!
 				end = int(end)
 				if self.blockAlignment:
-					end = int(
-						round(
-							((float(end) * self.bytesPerCylinder) / self.bytesPerSector)
-						)
-					)
+					end = int(round(((float(end) * self.bytesPerCylinder) / self.bytesPerSector)))
 
 			if unit == "cyl":
 				# Lowest possible cylinder is 0
@@ -2661,9 +2450,7 @@ class Harddisk:
 			self.readPartitionTable()
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_createPartition(
-					self, start, end, fs, type, boot, lba, err
-				)
+				hook.error_Harddisk_createPartition(self, start, end, fs, type, boot, lba, err)
 			raise
 
 		for hook in hooks:
@@ -2713,18 +2500,14 @@ class Harddisk:
 
 	def mountPartition(self, partition, mountpoint, **options):
 		for hook in hooks:
-			(partition, mountpoint, options) = hook.pre_Harddisk_mountPartition(
-				self, partition, mountpoint, **options
-			)
+			(partition, mountpoint, options) = hook.pre_Harddisk_mountPartition(self, partition, mountpoint, **options)
 		try:
 			partition = forceInt(partition)
 			mountpoint = forceFilename(mountpoint)
 			mount(self.getPartition(partition)["device"], mountpoint, **options)
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_mountPartition(
-					self, partition, mountpoint, err, **options
-				)
+				hook.error_Harddisk_mountPartition(self, partition, mountpoint, err, **options)
 			raise
 
 		for hook in hooks:
@@ -2813,9 +2596,7 @@ class Harddisk:
 
 	def resizeFilesystem(self, partition, size=0, fs=None):
 		for hook in hooks:
-			(partition, size, fs) = hook.pre_Harddisk_resizeFilesystem(
-				self, partition, size, fs
-			)
+			(partition, size, fs) = hook.pre_Harddisk_resizeFilesystem(self, partition, size, fs)
 		try:
 			partition = forceInt(partition)
 			size = forceInt(size)
@@ -2833,9 +2614,7 @@ class Harddisk:
 					size = self.getPartition(partition)["size"] - 10 * 1024 * 1024
 
 			if size <= 0:
-				raise ValueError(
-					f"New filesystem size of {(float(size) / (1024 * 1024)):.2f} MB is not possible!"
-				)
+				raise ValueError(f"New filesystem size of {(float(size) / (1024 * 1024)):.2f} MB is not possible!")
 
 			if fs.lower() == "ntfs":
 				cmd = f"echo 'y' | {which('ntfsresize')} --force --size {size} {self.getPartition(partition)['device']}"
@@ -2853,9 +2632,7 @@ class Harddisk:
 
 	def saveImage(self, partition, imageFile, progressSubject=None):
 		for hook in hooks:
-			(partition, imageFile, progressSubject) = hook.pre_Harddisk_saveImage(
-				self, partition, imageFile, progressSubject
-			)
+			(partition, imageFile, progressSubject) = hook.pre_Harddisk_saveImage(self, partition, imageFile, progressSubject)
 
 		saveImageResult = {"TotalTime": "n/a", "AveRate": "n/a", "AveUnit": "n/a"}
 
@@ -2880,10 +2657,7 @@ class Harddisk:
 
 			# "-f" will write images of "dirty" volumes too
 			# Better run chkdsk under windows before saving image!
-			cmd = (
-				f"{which('partclone.' + part['fs'])} --rescue --clone --force "
-				f"--source {part['device']} --overwrite {imageFile} {pipe}"
-			)
+			cmd = f"{which('partclone.' + part['fs'])} --rescue --clone --force --source {part['device']} --overwrite {imageFile} {pipe}"
 
 			if progressSubject:
 				progressSubject.setEnd(100)
@@ -2943,10 +2717,7 @@ class Harddisk:
 								logger.info("Save image: Scanning filesystem")
 								if progressSubject:
 									progressSubject.setMessage("Scanning filesystem")
-							elif (
-								currentBuffer.count(":") == 1
-								and "http:" not in currentBuffer
-							):
+							elif currentBuffer.count(":") == 1 and "http:" not in currentBuffer:
 								(key, val) = currentBuffer.split(":")
 								key = key.strip()
 								val = val.strip()
@@ -2962,10 +2733,7 @@ class Harddisk:
 							match = re.search(r"Completed:\s*([\d\.]+)%", currentBuffer)
 							if match:
 								percent = int(round(float(match.group(1))))
-								if (
-									progressSubject
-									and percent != progressSubject.getState()
-								):
+								if progressSubject and percent != progressSubject.getState():
 									logger.debug(" -->>> %s", currentBuffer)
 									progressSubject.setState(percent)
 
@@ -2983,9 +2751,7 @@ class Harddisk:
 
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_saveImage(
-					self, partition, imageFile, progressSubject, err
-				)
+				hook.error_Harddisk_saveImage(self, partition, imageFile, progressSubject, err)
 			raise
 
 		for hook in hooks:
@@ -2995,9 +2761,7 @@ class Harddisk:
 
 	def restoreImage(self, partition, imageFile, progressSubject=None):
 		for hook in hooks:
-			(partition, imageFile, progressSubject) = hook.pre_Harddisk_restoreImage(
-				self, partition, imageFile, progressSubject
-			)
+			(partition, imageFile, progressSubject) = hook.pre_Harddisk_restoreImage(self, partition, imageFile, progressSubject)
 
 		try:
 			partition = forceInt(partition)
@@ -3035,13 +2799,9 @@ class Harddisk:
 					while proc.poll() is None:
 						pids = os.listdir("/proc")
 						for pid_ in pids:
-							if not os.path.exists(
-								os.path.join("/proc", pid_, "status")
-							):
+							if not os.path.exists(os.path.join("/proc", pid_, "status")):
 								continue
-							with open(
-								os.path.join("/proc", pid_, "status"), encoding="utf-8"
-							) as file:
+							with open(os.path.join("/proc", pid_, "status"), encoding="utf-8") as file:
 								for line in file:
 									if line.startswith("PPid:"):
 										ppid = line.split()[1].strip()
@@ -3082,10 +2842,7 @@ class Harddisk:
 					self.getPartition(partition)["device"],
 				)
 
-				cmd = (
-					f"{pipe} {which('partclone.restore')} --source {imageFile} "
-					f"--overwrite {self.getPartition(partition)['device']}"
-				)
+				cmd = f"{pipe} {which('partclone.restore')} --source {imageFile} --overwrite {self.getPartition(partition)['device']}"
 
 				if progressSubject:
 					progressSubject.setEnd(100)
@@ -3122,10 +2879,7 @@ class Harddisk:
 							if "Partclone successfully" in currentBuffer:
 								done = True
 							if not started:
-								if (
-									currentBuffer.count(":") == 1
-									and "http:" in currentBuffer
-								):
+								if currentBuffer.count(":") == 1 and "http:" in currentBuffer:
 									(key, val) = currentBuffer.split(":")
 									key = key.strip()
 									val = val.strip()
@@ -3136,21 +2890,14 @@ class Harddisk:
 										fs = val.lower()
 									elif "used" in key.lower():
 										if progressSubject:
-											progressSubject.setMessage(
-												"Restoring image"
-											)
+											progressSubject.setMessage("Restoring image")
 										started = True
 										continue
 							else:
-								match = re.search(
-									r"Completed:\s*([\d\.]+)%", currentBuffer
-								)
+								match = re.search(r"Completed:\s*([\d\.]+)%", currentBuffer)
 								if match:
 									percent = int(round(float(match.group(1))))
-									if (
-										progressSubject
-										and percent != progressSubject.getState()
-									):
+									if progressSubject and percent != progressSubject.getState():
 										logger.debug(" -->>> %s", currentBuffer)
 										progressSubject.setState(percent)
 
@@ -3176,10 +2923,7 @@ class Harddisk:
 					self.getPartition(partition)["device"],
 				)
 
-				cmd = (
-					f"{pipe} {which('ntfsclone')} --restore-image "
-					f"--overwrite {self.getPartition(partition)['device']} {imageFile}"
-				)
+				cmd = f"{pipe} {which('ntfsclone')} --restore-image --overwrite {self.getPartition(partition)['device']} {imageFile}"
 
 				if progressSubject:
 					progressSubject.setEnd(100)
@@ -3210,15 +2954,10 @@ class Harddisk:
 								if progressSubject:
 									progressSubject.setMessage("Syncing")
 								done = True
-							match = re.search(
-								r"\s(\d+)[\.\,]\d\d\spercent", currentBuffer
-							)
+							match = re.search(r"\s(\d+)[\.\,]\d\d\spercent", currentBuffer)
 							if match:
 								percent = int(match.group(1))
-								if (
-									progressSubject
-									and percent != progressSubject.getState()
-								):
+								if progressSubject and percent != progressSubject.getState():
 									logger.debug(" -->>> %s", currentBuffer)
 									progressSubject.setState(percent)
 							else:
@@ -3246,9 +2985,7 @@ class Harddisk:
 
 		except Exception as err:
 			for hook in hooks:
-				hook.error_Harddisk_restoreImage(
-					self, partition, imageFile, progressSubject, err
-				)
+				hook.error_Harddisk_restoreImage(self, partition, imageFile, progressSubject, err)
 			raise
 
 		for hook in hooks:
@@ -3260,11 +2997,7 @@ def isCentOS():
 	Returns `True` if this is running on CentOS.
 	Returns `False` if otherwise.
 	"""
-	return (
-		_checkForDistribution("CentOS")
-		or _checkForDistribution("Rocky Linux")
-		or _checkForDistribution("AlmaLinux")
-	)
+	return _checkForDistribution("CentOS") or _checkForDistribution("Rocky Linux") or _checkForDistribution("AlmaLinux")
 
 
 def isDebian():
@@ -3324,10 +3057,7 @@ def isUCS():
 	Returns `True` if this is running on Univention Corporate Server.
 	Returns `False` if otherwise.
 	"""
-	return (
-		_checkForDistribution("Univention")
-		or "univention" in Distribution().distributor.lower()
-	)
+	return _checkForDistribution("Univention") or "univention" in Distribution().distributor.lower()
 
 
 def _checkForDistribution(name):
@@ -3430,9 +3160,7 @@ class SysInfo:
 	def hardwareAddress(self):
 		for device in getEthernetDevices():
 			devconf = getNetworkDeviceConfig(device)
-			if devconf["ipAddress"] and not devconf["ipAddress"].startswith(
-				("127", "169")
-			):
+			if devconf["ipAddress"] and not devconf["ipAddress"].startswith(("127", "169")):
 				if self.ipAddress == devconf["ipAddress"]:
 					return forceHardwareAddress(devconf["hardwareAddress"])
 		return None
@@ -3441,9 +3169,7 @@ class SysInfo:
 	def netmask(self):
 		for device in getEthernetDevices():
 			devconf = getNetworkDeviceConfig(device)
-			if devconf["ipAddress"] and not devconf["ipAddress"].startswith(
-				("127", "169")
-			):
+			if devconf["ipAddress"] and not devconf["ipAddress"].startswith(("127", "169")):
 				if self.ipAddress == devconf["ipAddress"]:
 					return forceNetmask(devconf["netmask"])
 		return "255.255.255.0"
@@ -3451,19 +3177,14 @@ class SysInfo:
 	@property
 	def broadcast(self):
 		return ".".join(
-			"%d"
-			% (
-				int(self.ipAddress.split(".")[i])
-				| int(self.netmask.split(".")[i]) ^ 255
-			)
+			"%d" % (int(self.ipAddress.split(".")[i]) | int(self.netmask.split(".")[i]) ^ 255)
 			for i in range(len(self.ipAddress.split(".")))
 		)
 
 	@property
 	def subnet(self):
 		return ".".join(
-			"%d" % (int(self.ipAddress.split(".")[i]) & int(self.netmask.split(".")[i]))
-			for i in range(len(self.ipAddress.split(".")))
+			"%d" % (int(self.ipAddress.split(".")[i]) & int(self.netmask.split(".")[i])) for i in range(len(self.ipAddress.split(".")))
 		)
 
 
@@ -3472,9 +3193,7 @@ class SysInfo:
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 def auditHardware(config, hostId, progressSubject=None):
 	for hook in hooks:
-		(config, hostId, progressSubject) = hook.pre_auditHardware(
-			config, hostId, progressSubject
-		)
+		(config, hostId, progressSubject) = hook.pre_auditHardware(config, hostId, progressSubject)
 
 	try:
 		hostId = forceHostId(hostId)
@@ -3499,9 +3218,7 @@ def auditHardware(config, hostId, progressSubject=None):
 		raise
 
 	for hook in hooks:
-		auditHardwareOnHosts = hook.post_auditHardware(
-			config, hostId, auditHardwareOnHosts
-		)
+		auditHardwareOnHosts = hook.post_auditHardware(config, hostId, auditHardwareOnHosts)
 
 	return auditHardwareOnHosts
 
@@ -3586,9 +3303,7 @@ def hardwareInventory(config, progressSubject=None):
 			return nodelist[0].getAttribute(attrname).strip()
 		return ""
 
-	def getElementsByAttributeValue(
-		dom, tagName, attributeName, attributeValue, onlyHighest=False
-	):
+	def getElementsByAttributeValue(dom, tagName, attributeName, attributeValue, onlyHighest=False):
 		if onlyHighest:
 			return [
 				[
@@ -3598,11 +3313,7 @@ def hardwareInventory(config, progressSubject=None):
 				][0]
 			]
 
-		return [
-			element
-			for element in dom.getElementsByTagName(tagName)
-			if re.search(attributeValue, element.getAttribute(attributeName))
-		]
+		return [element for element in dom.getElementsByTagName(tagName) if re.search(attributeValue, element.getAttribute(attributeName))]
 
 	# Read output from lshw
 	proc_env = get_subprocess_environment(add_lc_all_C=True, add_path_sbin=True)
@@ -3632,9 +3343,7 @@ def hardwareInventory(config, progressSubject=None):
 	# Read output from lspci
 	lspci = {}
 	busId = None
-	devRegex = re.compile(
-		r"([\d.:a-f]+)\s+([\da-f]+):\s+([\da-f]+):([\da-f]+)\s*(\(rev ([^\)]+)\)|)"
-	)
+	devRegex = re.compile(r"([\d.:a-f]+)\s+([\da-f]+):\s+([\da-f]+):([\da-f]+)\s*(\(rev ([^\)]+)\)|)")
 	subRegex = re.compile(r"\s*Subsystem:\s+([\da-f]+):([\da-f]+)\s*")
 	proc_env = get_subprocess_environment(add_path_sbin=True)
 	for line in execute("lspci -vn", captureStderr=False, env=proc_env):
@@ -3678,29 +3387,17 @@ def hardwareInventory(config, progressSubject=None):
 						if line.startswith("Codec:"):
 							hdaudio[hdaudioId]["codec"] = line.split(":", 1)[1].strip()
 						elif line.startswith("Address:"):
-							hdaudio[hdaudioId]["address"] = line.split(":", 1)[
-								1
-							].strip()
+							hdaudio[hdaudioId]["address"] = line.split(":", 1)[1].strip()
 						elif line.startswith("Vendor Id:"):
 							vid = line.split("x", 1)[1].strip()
-							hdaudio[hdaudioId]["vendorId"] = forceHardwareVendorId(
-								vid[0:4]
-							)
-							hdaudio[hdaudioId]["deviceId"] = forceHardwareDeviceId(
-								vid[4:8]
-							)
+							hdaudio[hdaudioId]["vendorId"] = forceHardwareVendorId(vid[0:4])
+							hdaudio[hdaudioId]["deviceId"] = forceHardwareDeviceId(vid[4:8])
 						elif line.startswith("Subsystem Id:"):
 							sid = line.split("x", 1)[1].strip()
-							hdaudio[hdaudioId]["subsystemVendorId"] = (
-								forceHardwareVendorId(sid[0:4])
-							)
-							hdaudio[hdaudioId]["subsystemDeviceId"] = (
-								forceHardwareDeviceId(sid[4:8])
-							)
+							hdaudio[hdaudioId]["subsystemVendorId"] = forceHardwareVendorId(sid[0:4])
+							hdaudio[hdaudioId]["subsystemDeviceId"] = forceHardwareDeviceId(sid[4:8])
 						elif line.startswith("Revision Id:"):
-							hdaudio[hdaudioId]["revision"] = line.split("x", 1)[
-								1
-							].strip()
+							hdaudio[hdaudioId]["revision"] = line.split("x", 1)[1].strip()
 				logger.debug("      Codec info: '%s'", hdaudio[hdaudioId])
 
 	# Read output from lsusb
@@ -3711,9 +3408,7 @@ def hardwareInventory(config, progressSubject=None):
 	currentKey = None
 	status = False
 
-	devRegex = re.compile(
-		r"^Bus\s+(\d+)\s+Device\s+(\d+):\s+ID\s+([\da-fA-F]{4}):([\da-fA-F]{4})\s*(.*)$"
-	)
+	devRegex = re.compile(r"^Bus\s+(\d+)\s+Device\s+(\d+):\s+ID\s+([\da-fA-F]{4}):([\da-fA-F]{4})\s*(.*)$")
 	descriptorRegex = re.compile(r"^(\s*)(.*)\s+Descriptor:\s*$")
 	deviceStatusRegex = re.compile(r"^(\s*)Device\s+Status:\s+(\S+)\s*$")
 	deviceQualifierRegex = re.compile(r"^(\s*)Device\s+Qualifier\s+.*:\s*$")
@@ -3853,26 +3548,18 @@ def hardwareInventory(config, progressSubject=None):
 				elif option:
 					if not isinstance(dmidecode[dmiType][-1][option], list):
 						if dmidecode[dmiType][-1][option]:
-							dmidecode[dmiType][-1][option] = [
-								dmidecode[dmiType][-1][option]
-							]
+							dmidecode[dmiType][-1][option] = [dmidecode[dmiType][-1][option]]
 						else:
 							dmidecode[dmiType][-1][option] = []
 					dmidecode[dmiType][-1][option].append(removeUnit(line.strip()))
 		except Exception as err:
-			logger.error(
-				"Error while parsing dmidecode output '%s': %s", line.strip(), err
-			)
+			logger.error("Error while parsing dmidecode output '%s': %s", line.strip(), err)
 	logger.trace("Parsed dmidecode info:")
 	logger.trace(objectToBeautifiedText(dmidecode))
 
 	# Build hw info structure
 	for hwClass in config:
-		if (
-			not hwClass.get("Class")
-			or not hwClass["Class"].get("Opsi")
-			or not hwClass["Class"].get("Linux")
-		):
+		if not hwClass.get("Class") or not hwClass["Class"].get("Opsi") or not hwClass["Class"].get("Linux"):
 			continue
 
 		opsiClass = hwClass["Class"]["Opsi"]
@@ -3900,13 +3587,9 @@ def hardwareInventory(config, progressSubject=None):
 
 					if hwclass == "system":
 						# system nodes can appear nested... only working with root system here
-						devs = getElementsByAttributeValue(
-							dom, "node", "class", hwclass, onlyHighest=True
-						)
+						devs = getElementsByAttributeValue(dom, "node", "class", hwclass, onlyHighest=True)
 					else:
-						devs = getElementsByAttributeValue(
-							dom, "node", "class", hwclass
-						)
+						devs = getElementsByAttributeValue(dom, "node", "class", hwclass)
 
 					for dev in devs:
 						if dev.hasChildNodes():
@@ -3914,18 +3597,14 @@ def hardwareInventory(config, progressSubject=None):
 								if child.nodeName == "businfo":
 									busInfo = child.firstChild.data.strip()
 									if busInfo.startswith("pci@"):
-										logger.debug(
-											"Getting pci bus info for '%s'", busInfo
-										)
+										logger.debug("Getting pci bus info for '%s'", busInfo)
 										pciBusId = busInfo.split("@")[1]
 										if pciBusId.startswith("0000:"):
 											pciBusId = pciBusId[5:]
 										pciInfo = lspci.get(pciBusId, {})
 										for key, value in pciInfo.items():
 											elem = dom.createElement(key)
-											elem.childNodes.append(
-												dom.createTextNode(value)
-											)
+											elem.childNodes.append(dom.createTextNode(value))
 											dev.childNodes.append(elem)
 									break
 					if hwid:
@@ -3941,31 +3620,19 @@ def hardwareInventory(config, progressSubject=None):
 											filtered.append(dev)
 									elif dev.hasChildNodes():
 										for child in dev.childNodes:
-											if (
-												child.nodeName == attr
-											) and child.hasChildNodes():
-												if eval(
-													f"child.firstChild.data.strip().{method}"
-												):
+											if (child.nodeName == attr) and child.hasChildNodes():
+												if eval(f"child.firstChild.data.strip().{method}"):
 													filtered.append(dev)
 													break
 											try:
-												if (
-													child.hasAttributes()
-													and child.getAttribute(attr)
-												):
-													if eval(
-														f"child.getAttribute(attr).{method}"
-													):
+												if child.hasAttributes() and child.getAttribute(attr):
+													if eval(f"child.getAttribute(attr).{method}"):
 														filtered.append(dev)
 														break
 											except Exception:
 												pass
 							# Also consider nodes with matching class
-							if (
-								re.search(hwid, dev.getAttribute("class"))
-								and not filter
-							):
+							if re.search(hwid, dev.getAttribute("class")) and not filter:
 								filtered.append(dev)
 						devs = filtered
 
@@ -4004,13 +3671,7 @@ def hardwareInventory(config, progressSubject=None):
 										try:
 											if child.nodeName == part:
 												nextElements.append(child)
-											elif (
-												child.hasAttributes()
-												and child.getAttribute("id").split(":")[
-													0
-												]
-												== part
-											):
+											elif child.hasAttributes() and child.getAttribute("id").split(":")[0] == part:
 												nextElements.append(child)
 										except Exception:
 											pass
@@ -4018,18 +3679,12 @@ def hardwareInventory(config, progressSubject=None):
 									if not nextElements:
 										for child in element.childNodes:
 											try:
-												if (
-													child.hasAttributes()
-													and child.getAttribute("class")
-													== part
-												):
+												if child.hasAttributes() and child.getAttribute("class") == part:
 													nextElements.append(child)
 											except Exception:
 												pass
 								if not nextElements:
-									logger.warning(
-										"Attribute part '%s' not found", part
-									)
+									logger.warning("Attribute part '%s' not found", part)
 									break
 								elements = nextElements
 
@@ -4078,11 +3733,7 @@ def hardwareInventory(config, progressSubject=None):
 							(filterAttr, filterExp) = filter.split(".", 1)
 
 					for dev in dmidecode.get(hwclass, []):
-						if (
-							filterAttr
-							and dev.get(filterAttr)
-							and not eval(f"str(dev.get(filterAttr)).{filterExp}")
-						):
+						if filterAttr and dev.get(filterAttr) and not eval(f"str(dev.get(filterAttr)).{filterExp}"):
 							continue
 						device = {}
 						for attribute in hwClass["Values"]:
@@ -4096,12 +3747,8 @@ def hardwareInventory(config, progressSubject=None):
 									(aname, method) = aname.split(".", 1)
 								if method:
 									try:
-										logger.debug(
-											"Eval: %s.%s", dev.get(aname, ""), method
-										)
-										device[attribute["Opsi"]] = eval(
-											f"dev.get(aname, '').{method}"
-										)
+										logger.debug("Eval: %s.%s", dev.get(aname, ""), method)
+										device[attribute["Opsi"]] = eval(f"dev.get(aname, '').{method}")
 									except Exception as err:
 										if not device.get(attribute["Opsi"]):
 											device[attribute["Opsi"]] = ""
@@ -4122,9 +3769,7 @@ def hardwareInventory(config, progressSubject=None):
 						if len(devices) == 1 and opsiValues[hwClass["Class"]["Opsi"]]:
 							for attr in device.keys():
 								if device[attr]:
-									opsiValues[hwClass["Class"]["Opsi"]][0][attr] = (
-										device[attr]
-									)
+									opsiValues[hwClass["Class"]["Opsi"]][0][attr] = device[attr]
 						else:
 							opsiValues[hwClass["Class"]["Opsi"]].append(device)
 
@@ -4180,10 +3825,7 @@ def hardwareInventory(config, progressSubject=None):
 		opsiClass = hwClass["Class"]["Opsi"]
 		if opsiValues.get(opsiClass):
 			opsiValues[opsiClass] = [
-				dict(value_tuple)
-				for value_tuple in {
-					tuple(value_dict.items()) for value_dict in opsiValues[opsiClass]
-				}
+				dict(value_tuple) for value_tuple in {tuple(value_dict.items()) for value_dict in opsiValues[opsiClass]}
 			]
 
 	opsiValues["SCANPROPERTIES"] = [{"scantime": time.strftime("%Y-%m-%d %H:%M:%S")}]
@@ -4553,9 +4195,7 @@ until the execution of the process is terminated.
 		if timeoutSeconds:
 			if timeRunning >= timeoutSeconds:
 				_terminateProcess(process)
-				raise RuntimeError(
-					f"Timed out after {timeRunning} seconds while waiting for process {process.pid}"
-				)
+				raise RuntimeError(f"Timed out after {timeRunning} seconds while waiting for process {process.pid}")
 
 			timeRunning += sleepDuration
 		time.sleep(sleepDuration)
@@ -4599,9 +4239,7 @@ def setLocalSystemTime(timestring):
 	http://docs.activestate.com/activepython/2.5/pywin32/win32api__SetSystemTime_meth.html
 	"""
 	if not timestring:
-		raise ValueError(
-			"Invalid timestring given. It should be in format like: '2014-07-15 13:20:24.085661'"
-		)
+		raise ValueError("Invalid timestring given. It should be in format like: '2014-07-15 13:20:24.085661'")
 
 	try:
 		dt = datetime.datetime.strptime(timestring, "%Y-%m-%d %H:%M:%S.%f")
@@ -4610,3 +4248,11 @@ def setLocalSystemTime(timestring):
 		subprocess.call([systemTime])
 	except Exception as err:
 		logger.error("Failed to set System Time: %s", err)
+
+
+def getUEFISecureBootCertificates() -> list[x509.Certificate]:
+	db_files = list(Path("/sys/firmware/efi/efivars").glob("db-*"))
+	if not db_files:
+		return []
+	data = db_files[0].read_bytes()[4:]
+	return _get_secure_boot_certificates_from_efivar_payload(data)

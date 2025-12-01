@@ -7,10 +7,11 @@ Testing functionality of OPSI.System
 """
 
 import os
-import pytest
 import shutil
 
-from OPSI.System import copy
+import pytest
+
+from OPSI.System import copy, getUEFISecureBootCertificates
 from OPSI.Util.Message import ProgressSubject
 
 
@@ -48,9 +49,7 @@ def dstDir(tempDir):
 
 @pytest.fixture
 def filledSourceDirectory(srcDir, exampleFilenames, exampleDirectories):
-	return fillDirectoryWithFilesAndFolders(
-		srcDir, exampleFilenames, exampleDirectories
-	)
+	return fillDirectoryWithFilesAndFolders(srcDir, exampleFilenames, exampleDirectories)
 
 
 def fillDirectoryWithFilesAndFolders(sourceDirectory, filenames, directories):
@@ -73,9 +72,7 @@ def fillDirectoryWithFilesAndFolders(sourceDirectory, filenames, directories):
 	return sourceDirectory
 
 
-def makeSureFilesAndFoldersExistAtDestination(
-	filenames, directories, sourceDirectory, destinationDirectory
-):
+def makeSureFilesAndFoldersExistAtDestination(filenames, directories, sourceDirectory, destinationDirectory):
 	bname = os.path.basename(sourceDirectory)
 	for filename in filenames:
 		pathToFile = os.path.join(destinationDirectory, bname, filename)
@@ -90,9 +87,7 @@ def makeSureFilesAndFoldersExistAtDestination(
 			assert os.path.isfile(pathToFile)
 
 
-def makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(
-	filenames, directories, destinationDirectory
-):
+def makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(filenames, directories, destinationDirectory):
 	"""
 	Checking method for files and folders that does nut include the basename
 	of the source directory.
@@ -172,20 +167,14 @@ def testCopyingFromDirectoryToFileRaisesException(progressSubject, srcDir, dstDi
 		copy(testSrcDir, testDstDir, progressSubject)
 
 
-def testCopyingFromDirectoryToDirectoryCopiesContent(
-	progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories
-):
+def testCopyingFromDirectoryToDirectoryCopiesContent(progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories):
 	# src = dir,   dst = dir			=> copy src dir into dst
 	copy(filledSourceDirectory, dstDir, progressSubject)
-	makeSureFilesAndFoldersExistAtDestination(
-		exampleFilenames, exampleDirectories, filledSourceDirectory, dstDir
-	)
+	makeSureFilesAndFoldersExistAtDestination(exampleFilenames, exampleDirectories, filledSourceDirectory, dstDir)
 
 	copy(filledSourceDirectory, dstDir, progressSubject)
 
-	for name in os.listdir(
-		os.path.join(dstDir, os.path.basename(filledSourceDirectory))
-	):
+	for name in os.listdir(os.path.join(dstDir, os.path.basename(filledSourceDirectory))):
 		assert name in exampleDirectories + exampleFilenames
 
 	for dirname in exampleDirectories:
@@ -201,37 +190,32 @@ def testCopyingFromDirectoryToNonExistingCreatesFolderAndCopiesContent(
 	shutil.rmtree(dstDir)
 	copy(filledSourceDirectory, dstDir, progressSubject)
 
-	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(
-		exampleFilenames, exampleDirectories, dstDir
-	)
+	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(exampleFilenames, exampleDirectories, dstDir)
 
 
-def testCopyingManyFilesIntoNonFileDestination(
-	progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories
-):
+def testCopyingManyFilesIntoNonFileDestination(progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories):
 	# src = dir/*, dst = not file	   => create dst if not exists, copy content of src into dst
 	copy(filledSourceDirectory + "/*.*", dstDir, progressSubject)
 
-	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(
-		exampleFilenames, exampleDirectories, dstDir
-	)
+	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(exampleFilenames, exampleDirectories, dstDir)
 
 
-def testCopyingFilesWithWildcardPattern(
-	progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories
-):
+def testCopyingFilesWithWildcardPattern(progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories):
 	copy(filledSourceDirectory + "/*", dstDir, progressSubject)
 
-	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(
-		exampleFilenames, exampleDirectories, dstDir
-	)
+	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(exampleFilenames, exampleDirectories, dstDir)
 
 
-def testCopyingFilesWithWildcardPatternIncludingDot(
-	progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories
-):
+def testCopyingFilesWithWildcardPatternIncludingDot(progressSubject, filledSourceDirectory, dstDir, exampleFilenames, exampleDirectories):
 	copy(filledSourceDirectory + "/*.*", dstDir, progressSubject)
 
-	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(
-		exampleFilenames, exampleDirectories, dstDir
-	)
+	makeSureFilesAndFoldersExistAtDestinationWithoutLongPath(exampleFilenames, exampleDirectories, dstDir)
+
+
+def testGetUEFISecureBootCertificates():
+	certificates = getUEFISecureBootCertificates()
+	assert isinstance(certificates, list)
+	for cert in certificates:
+		from cryptography.x509 import Certificate
+
+		assert isinstance(cert, Certificate)

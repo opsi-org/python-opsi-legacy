@@ -32,9 +32,7 @@ elif platform.system().lower() == "windows":
 elif platform.system().lower() == "darwin":
 	from .Darwin import *  # noqa: F401,F403
 else:
-	logger.error(
-		"Unable to import System library for system %s", platform.system().lower()
-	)
+	logger.error("Unable to import System library for system %s", platform.system().lower())
 
 
 class SystemHook(SystemSpecificHook):
@@ -180,9 +178,7 @@ def getCountAndSize(path):
 			logger.trace("Is dir: %s", path)
 			logger.debug("Counting and getting sizes of files in dir %s", path)
 			for element in os.listdir(path):
-				(elementCount, elementSize) = getCountAndSize(
-					os.path.join(path, element)
-				)
+				(elementCount, elementSize) = getCountAndSize(os.path.join(path, element))
 				count += elementCount
 				size += elementSize
 	except Exception as error:
@@ -209,9 +205,7 @@ def mkdir(newDir, mode=0o750):
 	if os.path.isdir(newDir):
 		pass
 	elif os.path.isfile(newDir):
-		raise OSError(
-			"A file with the same name as the desired dir, '{newDir}', already exists."
-		)
+		raise OSError("A file with the same name as the desired dir, '{newDir}', already exists.")
 	else:
 		(head, tail) = os.path.split(newDir)
 		if head and not os.path.isdir(head):
