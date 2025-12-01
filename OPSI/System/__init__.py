@@ -335,3 +335,45 @@ def _copy(
 			)
 
 	return fileCount
+
+
+def hardwarePredefinedInventory(config, opsiValues={}):
+	if not config:
+		logger.error("hardwareInventory: no config given")
+		return {}
+
+	for hwClass in config:
+		if not hwClass.get("Class") or not hwClass["Class"].get("Opsi"):
+			continue
+
+		opsiName = hwClass["Class"]["Opsi"]
+
+		logger.debug("Processing class '%s'", opsiName)
+
+		for item in hwClass["Values"]:
+			if not item.get("predefined"):
+				continue
+
+			value = None
+			if opsiName == "BIOS":
+				if item["Opsi"] == "UEFIBootActive":
+					value = inUEFIMode()
+				elif item["Opsi"] == "SecureBootActive":
+					value = getUEFISecureBootEnabled()
+				elif item["Opsi"] == "SecureBootWindowsCA2023":
+					value = False
+					for cert in getUEFISecureBootCertificates():
+						rfc4514_string = cert.subject.rfc4514_string()
+						logger.debug("Checking UEFI Secure Boot certificate: %s", rfc4514_string)
+						if rfc4514_string.startswith("CN=Windows UEFI CA 2023,"):
+							value = True
+							break
+
+			if value is None:
+				logger.warning("Predefined value for '%s.%s' not found.", opsiName, item["Opsi"])
+			if opsiName not in opsiValues:
+				opsiValues[opsiName] = [{}]
+			for i in range(len(opsiValues[opsiName])):
+				opsiValues[opsiName][i][item["Opsi"]] = value
+
+	return opsiValues
