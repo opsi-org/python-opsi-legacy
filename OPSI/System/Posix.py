@@ -3199,6 +3199,7 @@ def auditHardware(config, hostId, progressSubject=None):
 
 		info = hardwareInventory(config)
 		info = hardwareExtendedInventory(config, info)
+		info = hardwarePredefinedInventory(config, info)
 		for hardwareClass, devices in info.items():
 			if hardwareClass == "SCANPROPERTIES":
 				continue
@@ -3280,6 +3281,50 @@ def hardwareExtendedInventory(config, opsiValues={}, progressSubject=None):
 						opsiValues[opsiName].append({})
 					for i in range(len(opsiValues[opsiName])):
 						opsiValues[opsiName][i][item["Opsi"]] = result
+
+	return opsiValues
+
+
+def hardwarePredefinedInventory(config, opsiValues={}):
+	if not config:
+		logger.error("hardwareInventory: no config given")
+		return {}
+
+	from OPSI.System.Linux import getUEFISecureBootCertificates, getUEFISecureBootEnabled, inUEFIMode
+
+	for hwClass in config:
+		if not hwClass.get("Class") or not hwClass["Class"].get("Opsi"):
+			continue
+
+		opsiName = hwClass["Class"]["Opsi"]
+
+		logger.debug("Processing class '%s'", opsiName)
+
+		for item in hwClass["Values"]:
+			if item.get("Linux") != "__predefined__":
+				continue
+
+			value = None
+			if opsiName == "BIOS":
+				if item["Opsi"] == "UEFIBootActive":
+					value = inUEFIMode()
+				elif item["Opsi"] == "SecureBootActive":
+					value = getUEFISecureBootEnabled()
+				elif item["Opsi"] == "SecureBootWindowsCA2023":
+					value = False
+					for cert in getUEFISecureBootCertificates():
+						rfc4514_string = cert.subject.rfc4514_string()
+						logger.debug("Checking UEFI Secure Boot certificate: %s", rfc4514_string)
+						if rfc4514_string.startswith("CN=Windows UEFI CA 2023,"):
+							value = True
+							break
+
+			if value is None:
+				logger.warning("Predefined value for '%s.%s' not found.", opsiName, item["Opsi"])
+			if opsiName not in opsiValues:
+				opsiValues[opsiName].append({})
+			for i in range(len(opsiValues[opsiName])):
+				opsiValues[opsiName][i][item["Opsi"]] = value
 
 	return opsiValues
 
@@ -3646,7 +3691,7 @@ def hardwareInventory(config, progressSubject=None):
 
 					for attribute in hwClass["Values"]:
 						elements = [device]
-						if not attribute.get("Opsi") or not attribute.get("Linux"):
+						if not attribute.get("Opsi") or not attribute.get("Linux") or attribute["Linux"] == "__predefined__":
 							continue
 
 						logger.trace(
@@ -3733,7 +3778,7 @@ def hardwareInventory(config, progressSubject=None):
 							continue
 						device = {}
 						for attribute in hwClass["Values"]:
-							if not attribute.get("Linux"):
+							if not attribute.get("Linux") or attribute["Linux"] == "__predefined__":
 								continue
 
 							for aname in attribute["Linux"].split("||"):
@@ -3775,7 +3820,7 @@ def hardwareInventory(config, progressSubject=None):
 				for hdaudioId, dev in hdaudio.items():
 					device = {}
 					for attribute in hwClass["Values"]:
-						if not attribute.get("Linux") or attribute["Linux"] not in dev:
+						if not attribute.get("Linux") or attribute["Linux"] not in dev or attribute["Linux"] == "__predefined__":
 							continue
 
 						try:
@@ -3791,7 +3836,7 @@ def hardwareInventory(config, progressSubject=None):
 				for busId, dev in lsusb.items():
 					device = {}
 					for attribute in hwClass["Values"]:
-						if not attribute.get("Linux"):
+						if not attribute.get("Linux") or attribute["Linux"] == "__predefined__":
 							continue
 
 						try:
