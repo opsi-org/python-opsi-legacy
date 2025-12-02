@@ -12,7 +12,7 @@ import shutil
 
 import pytest
 
-from OPSI.System import copy, getUEFISecureBootCertificates
+from OPSI.System import copy, getUEFISecureBootCertificates, getUEFISecureBootEnabled, inUEFIMode
 from OPSI.Util.Message import ProgressSubject
 
 
@@ -220,3 +220,13 @@ def testGetUEFISecureBootCertificates():
 		from cryptography.x509 import Certificate
 
 		assert isinstance(cert, Certificate)
+
+
+def testInUEFIMode():
+	result = inUEFIMode()
+	assert isinstance(result, bool)
+
+
+def testGetUEFISecureBootEnabled():
+	result = getUEFISecureBootEnabled()
+	assert isinstance(result, bool)

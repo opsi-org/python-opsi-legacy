@@ -2111,7 +2111,7 @@ class Impersonate:
 
 
 def inUEFIMode():
-	return subprocess.check_output("Write-Host $env:firmware_type").strip() == b"UEFI"
+	return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Write-Host $env:firmware_type"').strip() == b"UEFI"
 
 
 def getUEFISecureBootEnabled() -> bool:
