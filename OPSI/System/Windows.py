@@ -2111,17 +2111,29 @@ class Impersonate:
 
 
 def inUEFIMode():
-	return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Write-Host $env:firmware_type"').strip() == b"UEFI"
+	try:
+		return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Write-Host $env:firmware_type"').strip() == b"UEFI"
+	except Exception as err:
+		logger.debug("Failed to determine firmware type: %s", err)
+		return False
 
 
 def getUEFISecureBootEnabled() -> bool:
-	return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Confirm-SecureBootUEFI"').strip() == b"True"
+	try:
+		return subprocess.check_output('powershell -ExecutionPolicy ByPass -c "Confirm-SecureBootUEFI"').strip() == b"True"
+	except Exception as err:
+		logger.debug("Failed to determine Secure Boot status: %s", err)
+		return False
 
 
 def getUEFISecureBootCertificates() -> list[x509.Certificate]:
-	data = base64.b64decode(
-		subprocess.check_output(
-			'powershell -ExecutionPolicy ByPass -c "[Convert]::ToBase64String((Get-SecureBootUEFI -Name db).Bytes)"'
-		).strip()
-	)
-	return _get_secure_boot_certificates_from_efivar_payload(data)
+	try:
+		data = base64.b64decode(
+			subprocess.check_output(
+				'powershell -ExecutionPolicy ByPass -c "[Convert]::ToBase64String((Get-SecureBootUEFI -Name db).Bytes)"'
+			).strip()
+		)
+		return _get_secure_boot_certificates_from_efivar_payload(data)
+	except Exception as err:
+		logger.debug("Failed to get Secure Boot certificates: %s", err)
+		return []
