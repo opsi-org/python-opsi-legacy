@@ -238,7 +238,7 @@ def grant_session_access(username: str, session_id: str):
 	logger.debug("Using process env: %s", sp_env)
 
 	# Allow user to connect to X
-	xhost_cmd = ["sudo", "-u", session_username, "xhost", f"+si:localuser:{username}"]
+	xhost_cmd = ["sudo", "-u", str(session_username), "xhost", f"+si:localuser:{username}"]
 	logger.info("Running command %s", xhost_cmd)
 	process = subprocess.run(
 		xhost_cmd,
