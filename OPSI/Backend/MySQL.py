@@ -8,7 +8,7 @@ MySQL-Backend
 """
 
 import time
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, Generator, List  # noqa: F401
 from urllib.parse import quote, urlencode
 
 # Disable sqlalchemy 2.0 deprecation warnings
@@ -427,5 +427,7 @@ class MySQLBackend(SQLBackend):
 class MySQLBackendObjectModificationTracker(SQLBackendObjectModificationTracker):
 	def __init__(self, **kwargs) -> None:
 		SQLBackendObjectModificationTracker.__init__(self, **kwargs)
+		self._sql = MySQL(**kwargs)
+		self._createTables()
 		self._sql = MySQL(**kwargs)
 		self._createTables()
