@@ -1,4 +1,4 @@
-image: docker.uib.gmbh/opsi/dev/pybuilder:deb9-py3.13
+image: docker.uib.gmbh/opsi/dev/pybuilder:deb9-py3.11
 
 stages:
   - test
@@ -6,7 +6,6 @@ stages:
   - publish
 
 lint-and-test:
-  #when: manual
   services:
     - name: mysql:8.3
       command:
@@ -26,14 +25,14 @@ lint-and-test:
     wget --header="Authorization: Bearer ${OPSILICSRV_TOKEN}" "https://opsi-license-server.uib.gmbh/api/v1/licenses/test?usage=python-opsi-gitlab-ci" -O /etc/opsi/licenses/test.opsilic
 
     cp tests/Backends/config.py.gitlabci tests/Backends/config.py
-    apt-get update
-    apt-get --yes install default-libmysqlclient-dev librsync1
-    poetry env use 3.13
-    poetry lock
-    poetry install
-    poetry run ruff check OPSI tests
-    poetry add mysqlclient==2.1.1
-    poetry run pytest --tb=short -x -o junit_family=xunit2 --junitxml=testreport.xml --cov-append --cov-report term --cov-report xml -v tests
+
+    export UV_PYTHON="3.13"
+    export UV_PYTHON_PREFERENCE="only-managed"
+    uv self update
+    uv sync --frozen
+    uv run ruff check OPSI tests
+    uv add mysqlclient==2.1.1
+    uv run pytest --tb=short -x -o junit_family=xunit2 --junitxml=testreport.xml --cov-append --cov-report term --cov-report xml -v tests
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+)%/'
   artifacts:
     name: 'python-opsi_test'
@@ -55,10 +54,11 @@ apidoc:
     - eval $(ssh-agent -s)
     - ssh-add <(echo "$BLOG_PUBLISH_PRIVATE_KEY")
   script:
-    - poetry env use 3.13
-    - poetry lock
-    - poetry install
-    - poetry run opsi-dev-cli apidoc makehtml --output python-opsi
+    - export UV_PYTHON="3.13"
+    - export UV_PYTHON_PREFERENCE="only-managed"
+    - uv self update
+    - uv sync --frozen
+    - uv run opsi-dev-cli apidoc makehtml --output python-opsi
     - ssh -o StrictHostKeyChecking=no "root@docker1.ext.uib.gmbh" "mkdir -p /var/lib/docker/volumes/docs_nginx_data/_data/python-docs"
     - rsync -e "ssh -o StrictHostKeyChecking=no" --delete -azv python-opsi "root@docker1.ext.uib.gmbh:/var/lib/docker/volumes/docs_nginx_data/_data/python-docs/"
 
@@ -66,9 +66,10 @@ apidoc:
 uibpypi:
   stage: publish
   script:
-    - poetry env use 3.13
-    - poetry lock
-    - poetry install
-    - poetry run opsi-dev-tool -l info --uib-pypi-publish
+    - export UV_PYTHON="3.13"
+    - export UV_PYTHON_PREFERENCE="only-managed"
+    - uv self update
+    - uv sync --frozen
+    - uv run opsi-dev-cli -l info pypi publish --url https://pypi.uib.gmbh --overwrite
   only:
     - tags

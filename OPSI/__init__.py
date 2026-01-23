@@ -10,4 +10,4 @@ This module is part of the desktop management solution opsi
 (open pc server integration) http://www.opsi.org
 """
 
-__version__ = "4.3.0.28"
+__version__ = "4.3.10.6"

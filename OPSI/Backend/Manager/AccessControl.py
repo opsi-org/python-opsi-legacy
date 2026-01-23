@@ -13,8 +13,8 @@ import re
 import types
 import typing  # This is needed for dynamic loading  # noqa: F401
 from functools import lru_cache
-from typing import (  # This is needed for dynamic loading  # noqa: F401
-	Any,
+from typing import (
+	Any,  # This is needed for dynamic loading  # noqa: F401
 	Dict,
 	Generator,
 	List,
@@ -39,7 +39,7 @@ from OPSI.Exceptions import (
 )
 from OPSI.Object import *  # This is needed for dynamic loading  # noqa: F403
 from OPSI.Types import forceBool, forceList, forceUnicodeList, forceUnicodeLowerList
-from OPSI.Util.File.Opsi import BackendACLFile, OpsiConfFile
+from OPSI.Util.File.Opsi import BackendACLFile
 
 __all__ = ("BackendAccessControl",)
 
@@ -90,49 +90,17 @@ class BackendAccessControl:
 		if not self._backend:
 			raise BackendAuthenticationError("No backend specified")
 		if isinstance(self._backend, BackendAccessControl):
-			raise BackendConfigurationError(
-				"Cannot use BackendAccessControl instance as backend"
-			)
+			raise BackendConfigurationError("Cannot use BackendAccessControl instance as backend")
 
 		if not self._auth_module:
-			try:
-				ldap_conf = OpsiConfFile().get_ldap_auth_config()
-				if ldap_conf:
-					logger.debug("Using ldap auth with config: %s", ldap_conf)
+			if os.name == "posix":
+				import OPSI.Backend.Manager.Authentication.PAM
 
-					available_modules = self._context.backend_getLicensingInfo()[
-						"available_modules"
-					]
-					if "directory-connector" in available_modules:
-						import OPSI.Backend.Manager.Authentication.LDAP
+				self._auth_module = OPSI.Backend.Manager.Authentication.PAM.PAMAuthentication(pam_service)
+			elif os.name == "nt":
+				import OPSI.Backend.Manager.Authentication.NT
 
-						self._auth_module = (
-							OPSI.Backend.Manager.Authentication.LDAP.LDAPAuthentication(
-								**ldap_conf
-							)
-						)
-					else:
-						logger.error(
-							"Disabling ldap authentication: directory-connector module not available"
-						)
-
-			except Exception as err:
-				logger.debug(err)
-			if not self._auth_module:
-				if os.name == "posix":
-					import OPSI.Backend.Manager.Authentication.PAM
-
-					self._auth_module = (
-						OPSI.Backend.Manager.Authentication.PAM.PAMAuthentication(
-							pam_service
-						)
-					)
-				elif os.name == "nt":
-					import OPSI.Backend.Manager.Authentication.NT
-
-					self._auth_module = (
-						OPSI.Backend.Manager.Authentication.NT.NTAuthentication()
-					)
+				self._auth_module = OPSI.Backend.Manager.Authentication.NT.NTAuthentication()
 
 		self._createInstanceMethods()
 		if self._aclFile:
@@ -161,9 +129,7 @@ class BackendAccessControl:
 			self._acl[i] = (re.compile(pattern), acl)
 
 		if kwargs.get("username") and kwargs.get("password"):
-			self.authenticate(
-				kwargs["username"], kwargs["password"], kwargs.get("forcegroups")
-			)
+			self.authenticate(kwargs["username"], kwargs["password"], kwargs.get("forcegroups"))
 
 	@property
 	def user_store(self):
@@ -183,9 +149,7 @@ class BackendAccessControl:
 		auth_type: str = None,
 	):
 		if not auth_type:
-			if re.search(r"^[^.]+\.[^.]+\.\S+$", username) or re.search(
-				r"^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", username
-			):
+			if re.search(r"^[^.]+\.[^.]+\.\S+$", username) or re.search(r"^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", username):
 				# Username is a fqdn or mac address
 				auth_type = "opsi-hostkey"
 			else:
@@ -204,12 +168,8 @@ class BackendAccessControl:
 			if self.auth_type == "opsi-hostkey":
 				self.user_store.username = self.user_store.username.lower()
 				host_filter = {}
-				if re.search(
-					r"^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", self.user_store.username
-				):
-					logger.debug(
-						"Trying to authenticate by mac address and opsi host key"
-					)
+				if re.search(r"^[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}$", self.user_store.username):
+					logger.debug("Trying to authenticate by mac address and opsi host key")
 					host_filter["hardwareAddress"] = self.user_store.username
 				else:
 					logger.debug("Trying to authenticate by host id and opsi host key")
@@ -228,19 +188,13 @@ class BackendAccessControl:
 					self.user_store.host = host[0]
 				except IndexError as err:
 					logger.debug(err)
-					raise BackendMissingDataError(
-						f"Host '{self.user_store.username}' not found in backend {self._context}"
-					) from err
+					raise BackendMissingDataError(f"Host '{self.user_store.username}' not found in backend {self._context}") from err
 
 				self.user_store.username = self.user_store.host.id
 
 				if not self.user_store.host.opsiHostKey:
-					raise BackendMissingDataError(
-						f"OpsiHostKey not found for host '{self.user_store.username}'"
-					)
-				one_time_password = getattr(
-					self.user_store.host, "oneTimePassword", None
-				)
+					raise BackendMissingDataError(f"OpsiHostKey not found for host '{self.user_store.username}'")
+				one_time_password = getattr(self.user_store.host, "oneTimePassword", None)
 
 				logger.confidential(
 					"Host '%s' authentication: password sent '%s', host key '%s', onetime password '%s'",
@@ -250,16 +204,9 @@ class BackendAccessControl:
 					one_time_password,
 				)
 
-				if (
-					self.user_store.host.opsiHostKey
-					and self.user_store.password == self.user_store.host.opsiHostKey
-				):
-					logger.info(
-						"Host '%s' authenticated by host key", self.user_store.host.id
-					)
-				elif (
-					one_time_password and self.user_store.password == one_time_password
-				):
+				if self.user_store.host.opsiHostKey and self.user_store.password == self.user_store.host.opsiHostKey:
+					logger.info("Host '%s' authenticated by host key", self.user_store.host.id)
+				elif one_time_password and self.user_store.password == one_time_password:
 					logger.info(
 						"Host '%s' authenticated by onetime password",
 						self.user_store.host.id,
@@ -267,26 +214,17 @@ class BackendAccessControl:
 					self.user_store.host.setOneTimePassword("")
 					host = self._context.host_updateObject(self.user_store.host)
 				else:
-					raise BackendAuthenticationError(
-						f"Authentication of host '{self.user_store.host.id}' failed"
-					)
+					raise BackendAuthenticationError(f"Authentication of host '{self.user_store.host.id}' failed")
 
 				self.user_store.authenticated = True
 				self.user_store.isAdmin = self._isOpsiDepotserver()
 				self.user_store.isReadOnly = False
 			elif self.auth_type == "opsi-passwd":
-				credentials = self._context.user_getCredentials(
-					self.user_store.username
-				)
-				if (
-					self.user_store.password
-					and self.user_store.password == credentials.get("password")
-				):
+				credentials = self._context.user_getCredentials(self.user_store.username)
+				if self.user_store.password and self.user_store.password == credentials.get("password"):
 					self.user_store.authenticated = True
 				else:
-					raise BackendAuthenticationError(
-						f"Authentication failed for user {self.user_store.username}"
-					)
+					raise BackendAuthenticationError(f"Authentication failed for user {self.user_store.username}")
 			elif self.auth_type == "auth-module":
 				# Get a fresh instance
 				auth_module = self._auth_module.get_instance()
@@ -297,18 +235,12 @@ class BackendAccessControl:
 				)
 
 				if not auth_module:
-					raise BackendAuthenticationError(
-						"Authentication module unavailable"
-					)
+					raise BackendAuthenticationError("Authentication module unavailable")
 
 				try:
-					auth_module.authenticate(
-						self.user_store.username, self.user_store.password
-					)
+					auth_module.authenticate(self.user_store.username, self.user_store.password)
 				except Exception as err:
-					raise BackendAuthenticationError(
-						f"Authentication failed for user '{self.user_store.username}': {err}"
-					) from err
+					raise BackendAuthenticationError(f"Authentication failed for user '{self.user_store.username}': {err}") from err
 
 				# Authentication did not throw exception => authentication successful
 				self.user_store.authenticated = True
@@ -320,12 +252,8 @@ class BackendAccessControl:
 						", ".join(self.user_store.userGroups),
 					)
 				else:
-					self.user_store.userGroups = auth_module.get_groupnames(
-						self.user_store.username
-					)
-				self.user_store.isAdmin = auth_module.user_is_admin(
-					self.user_store.username
-				)
+					self.user_store.userGroups = auth_module.get_groupnames(self.user_store.username)
+				self.user_store.isAdmin = auth_module.user_is_admin(self.user_store.username)
 				self.user_store.isReadOnly = auth_module.user_is_read_only(
 					self.user_store.username, set(forceGroups) if forceGroups else None
 				)
@@ -344,9 +272,7 @@ class BackendAccessControl:
 				raise BackendAuthenticationError(f"Invalid auth type {self.auth_type}")
 		except Exception as err:
 			logger.debug(err, exc_info=True)
-			raise BackendAuthenticationError(
-				f"{err} (auth_type={self.auth_type})"
-			) from err
+			raise BackendAuthenticationError(f"{err} (auth_type={self.auth_type})") from err
 
 	def accessControl_authenticated(self):
 		return self.user_store.authenticated
@@ -369,9 +295,7 @@ class BackendAccessControl:
 			logger.debug("Read acl from file %s: %s", self._aclFile, self._acl)
 		except Exception as err:
 			logger.error(err, exc_info=True)
-			raise BackendConfigurationError(
-				f"Failed to load acl file '{self._aclFile}': {err}"
-			) from err
+			raise BackendConfigurationError(f"Failed to load acl file '{self._aclFile}': {err}") from err
 
 	def _createInstanceMethods(self):
 		protectedMethods = set()
@@ -382,17 +306,11 @@ class BackendAccessControl:
 			HostControlBackend,
 			HostControlSafeBackend,
 		):
-			methodnames = (
-				name
-				for name, _ in inspect.getmembers(Class, inspect.isfunction)
-				if not name.startswith("_")
-			)
+			methodnames = (name for name, _ in inspect.getmembers(Class, inspect.isfunction) if not name.startswith("_"))
 			for methodName in methodnames:
 				protectedMethods.add(methodName)
 
-		for methodName, functionRef in inspect.getmembers(
-			self._backend, inspect.ismethod
-		):
+		for methodName, functionRef in inspect.getmembers(self._backend, inspect.ismethod):
 			if getattr(functionRef, "no_export", False):
 				continue
 			if methodName.startswith("_"):
@@ -436,9 +354,7 @@ class BackendAccessControl:
 		return self.user_store.username in forceUnicodeLowerList(ids)
 
 	def _isOpsiDepotserver(self, ids=None):
-		if not self.user_store.host or not isinstance(
-			self.user_store.host, OpsiDepotserver
-		):
+		if not self.user_store.host or not isinstance(self.user_store.host, OpsiDepotserver):
 			return False
 		if not ids:
 			return True
@@ -484,9 +400,7 @@ class BackendAccessControl:
 		acls = []
 		logger.debug("Access control for method %s with params %s", methodName, kwargs)
 		for regex, acl in self._acl:
-			logger.trace(
-				"Testing if ACL pattern %s matches method %s", regex.pattern, methodName
-			)
+			logger.trace("Testing if ACL pattern %s matches method %s", regex.pattern, methodName)
 			if not regex.search(methodName):
 				logger.trace("No match -> skipping.")
 				continue
@@ -536,9 +450,7 @@ class BackendAccessControl:
 			)
 			newKwargs = kwargs
 		elif granted is False:
-			raise BackendPermissionDeniedError(
-				f"Access to method '{methodName}' denied for user '{self.user_store.username}'"
-			)
+			raise BackendPermissionDeniedError(f"Access to method '{methodName}' denied for user '{self.user_store.username}'")
 		else:
 			logger.debug(
 				"Partial access to method %s granted to user %s by acls %s",
@@ -557,11 +469,7 @@ class BackendAccessControl:
 				) from err
 
 		if methodName == "backend_getLicensingInfo" and not self.user_store.isAdmin:
-			if (
-				newKwargs.get("licenses")
-				or newKwargs.get("legacy_modules")
-				or newKwargs.get("dates")
-			):
+			if newKwargs.get("licenses") or newKwargs.get("legacy_modules") or newKwargs.get("dates"):
 				raise BackendPermissionDeniedError(
 					f"Access to method '{methodName}' with params {newKwargs} denied for user '{self.user_store.username}'"
 				)
@@ -583,12 +491,8 @@ class BackendAccessControl:
 			if not valueList:
 				continue
 
-			if issubclass(valueList[0].__class__, BaseObject) or isinstance(
-				valueList[0], dict
-			):
-				valueList = self._filterObjects(
-					valueList, acls, exceptionOnTruncate=False
-				)
+			if issubclass(valueList[0].__class__, BaseObject) or isinstance(valueList[0], dict):
+				valueList = self._filterObjects(valueList, acls, exceptionOnTruncate=False)
 				if isinstance(value, list):
 					params[key] = valueList
 				else:
@@ -601,17 +505,11 @@ class BackendAccessControl:
 	def _filterResult(self, result, acls):
 		if result:
 			resultList = forceList(result)
-			if issubclass(resultList[0].__class__, BaseObject) or isinstance(
-				resultList[0], dict
-			):
-				return self._filterObjects(
-					result, acls, exceptionOnTruncate=False, exceptionIfAllRemoved=False
-				)
+			if issubclass(resultList[0].__class__, BaseObject) or isinstance(resultList[0], dict):
+				return self._filterObjects(result, acls, exceptionOnTruncate=False, exceptionIfAllRemoved=False)
 		return result
 
-	def _filterObjects(
-		self, objects, acls, exceptionOnTruncate=True, exceptionIfAllRemoved=True
-	):
+	def _filterObjects(self, objects, acls, exceptionOnTruncate=True, exceptionIfAllRemoved=True):
 		logger.info("Filtering objects by acls")
 		is_list = type(objects) in (tuple, list)
 		newObjects = []
@@ -646,11 +544,7 @@ class BackendAccessControl:
 				if acl.get("allowAttributes"):
 					attributesToAdd = acl["allowAttributes"]
 				elif acl.get("denyAttributes"):
-					attributesToAdd = (
-						attribute
-						for attribute in objHash
-						if attribute not in acl["denyAttributes"]
-					)
+					attributesToAdd = (attribute for attribute in objHash if attribute not in acl["denyAttributes"])
 				else:
 					attributesToAdd = list(objHash.keys())
 
@@ -670,9 +564,7 @@ class BackendAccessControl:
 			for key in objHash.keys():
 				if key not in allowedAttributes:
 					if exceptionOnTruncate:
-						raise BackendPermissionDeniedError(
-							f"Access to attribute '{key}' denied"
-						)
+						raise BackendPermissionDeniedError(f"Access to attribute '{key}' denied")
 					keysToDelete.add(key)
 
 			for key in keysToDelete:
@@ -686,9 +578,7 @@ class BackendAccessControl:
 		orilen = len(objects) if is_list else 1
 		newlen = len(newObjects)
 		if newlen < orilen:
-			logger.warning(
-				"%s objects removed by acl, %s objects left", (orilen - newlen), newlen
-			)
+			logger.warning("%s objects removed by acl, %s objects left", (orilen - newlen), newlen)
 			if newlen == 0 and exceptionIfAllRemoved:
 				raise BackendPermissionDeniedError("Access denied")
 
