@@ -38,9 +38,7 @@ from OPSI.Util import (
 	toJson,
 )
 
-from .helpers import (
-	workInTemporaryDirectory,
-)
+from .helpers import workInTemporaryDirectory
 
 
 @pytest.mark.parametrize(
@@ -145,9 +143,7 @@ def testObjectToHtmlOutputIsAsExpected():
 	assert '<font class="json_key">"id"</font>: "htmltestproduct"' in result
 	assert '<font class="json_key">"licenseRequired"</font>: false' in result
 	assert '<font class="json_key">"ident"</font>: "htmltestproduct;3.1;1"' in result
-	assert (
-		'<font class="json_key">"name"</font>: "Product&nbsp;HTML&nbsp;Test"' in result
-	)
+	assert '<font class="json_key">"name"</font>: "Product&nbsp;HTML&nbsp;Test"' in result
 	assert '<font class="json_key">"changelog"</font>: null' in result
 	assert '<font class="json_key">"customScript"</font>: null' in result
 	assert '<font class="json_key">"uninstallScript"</font>: "uninstall.ins"' in result
@@ -550,9 +546,7 @@ def testSerialisingDictsInListWithFloat():
 	assert inputValues == fromJson(output)
 
 
-@pytest.mark.parametrize(
-	"inputValues", [{"a": "b", "c": 1, "e": 2}, {"a": "b", "c": 1, "e": 2.3}]
-)
+@pytest.mark.parametrize("inputValues", [{"a": "b", "c": 1, "e": 2}, {"a": "b", "c": 1, "e": 2.3}])
 def testSerialisingDict(inputValues):
 	result = toJson(inputValues)
 
@@ -755,9 +749,7 @@ def blowfishKey(request):
 
 
 def test_blowfish_encryption():
-	blowfishEncrypt(
-		"575bf0d0b557dd9184ae41e7ff58ead0", "jksdfjklöasdfjkladfsjkasdfjlkö"
-	)
+	blowfishEncrypt("575bf0d0b557dd9184ae41e7ff58ead0", "jksdfjklöasdfjkladfsjkasdfjlkö")
 
 
 def testBlowfishEncryption(randomText, blowfishKey):
@@ -882,12 +874,8 @@ def testObjectToBashOutput():
 
 def testObjectToBashOnConfigStates():
 	states = [
-		ConfigState(
-			configId="foo.bar.baz", objectId="client1.invalid.test", values=[""]
-		),
-		ConfigState(
-			configId="drive.slow", objectId="client2.invalid.test", values=[False]
-		),
+		ConfigState(configId="foo.bar.baz", objectId="client1.invalid.test", values=[""]),
+		ConfigState(configId="drive.slow", objectId="client2.invalid.test", values=[False]),
 	]
 
 	result = objectToBash(states)
@@ -1000,8 +988,7 @@ def testComparisonsWithDifferntDepthsAreMadeTheSameDepth(ver1, operator, ver2):
 	assert compareVersions(ver1, operator, ver2)
 
 
-@pytest.mark.parametrize(
-	"ver1, operator, ver2", [("1-2", "<", "1-3"), ("1-2.0", "<", "1-2.1")]
-)
+@pytest.mark.parametrize("ver1, operator, ver2", [("1-2", "<", "1-3"), ("1-2.0", "<", "1-2.1")])
 def testPackageVersionsAreComparedAswell(ver1, operator, ver2):
+	assert compareVersions(ver1, operator, ver2)
 	assert compareVersions(ver1, operator, ver2)
