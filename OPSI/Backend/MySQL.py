@@ -7,7 +7,6 @@
 MySQL-Backend
 """
 
-import re
 import time
 from typing import Any, Callable, List
 from urllib.parse import quote, urlencode
@@ -27,7 +26,6 @@ from OPSI.Backend.SQL import SQLBackend  # noqa: E402
 from OPSI.Backend.SQL import SQLBackendObjectModificationTracker  # noqa: E402
 from OPSI.Object import Product, ProductProperty  # noqa: E402
 from OPSI.Types import forceHostIdList, forceInt, forceUnicode  # noqa: E402
-from OPSI.Util import compareVersions  # noqa: E402
 
 __all__ = ("MySQL", "MySQLBackend", "MySQLBackendObjectModificationTracker")
 
@@ -158,28 +156,13 @@ class MySQL(SQL):
 
 		listen(self.engine, "engine_connect", self.on_engine_connect)
 
-		self.session_factory = sessionmaker(
-			bind=self.engine, autocommit=False, autoflush=False
-		)
+		self.session_factory = sessionmaker(bind=self.engine, autocommit=False, autoflush=False)
 		self.Session = scoped_session(self.session_factory)
 
 		# Test connection and get tables
 		with self.session() as session:
 			version_string = self.getRow(session, "SELECT @@VERSION")[0]
 			logger.info("Connected to server version: %s", version_string)
-			server_type = "MariaDB" if "maria" in version_string.lower() else "MySQL"
-			match = re.search(r"^([\d\.]+)", version_string)
-			if match:
-				min_version = "5.6.5"
-				if server_type == "MariaDB":
-					min_version = "10.1"
-				if compareVersions(match.group(1), "<", min_version):
-					error = (
-						f"{server_type} server version '{version_string}' to old."
-						" Supported versions are MariaDB >= 10.1 and MySQL >= 5.6.5"
-					)
-					logger.error(error)
-					raise RuntimeError(error)
 			self.getTables(session)
 
 	def __repr__(self) -> str:
@@ -204,9 +187,7 @@ class MySQL(SQL):
 	def delete(self, session: scoped_session, table: str, where: str) -> Any:
 		return super().delete(session, table, where)
 
-	def getTables(
-		self, session: scoped_session | None = None, allow_cached: bool = False
-	) -> dict[str, Any]:
+	def getTables(self, session: scoped_session | None = None, allow_cached: bool = False) -> dict[str, Any]:
 		"""
 		Get what tables are present in the database (do not return views).
 
@@ -218,9 +199,7 @@ class MySQL(SQL):
 		if self._tables and allow_cached:
 			return self._tables
 		if not session:
-			raise RuntimeError(
-				"Session required to get tables, if allow_cached is False"
-			)
+			raise RuntimeError("Session required to get tables, if allow_cached is False")
 		self._tables = {}
 		logger.trace("Current tables:")
 		for i in self.getSet(
@@ -230,19 +209,14 @@ class MySQL(SQL):
 			for table_name in i.values():
 				table_name = table_name.upper()
 				logger.trace(" [ %s ]", table_name)
-				fields = [
-					j["Field"]
-					for j in self.getSet(session, f"SHOW COLUMNS FROM `{table_name}`")
-				]
+				fields = [j["Field"] for j in self.getSet(session, f"SHOW COLUMNS FROM `{table_name}`")]
 				self._tables[table_name] = fields
 				logger.trace("Fields in %s: %s", table_name, fields)
 
 		return self._tables
 
 	def getTableCreationOptions(self, table: str) -> str:
-		if table in ("SOFTWARE", "SOFTWARE_CONFIG") or table.startswith(
-			("HARDWARE_DEVICE_", "HARDWARE_CONFIG_")
-		):
+		if table in ("SOFTWARE", "SOFTWARE_CONFIG") or table.startswith(("HARDWARE_DEVICE_", "HARDWARE_CONFIG_")):
 			return "ENGINE=MyISAM DEFAULT CHARSET utf8 COLLATE utf8_general_ci;"
 		return "ENGINE=InnoDB DEFAULT CHARSET utf8 COLLATE utf8_general_ci"
 
@@ -297,9 +271,7 @@ class MySQLBackend(SQLBackend):
 		logger.debug(table)
 		with self._sql.session() as session:
 			self._sql.execute(session, table)
-			self._sql.execute(
-				session, "CREATE INDEX `index_host_type` on `HOST` (`type`);"
-			)
+			self._sql.execute(session, "CREATE INDEX `index_host_type` on `HOST` (`type`);")
 
 	def _createTableSoftwareConfig(self) -> None:
 		logger.debug("Creating table SOFTWARE_CONFIG")
@@ -369,9 +341,7 @@ class MySQLBackend(SQLBackend):
 			for product in self._sql.getSet(session, query):
 				product["productClassIds"] = []
 				if readWindowsSoftwareIDs and product["windowsSoftwareIds"]:
-					product["windowsSoftwareIds"] = product["windowsSoftwareIds"].split(
-						"\n"
-					)
+					product["windowsSoftwareIds"] = product["windowsSoftwareIds"].split("\n")
 				else:
 					product["windowsSoftwareIds"] = []
 
@@ -383,21 +353,13 @@ class MySQLBackend(SQLBackend):
 		return products
 
 	# Overwriting productProperty_getObjects to use JOIN for speedup
-	def productProperty_getObjects(
-		self, attributes: List = None, **filter
-	) -> list[ProductProperty]:
+	def productProperty_getObjects(self, attributes: List = None, **filter) -> list[ProductProperty]:
 		attributes = attributes or []
 		ConfigDataBackend.productProperty_getObjects(self, attributes=[], **filter)
 		logger.info("Getting product properties, filter: %s", filter)
 
-		(attributes, filter) = self._adjustAttributes(
-			ProductProperty, attributes, filter
-		)
-		readValues = (
-			not attributes
-			or "possibleValues" in attributes
-			or "defaultValues" in attributes
-		)
+		(attributes, filter) = self._adjustAttributes(ProductProperty, attributes, filter)
+		readValues = not attributes or "possibleValues" in attributes or "defaultValues" in attributes
 
 		select = ",".join(f"pp.`{attribute}`" for attribute in attributes) or "pp.*"
 		where = self._filterToSql(filter, table="pp") or "1=1"
@@ -428,16 +390,12 @@ class MySQLBackend(SQLBackend):
 		with self._sql.session() as session:
 			for productProperty in self._sql.getSet(session, query):
 				if readValues and productProperty["possibleValues"]:
-					productProperty["possibleValues"] = productProperty[
-						"possibleValues"
-					].split("\n")
+					productProperty["possibleValues"] = productProperty["possibleValues"].split("\n")
 				else:
 					productProperty["possibleValues"] = []
 
 				if readValues and productProperty["defaultValues"]:
-					productProperty["defaultValues"] = productProperty[
-						"defaultValues"
-					].split("\n")
+					productProperty["defaultValues"] = productProperty["defaultValues"].split("\n")
 				else:
 					productProperty["defaultValues"] = []
 				productProperties.append(ProductProperty.fromHash(productProperty))
