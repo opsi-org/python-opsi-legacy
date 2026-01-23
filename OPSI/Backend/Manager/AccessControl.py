@@ -13,9 +13,10 @@ import re
 import types
 import typing  # This is needed for dynamic loading  # noqa: F401
 from functools import lru_cache
-from typing import (
-	Any,  # This is needed for dynamic loading  # noqa: F401
-	)
+from typing import Any  # This is needed for dynamic loading  # noqa: F401
+from typing import Dict  # This is needed for dynamic loading  # noqa: F401
+from typing import Generator  # This is needed for dynamic loading  # noqa: F401
+from typing import List  # This is needed for dynamic loading  # noqa: F401
 
 import opsicommon  # This is needed for dynamic loading  # noqa: F401
 from opsicommon.logging import get_logger
@@ -586,5 +587,7 @@ class BackendAccessControl:
 def _readACLFile(path):
 	if not os.path.exists(path):
 		raise BackendIOError(f"Acl file '{path}' not found")
+
+	return BackendACLFile(path).parse()
 
 	return BackendACLFile(path).parse()
