@@ -15,10 +15,7 @@ import typing  # This is needed for dynamic loading  # noqa: F401
 from functools import lru_cache
 from typing import (
 	Any,  # This is needed for dynamic loading  # noqa: F401
-	Dict,
-	Generator,
-	List,
-)
+	)
 
 import opsicommon  # This is needed for dynamic loading  # noqa: F401
 from opsicommon.logging import get_logger
