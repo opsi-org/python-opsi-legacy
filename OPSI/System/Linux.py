@@ -209,7 +209,7 @@ def grant_session_access(username: str, session_id: str):
 	session_username = None
 	session_env = {}
 
-	# trying to find process with XAUTHORITY (prefer non-greeter)
+	# Trying to find process with XAUTHORITY (prefer non-greeter)
 	for proc in psutil.process_iter():
 		try:
 			env = proc.environ()
@@ -220,7 +220,7 @@ def grant_session_access(username: str, session_id: str):
 			session_username = proc.username()
 			session_env = env
 			logger.debug(
-				"Found process of user %s with XDG_SESSION_CLASS %s",
+				"Found process of user %r with XDG_SESSION_CLASS %r",
 				session_username,
 				session_env.get("XDG_SESSION_CLASS"),
 			)
