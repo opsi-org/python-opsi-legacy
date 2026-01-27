@@ -211,7 +211,11 @@ def grant_session_access(username: str, session_id: str):
 
 	# trying to find process with XAUTHORITY (prefer non-greeter)
 	for proc in psutil.process_iter():
-		env = proc.environ()
+		try:
+			env = proc.environ()
+		except (psutil.AccessDenied, psutil.NoSuchProcess) as err:
+			logger.debug(err)
+			continue
 		if env.get("DISPLAY") == session_id and env.get("XAUTHORITY"):
 			session_username = proc.username()
 			session_env = env
