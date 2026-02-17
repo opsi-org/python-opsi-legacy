@@ -1,6 +1,6 @@
 [project]
 name = "python-opsi"
-version = "4.3.10.7"
+version = "4.3.10.8"
 description = "The opsi python library"
 readme = "README.md"
 license = "AGPL-3.0-only"
