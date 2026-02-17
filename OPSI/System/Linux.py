@@ -444,20 +444,28 @@ Posix.mount = mount
 
 
 def inUEFIMode():
+	logger.debug("Checking if system is running in UEFI mode")
 	return Path("/sys/firmware/efi").exists()
 
 
 def getUEFISecureBootEnabled() -> bool:
+	logger.debug("Checking if UEFI Secure Boot is enabled")
 	files = list(Path("/sys/firmware/efi/efivars").glob("SecureBoot-*"))
 	if not files:
+		logger.debug("SecureBoot variable not found, assuming UEFI Secure Boot is not enabled")
 		return False
+	logger.debug("SecureBoot variable found, reading value")
 	data = files[0].read_bytes()[4:]
+	logger.debug("SecureBoot variable value: %s", data[0])
 	return data[0] == 1
 
 
 def getUEFISecureBootCertificates() -> list[x509.Certificate]:
+	logger.debug("Retrieving UEFI Secure Boot certificates")
 	db_files = list(Path("/sys/firmware/efi/efivars").glob("db-*"))
+	logger.debug("Found %d db variables", len(db_files))
 	if not db_files:
 		return []
+	logger.debug("Reading db variable to extract certificates")
 	data = db_files[0].read_bytes()[4:]
 	return _get_secure_boot_certificates_from_efivar_payload(data)

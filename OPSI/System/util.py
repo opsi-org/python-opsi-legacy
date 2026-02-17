@@ -35,6 +35,10 @@ def _get_secure_boot_certificates_from_efivar_payload(data: bytes) -> list[x509.
 		if list_size < 28 or offset + list_size > data_len:
 			logger.warning("Invalid EFI_SIGNATURE_LIST size %d at offset %d", list_size, offset)
 			break
+		if sig_size == 0:
+			logger.warning("Invalid EFI_SIGNATURE_LIST signature size %d at offset %d", sig_size, offset)
+			offset = offset + list_size
+			continue
 
 		list_end = offset + list_size
 		if sig_type != UUID("a5c059a1-94e4-4aa7-87b5-ab155c2bf072"):

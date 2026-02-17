@@ -339,6 +339,7 @@ def _copy(
 
 
 def hardwarePredefinedInventory(config, opsiValues={}):
+	logger.info("Collecting hardware inventory predefined values")
 	if not config:
 		logger.error("hardwareInventory: no config given")
 		return {}
