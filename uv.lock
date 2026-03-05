@@ -927,8 +927,45 @@ wheels = [
 ]
 
 [[package]]
-name = "python-opsi"
-version = "4.3.10.8"
+name = "python-opsi-common"
+version = "4.3.51.3"
+source = { registry = "https://pypi.uib.gmbh/simple" }
+dependencies = [
+    { name = "aiofiles" },
+    { name = "annotated-types" },
+    { name = "colorlog" },
+    { name = "cryptography" },
+    { name = "distro" },
+    { name = "dnspython" },
+    { name = "lz4" },
+    { name = "mailbits" },
+    { name = "msgpack", marker = "sys_platform == 'win32'" },
+    { name = "msgspec", marker = "sys_platform != 'win32'" },
+    { name = "netifaces" },
+    { name = "packaging" },
+    { name = "psutil" },
+    { name = "ptyprocess" },
+    { name = "pycryptodome" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "pywinpty", marker = "sys_platform == 'win32'" },
+    { name = "pyzsync" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "tomlkit" },
+    { name = "websocket-client" },
+    { name = "wmi", marker = "sys_platform == 'win32'" },
+    { name = "zstandard" },
+]
+sdist = { url = "https://pypi.uib.gmbh/packages/python_opsi_common-4.3.51.3.tar.gz", hash = "sha256:e8055b76ba9020161fe9a7a5e249c4b385c17f845c4648e2179d2019210f1189" }
+wheels = [
+    { url = "https://pypi.uib.gmbh/packages/python_opsi_common-4.3.51.3-py3-none-any.whl", hash = "sha256:46423a7b97662aa4650c61a563a0022de540160da7dd3255d4e21f4818ed3b90" },
+]
+
+[[package]]
+name = "python-opsi-legacy"
+version = "4.3.11.0"
 source = { editable = "." }
 dependencies = [
     { name = "colorlog" },
@@ -997,43 +1034,6 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov", specifier = ">=5.0" },
     { name = "ruff", specifier = ">=0.7" },
-]
-
-[[package]]
-name = "python-opsi-common"
-version = "4.3.51.3"
-source = { registry = "https://pypi.uib.gmbh/simple" }
-dependencies = [
-    { name = "aiofiles" },
-    { name = "annotated-types" },
-    { name = "colorlog" },
-    { name = "cryptography" },
-    { name = "distro" },
-    { name = "dnspython" },
-    { name = "lz4" },
-    { name = "mailbits" },
-    { name = "msgpack", marker = "sys_platform == 'win32'" },
-    { name = "msgspec", marker = "sys_platform != 'win32'" },
-    { name = "netifaces" },
-    { name = "packaging" },
-    { name = "psutil" },
-    { name = "ptyprocess" },
-    { name = "pycryptodome" },
-    { name = "pydantic" },
-    { name = "pydantic-core" },
-    { name = "pywin32", marker = "sys_platform == 'win32'" },
-    { name = "pywinpty", marker = "sys_platform == 'win32'" },
-    { name = "pyzsync" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "tomlkit" },
-    { name = "websocket-client" },
-    { name = "wmi", marker = "sys_platform == 'win32'" },
-    { name = "zstandard" },
-]
-sdist = { url = "https://pypi.uib.gmbh/packages/python_opsi_common-4.3.51.3.tar.gz", hash = "sha256:e8055b76ba9020161fe9a7a5e249c4b385c17f845c4648e2179d2019210f1189" }
-wheels = [
-    { url = "https://pypi.uib.gmbh/packages/python_opsi_common-4.3.51.3-py3-none-any.whl", hash = "sha256:46423a7b97662aa4650c61a563a0022de540160da7dd3255d4e21f4818ed3b90" },
 ]
 
 [[package]]
