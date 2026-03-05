@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,7 +7,7 @@
 Testing unbound methods for the backends.
 """
 
-from OPSI.Backend.Base.Extended import get_function_signature_and_args
+from opsi_legacy.Backend.Base.Extended import get_function_signature_and_args
 
 
 def test_getting_signature_for_method_without_arguments():

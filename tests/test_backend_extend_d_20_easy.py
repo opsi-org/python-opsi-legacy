@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -17,9 +17,9 @@ import random
 
 import pytest
 
-from OPSI.Object import LocalbootProduct, OpsiClient, ProductOnClient, UnicodeConfig
+from opsi_legacy.Object import LocalbootProduct, OpsiClient, ProductOnClient, UnicodeConfig
 
-from .test_hosts import getConfigServer, getDepotServers, getClients
+from .test_hosts import getClients, getConfigServer, getDepotServers
 
 
 @pytest.fixture
@@ -109,9 +109,7 @@ def testGetClientsOnDepotExpectsValidIDs(backendManager, value):
 		backendManager.getClientsOnDepot(value)
 
 
-def testGetClientsOnDepotWithDifferentDepot(
-	backendManager, hosts, clients, depots, configServer
-):
+def testGetClientsOnDepotWithDifferentDepot(backendManager, hosts, clients, depots, configServer):
 	for host in hosts:
 		backendManager.host_insertObject(host)
 
@@ -128,9 +126,7 @@ def testGetClientsOnDepotWithDifferentDepot(
 	assert len(clientIds) == 0
 
 	client = random.choice(clients)
-	backendManager.configState_create(
-		clientConfigDepotId.id, client.id, values=[depot.id]
-	)
+	backendManager.configState_create(clientConfigDepotId.id, client.id, values=[depot.id])
 
 	clientIds = backendManager.getClientsOnDepot(depot.id)
 	assert len(clientIds) == 1
@@ -149,9 +145,7 @@ def testGetClientsOnDepotWithDifferentDepot(
 		(["myproduct"], "intalled"),  # Typo - missing s
 	],
 )
-def testGetClientsWithProductsWithInvalidParameters(
-	backendManager, productIds, installationStatus
-):
+def testGetClientsWithProductsWithInvalidParameters(backendManager, productIds, installationStatus):
 	with pytest.raises(ValueError):
 		backendManager.getClientsWithProducts(productIds, installationStatus)
 
@@ -220,9 +214,7 @@ def testGetClientsWithProducts(backendManager, clients):
 		("testclient1.test.invalid", "unknown"),
 	],
 )
-def testGetClientsWithProductsWithSpecificStatus(
-	backendManager, clients, desiredStatus, expectedClient
-):
+def testGetClientsWithProductsWithSpecificStatus(backendManager, clients, desiredStatus, expectedClient):
 	for client in clients:
 		backendManager.host_insertObject(client)
 
@@ -278,9 +270,7 @@ def testGetClientsWithProductsWithSpecificStatus(
 	for poc in fillerPocs + relevantPocs:
 		backendManager.productOnClient_insertObject(poc)
 
-	clientsToCheck = backendManager.getClientsWithProducts(
-		[product1.id, product2.id], desiredStatus
-	)
+	clientsToCheck = backendManager.getClientsWithProducts([product1.id, product2.id], desiredStatus)
 
 	assert len(clientsToCheck) == 1
 	assert clientsToCheck[0] == expectedClient

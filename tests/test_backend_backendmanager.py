@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,8 +11,8 @@ import os
 
 import pytest
 
-from OPSI.Backend.BackendManager import BackendManager
-from OPSI.Backend.Base import ConfigDataBackend
+from opsi_legacy.Backend.BackendManager import BackendManager
+from opsi_legacy.Backend.Base import ConfigDataBackend
 
 from .Backends.File import getFileBackend
 from .helpers import getLocalFQDN
@@ -70,9 +70,7 @@ def testBackendManagerMethods(backendManager):
 	bm.config_createObjects(origConfigs)
 
 	config1 = origConfigs[0]
-	assert config1.defaultValues[0] == bm.getGeneralConfigValue(
-		key=config1.id, objectId=None
-	)
+	assert config1.defaultValues[0] == bm.getGeneralConfigValue(key=config1.id, objectId=None)
 
 	generalConfig = {
 		"test-key-1": "test-value-1",
@@ -106,9 +104,7 @@ def testBackendManagerMethods(backendManager):
 	client2 = origClients[1]
 	clients = [client1.id, client2.id]
 	groupId = "a test group"
-	bm.createGroup(
-		groupId, members=clients, description="A test group", parentGroupId=""
-	)
+	bm.createGroup(groupId, members=clients, description="A test group", parentGroupId="")
 
 	assert 1 == len(bm.group_getObjects(id=groupId))
 
@@ -280,9 +276,7 @@ def testBackendManagerMethods(backendManager):
 	productIds = bm.getProvidedNetBootProductIds_list(depotId=origDepotserver1.id)
 
 	for client in origClients:
-		bm.getProductInstallationStatus_hash(
-			productId=origProduct1.id, objectId=client.id
-		)
+		bm.getProductInstallationStatus_hash(productId=origProduct1.id, objectId=client.id)
 
 	bm.config_createObjects(
 		[
@@ -292,9 +286,7 @@ def testBackendManagerMethods(backendManager):
 			}
 		]
 	)
-	bm.configState_create(
-		"clientconfig.depot.id", client.id, values=[origDepotserver1.id]
-	)
+	bm.configState_create("clientconfig.depot.id", client.id, values=[origDepotserver1.id])
 
 	bm.setProductState(
 		productId=origProduct1.id,
@@ -302,17 +294,13 @@ def testBackendManagerMethods(backendManager):
 		installationStatus="not_installed",
 		actionRequest="setup",
 	)
-	bm.setProductInstallationStatus(
-		productId=origProduct1.id, objectId=client.id, installationStatus="installed"
-	)
+	bm.setProductInstallationStatus(productId=origProduct1.id, objectId=client.id, installationStatus="installed")
 	bm.setProductActionProgress(
 		productId=origProduct1.id,
 		hostId=client.id,
 		productActionProgress="something 90%",
 	)
-	bm.setProductActionRequest(
-		productId=origProduct1.id, clientId=client.id, actionRequest="uninstall"
-	)
+	bm.setProductActionRequest(productId=origProduct1.id, clientId=client.id, actionRequest="uninstall")
 
 	for product in origProducts:
 		bm.getPossibleProductActions_list(productId=product.id)

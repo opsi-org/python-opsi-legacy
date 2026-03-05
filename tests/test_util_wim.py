@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,9 +12,9 @@ from contextlib import contextmanager
 
 import pytest
 
-from OPSI.Util.WIM import getImageInformation, parseWIM
+from opsi_legacy.Util.WIM import getImageInformation, parseWIM
 
-from .helpers import workInTemporaryDirectory, mock
+from .helpers import mock, workInTemporaryDirectory
 
 
 @contextmanager
@@ -33,8 +33,8 @@ def fakeWIMEnvironment(tempDir=None):
 				content = f.read()
 				return content.split("\n")
 
-		with mock.patch("OPSI.Util.WIM.which", lambda x: "/usr/bin/echo"):
-			with mock.patch("OPSI.Util.WIM.execute", fakeReturningOutput):
+		with mock.patch("opsi_legacy.Util.WIM.which", lambda x: "/usr/bin/echo"):
+			with mock.patch("opsi_legacy.Util.WIM.execute", fakeReturningOutput):
 				yield fakeWimPath
 
 
@@ -50,7 +50,7 @@ def testParsingNonExistingWimFileFails():
 
 
 def testParsingWIMReturnNoInformationFails(fakeWimPath):
-	with mock.patch("OPSI.Util.WIM.execute", lambda x: [""]):
+	with mock.patch("opsi_legacy.Util.WIM.execute", lambda x: [""]):
 		with pytest.raises(ValueError):
 			parseWIM(fakeWimPath)
 

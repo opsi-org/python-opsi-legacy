@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing functionality of OPSI.System
+Testing functionality of opsi_legacy.System
 """
 
 import os
@@ -12,8 +12,8 @@ import shutil
 
 import pytest
 
-from OPSI.System import copy, getUEFISecureBootCertificates, getUEFISecureBootEnabled, inUEFIMode
-from OPSI.Util.Message import ProgressSubject
+from opsi_legacy.System import copy, getUEFISecureBootCertificates, getUEFISecureBootEnabled, inUEFIMode
+from opsi_legacy.Util.Message import ProgressSubject
 
 
 @pytest.fixture(

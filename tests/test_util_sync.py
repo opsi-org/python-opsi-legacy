@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing functionality of OPSI.Util.
+Testing functionality of opsi_legacy.Util.
 """
 
 import codecs
@@ -17,7 +17,7 @@ from itertools import combinations_with_replacement
 
 import pytest
 
-from OPSI.Util.Sync import librsyncDeltaFile, librsyncPatchFile, librsyncSignature
+from opsi_legacy.Util.Sync import librsyncDeltaFile, librsyncPatchFile, librsyncSignature
 
 importFailed = False
 
@@ -38,12 +38,9 @@ def testLibrsyncSignatureBase64Encoded(librsyncTestfile):
 @pytest.mark.skipif(importFailed, reason="Import failed.")
 def testLibrsyncSignatureCreation(librsyncTestfile):
 	signature = librsyncSignature(librsyncTestfile, base64Encoded=False)
-	assert (
-		signature
-		in (
-			b"rs\x016\x00\x00\x08\x00\x00\x00\x00\x08\xff\xae5\xd0\x80f\xbc}F)\xb0M",  # librsync1
-			b"rs\x017\x00\x00\x08\x00\x00\x00\x00\x08\xff\xae5\xd0KB\xe5\xd8K\x17\xab\x08",  # librsync2
-		)
+	assert signature in (
+		b"rs\x016\x00\x00\x08\x00\x00\x00\x00\x08\xff\xae5\xd0\x80f\xbc}F)\xb0M",  # librsync1
+		b"rs\x017\x00\x00\x08\x00\x00\x00\x00\x08\xff\xae5\xd0KB\xe5\xd8K\x17\xab\x08",  # librsync2
 	)
 
 
@@ -74,9 +71,7 @@ def testLibrsyncDeltaSize(librsyncTestfile, tempDir):
 	deltaFile = os.path.join(tempDir, "base.delta")
 	size = 1 * 1024 * 1024  # 1MiB
 
-	data = "".join(
-		random.choice(string.ascii_uppercase + string.digits) for _ in range(size)
-	)
+	data = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
 	with open(baseFile, "w") as f:
 		f.write(data)
 	with open(oldfile, "w") as f:
@@ -167,9 +162,7 @@ def testLibrsyncPatchFileCreatesNewFileBasedOnDelta(librsyncTestfile, tempDir):
 
 
 @pytest.mark.skipif(importFailed, reason="Import failed.")
-@pytest.mark.parametrize(
-	"old, delta, new", list(combinations_with_replacement(("foo", "bar"), 3))
-)
+@pytest.mark.parametrize("old, delta, new", list(combinations_with_replacement(("foo", "bar"), 3)))
 def testLibrsyncPatchFileAvoidsPatchingSameFile(old, delta, new):
 	with pytest.raises(ValueError):
 		librsyncPatchFile(old, delta, new)

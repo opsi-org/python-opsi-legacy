@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing OPSI.Util.File.Opsi
+Testing opsi_legacy.Util.File.Opsi
 """
 
 import os
@@ -12,8 +12,8 @@ import random
 
 import pytest
 
-from OPSI.Util import findFilesGenerator, md5sum
-from OPSI.Util.File.Opsi import (
+from opsi_legacy.Util import findFilesGenerator, md5sum
+from opsi_legacy.Util.File.Opsi import (
 	BackendDispatchConfigFile,
 	FileInfo,
 	HostKeyFile,
@@ -40,9 +40,7 @@ audit.*			: mysql
 
 	dispatchConfig = BackendDispatchConfigFile("not_reading_file")
 
-	assert set(
-		("file", "mysql", "opsipxeconfd", "dhcpd")
-	) == dispatchConfig.getUsedBackends(lines=exampleConfig.split("\n"))
+	assert set(("file", "mysql", "opsipxeconfd", "dhcpd")) == dispatchConfig.getUsedBackends(lines=exampleConfig.split("\n"))
 
 
 def testParsingIgnoresCommentedLines():
@@ -123,9 +121,7 @@ def testGettingDefaultPigzStatus(opsiConfigFile):
 def opsiControlFilePath(test_data_path):
 	# The file is the one that was causing a problem in
 	# https://forum.opsi.org/viewtopic.php?f=7&t=7907
-	return os.path.join(
-		test_data_path, "util", "file", "opsi", "control_with_german_umlauts"
-	)
+	return os.path.join(test_data_path, "util", "file", "opsi", "control_with_german_umlauts")
 
 
 def testParsingControlFileWithGermanUmlautsInDescription(opsiControlFilePath):
@@ -133,16 +129,11 @@ def testParsingControlFileWithGermanUmlautsInDescription(opsiControlFilePath):
 	p.parse()
 
 	product = p.getProduct()
-	assert (
-		"Startet die Druckerwarteschlange auf dem Client neu / oder überhaupt."
-		== product.description
-	)
+	assert "Startet die Druckerwarteschlange auf dem Client neu / oder überhaupt." == product.description
 
 
 def testProductControlFileWithoutVersionUsesDefaults(test_data_path):
-	filename = os.path.join(
-		test_data_path, "util", "file", "opsi", "control_without_versions"
-	)
+	filename = os.path.join(test_data_path, "util", "file", "opsi", "control_without_versions")
 
 	pcf = PackageControlFile(filename)
 
@@ -154,9 +145,7 @@ def testProductControlFileWithoutVersionUsesDefaults(test_data_path):
 
 @pytest.fixture
 def controlFileWithEmptyValues(test_data_path):
-	filePath = os.path.join(
-		test_data_path, "util", "file", "opsi", "control_with_empty_property_values"
-	)
+	filePath = os.path.join(test_data_path, "util", "file", "opsi", "control_with_empty_property_values")
 
 	with createTemporaryTestfile(filePath) as newFilePath:
 		yield newFilePath
@@ -244,9 +233,7 @@ def testGeneratingProductControlFileContainingSpecialCharactersInProperty(
 
 	testProperty = properties.pop()
 	assert testProperty.propertyId == "adminaccounts"
-	assert (
-		testProperty.description == "Windows account(s) to provision as administrators."
-	)
+	assert testProperty.description == "Windows account(s) to provision as administrators."
 	assert testProperty.multiValue is False
 	assert testProperty.editable is True
 	assert testProperty.defaultValues == ["Administrator"]
@@ -290,9 +277,7 @@ def testGeneratingProductControlFileToml(tomlControlFile):
 
 	testProperty = properties.pop()
 	assert testProperty.propertyId == "adminaccounts"
-	assert (
-		testProperty.description == "Windows account(s) to provision as administrators."
-	)
+	assert testProperty.description == "Windows account(s) to provision as administrators."
 	assert testProperty.multiValue is False
 	assert testProperty.editable is True
 	assert testProperty.defaultValues == ["Administrator"]
@@ -330,13 +315,8 @@ def testConvertingControlFile(tomlControlFile):
 	pcf_regenerated = PackageControlFile(tomlControlFile)
 	assert pcf_regenerated.getProduct() == pcf_generated.getProduct()
 	# Advice and Description may differ as old format cannot handle multiline properly
-	assert (
-		pcf_regenerated.getProductProperties() == pcf_generated.getProductProperties()
-	)
-	assert (
-		pcf_regenerated.getProductDependencies()
-		== pcf_generated.getProductDependencies()
-	)
+	assert pcf_regenerated.getProductProperties() == pcf_generated.getProductProperties()
+	assert pcf_regenerated.getProductDependencies() == pcf_generated.getProductDependencies()
 	pcf_generated.close()
 	pcf_regenerated.close()
 
@@ -431,9 +411,7 @@ def testPackageContentFileCreation(outsideFile, outsideDir):
 					print("Processing line {0!r} failed".format(line))
 					raise
 
-		assert not content, "Files not listed in content file: {0}".format(
-			", ".join(content)
-		)
+		assert not content, "Files not listed in content file: {0}".format(", ".join(content))
 
 
 def fillDirectory(directory):
@@ -512,9 +490,7 @@ def testParsingPackageContentFile(outsideFile, outsideDir):
 			assert not filename.endswith("'")
 
 			entryType = entry["type"]
-			assert entryType == content[filename] or (
-				entryType == "f" and content[filename] == "l"
-			)
+			assert entryType == content[filename] or (entryType == "f" and content[filename] == "l")
 
 			if entryType == "d":
 				assert entry["size"] == 0
@@ -558,10 +534,7 @@ def hostKeyEntries(request):
 		pw = "deadbeef1c0ff3300deadbeef1c0ff33{0}".format(number)
 		return pw[-32:]  # We need to have 32 characters in length
 
-	entries = [
-		("client{0}.domain.test".format(i), generatePassword(i))
-		for i in range(request.param)
-	]
+	entries = [("client{0}.domain.test".format(i), generatePassword(i)) for i in range(request.param)]
 	random.shuffle(entries)
 
 	return entries

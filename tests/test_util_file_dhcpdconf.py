@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,7 +12,7 @@ import os
 
 import pytest
 
-from OPSI.Util.File import DHCPDConfFile
+from opsi_legacy.Util.File import DHCPDConfFile
 
 from .helpers import createTemporaryTestfile
 
@@ -83,9 +83,7 @@ def testAddingHostsToConfig(dhcpdConf):
 	"""
 	dhcpdConf.parse()
 
-	dhcpdConf.addHost(
-		"TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None
-	)
+	dhcpdConf.addHost("TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None)
 	dhcpdConf.addHost(
 		"TestclienT2",
 		"00:01:09:08:99:11",
@@ -101,9 +99,7 @@ def testAddingHostsToConfig(dhcpdConf):
 def testGeneratingConfig(dhcpdConf):
 	dhcpdConf.parse()
 
-	dhcpdConf.addHost(
-		"TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None
-	)
+	dhcpdConf.addHost("TestclienT", "0001-21-21:00:00", "192.168.99.112", "192.168.99.112", None)
 	dhcpdConf.addHost(
 		"TestclienT2",
 		"00:01:09:08:99:11",

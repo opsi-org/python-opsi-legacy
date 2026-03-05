@@ -16,66 +16,66 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../OPSI/UI.py:114 ../OPSI/UI.py:117 ../OPSI/UI.py:138 ../OPSI/UI.py:141
-#: ../OPSI/UI.py:144 ../OPSI/UI.py:147 ../OPSI/UI.py:244 ../OPSI/UI.py:283
-#: ../OPSI/UI.py:396 ../OPSI/UI.py:472 ../OPSI/UI.py:580 ../OPSI/UI.py:680
+#: ../opsi_legacy/UI.py:114 ../opsi_legacy/UI.py:117 ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:141
+#: ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:147 ../opsi_legacy/UI.py:244 ../opsi_legacy/UI.py:283
+#: ../opsi_legacy/UI.py:396 ../opsi_legacy/UI.py:472 ../opsi_legacy/UI.py:580 ../opsi_legacy/UI.py:680
 msgid "OK"
 msgstr "OK"
 
-#: ../OPSI/UI.py:114 ../OPSI/UI.py:244
+#: ../opsi_legacy/UI.py:114 ../opsi_legacy/UI.py:244
 msgid "An error occured"
 msgstr "An error occured"
 
-#: ../OPSI/UI.py:117 ../OPSI/UI.py:283
+#: ../opsi_legacy/UI.py:117 ../opsi_legacy/UI.py:283
 msgid "Message"
 msgstr "Message"
 
-#: ../OPSI/UI.py:120 ../OPSI/UI.py:126 ../OPSI/UI.py:322 ../OPSI/UI.py:352
+#: ../opsi_legacy/UI.py:120 ../opsi_legacy/UI.py:126 ../opsi_legacy/UI.py:322 ../opsi_legacy/UI.py:352
 msgid "Progress"
 msgstr "Progress"
 
-#: ../OPSI/UI.py:123 ../OPSI/UI.py:129 ../OPSI/UI.py:337 ../OPSI/UI.py:367
+#: ../opsi_legacy/UI.py:123 ../opsi_legacy/UI.py:129 ../opsi_legacy/UI.py:337 ../opsi_legacy/UI.py:367
 msgid "Copy progress"
 msgstr "Copy progress"
 
-#: ../OPSI/UI.py:132 ../OPSI/UI.py:382
+#: ../opsi_legacy/UI.py:132 ../opsi_legacy/UI.py:382
 msgid "Text"
 msgstr "Text"
 
-#: ../OPSI/UI.py:138 ../OPSI/UI.py:141 ../OPSI/UI.py:144 ../OPSI/UI.py:147
-#: ../OPSI/UI.py:396 ../OPSI/UI.py:472 ../OPSI/UI.py:580 ../OPSI/UI.py:680
+#: ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:141 ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:147
+#: ../opsi_legacy/UI.py:396 ../opsi_legacy/UI.py:472 ../opsi_legacy/UI.py:580 ../opsi_legacy/UI.py:680
 msgid "Cancel"
 msgstr "Cancel"
 
-#: ../OPSI/UI.py:138 ../OPSI/UI.py:396
+#: ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:396
 msgid "Please type text"
 msgstr "Please type text"
 
-#: ../OPSI/UI.py:141 ../OPSI/UI.py:472
+#: ../opsi_legacy/UI.py:141 ../opsi_legacy/UI.py:472
 msgid "Please select"
 msgstr "Please select"
 
-#: ../OPSI/UI.py:144 ../OPSI/UI.py:580
+#: ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:580
 msgid "Please fill in"
 msgstr "Please fill in"
 
-#: ../OPSI/UI.py:147 ../OPSI/UI.py:680
+#: ../opsi_legacy/UI.py:147 ../opsi_legacy/UI.py:680
 msgid "Question"
 msgstr "Question"
 
-#: ../OPSI/UI.py:152 ../OPSI/UI.py:169 ../OPSI/UI.py:184 ../OPSI/UI.py:734
-#: ../OPSI/UI.py:834 ../OPSI/UI.py:899
+#: ../opsi_legacy/UI.py:152 ../opsi_legacy/UI.py:169 ../opsi_legacy/UI.py:184 ../opsi_legacy/UI.py:734
+#: ../opsi_legacy/UI.py:834 ../opsi_legacy/UI.py:899
 msgid "Title"
 msgstr "Title"
 
-#: ../OPSI/UI.py:275 ../OPSI/UI.py:314
+#: ../opsi_legacy/UI.py:275 ../opsi_legacy/UI.py:314
 msgid "<F12> %s | <Space> select | <Up/Down> scroll text"
 msgstr "<F12> %s | <Space> select | <Up/Down> scroll text"
 
-#: ../OPSI/UI.py:451 ../OPSI/UI.py:553 ../OPSI/UI.py:652 ../OPSI/UI.py:712
+#: ../opsi_legacy/UI.py:451 ../opsi_legacy/UI.py:553 ../opsi_legacy/UI.py:652 ../opsi_legacy/UI.py:712
 msgid "<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select"
 msgstr "<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select"
 
-#: ../OPSI/UI.py:453 ../OPSI/UI.py:555 ../OPSI/UI.py:654 ../OPSI/UI.py:714
+#: ../opsi_legacy/UI.py:453 ../opsi_legacy/UI.py:555 ../opsi_legacy/UI.py:654 ../opsi_legacy/UI.py:714
 msgid " | <Up/Down> scroll text"
 msgstr " | <Up/Down> scroll text"

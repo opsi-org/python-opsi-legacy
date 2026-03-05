@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,11 +9,11 @@ Testing the update of configuration data.
 
 import pytest
 
-from OPSI.Object import OpsiClient, OpsiDepotserver, OpsiConfigserver
-from OPSI.Util.Task.UpdateBackend.ConfigurationData import updateBackendData
+from opsi_legacy.Object import OpsiClient, OpsiConfigserver, OpsiDepotserver
+from opsi_legacy.Util.Task.UpdateBackend.ConfigurationData import updateBackendData
 
-from .test_hosts import getLocalHostFqdn
 from .helpers import mock
+from .test_hosts import getLocalHostFqdn
 
 
 @pytest.mark.parametrize(
@@ -29,17 +29,11 @@ def testUpdateBackendData(backendManager, onSuse, expectedLocalPath):
 		return addressAndPath.split("/")[2]
 
 	addServers(backendManager)
-	with mock.patch(
-		"OPSI.Util.Task.UpdateBackend.ConfigurationData.isOpenSUSE", lambda: onSuse
-	):
-		with mock.patch(
-			"OPSI.Util.Task.UpdateBackend.ConfigurationData.isSLES", lambda: onSuse
-		):
+	with mock.patch("opsi_legacy.Util.Task.UpdateBackend.ConfigurationData.isOpenSUSE", lambda: onSuse):
+		with mock.patch("opsi_legacy.Util.Task.UpdateBackend.ConfigurationData.isSLES", lambda: onSuse):
 			updateBackendData(backendManager)
 
-	servers = backendManager.host_getObjects(
-		type=["OpsiDepotserver", "OpsiConfigserver"]
-	)
+	servers = backendManager.host_getObjects(type=["OpsiDepotserver", "OpsiConfigserver"])
 	assert servers, "No servers found in backend."
 
 	for server in servers:
@@ -52,9 +46,7 @@ def testUpdateBackendData(backendManager, onSuse, expectedLocalPath):
 
 def addServers(backend):
 	localHostFqdn = getLocalHostFqdn()
-	configServer = OpsiConfigserver(
-		id=localHostFqdn, depotRemoteUrl="smb://192.168.123.1/opsi_depot"
-	)
+	configServer = OpsiConfigserver(id=localHostFqdn, depotRemoteUrl="smb://192.168.123.1/opsi_depot")
 	backend.host_createObjects([configServer])
 
 	_, domain = localHostFqdn.split(".", 1)
@@ -74,8 +66,5 @@ def addServers(backend):
 	]
 	backend.host_createObjects(depots)
 
-	clients = [
-		OpsiClient(id="client{n}.{domain}".format(n=index, domain=domain))
-		for index in range(10)
-	]
+	clients = [OpsiClient(id="client{n}.{domain}".format(n=index, domain=domain)) for index in range(10)]
 	backend.host_createObjects(clients)

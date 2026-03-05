@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,7 +12,8 @@ import time
 
 import pytest
 
-from OPSI.Backend.Backend import ExtendedConfigDataBackend
+from opsi_legacy.Backend.Backend import ExtendedConfigDataBackend
+
 from .test_groups import fillBackendWithObjectToGroups
 
 
@@ -83,4 +84,5 @@ def testMultiThreadingBackend(multithreadingBackend, numberOfThreads):
 		if not mtt.is_alive():
 			assert not mtt.error, f"Multithreading test failed: Exit Code {mtt.error}"
 		else:
+			mtts.append(mtt)
 			mtts.append(mtt)

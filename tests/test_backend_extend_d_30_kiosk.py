@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,17 +9,17 @@ Tests for the kiosk client method.
 
 import pytest
 
-from OPSI.Object import (
+from opsi_legacy.Exceptions import BackendMissingDataError
+from opsi_legacy.Object import (
 	LocalbootProduct,
 	ObjectToGroup,
 	OpsiClient,
 	OpsiDepotserver,
+	ProductDependency,
 	ProductGroup,
 	ProductOnDepot,
-	ProductDependency,
 	UnicodeConfig,
 )
-from OPSI.Exceptions import BackendMissingDataError
 
 
 def testGettingInfoForNonExistingClient(backendManager):
@@ -179,9 +179,7 @@ def testGettingKioskInfoFromDifferentDepot(backendManager, client, depot, anothe
 	backendManager.config_createObjects(basicConfigs)
 
 	# Assign client to second depot
-	backendManager.configState_create(
-		"clientconfig.depot.id", client.id, values=[anotherDepot.id]
-	)
+	backendManager.configState_create("clientconfig.depot.id", client.id, values=[anotherDepot.id])
 	assert backendManager.getDepotId(client.id) == anotherDepot.id
 
 	results = backendManager.getKioskProductInfosForClient(client.id)
@@ -246,9 +244,7 @@ def testGettingKioskInfoWithConfigStates(backendManager, client, depot, addConfi
 	]
 	backendManager.config_createObjects(basicConfigs)
 
-	result = backendManager.getKioskProductInfosForClient(
-		clientId=client.id, addConfigs=addConfigs
-	)
+	result = backendManager.getKioskProductInfosForClient(clientId=client.id, addConfigs=addConfigs)
 
 	if addConfigs:
 		assert isinstance(result, dict)

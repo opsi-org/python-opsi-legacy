@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,7 +9,7 @@ Testing the work with archives.
 
 import pytest
 
-from OPSI.Util.File.Archive import Archive, is_pigz_available
+from opsi_legacy.Util.File.Archive import Archive, is_pigz_available
 
 from .helpers import mock
 
@@ -33,5 +33,5 @@ def testDisablingPigz():
 	"""
 	Disabling the usage of pigz by setting PIGZ_ENABLED to False.
 	"""
-	with mock.patch("OPSI.Util.File.Opsi.OpsiConfFile.isPigzEnabled", lambda x: False):
+	with mock.patch("opsi_legacy.Util.File.Opsi.OpsiConfFile.isPigzEnabled", lambda x: False):
 		assert is_pigz_available() is False

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,7 +7,7 @@
 Testing group functionality.
 """
 
-from OPSI.Object import HostGroup, ProductGroup, ObjectToGroup
+from opsi_legacy.Object import HostGroup, ObjectToGroup, ProductGroup
 
 from .test_hosts import getClients
 
@@ -31,34 +31,24 @@ def getHostGroups():
 		parentGroupId=group1.id,
 	)
 
-	group3 = HostGroup(
-		id="host group 3", description="Group 3", notes="", parentGroupId=None
-	)
+	group3 = HostGroup(id="host group 3", description="Group 3", notes="", parentGroupId=None)
 
 	return group1, group2, group3
 
 
 def getProductGroup():
-	return ProductGroup(
-		id="products group 4", description="Group 4", notes="", parentGroupId=None
-	)
+	return ProductGroup(id="products group 4", description="Group 4", notes="", parentGroupId=None)
 
 
 def getObjectToGroups(groups, clients):
 	group1, group2 = groups[:2]
 	client1, client2 = clients[:2]
 
-	objectToGroup1 = ObjectToGroup(
-		groupType=group1.getType(), groupId=group1.getId(), objectId=client1.getId()
-	)
+	objectToGroup1 = ObjectToGroup(groupType=group1.getType(), groupId=group1.getId(), objectId=client1.getId())
 
-	objectToGroup2 = ObjectToGroup(
-		groupType=group1.getType(), groupId=group1.getId(), objectId=client2.getId()
-	)
+	objectToGroup2 = ObjectToGroup(groupType=group1.getType(), groupId=group1.getId(), objectId=client2.getId())
 
-	objectToGroup3 = ObjectToGroup(
-		groupType=group2.getType(), groupId=group2.getId(), objectId=client2.getId()
-	)
+	objectToGroup3 = ObjectToGroup(groupType=group2.getType(), groupId=group2.getId(), objectId=client2.getId())
 
 	return objectToGroup1, objectToGroup2, objectToGroup3
 
@@ -162,24 +152,16 @@ def testSelectingObjectToGroupByObjectId(extendedConfigDataBackend):
 	client1 = clients[0]
 	client2 = clients[1]
 
-	client1ObjectToGroups = [
-		objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client1.id
-	]
-	client2ObjectToGroups = [
-		objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client2.id
-	]
+	client1ObjectToGroups = [objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client1.id]
+	client2ObjectToGroups = [objectToGroup for objectToGroup in o2g if objectToGroup.objectId == client2.id]
 
-	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(
-		objectId=client1.getId()
-	)
+	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(objectId=client1.getId())
 	assert len(objectToGroups) == len(client1ObjectToGroups)
 
 	for objectToGroup in objectToGroups:
 		assert objectToGroup.objectId == client1.id
 
-	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(
-		objectId=client2.getId()
-	)
+	objectToGroups = extendedConfigDataBackend.objectToGroup_getObjects(objectId=client2.getId())
 	assert len(objectToGroups) == len(client2ObjectToGroups)
 
 	for objectToGroup in objectToGroups:

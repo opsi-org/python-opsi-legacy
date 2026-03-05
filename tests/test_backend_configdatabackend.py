@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,22 +11,22 @@ import os
 
 import pytest
 
-import OPSI.Backend.Backend
-from OPSI.Exceptions import BackendBadValueError
-from OPSI.Util import removeUnit
-from OPSI.Util.Log import truncateLogData
+import opsi_legacy.Backend.Backend
+from opsi_legacy.Exceptions import BackendBadValueError
+from opsi_legacy.Util import removeUnit
+from opsi_legacy.Util.Log import truncateLogData
 
 from .helpers import mock
 
 
 @pytest.fixture
 def logBackend(patchLogDir):
-	yield OPSI.Backend.Backend.ConfigDataBackend()
+	yield opsi_legacy.Backend.Backend.ConfigDataBackend()
 
 
 @pytest.fixture
 def patchLogDir(tempDir):
-	with mock.patch("OPSI.Backend.Base.ConfigData.LOG_DIR", tempDir):
+	with mock.patch("opsi_legacy.Backend.Base.ConfigData.LOG_DIR", tempDir):
 		yield tempDir
 
 
@@ -35,9 +35,7 @@ def testReadingLogFailsIfTypeUnknown(logBackend):
 		logBackend.log_read("unknowntype")
 
 
-@pytest.mark.parametrize(
-	"logType", ["bootimage", "clientconnect", "instlog", "userlogin", "winpe"]
-)
+@pytest.mark.parametrize("logType", ["bootimage", "clientconnect", "instlog", "userlogin", "winpe"])
 def testReadingLogRequiresObjectId(logBackend, logType):
 	with pytest.raises(BackendBadValueError):
 		logBackend.log_read(logType)
@@ -96,7 +94,7 @@ def testWritingAndThenReadingDataFromLog(logBackend):
 	["bootimage", "clientconnect", "instlog", "opsiconfd", "userlogin", "winpe"],
 )
 def testWritingLogCreatesFile(patchLogDir, logType):
-	cdb = OPSI.Backend.Backend.ConfigDataBackend()
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend()
 	cdb.log_write(logType, "logdata", objectId="foo.bar.baz")
 
 	expectedLogDir = os.path.join(patchLogDir, logType)
@@ -125,7 +123,7 @@ def testTruncatingLogData(text, length, expected):
 
 
 def test_log_file_rotation_keep_0(patchLogDir):
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=0)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=0)
 	object_id = "foo.bar.baz"
 
 	data = "aaaaaaaaaaa"
@@ -140,7 +138,7 @@ def test_log_file_rotation_keep_0(patchLogDir):
 
 
 def test_log_file_rotation_append(patchLogDir):
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=2)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=2)
 	object_id = "foo.bar.baz"
 
 	data = "aaaaaaaaaaa"
@@ -165,7 +163,7 @@ def test_log_file_rotation_append(patchLogDir):
 	]
 	assert data == cdb.log_read("opsiconfd", object_id)
 
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=1)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=10, keepRotatedLogs=1)
 	data = "ddddddddddd"
 	cdb.log_write("opsiconfd", data, objectId=object_id, append=True)
 	assert sorted(os.listdir(os.path.join(patchLogDir, "opsiconfd"))) == [
@@ -174,13 +172,9 @@ def test_log_file_rotation_append(patchLogDir):
 	]
 	assert data == cdb.log_read("opsiconfd", object_id)
 
-	with open(
-		os.path.join(patchLogDir, "opsiconfd", f"{object_id}.log"), encoding="utf-8"
-	) as file:
+	with open(os.path.join(patchLogDir, "opsiconfd", f"{object_id}.log"), encoding="utf-8") as file:
 		assert file.read() == "ddddddddddd"
-	with open(
-		os.path.join(patchLogDir, "opsiconfd", f"{object_id}.log.1"), encoding="utf-8"
-	) as file:
+	with open(os.path.join(patchLogDir, "opsiconfd", f"{object_id}.log.1"), encoding="utf-8") as file:
 		assert file.read() == "ccccccccccc"
 
 
@@ -197,7 +191,7 @@ def testAppendingLog(patchLogDir):
 	data2 = "data5\n"
 
 	maxLogSize = len(data1 + data2)
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=maxLogSize)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=maxLogSize)
 
 	cdb.log_write("opsiconfd", data1, objectId="foo.bar.baz")
 	cdb.log_write("opsiconfd", data2, objectId="foo.bar.baz", append=True)
@@ -208,7 +202,7 @@ def testAppendingLog(patchLogDir):
 
 def testWritingAndReadingLogWithoutLimits(patchLogDir):
 	# 0 means no limit.
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=0)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=0)
 
 	# The magic 218454 are meant to be more than:
 	# MAX_LOG_SIZE / len('data1\ndata2\ndata3\ndata4\n')
@@ -226,7 +220,7 @@ def testOverwritingOldDataInAppendMode(patchLogDir):
 	So every write operation should override the previously written
 	data.
 	"""
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=4)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=4)
 
 	objId = "foo.bar.baz"
 	cdb.log_write("opsiconfd", "data1", objectId=objId, append=True)
@@ -250,9 +244,7 @@ def longText(request):
 	i = 0
 	length = 0
 	while length <= size:
-		snippet = (
-			f"This is line {i} - we have some more text with special unicode: üöä \n"
-		)
+		snippet = f"This is line {i} - we have some more text with special unicode: üöä \n"
 		curLenght = len(snippet.encode("utf-8"))
 		if curLenght + length > size:
 			break
@@ -280,7 +272,7 @@ def testLimitingTheReadTextInSize(patchLogDir, longText, sizeLimit):
 	This must not hinder the text limitation.
 	"""
 	limit = removeUnit(sizeLimit)
-	cdb = OPSI.Backend.Backend.ConfigDataBackend(maxLogSize=limit)
+	cdb = opsi_legacy.Backend.Backend.ConfigDataBackend(maxLogSize=limit)
 
 	objId = "foo.bar.baz"
 	cdb.log_write("instlog", longText, objectId=objId)

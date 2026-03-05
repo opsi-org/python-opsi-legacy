@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,33 +12,27 @@ import os
 
 import pytest
 
-from OPSI.Object import NetbootProduct, ProductOnDepot, UnicodeProductProperty
+from opsi_legacy.Object import NetbootProduct, ProductOnDepot, UnicodeProductProperty
 
 from .helpers import getLocalFQDN, mock, patchAddress, patchEnvironmentVariables
 from .test_hosts import getConfigServer
-from .test_util_wim import (
-	fakeWimPath,  # required fixture  # noqa: F401
-)
+from .test_util_wim import fakeWimPath  # required fixture  # noqa: F401
 
 
 def test_update_wim(backendManager, fakeWimPath):  # noqa: F811
 	backend = backendManager
 	localFqdn = getLocalFQDN()
 	if "[mysql]" in os.environ["PYTEST_CURRENT_TEST"]:
-		pytest.skip(
-			"MySQL backend license check will not work with mocked os.path.exists"
-		)
+		pytest.skip("MySQL backend license check will not work with mocked os.path.exists")
 
 	with patchAddress(fqdn=localFqdn):
 		with patchEnvironmentVariables(OPSI_HOSTNAME=localFqdn):
 			fill_backend(backend)
 
-			with mock.patch("OPSI.Util.WIM.os.path.exists", lambda path: True):
+			with mock.patch("opsi_legacy.Util.WIM.os.path.exists", lambda path: True):
 				backend.updateWIMConfig("testwindows")
 
-			imagename = backend.productProperty_getObjects(
-				propertyId="imagename", productId="testwindows"
-			)
+			imagename = backend.productProperty_getObjects(propertyId="imagename", productId="testwindows")
 			imagename = imagename[0]
 
 			possibleImageNames = set(
@@ -53,9 +47,7 @@ def test_update_wim(backendManager, fakeWimPath):  # noqa: F811
 			assert possibleImageNames == set(imagename.possibleValues)
 			assert imagename.defaultValues[0] in imagename.possibleValues
 
-			language = backend.productProperty_getObjects(
-				propertyId="system_language", productId="testwindows"
-			)
+			language = backend.productProperty_getObjects(propertyId="system_language", productId="testwindows")
 			language = language[0]
 			assert ["de-DE"] == language.defaultValues
 			assert ["de-DE"] == language.possibleValues

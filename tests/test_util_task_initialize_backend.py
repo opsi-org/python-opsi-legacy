@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,7 +7,7 @@
 Testing the backend initialisation.
 """
 
-import OPSI.Util.Task.InitializeBackend as initBackend
+import opsi_legacy.Util.Task.InitializeBackend as initBackend
 
 
 def testGettingServerConfig():
@@ -42,7 +42,4 @@ def testGettingServerConfig():
 	assert config["repositoryRemoteUrl"] == f"webdavs://{fqdn}:4447/repository"
 	assert config["workbenchLocalUrl"] == "file:///var/lib/opsi/workbench"
 	assert config["workbenchRemoteUrl"] == f"smb://{fqdn}/opsi_workbench"
-	assert (
-		config["networkAddress"]
-		== f"{networkConfig['subnet']}/{networkConfig['netmask']}"
-	)
+	assert config["networkAddress"] == f"{networkConfig['subnet']}/{networkConfig['netmask']}"

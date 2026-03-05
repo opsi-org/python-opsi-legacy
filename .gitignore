@@ -21,7 +21,7 @@ tests/Backends/config.py
 .coverage
 coverage.xml
 nosetests.xml
-testreport-OPSI.xml
+testreport-opsi_legacy.xml
 
 build/
 data/version

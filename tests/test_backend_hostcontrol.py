@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,8 +12,8 @@ from ipaddress import IPv4Address, IPv4Network
 import pytest
 from opsicommon.objects import OpsiClient
 
-from OPSI.Backend.HostControl import HostControlBackend
-from OPSI.Exceptions import BackendMissingDataError
+from opsi_legacy.Backend.HostControl import HostControlBackend
+from opsi_legacy.Exceptions import BackendMissingDataError
 
 from .test_hosts import getClients
 
@@ -121,15 +121,10 @@ def test_set_broadcast_addresses(host_control_backend, config, expected_result):
 		),
 	),
 )
-def test_get_broadcast_addresses_for_host(
-	host_control_backend, config, ip_address, expected_result
-):
+def test_get_broadcast_addresses_for_host(host_control_backend, config, ip_address, expected_result):
 	host_control_backend._set_broadcast_addresses(config)
 	host = OpsiClient(id="test.opsi.org", ipAddress=ip_address)
-	assert (
-		list(host_control_backend._get_broadcast_addresses_for_host(host))
-		== expected_result
-	)
+	assert list(host_control_backend._get_broadcast_addresses_for_host(host)) == expected_result
 
 
 def test_calling_start_and_stop_method(host_control_backend):

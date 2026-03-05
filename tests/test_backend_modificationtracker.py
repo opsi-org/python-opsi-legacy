@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,13 +9,13 @@ Testing the modification tracking.
 Based on work of Christian Kampka.
 """
 
-from OPSI.Backend.Backend import ModificationTrackingBackend
-from OPSI.Object import OpsiClient
-
-from .Backends.SQLite import getSQLiteBackend, getSQLiteModificationTracker
-from .Backends.MySQL import getMySQLBackend, getMySQLModificationTracker
-
 import pytest
+
+from opsi_legacy.Backend.Backend import ModificationTrackingBackend
+from opsi_legacy.Object import OpsiClient
+
+from .Backends.MySQL import getMySQLBackend, getMySQLModificationTracker
+from .Backends.SQLite import getSQLiteBackend, getSQLiteModificationTracker
 
 
 @pytest.fixture(

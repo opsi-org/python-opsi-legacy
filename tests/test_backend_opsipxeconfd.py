@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -8,15 +8,9 @@ Testing opsipxeconfd backend.
 """
 
 import pytest
-from OPSI.Backend.OpsiPXEConfd import OpsiPXEConfdBackend, getClientCacheFilePath
-from OPSI.Object import (
-	NetbootProduct,
-	OpsiClient,
-	OpsiDepotserver,
-	ProductOnClient,
-	ProductOnDepot,
-	UnicodeConfig,
-)
+
+from opsi_legacy.Backend.OpsiPXEConfd import OpsiPXEConfdBackend, getClientCacheFilePath
+from opsi_legacy.Object import NetbootProduct, OpsiClient, OpsiDepotserver, ProductOnClient, ProductOnDepot, UnicodeConfig
 
 from .helpers import patchAddress
 
@@ -95,9 +89,7 @@ def testCacheDataCollectionWithPxeConfigTemplate(backendManager, client, depot):
 	)
 	backendManager.productOnDepot_createObjects([productOnDepot])
 
-	poc = ProductOnClient(
-		product.id, product.getType(), client.id, actionRequest="setup"
-	)
+	poc = ProductOnClient(product.id, product.getType(), client.id, actionRequest="setup")
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):
@@ -146,9 +138,7 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 		]
 	)
 
-	oldProduct = NetbootProduct(
-		"mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old"
-	)
+	oldProduct = NetbootProduct("mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old")
 	backendManager.product_insertObject(oldProduct)
 	newProduct = NetbootProduct(
 		oldProduct.id,
@@ -176,9 +166,7 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 		depotId=depot.id,
 	)
 
-	poc = ProductOnClient(
-		oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup"
-	)
+	poc = ProductOnClient(oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup")
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):
@@ -194,9 +182,7 @@ def testCacheDataCollectionWithChangingPxeConfigTemplate(backendManager, client,
 		assert data["product"]["pxeConfigTemplate"] == newProduct.pxeConfigTemplate
 
 
-def testCacheDataCollectionWithMultiplePxeConfigTemplates(
-	backendManager, client, depot
-):
+def testCacheDataCollectionWithMultiplePxeConfigTemplates(backendManager, client, depot):
 	"""
 	Testing what happens if each product version has a different pxe template.
 	"""
@@ -234,9 +220,7 @@ def testCacheDataCollectionWithMultiplePxeConfigTemplates(
 		]
 	)
 
-	oldProduct = NetbootProduct(
-		"mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old"
-	)
+	oldProduct = NetbootProduct("mytest86", productVersion=1, packageVersion=1, pxeConfigTemplate="old")
 	backendManager.product_insertObject(oldProduct)
 	newProduct = NetbootProduct(
 		oldProduct.id,
@@ -264,9 +248,7 @@ def testCacheDataCollectionWithMultiplePxeConfigTemplates(
 	)
 	backendManager.productOnDepot_createObjects([productOnDepot])
 
-	poc = ProductOnClient(
-		oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup"
-	)
+	poc = ProductOnClient(oldProduct.id, oldProduct.getType(), client.id, actionRequest="setup")
 	backendManager.productOnClient_insertObject(poc)
 
 	with patchAddress(fqdn=depot.id):

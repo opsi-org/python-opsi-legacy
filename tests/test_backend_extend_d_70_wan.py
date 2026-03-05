@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -17,8 +17,8 @@ from __future__ import print_function
 
 import pytest
 
-from OPSI.Object import OpsiClient
-from OPSI.Util.Task.ConfigureBackend.ConfigurationData import createWANconfigs
+from opsi_legacy.Object import OpsiClient
+from opsi_legacy.Util.Task.ConfigureBackend.ConfigurationData import createWANconfigs
 
 
 @pytest.fixture
@@ -42,15 +42,10 @@ def clientHasWANEnabled(backend, clientId):
 			if configState.values[0]:
 				return False
 			configsToCheck.remove("opsiclientd.event_gui_startup.active")
-		elif (
-			configState.configId
-			== "opsiclientd.event_gui_startup{user_logged_in}.active"
-		):
+		elif configState.configId == "opsiclientd.event_gui_startup{user_logged_in}.active":
 			if configState.values[0]:
 				return False
-			configsToCheck.remove(
-				"opsiclientd.event_gui_startup{user_logged_in}.active"
-			)
+			configsToCheck.remove("opsiclientd.event_gui_startup{user_logged_in}.active")
 		elif configState.configId == "opsiclientd.event_net_connection.active":
 			if not configState.values[0]:
 				return False

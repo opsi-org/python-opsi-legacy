@@ -1,6 +1,6 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR ORGANIZATION
-# 
+#
 # Translators:
 # Martin Scalese <m.scalese@uib.de>, 2015,2017
 msgid ""
@@ -17,66 +17,66 @@ msgstr ""
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../OPSI/UI.py:114 ../OPSI/UI.py:117 ../OPSI/UI.py:138 ../OPSI/UI.py:141
-#: ../OPSI/UI.py:144 ../OPSI/UI.py:147 ../OPSI/UI.py:244 ../OPSI/UI.py:283
-#: ../OPSI/UI.py:396 ../OPSI/UI.py:472 ../OPSI/UI.py:579 ../OPSI/UI.py:679
+#: ../opsi_legacy/UI.py:114 ../opsi_legacy/UI.py:117 ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:141
+#: ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:147 ../opsi_legacy/UI.py:244 ../opsi_legacy/UI.py:283
+#: ../opsi_legacy/UI.py:396 ../opsi_legacy/UI.py:472 ../opsi_legacy/UI.py:579 ../opsi_legacy/UI.py:679
 msgid "OK"
 msgstr "OK"
 
-#: ../OPSI/UI.py:114 ../OPSI/UI.py:244
+#: ../opsi_legacy/UI.py:114 ../opsi_legacy/UI.py:244
 msgid "An error occurred"
 msgstr "Un error ocurrió"
 
-#: ../OPSI/UI.py:117 ../OPSI/UI.py:283
+#: ../opsi_legacy/UI.py:117 ../opsi_legacy/UI.py:283
 msgid "Message"
 msgstr "Mensaje"
 
-#: ../OPSI/UI.py:120 ../OPSI/UI.py:126 ../OPSI/UI.py:322 ../OPSI/UI.py:352
+#: ../opsi_legacy/UI.py:120 ../opsi_legacy/UI.py:126 ../opsi_legacy/UI.py:322 ../opsi_legacy/UI.py:352
 msgid "Progress"
 msgstr "Progreso"
 
-#: ../OPSI/UI.py:123 ../OPSI/UI.py:129 ../OPSI/UI.py:337 ../OPSI/UI.py:367
+#: ../opsi_legacy/UI.py:123 ../opsi_legacy/UI.py:129 ../opsi_legacy/UI.py:337 ../opsi_legacy/UI.py:367
 msgid "Copy progress"
 msgstr "Progreso de copia"
 
-#: ../OPSI/UI.py:132 ../OPSI/UI.py:382
+#: ../opsi_legacy/UI.py:132 ../opsi_legacy/UI.py:382
 msgid "Text"
 msgstr "Texto"
 
-#: ../OPSI/UI.py:138 ../OPSI/UI.py:141 ../OPSI/UI.py:144 ../OPSI/UI.py:147
-#: ../OPSI/UI.py:396 ../OPSI/UI.py:472 ../OPSI/UI.py:579 ../OPSI/UI.py:679
+#: ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:141 ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:147
+#: ../opsi_legacy/UI.py:396 ../opsi_legacy/UI.py:472 ../opsi_legacy/UI.py:579 ../opsi_legacy/UI.py:679
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ../OPSI/UI.py:138 ../OPSI/UI.py:396
+#: ../opsi_legacy/UI.py:138 ../opsi_legacy/UI.py:396
 msgid "Please type text"
 msgstr "Por favor introduzca el texto"
 
-#: ../OPSI/UI.py:141 ../OPSI/UI.py:472
+#: ../opsi_legacy/UI.py:141 ../opsi_legacy/UI.py:472
 msgid "Please select"
 msgstr "Por favor seleccione"
 
-#: ../OPSI/UI.py:144 ../OPSI/UI.py:579
+#: ../opsi_legacy/UI.py:144 ../opsi_legacy/UI.py:579
 msgid "Please fill in"
 msgstr "Por favor rellene el campo"
 
-#: ../OPSI/UI.py:147 ../OPSI/UI.py:679
+#: ../opsi_legacy/UI.py:147 ../opsi_legacy/UI.py:679
 msgid "Question"
 msgstr "Pregunta"
 
-#: ../OPSI/UI.py:152 ../OPSI/UI.py:169 ../OPSI/UI.py:184 ../OPSI/UI.py:733
-#: ../OPSI/UI.py:833 ../OPSI/UI.py:898
+#: ../opsi_legacy/UI.py:152 ../opsi_legacy/UI.py:169 ../opsi_legacy/UI.py:184 ../opsi_legacy/UI.py:733
+#: ../opsi_legacy/UI.py:833 ../opsi_legacy/UI.py:898
 msgid "Title"
 msgstr "Titulo"
 
-#: ../OPSI/UI.py:275 ../OPSI/UI.py:314
+#: ../opsi_legacy/UI.py:275 ../opsi_legacy/UI.py:314
 msgid "<F12> %s | <Space> select | <Up/Down> scroll text"
 msgstr "<F12> %s | <Espacio> seleccionar | <Up/Down> desplazarse en el texto"
 
-#: ../OPSI/UI.py:451 ../OPSI/UI.py:552 ../OPSI/UI.py:651 ../OPSI/UI.py:711
+#: ../opsi_legacy/UI.py:451 ../opsi_legacy/UI.py:552 ../opsi_legacy/UI.py:651 ../opsi_legacy/UI.py:711
 msgid "<ESC> %s | <F12> %s | <Tab> move cursor | <Space> select"
 msgstr "<ESC> %s | <F12> %s | <Tab> mover el cursor | <Espacio> seleccionar"
 
-#: ../OPSI/UI.py:453 ../OPSI/UI.py:554 ../OPSI/UI.py:653 ../OPSI/UI.py:713
+#: ../opsi_legacy/UI.py:453 ../opsi_legacy/UI.py:554 ../opsi_legacy/UI.py:653 ../opsi_legacy/UI.py:713
 msgid " | <Up/Down> scroll text"
 msgstr " | <Up/Down> desplazarse en el texto"

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,7 +9,7 @@ Testing backend replication.
 
 import pytest
 
-from OPSI.Backend.Replicator import BackendReplicator
+from opsi_legacy.Backend.Replicator import BackendReplicator
 
 from .Backends import getTestBackend
 from .test_configs import getConfigs, getConfigStates
@@ -25,20 +25,13 @@ from .test_products import (
 	getProductsOnClients,
 	getProductsOnDepot,
 )
-from .test_software_and_hardware_audit import (
-	getAuditHardwareOnHost,
-	getAuditHardwares,
-	getAuditSoftwareOnClient,
-	getAuditSoftwares,
-)
+from .test_software_and_hardware_audit import getAuditHardwareOnHost, getAuditHardwares, getAuditSoftwareOnClient, getAuditSoftwares
 
 
 # TODO: there are some cases we should test
 # * handling backends with / without license management
 # * test with serverID, depotID, hostID given
-@pytest.mark.parametrize(
-	"checkAuditData", [True, False], ids=["with audit", "without audit"]
-)
+@pytest.mark.parametrize("checkAuditData", [True, False], ids=["with audit", "without audit"])
 def testBackendReplication(replicationDestinationBackend, checkAuditData):
 	# One important note regarding pytest:
 	# With our current way of setting up backends we may end up in
@@ -53,9 +46,7 @@ def testBackendReplication(replicationDestinationBackend, checkAuditData):
 		replicator.replicate(audit=checkAuditData)
 
 		checkIfBackendIsFilled(writeBackend)
-		checkBackendDataIsEqual(
-			readBackend, writeBackend, checkAuditData=checkAuditData
-		)
+		checkBackendDataIsEqual(readBackend, writeBackend, checkAuditData=checkAuditData)
 
 		if not checkAuditData:
 			assert 0 == len(writeBackend.auditHardware_getObjects())
@@ -79,21 +70,15 @@ def checkBackendDataIsEqual(first, second, checkAuditData=True):
 	compareResultsFromBackendMethod(first, second, "productPropertyState_getObjects")
 	compareResultsFromBackendMethod(first, second, "configState_getObjects")
 	compareResultsFromBackendMethod(first, second, "objectToGroup_getObjects")
-	compareResultsFromBackendMethod(
-		first, second, "softwareLicenseToLicensePool_getObjects"
-	)
+	compareResultsFromBackendMethod(first, second, "softwareLicenseToLicensePool_getObjects")
 	compareResultsFromBackendMethod(first, second, "licenseOnClient_getObjects")
-	compareResultsFromBackendMethod(
-		first, second, "auditSoftwareToLicensePool_getObjects"
-	)
+	compareResultsFromBackendMethod(first, second, "auditSoftwareToLicensePool_getObjects")
 
 	if checkAuditData:
 		compareResultsFromBackendMethod(first, second, "auditHardware_getObjects")
 		compareResultsFromBackendMethod(first, second, "auditSoftware_getObjects")
 		compareResultsFromBackendMethod(first, second, "auditHardwareOnHost_getObjects")
-		compareResultsFromBackendMethod(
-			first, second, "auditSoftwareOnClient_getObjects"
-		)
+		compareResultsFromBackendMethod(first, second, "auditSoftwareOnClient_getObjects")
 
 
 def compareResultsFromBackendMethod(firstBackend, secondBackend, methodname):
@@ -125,9 +110,7 @@ def fillBackend(backend, licenseManagementData=False):
 	productProperties = fillBackendWithProductPropertys(backend, products)
 	fillBackendWithProductOnDepots(backend, products, configServer, depotServer)
 	fillBackendWithProductOnClients(backend, products, clients)
-	fillBackendWithProductPropertyStates(
-		backend, productProperties, depotServer, clients
-	)
+	fillBackendWithProductPropertyStates(backend, productProperties, depotServer, clients)
 	fillBackendWithConfigStates(backend, configs, clients, depotServer)
 	fillBackendWithObjectToGroups(backend, groups, clients)
 	auditSoftwares = fillBackendWithAuditSoftwares(backend)
@@ -281,12 +264,8 @@ def fillBackendWithProductOnClients(backend, products, clients):
 	return productsOnClients
 
 
-def fillBackendWithProductPropertyStates(
-	backend, productProperties, depotServer, clients
-):
-	productPropertyStates = getProductPropertyStates(
-		productProperties, depotServer, clients
-	)
+def fillBackendWithProductPropertyStates(backend, productProperties, depotServer, clients):
+	productPropertyStates = getProductPropertyStates(productProperties, depotServer, clients)
 	backend.productPropertyState_createObjects(productPropertyStates)
 
 

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -10,18 +10,18 @@ This tests what usually is found under
 ``/etc/opsi/backendManager/extend.de/10_opsi.conf``.
 """
 
-from OPSI.Object import (
-	OpsiClient,
+import pytest
+
+from opsi_legacy.Object import (
+	ConfigState,
 	LocalbootProduct,
-	ProductOnClient,
-	ProductDependency,
+	OpsiClient,
 	OpsiDepotserver,
+	ProductDependency,
+	ProductOnClient,
 	ProductOnDepot,
 	UnicodeConfig,
-	ConfigState,
 )
-
-import pytest
 
 
 @pytest.fixture
@@ -86,9 +86,7 @@ def fillBackend(backend):
 
 
 def createClientAndDepot(backend):
-	client = OpsiClient(
-		id="backend-test-1.vmnat.local", description="Unittest Test client."
-	)
+	client = OpsiClient(id="backend-test-1.vmnat.local", description="Unittest Test client.")
 
 	depot = OpsiDepotserver(
 		id="depotserver1.some.test",
@@ -119,8 +117,4 @@ def createClientAndDepot(backend):
 
 def testBackendDoesNotCreateProductsOnClientsOnItsOwn(prefilledBackendManager):
 	pocs = prefilledBackendManager.productOnClient_getObjects()
-	assert 1 == len(
-		pocs
-	), "Expected to have only one ProductOnClient but got {n} instead: {0}".format(
-		pocs, n=len(pocs)
-	)
+	assert 1 == len(pocs), "Expected to have only one ProductOnClient but got {n} instead: {0}".format(pocs, n=len(pocs))

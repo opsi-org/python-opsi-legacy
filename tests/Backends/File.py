@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -14,8 +14,8 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
-from OPSI.Backend.Backend import ExtendedConfigDataBackend
-from OPSI.Backend.File import FileBackend
+from opsi_legacy.Backend.Backend import ExtendedConfigDataBackend
+from opsi_legacy.Backend.File import FileBackend
 
 from ..helpers import workInTemporaryDirectory
 from . import BackendMixin
@@ -37,9 +37,7 @@ class FileBackendMixin(BackendMixin):
 		tempDir = tempfile.mkdtemp()
 		originalBackendDir = _getOriginalBackendLocation()
 
-		shutil.copytree(
-			originalBackendDir, os.path.join(tempDir, self.BACKEND_SUBFOLDER)
-		)
+		shutil.copytree(originalBackendDir, os.path.join(tempDir, self.BACKEND_SUBFOLDER))
 
 		self._setupFileBackend(tempDir)
 		self._patchDispatchConfig(tempDir)
@@ -48,9 +46,7 @@ class FileBackendMixin(BackendMixin):
 
 	def _setupFileBackend(self, targetDirectory):
 		self._patchFileBackend(targetDirectory)
-		self._createClientTemplateFolders(
-			os.path.join(targetDirectory, self.CONFIG_DIRECTORY)
-		)
+		self._createClientTemplateFolders(os.path.join(targetDirectory, self.CONFIG_DIRECTORY))
 
 	def _patchFileBackend(self, backendDirectory):
 		baseDir = os.path.join(backendDirectory, self.CONFIG_DIRECTORY, "config")
@@ -70,9 +66,7 @@ class FileBackendMixin(BackendMixin):
 			)
 		)
 
-		config_file = os.path.join(
-			backendDirectory, self.BACKEND_SUBFOLDER, "backends", "file.conf"
-		)
+		config_file = os.path.join(backendDirectory, self.BACKEND_SUBFOLDER, "backends", "file.conf")
 		with open(config_file, "w") as config:
 			new_configuration = """
 # -*- coding: utf-8 -*-

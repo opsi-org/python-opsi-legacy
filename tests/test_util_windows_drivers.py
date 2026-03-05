@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -8,10 +8,11 @@ Testing WindowsDrivers.
 """
 
 import os
+
 import pytest
 
-from OPSI.Util.WindowsDrivers import integrateAdditionalWindowsDrivers
-from OPSI.Object import AuditHardwareOnHost
+from opsi_legacy.Object import AuditHardwareOnHost
+from opsi_legacy.Util.WindowsDrivers import integrateAdditionalWindowsDrivers
 
 
 def auditHardwareOnHostFactory(hardwareClass, hostId, vendor, model, sku=None):
@@ -63,9 +64,7 @@ def testByAudit(tempDir, destinationDir, hardwareClass, hostId):
 	_generateDirectories(tempDir, vendor, model)
 	_generateTestFiles(tempDir, vendor, model, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(
-		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
-	)
+	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
 
 	expectedResult = [
 		{
@@ -87,9 +86,7 @@ def testByAuditWithUnderscoreAtTheEnd(tempDir, destinationDir, hardwareClass, ho
 	_generateDirectories(tempDir, vendor, model)
 	_generateTestFiles(tempDir, vendor, model, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(
-		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
-	)
+	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
 
 	expectedResult = [
 		{
@@ -109,15 +106,11 @@ def testByAuditWithSKUFallback(tempDir, destinationDir, hardwareClass, hostId):
 	sku = "ABC"
 	model_without_sku = "Venue 11 Pro 7130 MS"
 
-	testData1 = auditHardwareOnHostFactory(
-		hardwareClass, hostId, "Dell Inc.", model, sku
-	)
+	testData1 = auditHardwareOnHostFactory(hardwareClass, hostId, "Dell Inc.", model, sku)
 	_generateDirectories(tempDir, vendor, model_without_sku)
 	_generateTestFiles(tempDir, vendor, model_without_sku, "test.inf")
 
-	result = integrateAdditionalWindowsDrivers(
-		tempDir, destinationDir, [], auditHardwareOnHosts=[testData1]
-	)
+	result = integrateAdditionalWindowsDrivers(tempDir, destinationDir, [], auditHardwareOnHosts=[testData1])
 
 	expectedResult = [
 		{
@@ -128,4 +121,5 @@ def testByAuditWithSKUFallback(tempDir, destinationDir, hardwareClass, hostId):
 		}
 	]
 
+	assert expectedResult == result
 	assert expectedResult == result

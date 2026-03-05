@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,7 +7,7 @@
 Testing configuration objects on a backend.
 """
 
-from OPSI.Object import BoolConfig, ConfigState, OpsiClient, UnicodeConfig
+from opsi_legacy.Object import BoolConfig, ConfigState, OpsiClient, UnicodeConfig
 
 from .test_hosts import getClients, getDepotServers
 
@@ -20,9 +20,7 @@ def getConfigs(depotServerId=None):
 		defaultValues=["b,c"],
 	)
 
-	config2 = BoolConfig(
-		id="opsi-linux-bootimage.cmdline.bool", description="Bool?", defaultValues="on"
-	)
+	config2 = BoolConfig(id="opsi-linux-bootimage.cmdline.bool", description="Bool?", defaultValues="on")
 
 	config3 = UnicodeConfig(
 		id="some.products",
@@ -60,17 +58,11 @@ def getConfigStates(configs, clients, depotserver):
 	client1, client2, _, _, client5, client6, client7 = clients[:7]
 	depotserver2 = depotserver[1]
 
-	configState1 = ConfigState(
-		configId=config1.getId(), objectId=client1.getId(), values=["w"]
-	)
+	configState1 = ConfigState(configId=config1.getId(), objectId=client1.getId(), values=["w"])
 
-	configState2 = ConfigState(
-		configId=config2.getId(), objectId=client1.getId(), values=[False]
-	)
+	configState2 = ConfigState(configId=config2.getId(), objectId=client1.getId(), values=[False])
 
-	configState3 = ConfigState(
-		configId=config2.getId(), objectId=client2.getId(), values=[False]
-	)
+	configState3 = ConfigState(configId=config2.getId(), objectId=client2.getId(), values=[False])
 
 	configState4 = ConfigState(
 		configId=config6.getId(),
@@ -78,17 +70,11 @@ def getConfigStates(configs, clients, depotserver):
 		values=["-------- test --------\n4: %4\n1: %1\n2: %2\n5: %5"],
 	)
 
-	configState5 = ConfigState(
-		configId=config4.getId(), objectId=client5.getId(), values=depotserver2.id
-	)
+	configState5 = ConfigState(configId=config4.getId(), objectId=client5.getId(), values=depotserver2.id)
 
-	configState6 = ConfigState(
-		configId=config4.getId(), objectId=client6.getId(), values=depotserver2.id
-	)
+	configState6 = ConfigState(configId=config4.getId(), objectId=client6.getId(), values=depotserver2.id)
 
-	configState7 = ConfigState(
-		configId=config4.getId(), objectId=client7.getId(), values=depotserver2.id
-	)
+	configState7 = ConfigState(configId=config4.getId(), objectId=client7.getId(), values=depotserver2.id)
 
 	return (
 		configState1,
@@ -119,9 +105,7 @@ def testConfigMethods(extendedConfigDataBackend):
 				assert config == c
 
 	config2 = configsOrig[1]
-	configs = extendedConfigDataBackend.config_getObjects(
-		defaultValues=config2.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(defaultValues=config2.defaultValues)
 	assert len(configs) == 1
 	assert configs[0].getId() == config2.getId()
 
@@ -129,17 +113,13 @@ def testConfigMethods(extendedConfigDataBackend):
 	assert len(configs) == len(configs)
 
 	config1 = configsOrig[0]
-	configs = extendedConfigDataBackend.config_getObjects(
-		possibleValues=config1.possibleValues, defaultValues=config1.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(possibleValues=config1.possibleValues, defaultValues=config1.defaultValues)
 	assert len(configs) == 1
 	assert configs[0].getId() == config1.getId()
 
 	config3 = configsOrig[2]
 	config5 = configsOrig[4]
-	configs = extendedConfigDataBackend.config_getObjects(
-		possibleValues=config5.possibleValues, defaultValues=config5.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(possibleValues=config5.possibleValues, defaultValues=config5.defaultValues)
 	assert len(configs) == 2
 	for config in configs:
 		assert config.getId() in (config3.id, config5.id)
@@ -148,9 +128,7 @@ def testConfigMethods(extendedConfigDataBackend):
 	for config in configsOrig:
 		if config.getMultiValue():
 			multiValueConfigNames.append(config.id)
-	configs = extendedConfigDataBackend.config_getObjects(
-		attributes=[], multiValue=True
-	)
+	configs = extendedConfigDataBackend.config_getObjects(attributes=[], multiValue=True)
 	assert len(configs) == len(multiValueConfigNames)
 	for config in configs:
 		assert config.id in multiValueConfigNames
@@ -209,9 +187,7 @@ def test_getConfigByDefaultValues(extendedConfigDataBackend):
 
 	config2 = configsOrig[1]
 
-	configs = extendedConfigDataBackend.config_getObjects(
-		defaultValues=config2.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(defaultValues=config2.defaultValues)
 	assert len(configs) == 1
 	assert configs[0].getId() == config2.getId()
 
@@ -224,16 +200,12 @@ def test_getConfigByPossibleValues(extendedConfigDataBackend):
 	assert len(configs) == len(configsOrig)
 
 	config1 = configsOrig[0]
-	configs = extendedConfigDataBackend.config_getObjects(
-		possibleValues=config1.possibleValues, defaultValues=config1.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(possibleValues=config1.possibleValues, defaultValues=config1.defaultValues)
 	assert len(configs) == 1
 	assert configs[0].getId() == config1.getId()
 
 	config5 = configsOrig[4]
-	configs = extendedConfigDataBackend.config_getObjects(
-		possibleValues=config5.possibleValues, defaultValues=config5.defaultValues
-	)
+	configs = extendedConfigDataBackend.config_getObjects(possibleValues=config5.possibleValues, defaultValues=config5.defaultValues)
 	assert len(configs) == 2
 
 	config3 = configsOrig[2]
@@ -245,14 +217,10 @@ def test_getMultiValueConfigs(extendedConfigDataBackend):
 	configsOrig = getConfigs()
 	extendedConfigDataBackend.config_createObjects(configsOrig)
 
-	multiValueConfigNames = [
-		config.id for config in configsOrig if config.getMultiValue()
-	]
+	multiValueConfigNames = [config.id for config in configsOrig if config.getMultiValue()]
 	assert multiValueConfigNames
 
-	configs = extendedConfigDataBackend.config_getObjects(
-		attributes=[], multiValue=True
-	)
+	configs = extendedConfigDataBackend.config_getObjects(attributes=[], multiValue=True)
 	assert len(configs) == len(multiValueConfigNames)
 	for config in configs:
 		assert config.id in multiValueConfigNames
@@ -310,9 +278,7 @@ def testConfigStateMethods(extendedConfigDataBackend):
 		if configState.getObjectId() == client1.getId():
 			client1ConfigStates.append(configState)
 
-	configStates = extendedConfigDataBackend.configState_getObjects(
-		attributes=[], objectId=client1.getId()
-	)
+	configStates = extendedConfigDataBackend.configState_getObjects(attributes=[], objectId=client1.getId())
 	assert len(configStates) == len(client1ConfigStates)
 	for configState in configStates:
 		assert configState.objectId == client1.getId()
@@ -322,10 +288,7 @@ def testConfigStateMethods(extendedConfigDataBackend):
 	configStates = extendedConfigDataBackend.configState_getObjects()
 	assert len(configStates) == len(configStatesOrig) - 1
 	for configState in configStates:
-		assert not (
-			configState.objectId == configState2.objectId
-			and configState.configId == configState2.configId
-		)
+		assert not (configState.objectId == configState2.objectId and configState.configId == configState2.configId)
 
 	configState3 = configStatesOrig[2]
 	configState3.setValues([True])
@@ -374,15 +337,9 @@ def test_getConfigStateByClientID(extendedConfigDataBackend):
 	extendedConfigDataBackend.configState_createObjects(configStatesOrig)
 
 	client1 = clients[0]
-	client1ConfigStates = [
-		configState
-		for configState in configStatesOrig
-		if configState.getObjectId() == client1.getId()
-	]
+	client1ConfigStates = [configState for configState in configStatesOrig if configState.getObjectId() == client1.getId()]
 
-	configStates = extendedConfigDataBackend.configState_getObjects(
-		attributes=[], objectId=client1.getId()
-	)
+	configStates = extendedConfigDataBackend.configState_getObjects(attributes=[], objectId=client1.getId())
 	assert configStates
 	assert len(configStates) == len(client1ConfigStates)
 	for configState in configStates:
@@ -463,9 +420,7 @@ def testGettingConfigIdents(extendedConfigDataBackend):
 	assert len(ids) == len(selfIdents)
 
 	for ident in ids:
-		assert any(ident == selfIdent["id"] for selfIdent in selfIdents), (
-			"'%s' not in '%s'" % (ident, selfIdents)
-		)
+		assert any(ident == selfIdent["id"] for selfIdent in selfIdents), "'%s' not in '%s'" % (ident, selfIdents)
 
 
 def testGetConfigStateIdents(extendedConfigDataBackend):
@@ -479,9 +434,7 @@ def testGetConfigStateIdents(extendedConfigDataBackend):
 	extendedConfigDataBackend.config_createObjects(configs)
 	extendedConfigDataBackend.configState_createObjects(configStatesOrig)
 
-	selfIdents = [
-		configState.getIdent(returnType="dict") for configState in configStatesOrig
-	]
+	selfIdents = [configState.getIdent(returnType="dict") for configState in configStatesOrig]
 
 	ids = extendedConfigDataBackend.configState_getIdents()
 	assert len(ids) == len(selfIdents)
@@ -489,10 +442,9 @@ def testGetConfigStateIdents(extendedConfigDataBackend):
 	for ident in ids:
 		i = ident.split(";")
 
-		assert any(
-			((i[0] == selfIdent["configId"]) and (i[1] == selfIdent["objectId"]))
-			for selfIdent in selfIdents
-		), "'%s' not in '%s'" % (ident, selfIdents)
+		assert any(((i[0] == selfIdent["configId"]) and (i[1] == selfIdent["objectId"])) for selfIdent in selfIdents), (
+			"'%s' not in '%s'" % (ident, selfIdents)
+		)
 
 
 def testConfigStateGetObjectsIncludesDefaultValues(extendedConfigDataBackend):

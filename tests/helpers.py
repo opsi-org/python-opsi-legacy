@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -13,7 +13,7 @@ import tempfile
 from contextlib import contextmanager
 from unittest import mock
 
-from OPSI.Util.Path import cd
+from opsi_legacy.Util.Path import cd
 
 
 @contextmanager
@@ -54,8 +54,8 @@ yield the path to the new file.
 def getLocalFQDN():
 	"Get the FQDN of the local machine."
 	# Lazy imports to not hinder other tests.
-	from OPSI.Types import forceHostId
-	from OPSI.Util import getfqdn
+	from opsi_legacy.Types import forceHostId
+	from opsi_legacy.Util import getfqdn
 
 	return forceHostId(getfqdn())
 

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -15,7 +15,7 @@ except ImportError:
 
 @contextmanager
 def getSQLiteBackend(**backendOptions):
-	sqliteModule = pytest.importorskip("OPSI.Backend.SQLite")
+	sqliteModule = pytest.importorskip("opsi_legacy.Backend.SQLite")
 	SQLiteBackend = sqliteModule.SQLiteBackend
 
 	# Defaults and settings from the old fixture.
@@ -38,7 +38,7 @@ def getSQLiteBackend(**backendOptions):
 
 @contextmanager
 def getSQLiteModificationTracker():
-	sqliteModule = pytest.importorskip("OPSI.Backend.SQLite")
+	sqliteModule = pytest.importorskip("opsi_legacy.Backend.SQLite")
 	trackerClass = sqliteModule.SQLiteObjectBackendModificationTracker
 
 	yield trackerClass(database=":memory:")

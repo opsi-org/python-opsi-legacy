@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -26,8 +26,8 @@ import pytest
 import urllib3
 from _pytest.logging import LogCaptureHandler
 
-from OPSI.Backend.Backend import ExtendedConfigDataBackend
-from OPSI.Backend.BackendManager import BackendManager
+from opsi_legacy.Backend.Backend import ExtendedConfigDataBackend
+from opsi_legacy.Backend.BackendManager import BackendManager
 
 from .Backends.File import getFileBackend
 from .Backends.MySQL import getMySQLBackend
@@ -65,9 +65,7 @@ def pytest_configure(config):
 	# When the mode is auto, all discovered async tests are considered
 	# asyncio-driven even if they have no @pytest.mark.asyncio marker.
 	config.option.asyncio_mode = "auto"
-	config.addinivalue_line(
-		"markers", "obsolete: mark test that are obsolete for 4.2 development"
-	)
+	config.addinivalue_line("markers", "obsolete: mark test that are obsolete for 4.2 development")
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +83,7 @@ def disable_insecure_request_warning():
 )
 def configDataBackend(request):
 	"""
-	Returns an `OPSI.Backend.ConfigDataBackend` for testing.
+	Returns an `opsi_legacy.Backend.ConfigDataBackend` for testing.
 
 	This will return multiple backends but some of these may lead to
 	skips if required libraries are missing or conditions for the
@@ -110,7 +108,7 @@ def _backendBase(backend):
 @pytest.fixture
 def extendedConfigDataBackend(configDataBackend):
 	"""
-	Returns an `OPSI.Backend.ExtendedConfigDataBackend` for testing.
+	Returns an `opsi_legacy.Backend.ExtendedConfigDataBackend` for testing.
 
 	This will return multiple backends but some of these may lead to
 	skips if required libraries are missing or conditions for the
@@ -159,7 +157,7 @@ def replicationDestinationBackend(request):
 @pytest.fixture
 def backendManager(_serverBackend, tempDir, dist_data_path):
 	"""
-	Returns an `OPSI.Backend.BackendManager.BackendManager` for testing.
+	Returns an `opsi_legacy.Backend.BackendManager.BackendManager` for testing.
 
 	The returned instance is set up to have access to backend extensions.
 	"""
@@ -167,9 +165,7 @@ def backendManager(_serverBackend, tempDir, dist_data_path):
 
 	yield BackendManager(
 		backend=_serverBackend,
-		extensionconfigdir=os.path.join(
-			tempDir, "etc", "opsi", "backendManager", "extend.d"
-		),
+		extensionconfigdir=os.path.join(tempDir, "etc", "opsi", "backendManager", "extend.d"),
 	)
 
 

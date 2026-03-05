@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing functionality of OPSI.Systen.Posix
+Testing functionality of opsi_legacy.Systen.Posix
 
 Various unittests to test functionality of python-opsi.
 """
@@ -15,7 +15,7 @@ import re
 import psutil
 import pytest
 
-import OPSI.System.Posix as Posix
+import opsi_legacy.System.Posix as Posix
 
 from .helpers import mock
 
@@ -89,7 +89,7 @@ def testGetHarddisks():
 		"total: 19922944 blocks",
 	]
 
-	with mock.patch("OPSI.System.Posix.execute"):
+	with mock.patch("opsi_legacy.System.Posix.execute"):
 		disks = Posix.getHarddisks(data=testData)
 
 	assert 1 == len(disks)
@@ -103,7 +103,7 @@ def testGetHarddisksIgnoresEverythingOutsideDev():
 		"total: 19922944 blocks",
 	]
 
-	with mock.patch("OPSI.System.Posix.execute"):
+	with mock.patch("opsi_legacy.System.Posix.execute"):
 		disks = Posix.getHarddisks(data=testData)
 
 	assert 1 == len(disks)
@@ -115,7 +115,7 @@ def testGetHarddisksFailsIfNoDisks():
 		"total: 19922944 blocks",
 	]
 
-	with mock.patch("OPSI.System.Posix.execute"):
+	with mock.patch("opsi_legacy.System.Posix.execute"):
 		with pytest.raises(Exception):
 			Posix.getHarddisks(data=testData)
 
@@ -248,17 +248,13 @@ def testHardwareExtendedInventoryReturnsSafelyWithoutConfig(
 
 
 def testGetSambaServiceNameGettingDefaultIfNothingElseParsed():
-	with mock.patch("OPSI.System.Posix.getServiceNames"):
-		assert "blabla" == Posix.getSambaServiceName(
-			default="blabla", staticFallback=False
-		)
+	with mock.patch("opsi_legacy.System.Posix.getServiceNames"):
+		assert "blabla" == Posix.getSambaServiceName(default="blabla", staticFallback=False)
 
 
 @pytest.mark.parametrize("values", ([], set("abc")))
 def testGetSambaServiceNameFailsIfNoServiceFound(values):
-	with mock.patch(
-		"OPSI.System.Posix.getServiceNames", mock.Mock(return_value=values)
-	):
+	with mock.patch("opsi_legacy.System.Posix.getServiceNames", mock.Mock(return_value=values)):
 		with pytest.raises(RuntimeError):
 			Posix.getSambaServiceName(staticFallback=False)
 
@@ -272,10 +268,8 @@ def testGetSambaServiceNameFailsIfNoServiceFound(values):
 	),
 )
 def testGetSambaServiceNameGettingFoundSambaServiceName(expectedName, services):
-	with mock.patch("OPSI.System.Posix._SAMBA_SERVICE_NAME", None):
-		with mock.patch(
-			"OPSI.System.Posix.getServiceNames", mock.Mock(return_value=services)
-		):
+	with mock.patch("opsi_legacy.System.Posix._SAMBA_SERVICE_NAME", None):
+		with mock.patch("opsi_legacy.System.Posix.getServiceNames", mock.Mock(return_value=services)):
 			assert expectedName == Posix.getSambaServiceName()
 
 
@@ -319,9 +313,7 @@ def testGetServiceNameParsingFromSystemd():
 		"lo ens18",
 	]
 
-	assert set(["iprdump", "iprinit", "iprupdate"]) == Posix.getServiceNames(
-		_serviceStatusOutput=output
-	)
+	assert set(["iprdump", "iprinit", "iprupdate"]) == Posix.getServiceNames(_serviceStatusOutput=output)
 
 
 def testParsingSystemdOutputFromCentOS7():
@@ -349,9 +341,7 @@ def testParsingSystemdOutputFromCentOS7():
 		"219 unit files listed.",
 	]
 
-	expectedServices = set(
-		["dhcpd", "dhcpd6", "getty@", "initrd-cleanup", "smb", "systemd-backlight@"]
-	)
+	expectedServices = set(["dhcpd", "dhcpd6", "getty@", "initrd-cleanup", "smb", "systemd-backlight@"])
 	assert expectedServices == Posix.getServiceNames(_serviceStatusOutput=output)
 
 

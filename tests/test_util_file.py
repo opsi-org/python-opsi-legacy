@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing OPSI.Util.File
+Testing opsi_legacy.Util.File
 """
 
 import os
@@ -13,7 +13,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from OPSI.Util.File import IniFile, InfFile, TxtSetupOemFile, ZsyncFile
+from opsi_legacy.Util.File import InfFile, IniFile, TxtSetupOemFile, ZsyncFile
 
 from .helpers import createTemporaryTestfile
 
@@ -129,9 +129,7 @@ def testTxtSetupOemFileApplyingWorkaroundsRemovesComments(
 def testTxtSetupOemFileApplyingWorkaroundsCreatesDisksSection(
 	regeneratedtxtSetupOemFileWithWorkarounds,
 ):
-	assert _sectionExists(
-		regeneratedtxtSetupOemFileWithWorkarounds.getFilename(), "[Disks]"
-	)
+	assert _sectionExists(regeneratedtxtSetupOemFileWithWorkarounds.getFilename(), "[Disks]")
 
 
 def _sectionExists(filepath, sectionName):
@@ -142,9 +140,7 @@ def _sectionExists(filepath, sectionName):
 def testTxtSetupOemFileApplyingWorkaroundsCreatesDefaultsSection(
 	regeneratedtxtSetupOemFileWithWorkarounds,
 ):
-	assert _sectionExists(
-		regeneratedtxtSetupOemFileWithWorkarounds.getFilename(), "[Defaults]"
-	)
+	assert _sectionExists(regeneratedtxtSetupOemFileWithWorkarounds.getFilename(), "[Defaults]")
 
 
 def testTxtSetupOemFileCommasAreFollowdBySpace(
@@ -188,20 +184,14 @@ def testReadingInExistingSpecialDevicesAndApplyingFixes(filename, vendorId, devi
 	with getTempTxtSetupOemFileFromPath(absFile) as setupFile:
 		assert setupFile.isDeviceKnown(vendorId=vendorId, deviceId=deviceId)
 
-		assert [] != setupFile.getFilesForDevice(
-			vendorId=vendorId, deviceId=deviceId, fileTypes=[]
-		)
+		assert [] != setupFile.getFilesForDevice(vendorId=vendorId, deviceId=deviceId, fileTypes=[])
 
-		assert setupFile.getComponentOptionsForDevice(
-			vendorId=vendorId, deviceId=deviceId
-		)["description"]
+		assert setupFile.getComponentOptionsForDevice(vendorId=vendorId, deviceId=deviceId)["description"]
 
 		setupFile.applyWorkarounds()
 		setupFile.generate()
 
-		assert [] != setupFile.getFilesForDevice(
-			vendorId=vendorId, deviceId=deviceId, fileTypes=[]
-		)
+		assert [] != setupFile.getFilesForDevice(vendorId=vendorId, deviceId=deviceId, fileTypes=[])
 
 
 @pytest.mark.parametrize(
@@ -219,9 +209,7 @@ def testCheckingForMissingVendorAndDevices(filename, vendorId, deviceId):
 		assert not setupFile.isDeviceKnown(vendorId=vendorId, deviceId=deviceId)
 
 		with pytest.raises(Exception):
-			setupFile.getFilesForDevice(
-				vendorId=vendorId, deviceId=deviceId, fileTypes=[]
-			)
+			setupFile.getFilesForDevice(vendorId=vendorId, deviceId=deviceId, fileTypes=[])
 
 		with pytest.raises(Exception):
 			setupFile.getComponentOptionsForDevice(vendorId=vendorId, deviceId=deviceId)
@@ -230,9 +218,7 @@ def testCheckingForMissingVendorAndDevices(filename, vendorId, deviceId):
 		setupFile.generate()
 
 		with pytest.raises(Exception):
-			setupFile.getFilesForDevice(
-				vendorId=vendorId, deviceId=deviceId, fileTypes=[]
-			)
+			setupFile.getFilesForDevice(vendorId=vendorId, deviceId=deviceId, fileTypes=[])
 
 
 @pytest.mark.parametrize(

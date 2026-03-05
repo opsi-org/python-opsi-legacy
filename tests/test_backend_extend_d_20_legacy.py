@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -15,7 +15,8 @@ that were written for opsi 3.
 
 import pytest
 
-from OPSI.Object import (
+from opsi_legacy.Exceptions import BackendMissingDataError
+from opsi_legacy.Object import (
 	BoolProductProperty,
 	LocalbootProduct,
 	OpsiClient,
@@ -25,7 +26,7 @@ from OPSI.Object import (
 	ProductPropertyState,
 	UnicodeProductProperty,
 )
-from OPSI.Exceptions import BackendMissingDataError
+
 from .test_hosts import getClients, getConfigServer, getDepotServers
 
 
@@ -185,18 +186,10 @@ def testSetProductPropertyWithoutSideEffects(backendManager, createDepotState):
 		assert pps.values == ["Starfish"]
 
 
-@pytest.mark.parametrize(
-	"productExists", [True, False], ids=["product exists", "product missing"]
-)
-@pytest.mark.parametrize(
-	"propertyExists", [True, False], ids=["property exists", "property missing"]
-)
-@pytest.mark.parametrize(
-	"clientExists", [True, False], ids=["client exists", "client missing"]
-)
-def testSetProductPropertyHandlingMissingObjects(
-	backendManager, productExists, propertyExists, clientExists
-):
+@pytest.mark.parametrize("productExists", [True, False], ids=["product exists", "product missing"])
+@pytest.mark.parametrize("propertyExists", [True, False], ids=["property exists", "property missing"])
+@pytest.mark.parametrize("clientExists", [True, False], ids=["client exists", "client missing"])
+def testSetProductPropertyHandlingMissingObjects(backendManager, productExists, propertyExists, clientExists):
 	expectedProperties = 0
 	productId = "existence"
 
@@ -229,9 +222,7 @@ def testSetProductPropertyHandlingMissingObjects(
 		backendManager.host_insertObject(client)
 
 	with pytest.raises(BackendMissingDataError):
-		backendManager.setProductProperty(
-			productId, "nothere", False, "testclient.domain.invalid"
-		)
+		backendManager.setProductProperty(productId, "nothere", False, "testclient.domain.invalid")
 
 	assert len(backendManager.productProperty_getObjects()) == expectedProperties
 
@@ -309,9 +300,7 @@ def testSetProductPropertyNotConcatenatingStrings(backendManager):
 
 	backendManager.setProductProperty(product.id, testprop.propertyId, "1", client.id)
 
-	result = backendManager.productProperty_getObjects(
-		propertyId=donotchange.propertyId
-	)
+	result = backendManager.productProperty_getObjects(propertyId=donotchange.propertyId)
 	assert len(result) == 1
 	result = result[0]
 	assert isinstance(result, UnicodeProductProperty)
@@ -360,9 +349,7 @@ def testSetProductPropertyFailingIfMultivalueIsFalse(backendManager):
 	backendManager.host_insertObject(client)
 
 	with pytest.raises(ValueError):
-		backendManager.setProductProperty(
-			product.id, testprop.propertyId, ["1", "2"], client.id
-		)
+		backendManager.setProductProperty(product.id, testprop.propertyId, ["1", "2"], client.id)
 
 
 def testGetDepotId(backendManager):
@@ -386,9 +373,7 @@ def testGetDepotId(backendManager):
 
 	client = clients[0]
 	depotId = depots[0].id
-	backendManager.configState_create(
-		"clientconfig.depot.id", client.id, values=depotId
-	)
+	backendManager.configState_create("clientconfig.depot.id", client.id, values=depotId)
 
 	assert depotId == backendManager.getDepotId(clientId=client.id)
 
@@ -430,13 +415,9 @@ def testSetProductPropertiesWithMultipleValues(backendManager):
 		backendManager.host_insertObject(depot)
 
 	for depotId in depotIds:
-		backendManager.setProductProperties(
-			product.id, {testprop.propertyId: ["1", "2"]}, depotId
-		)
+		backendManager.setProductProperties(product.id, {testprop.propertyId: ["1", "2"]}, depotId)
 
-	result = backendManager.productProperty_getObjects(
-		propertyId=donotchange.propertyId
-	)
+	result = backendManager.productProperty_getObjects(propertyId=donotchange.propertyId)
 	assert len(result) == 1
 	result = result[0]
 	assert isinstance(result, UnicodeProductProperty)
@@ -462,4 +443,5 @@ def testSetProductPropertiesWithMultipleValues(backendManager):
 		elif result.propertyId == testprop.propertyId:
 			assert result.getValues() == ["1", "2"]
 		else:
+			raise ValueError("Unexpected property state: {0!r}".format(result))
 			raise ValueError("Unexpected property state: {0!r}".format(result))

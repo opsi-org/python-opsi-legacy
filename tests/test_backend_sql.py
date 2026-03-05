@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,9 +9,10 @@ Testing opsi SQL backend.
 
 import os.path
 
-import OPSI.Backend.SQL as sql
-import OPSI.Object as ob
 import pytest
+
+import opsi_legacy.Backend.SQL as sql
+import opsi_legacy.Object as ob
 
 from .helpers import createTemporaryTestfile
 
@@ -58,24 +59,16 @@ def testFilterCreationSkiptsEmptyLists(sqlBackendWithoutConnection, filterExpres
 	assert "" == resultingQuery
 
 
-@pytest.mark.parametrize(
-	"expectedConversion, filterExpression", [("0", {"a": False}), ("1", {"a": True})]
-)
-def testBoolValueRepresentation(
-	sqlBackendWithoutConnection, expectedConversion, filterExpression
-):
-	assert expectedConversion in sqlBackendWithoutConnection._filterToSql(
-		filterExpression
-	)
+@pytest.mark.parametrize("expectedConversion, filterExpression", [("0", {"a": False}), ("1", {"a": True})])
+def testBoolValueRepresentation(sqlBackendWithoutConnection, expectedConversion, filterExpression):
+	assert expectedConversion in sqlBackendWithoutConnection._filterToSql(filterExpression)
 
 
 def testCreateFilterForMultipleBools(sqlBackendWithoutConnection):
 	condition = sqlBackendWithoutConnection._filterToSql({"a": True, "b": False})
 	first, second = condition.split(" and ", 1)
 
-	assert (first == "(`a` = 1)" and second == "(`b` = 0)") or (
-		second == "(`a` = 1)" and first == "(`b` = 0)"
-	)
+	assert (first == "(`a` = 1)" and second == "(`b` = 0)") or (second == "(`a` = 1)" and first == "(`b` = 0)")
 
 
 def testCreatingFilterAddsMultipleValuesWithAnAnd(sqlBackendWithoutConnection):
@@ -90,9 +83,7 @@ def testCreatingFilterAddsMultipleValuesWithAnAnd(sqlBackendWithoutConnection):
 		("(`c` = 4)", {"c": 4}),
 	],
 )
-def testCreatingFilterForNumberRepresentation(
-	sqlBackendWithoutConnection, result, filterExpression
-):
+def testCreatingFilterForNumberRepresentation(sqlBackendWithoutConnection, result, filterExpression):
 	assert result == sqlBackendWithoutConnection._filterToSql(filterExpression)
 
 
@@ -103,9 +94,7 @@ def testCreatingFilterForStringValue(sqlBackendWithoutConnection):
 def testCreatingFilterWithListOfValuesCreatesAnOrExpression(
 	sqlBackendWithoutConnection,
 ):
-	assert "(`a` = 1 or `a` = 2)" == sqlBackendWithoutConnection._filterToSql(
-		{"a": [1, 2]}
-	)
+	assert "(`a` = 1 or `a` = 2)" == sqlBackendWithoutConnection._filterToSql({"a": [1, 2]})
 
 
 def testCreatingFilterWithMultipleParameters(sqlBackendWithoutConnection):
@@ -140,9 +129,7 @@ def testCreatingFilterWithWildcard(sqlBackendWithoutConnection):
 		("(`a` <=> 1)", {"a": "<=> 1"}),
 	],
 )
-def testCreatingFilterWithGreaterOrLowerOrEqualSign(
-	sqlBackendWithoutConnection, result, filterExpression
-):
+def testCreatingFilterWithGreaterOrLowerOrEqualSign(sqlBackendWithoutConnection, result, filterExpression):
 	assert result == sqlBackendWithoutConnection._filterToSql(filterExpression)
 
 
@@ -155,9 +142,7 @@ def testQueryCreationWithoutAttributesEverythingIsSelected(sqlBackendWithoutConn
 
 
 def testQueryCreationDefiningColumnsToSelect(sqlBackendWithoutConnection):
-	assert "`first`,`second`" in sqlBackendWithoutConnection._createQuery(
-		"foo", ["first", "second"]
-	)
+	assert "`first`,`second`" in sqlBackendWithoutConnection._createQuery("foo", ["first", "second"])
 
 
 def testQueryCreationHavingFilterAddsWhereClause(sqlBackendWithoutConnection):
@@ -167,17 +152,13 @@ def testQueryCreationHavingFilterAddsWhereClause(sqlBackendWithoutConnection):
 
 def testUniqueConditionForHostObject(sqlBackendWithoutConnection):
 	host = ob.Host("foo.bar.baz")
-	assert "`hostId` = 'foo.bar.baz'" == sqlBackendWithoutConnection._uniqueCondition(
-		host
-	)
+	assert "`hostId` = 'foo.bar.baz'" == sqlBackendWithoutConnection._uniqueCondition(host)
 
 
 def testUniqueConditionOptionalParametersAreIgnored(sqlBackendWithoutConnection):
 	host = ob.Host("foo.bar.baz", inventoryNumber="ABC+333")
 
-	assert "`hostId` = 'foo.bar.baz'" == sqlBackendWithoutConnection._uniqueCondition(
-		host
-	)
+	assert "`hostId` = 'foo.bar.baz'" == sqlBackendWithoutConnection._uniqueCondition(host)
 
 
 def testUniqueConditionMultipleParametersAreJoinedWithAnAnd(
@@ -238,9 +219,7 @@ def testUniqueConditionMandatoryParametersAreSkippedIfValueIsNone(
 
 @pytest.mark.parametrize("number", [1, 2.3, 4])
 def testParameterIsNumber(sqlBackendWithoutConnection, number):
-	assert "`param` = {0!s}".format(
-		number
-	) == sqlBackendWithoutConnection._uniqueCondition(FooParam(number))
+	assert "`param` = {0!s}".format(number) == sqlBackendWithoutConnection._uniqueCondition(FooParam(number))
 
 
 class FooParam:
@@ -310,9 +289,7 @@ def returnQueryAfterCheck(query):
 	return query
 
 
-def testAlteringTableAfterChangeOfHardwareAuditConfig(
-	test_data_path, sqlBackendCreationContextManager
-):
+def testAlteringTableAfterChangeOfHardwareAuditConfig(test_data_path, sqlBackendCreationContextManager):
 	"""
 	Test if adding and altering hardware audit tables works.
 
@@ -325,13 +302,12 @@ def testAlteringTableAfterChangeOfHardwareAuditConfig(
 	pathToNewConfig = os.path.join(configDir, "small_extended_hwaudit.conf")
 
 	with createTemporaryTestfile(pathToOldConfig) as oldConfig:
-		with sqlBackendCreationContextManager(
-			auditHardwareConfigFile=oldConfig
-		) as backend:
+		with sqlBackendCreationContextManager(auditHardwareConfigFile=oldConfig) as backend:
 			backend.backend_createBase()
 
 			with createTemporaryTestfile(pathToNewConfig) as newConfig:
 				backend._auditHardwareConfigFile = newConfig
 				backend._setAuditHardwareConfig(backend.auditHardware_getConfig())
 
+				backend.backend_createBase()
 				backend.backend_createBase()

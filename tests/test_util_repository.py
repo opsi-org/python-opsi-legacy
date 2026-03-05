@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -17,15 +17,10 @@ from unittest import mock
 import pytest
 from opsicommon.testing.helpers import http_test_server
 
-from OPSI.Exceptions import RepositoryError
-from OPSI.Util import findFilesGenerator, md5sum
-from OPSI.Util.File.Opsi import PackageContentFile
-from OPSI.Util.Repository import (
-	DepotToLocalDirectorySychronizer,
-	FileRepository,
-	getFileInfosFromDavXML,
-	getRepository,
-)
+from opsi_legacy.Exceptions import RepositoryError
+from opsi_legacy.Util import findFilesGenerator, md5sum
+from opsi_legacy.Util.File.Opsi import PackageContentFile
+from opsi_legacy.Util.Repository import DepotToLocalDirectorySychronizer, FileRepository, getFileInfosFromDavXML, getRepository
 
 
 def testGettingFileRepository():
@@ -85,9 +80,7 @@ def testGetFileInfosFromDavXML(twistedDAVXML):
 		elif item["type"] == "file":
 			files = files + 1
 		else:
-			raise ValueError(
-				f"Unexpected type '{item['type']}' found. Maybe creepy testdata?"
-			)
+			raise ValueError(f"Unexpected type '{item['type']}' found. Maybe creepy testdata?")
 
 	assert dirs == 1
 	assert files == 3
@@ -125,9 +118,7 @@ def test_file_repo_start_end(tmpdir):
 			assert dst.read() == "6789"
 
 
-@pytest.mark.parametrize(
-	"repo_type,dynamic", [("file", False), ("http", False), ("http", True)]
-)
+@pytest.mark.parametrize("repo_type,dynamic", [("file", False), ("http", False), ("http", True)])
 def test_limit_download(tmpdir, repo_type, dynamic):
 	data = "o" * 2_000_000
 	limit = 100_000
@@ -158,16 +149,14 @@ def test_limit_download(tmpdir, repo_type, dynamic):
 		bandwidth = int(repo.speed_limiter._average_speed / traffic_ratio)
 		if repo._bytesTransfered >= len(data) * 0.8:
 			if simulate_other_traffic:
-				assert (
-					repo.speed_limiter._dynamic_bandwidth_limit / bandwidth
-				) <= repo.speed_limiter._dynamic_bandwidth_limit_rate * 2
+				assert (repo.speed_limiter._dynamic_bandwidth_limit / bandwidth) <= repo.speed_limiter._dynamic_bandwidth_limit_rate * 2
 			else:
 				assert repo.speed_limiter._dynamic_bandwidth_limit == 0
 		return bandwidth
 
 	# Setting DEFAULT_BUFFER_SIZE to slow down transfer
 	with mock.patch(
-		"OPSI.Util.Repository.Repository.DEFAULT_BUFFER_SIZE",
+		"opsi_legacy.Util.Repository.Repository.DEFAULT_BUFFER_SIZE",
 		1000 if dynamic else 32 * 1000,
 	):
 		if repo_type.startswith(("http", "webdav")):
@@ -179,7 +168,7 @@ def test_limit_download(tmpdir, repo_type, dynamic):
 					dynamicBandwidth=dynamic,
 				)
 				with mock.patch(
-					"OPSI.Util.Repository.SpeedLimiter._get_network_usage",
+					"opsi_legacy.Util.Repository.SpeedLimiter._get_network_usage",
 					get_network_usage,
 				):
 					download()
@@ -240,13 +229,7 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):
 
 	packageContentFile = PackageContentFile(str(package_content_file))
 	packageContentFile.setProductClientDataDir(str(product_path))
-	packageContentFile.setClientDataFiles(
-		list(
-			findFilesGenerator(
-				directory=str(product_path), followLinks=True, returnLinks=False
-			)
-		)
-	)
+	packageContentFile.setClientDataFiles(list(findFilesGenerator(directory=str(product_path), followLinks=True, returnLinks=False)))
 	packageContentFile.generate()
 
 	assert sorted(package_content_file.read_text().split("\n")) == sorted(
@@ -260,9 +243,7 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):
 
 	file_depot = getRepository(f"file://{str(depot_path)}")
 	server_log_file = tmp_path / "server.log"
-	with http_test_server(
-		serve_directory=depot_path, log_file=server_log_file
-	) as server:
+	with http_test_server(serve_directory=depot_path, log_file=server_log_file) as server:
 		webdav_depot = getRepository(f"webdav://localhost:{server.port}")
 		# http_test_server does not support PROPFIND
 		webdav_depot.content = file_depot.content
@@ -293,18 +274,14 @@ def test_depot_to_local_sync(tmp_path: pathlib.Path):
 				assert not server_log_file.exists()
 
 				# Test correct but incomplete file part
-				(local_product_path / "subdir" / "file2.txt").write_text(
-					"0123456789" * 50_000
-				)
+				(local_product_path / "subdir" / "file2.txt").write_text("0123456789" * 50_000)
 				sync._synchronizeDirectories(product_id, str(local_product_path))
 				request = json.loads(server_log_file.read_text())
 				assert request["headers"]["range"] == "bytes=500000-"
 
 				# Test incorrect and incomplete file part
 				server_log_file.unlink()
-				(local_product_path / "subdir" / "file2.txt").write_text(
-					"xxxxxxxxxx" * 50_000
-				)
+				(local_product_path / "subdir" / "file2.txt").write_text("xxxxxxxxxx" * 50_000)
 				sync._synchronizeDirectories(product_id, str(local_product_path))
 
 				requests = server_log_file.read_text().split("\n")

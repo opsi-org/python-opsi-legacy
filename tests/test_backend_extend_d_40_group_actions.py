@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -14,15 +14,8 @@ This tests what usually is found under
 
 import pytest
 
-from OPSI.Exceptions import BackendMissingDataError
-from OPSI.Object import (
-	HostGroup,
-	LocalbootProduct,
-	ProductOnDepot,
-	ObjectToGroup,
-	OpsiClient,
-	OpsiDepotserver,
-)
+from opsi_legacy.Exceptions import BackendMissingDataError
+from opsi_legacy.Object import HostGroup, LocalbootProduct, ObjectToGroup, OpsiClient, OpsiDepotserver, ProductOnDepot
 
 
 def testSetProductActionRequestForHostGroup(backendManager):
@@ -58,18 +51,12 @@ def testSetProductActionRequestForHostGroup(backendManager):
 	backendManager.group_insertObject(testGroup)
 	backendManager.objectToGroup_createObjects([client1ToGroup, client2ToGroup])
 	backendManager.config_create("clientconfig.depot.id")
-	backendManager.configState_create(
-		"clientconfig.depot.id", client1.getId(), values=[depot.getId()]
-	)
-	backendManager.configState_create(
-		"clientconfig.depot.id", client2.getId(), values=[depot.getId()]
-	)
+	backendManager.configState_create("clientconfig.depot.id", client1.getId(), values=[depot.getId()])
+	backendManager.configState_create("clientconfig.depot.id", client2.getId(), values=[depot.getId()])
 	backendManager.product_insertObject(product2)
 	backendManager.productOnDepot_insertObject(prodOnDepot)
 
-	backendManager.setProductActionRequestForHostGroup(
-		"host_group_1", "product2", "setup"
-	)
+	backendManager.setProductActionRequestForHostGroup("host_group_1", "product2", "setup")
 
 	pocs = backendManager.productOnClient_getObjects()
 	assert pocs

@@ -1,10 +1,10 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing the OPSI.Util.Product module.
+Testing the opsi_legacy.Util.Product module.
 """
 
 import os
@@ -13,7 +13,7 @@ import tempfile
 
 import pytest
 
-import OPSI.Util.Product as Product
+import opsi_legacy.Util.Product as Product
 
 from .helpers import cd, mock
 
@@ -61,9 +61,7 @@ def testProductPackageFileRemovingFolderWithUnicodeFilenamesInsideFails(tempDir)
 	with mock.patch.object(ppf, "packageControlFile", fakePackageControlFile):
 		ppf.deleteProductClientDataDir()
 
-	assert not os.path.exists(
-		targetDir
-	), "Product directory in depot should be deleted."
+	assert not os.path.exists(targetDir), "Product directory in depot should be deleted."
 
 
 def testSettigUpProductPackageFileWithNonExistingFileFails():

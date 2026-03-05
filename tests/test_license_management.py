@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,15 +7,15 @@
 Testing the license management functionality.
 """
 
-from OPSI.Object import (
-	LicenseContract,
-	RetailSoftwareLicense,
-	OEMSoftwareLicense,
-	VolumeSoftwareLicense,
+from opsi_legacy.Object import (
 	ConcurrentSoftwareLicense,
-	LicensePool,
-	SoftwareLicenseToLicensePool,
+	LicenseContract,
 	LicenseOnClient,
+	LicensePool,
+	OEMSoftwareLicense,
+	RetailSoftwareLicense,
+	SoftwareLicenseToLicensePool,
+	VolumeSoftwareLicense,
 )
 
 from .test_hosts import getClients
@@ -47,9 +47,7 @@ def getLicenseContracts():
 
 
 def testCreatingAndGettingLicenseOnClient(licenseManagementBackend):
-	originalLicenseOnClients, _, _, _, _, _, _ = createLicenseOnClients(
-		licenseManagementBackend
-	)
+	originalLicenseOnClients, _, _, _, _, _, _ = createLicenseOnClients(licenseManagementBackend)
 
 	licenseOnClients = licenseManagementBackend.licenseOnClient_getObjects()
 	assert len(licenseOnClients) == len(originalLicenseOnClients)
@@ -100,16 +98,10 @@ def createLicenseOnClients(backend):
 
 
 def testSoftwareLicenseToLicensePoolMethods(licenseManagementBackend):
-	originalSoftwareLicenseToLicensePools, _, _, _, _, _ = (
-		createSoftwareLicenseToLicensePools(licenseManagementBackend)
-	)
+	originalSoftwareLicenseToLicensePools, _, _, _, _, _ = createSoftwareLicenseToLicensePools(licenseManagementBackend)
 
-	softwareLicenseToLicensePools = (
-		licenseManagementBackend.softwareLicenseToLicensePool_getObjects()
-	)
-	assert len(softwareLicenseToLicensePools) == len(
-		originalSoftwareLicenseToLicensePools
-	)
+	softwareLicenseToLicensePools = licenseManagementBackend.softwareLicenseToLicensePool_getObjects()
+	assert len(softwareLicenseToLicensePools) == len(originalSoftwareLicenseToLicensePools)
 
 
 def createSoftwareLicenseToLicensePools(backend):
@@ -252,9 +244,7 @@ def testSelectingInvalidLicensePoolById(licenseManagementBackend):
 	licensePool1 = originalLicensePools[0]
 	licensePool2 = originalLicensePools[1]
 
-	licensePoolsFromBackend = licenseManagementBackend.licensePool_getObjects(
-		id=licensePool2.id, productIds=licensePool1.productIds
-	)
+	licensePoolsFromBackend = licenseManagementBackend.licensePool_getObjects(id=licensePool2.id, productIds=licensePool1.productIds)
 	assert 0 == len(licensePoolsFromBackend)
 
 
@@ -284,12 +274,8 @@ def testSelectLicensePoolByInvalidProductReturnsNoPools(licenseManagementBackend
 
 	assert len(licenseManagementBackend.licensePool_getObjects()) > 0
 
-	licensePools = licenseManagementBackend.licensePool_getObjects(
-		productIds=["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
-	)
-	assert 0 == len(licensePools), (
-		"Did not expect any license pools, but found %s on backend." % len(licensePools)
-	)
+	licensePools = licenseManagementBackend.licensePool_getObjects(productIds=["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"])
+	assert 0 == len(licensePools), "Did not expect any license pools, but found %s on backend." % len(licensePools)
 
 
 def testSelectingLicensePoolsByProductIds(licenseManagementBackend):
@@ -298,9 +284,7 @@ def testSelectingLicensePoolsByProductIds(licenseManagementBackend):
 	licensePool1 = originalLicensePools[0]
 	assert licensePool1.productIds
 
-	licensePools = licenseManagementBackend.licensePool_getObjects(
-		productIds=licensePool1.productIds
-	)
+	licensePools = licenseManagementBackend.licensePool_getObjects(productIds=licensePool1.productIds)
 	assert 1 == len(licensePools)
 	assert licensePools[0].getId() == licensePool1.getId()
 

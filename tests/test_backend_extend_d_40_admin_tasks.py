@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -10,19 +10,11 @@ This tests what usually is found under
 ``/etc/opsi/backendManager/extend.de/40_admin_tasks.conf``.
 """
 
-from OPSI.Exceptions import BackendMissingDataError
-from OPSI.Object import (
-	OpsiClient,
-	LocalbootProduct,
-	ProductOnClient,
-	OpsiDepotserver,
-	ProductOnDepot,
-	UnicodeConfig,
-	ConfigState,
-)
-from OPSI.Types import forceList
-
 import pytest
+
+from opsi_legacy.Exceptions import BackendMissingDataError
+from opsi_legacy.Object import ConfigState, LocalbootProduct, OpsiClient, OpsiDepotserver, ProductOnClient, ProductOnDepot, UnicodeConfig
+from opsi_legacy.Types import forceList
 
 
 def testSetActionRequestWhereOutdatedRequiresExistingActionRequestAndProductId(
@@ -131,17 +123,13 @@ def testSetActionRequestWhereOutdated(backendManager):
 		backend.configState_createObjects(clientDepotMappingConfigState)
 
 	# Starting the checks
-	assert not backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_without_product.id
-	)
+	assert not backend.productOnClient_getObjects(productId=new_product.id, clientId=client_without_product.id)
 	assert not backend.productOnClient_getObjects(
 		productId=new_product.id,
 		clientId=client_with_old_product.id,
 		actionRequest="setup",
 	)
-	assert backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_current_product.id
-	)
+	assert backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_current_product.id)
 	assert backend.productOnClient_getObjects(
 		productId=old_product.id,
 		clientId=client_unknown_status.id,
@@ -152,22 +140,14 @@ def testSetActionRequestWhereOutdated(backendManager):
 
 	assert 1 == len(clientIDs)
 	assert client_with_old_product.id, list(clientIDs)[0]
-	assert not backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_without_product.id
-	)
-	poc = backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_old_product.id
-	)[0]
+	assert not backend.productOnClient_getObjects(productId=new_product.id, clientId=client_without_product.id)
+	poc = backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_old_product.id)[0]
 	assert "setup" == poc.actionRequest
 
-	poc = backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_current_product.id
-	)[0]
+	poc = backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_current_product.id)[0]
 	assert "setup" != poc.actionRequest
 
-	poc = backend.productOnClient_getObjects(
-		productId=old_product.id, clientId=client_unknown_status.id
-	)[0]
+	poc = backend.productOnClient_getObjects(productId=old_product.id, clientId=client_unknown_status.id)[0]
 	assert "setup" != poc.actionRequest
 	assert "unknown" == poc.installationStatus
 
@@ -210,9 +190,7 @@ def testUninstallWhereInstalled(backendManager):
 		locked=False,
 	)
 
-	backend.productOnDepot_createObjects(
-		[installedProductOnDepot, installedProductOnDepot2]
-	)
+	backend.productOnDepot_createObjects([installedProductOnDepot, installedProductOnDepot2])
 
 	assert not backend.uninstallWhereInstalled("thunderheart")
 
@@ -247,9 +225,7 @@ def testUninstallWhereInstalled(backendManager):
 	clientIDs = backend.uninstallWhereInstalled(product.id)
 
 	assert 1 == len(clientIDs)
-	pocAfter = backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_product.id
-	)
+	pocAfter = backend.productOnClient_getObjects(productId=product.id, clientId=client_with_product.id)
 	assert 1 == len(pocAfter)
 	pocAfter = pocAfter[0]
 	assert "uninstall" == pocAfter.actionRequest
@@ -285,9 +261,7 @@ def testUpdateWhereInstalled(backendManager):
 	)
 
 	old_product = LocalbootProduct("thunderheart", "1", "1")
-	new_product = LocalbootProduct(
-		"thunderheart", "1", "2", updateScript="foo.opsiscript"
-	)
+	new_product = LocalbootProduct("thunderheart", "1", "2", updateScript="foo.opsiscript")
 
 	backend.product_createObjects([old_product, new_product])
 
@@ -335,30 +309,20 @@ def testUpdateWhereInstalled(backendManager):
 	backend.config_createObjects(clientConfigDepotId)
 
 	# Starting the checks
-	assert not backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_without_product.id
-	)
+	assert not backend.productOnClient_getObjects(productId=new_product.id, clientId=client_without_product.id)
 	assert not backend.productOnClient_getObjects(
 		productId=new_product.id,
 		clientId=client_with_old_product.id,
 		actionRequest="setup",
 	)
-	assert backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_current_product.id
-	)
+	assert backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_current_product.id)
 
 	clientIDs = backend.updateWhereInstalled("thunderheart")
 
-	assert not backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_without_product.id
-	)
-	poc = backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_old_product.id
-	)[0]
+	assert not backend.productOnClient_getObjects(productId=new_product.id, clientId=client_without_product.id)
+	poc = backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_old_product.id)[0]
 	assert "update" == poc.actionRequest
-	poc = backend.productOnClient_getObjects(
-		productId=new_product.id, clientId=client_with_current_product.id
-	)[0]
+	poc = backend.productOnClient_getObjects(productId=new_product.id, clientId=client_with_current_product.id)[0]
 	assert "update" == poc.actionRequest
 
 	assert 2 == len(clientIDs)
@@ -381,9 +345,7 @@ def testSetupWhereInstalled(backendManager):
 	client_with_failed_product = OpsiClient(id="failedclient.test.invalid")
 	client_without_product = OpsiClient(id="clientwithout.test.invalid")
 
-	clients = set(
-		[client_with_product, client_without_product, client_with_failed_product]
-	)
+	clients = set([client_with_product, client_without_product, client_with_failed_product])
 	depot = OpsiDepotserver(id="depotserver1.test.invalid")
 
 	backend.host_createObjects([depot])
@@ -448,20 +410,14 @@ def testSetupWhereInstalled(backendManager):
 	assert 1 == len(clientIDs)
 	assert client_with_product.id == forceList(clientIDs)[0]
 
-	assert not backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_without_product.id
-	)
+	assert not backend.productOnClient_getObjects(productId=product.id, clientId=client_without_product.id)
 
-	pocAfter = backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_product.id
-	)
+	pocAfter = backend.productOnClient_getObjects(productId=product.id, clientId=client_with_product.id)
 	assert 1 == len(pocAfter)
 	pocAfter = pocAfter[0]
 	assert "setup" == pocAfter.actionRequest
 
-	pocFailed = backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_failed_product.id
-	)
+	pocFailed = backend.productOnClient_getObjects(productId=product.id, clientId=client_with_failed_product.id)
 	assert 1 == len(pocFailed)
 	pocFailed = pocFailed[0]
 	assert "setup" != pocFailed.actionRequest
@@ -484,9 +440,7 @@ def testSetupWhereNotInstalled(backendManager):
 
 	depot = OpsiDepotserver(id="depotserver1.test.invalid")
 
-	backend.host_createObjects(
-		[depot, client_with_current_product, client_without_product]
-	)
+	backend.host_createObjects([depot, client_with_current_product, client_without_product])
 
 	product = LocalbootProduct("thunderheart", "1", "1", setupScript="foo.bar")
 
@@ -534,19 +488,13 @@ def testSetupWhereNotInstalled(backendManager):
 		backend.configState_createObjects(clientDepotMappingConfigState)
 
 	# Starting the checks
-	assert not backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_without_product.id
-	)
-	assert backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_current_product.id
-	)
+	assert not backend.productOnClient_getObjects(productId=product.id, clientId=client_without_product.id)
+	assert backend.productOnClient_getObjects(productId=product.id, clientId=client_with_current_product.id)
 
 	clientIDs = backend.setupWhereNotInstalled(product.id)
 
 	assert 1 == len(clientIDs)
-	poc = backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_without_product.id
-	)[0]
+	poc = backend.productOnClient_getObjects(productId=product.id, clientId=client_without_product.id)[0]
 	assert "setup" == poc.actionRequest
 
 
@@ -558,9 +506,7 @@ def testSetupWhereFailed(backendManager):
 
 	depot = OpsiDepotserver(id="depotserver1.test.invalid")
 
-	backend.host_createObjects(
-		[depot, client_with_failed_product, client_without_product]
-	)
+	backend.host_createObjects([depot, client_with_failed_product, client_without_product])
 
 	product = LocalbootProduct("thunderheart", "1", "1", setupScript="foo.bar")
 
@@ -607,18 +553,12 @@ def testSetupWhereFailed(backendManager):
 		backend.configState_createObjects(clientDepotMappingConfigState)
 
 	# Starting the checks
-	assert not backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_without_product.id
-	)
-	assert backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_failed_product.id
-	)
+	assert not backend.productOnClient_getObjects(productId=product.id, clientId=client_without_product.id)
+	assert backend.productOnClient_getObjects(productId=product.id, clientId=client_with_failed_product.id)
 
 	clientIDs = backend.setupWhereFailed(product.id)
 
 	assert 1 == len(clientIDs)
-	poc = backend.productOnClient_getObjects(
-		productId=product.id, clientId=client_with_failed_product.id
-	)[0]
+	poc = backend.productOnClient_getObjects(productId=product.id, clientId=client_with_failed_product.id)[0]
 	assert "setup" == poc.actionRequest
 	assert "failed" == poc.actionResult

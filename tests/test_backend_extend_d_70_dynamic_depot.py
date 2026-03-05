@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -23,7 +23,7 @@ import random
 
 import pytest
 
-from OPSI.Logger import Logger
+from opsi_legacy.Logger import Logger
 
 # Logger is needed because the functions expect a global "logger"
 logger = Logger()
@@ -74,23 +74,17 @@ def testDepotSelectionByLatencyIgnoresDepotsWithoutLatency(
 	highLatencyRepo = FakeDepot("a", latency=10)
 	alternativeDepots = [highLatencyRepo]
 	random.shuffle(alternativeDepots)
-	assert highLatencyRepo == selectDepot(
-		{}, FakeDepot("m", latency=None), alternativeDepots
-	)
+	assert highLatencyRepo == selectDepot({}, FakeDepot("m", latency=None), alternativeDepots)
 
 
 def testDepotSelectionAlgorithmByMasterDepotAndLatency(
 	depotSelectionAlgorithmByMasterDepotAndLatency,
 ):
 	masterDepot = FakeDepot("clients.master.depot")
-	wantedRepo = FakeDepot(
-		"our.wanted.repo", latency=1, masterDepotId="clients.master.depot"
-	)
+	wantedRepo = FakeDepot("our.wanted.repo", latency=1, masterDepotId="clients.master.depot")
 	alternativeDepots = [
 		FakeDepot("another.master", latency=0.5),
-		FakeDepot(
-			"sub.for.another.master", latency=0.4, masterDepotId="another.master"
-		),
+		FakeDepot("sub.for.another.master", latency=0.4, masterDepotId="another.master"),
 		wantedRepo,
 		FakeDepot(
 			"slower.repo.with.right.master",
@@ -202,6 +196,4 @@ class FakeDepot:
 		self.masterDepotId = masterDepotId
 
 	def __repr__(self):
-		return "<FakeDepot({id}, latency={latency}, masterDepotId={masterDepotId})>".format(
-			**self.__dict__
-		)
+		return "<FakeDepot({id}, latency={latency}, masterDepotId={masterDepotId})>".format(**self.__dict__)

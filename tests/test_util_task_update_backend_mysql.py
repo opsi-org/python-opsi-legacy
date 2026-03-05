@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,15 +11,10 @@ import os
 
 import pytest
 
-from OPSI.Backend.MySQL import MySQL, MySQLBackend
-from OPSI.Backend.SQL import DATABASE_SCHEMA_VERSION, createSchemaVersionTable
-from OPSI.Util.Task.ConfigureBackend import updateConfigFile
-from OPSI.Util.Task.UpdateBackend.MySQL import (
-	getTableColumns,
-	readSchemaVersion,
-	updateMySQLBackend,
-	updateSchemaVersion,
-)
+from opsi_legacy.Backend.MySQL import MySQL, MySQLBackend
+from opsi_legacy.Backend.SQL import DATABASE_SCHEMA_VERSION, createSchemaVersionTable
+from opsi_legacy.Util.Task.ConfigureBackend import updateConfigFile
+from opsi_legacy.Util.Task.UpdateBackend.MySQL import getTableColumns, readSchemaVersion, updateMySQLBackend, updateSchemaVersion
 
 from .Backends.MySQL import MySQLconfiguration, cleanDatabase, getTableNames
 
@@ -50,9 +45,7 @@ def getColumnLength(columnType):
 	return currentLength
 
 
-def testCorrectingLicenseOnClientLicenseKeyLength(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testCorrectingLicenseOnClientLicenseKeyLength(mysqlBackendConfig, mySQLBackendConfigFile):
 	"""
 	Test if the license key length is correctly set.
 
@@ -292,9 +285,7 @@ def createRequiredTables(database):
 			"""
 			% database.getTableCreationOptions("PRODUCT"),
 		)
-		database.execute(
-			session, "CREATE INDEX `index_product_type` on `PRODUCT` (`type`);"
-		)
+		database.execute(session, "CREATE INDEX `index_product_type` on `PRODUCT` (`type`);")
 
 		database.execute(
 			session,
@@ -402,9 +393,7 @@ def assertColumnIsVarchar(database, session, tableName, columnName, length):
 			assert getColumnLength(column.type) == length
 			break
 	else:
-		raise ValueError(
-			"Missing column '{1}' in table {0!r}".format(tableName, columnName)
-		)
+		raise ValueError("Missing column '{1}' in table {0!r}".format(tableName, columnName))
 
 
 def testInsertingSchemaNumber(mysqlBackendConfig, mySQLBackendConfigFile):
@@ -428,9 +417,7 @@ def testInsertingSchemaNumber(mysqlBackendConfig, mySQLBackendConfigFile):
 					raise Exception("Unexpected column!")
 
 
-def testReadingSchemaVersionIfTableIsMissing(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testReadingSchemaVersionIfTableIsMissing(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)) as db:
 		with db.session() as session:
 			assert readSchemaVersion(db, session) is None
@@ -458,9 +445,7 @@ def testUpdatingSchemaVersion(mysqlBackendConfig, mySQLBackendConfigFile):
 			assert version == 2
 
 
-def testReadingSchemaVersionOnlyReturnsNewestValue(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testReadingSchemaVersionOnlyReturnsNewestValue(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)) as db:
 		with db.session() as session:
 			createSchemaVersionTable(db, session)
@@ -496,9 +481,7 @@ def testReadingSchemaVersionOnlyReturnsNewestValue(
 # 				readSchemaVersion(db, session)
 
 
-def testUpdatingCurrentBackendDoesBreakNothing(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testUpdatingCurrentBackendDoesBreakNothing(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)):
 		with MySQLBackend(**mysqlBackendConfig) as freshBackend:
 			freshBackend.backend_createBase()
@@ -510,14 +493,10 @@ def testUpdatingCurrentBackendDoesBreakNothing(
 		with MySQLBackend(**mysqlBackendConfig) as anotherBackend:
 			# We want to have the latest schema version
 			with anotherBackend._sql.session() as session:
-				assert DATABASE_SCHEMA_VERSION == readSchemaVersion(
-					anotherBackend._sql, session
-				)
+				assert DATABASE_SCHEMA_VERSION == readSchemaVersion(anotherBackend._sql, session)
 
 
-def testCreatingBackendSetsTheLatestSchemaVersion(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testCreatingBackendSetsTheLatestSchemaVersion(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)) as db:
 		with MySQLBackend(**mysqlBackendConfig) as freshBackend:
 			freshBackend.backend_createBase()
@@ -561,9 +540,7 @@ def testAddingWorkbenchAttributesToHost(mysqlBackendConfig, mySQLBackendConfigFi
 			assert changesFound == 2
 
 
-def testCorrectingObjectToGroupGroupIdFieldLength(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testCorrectingObjectToGroupGroupIdFieldLength(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)) as db:
 		createRequiredTables(db)
 
@@ -576,9 +553,7 @@ def testCorrectingObjectToGroupGroupIdFieldLength(
 					break
 
 
-def testIncreasingInventoryNumberFieldLength(
-	mysqlBackendConfig, mySQLBackendConfigFile
-):
+def testIncreasingInventoryNumberFieldLength(mysqlBackendConfig, mySQLBackendConfigFile):
 	with cleanDatabase(MySQL(**mysqlBackendConfig)) as db:
 		createRequiredTables(db)
 

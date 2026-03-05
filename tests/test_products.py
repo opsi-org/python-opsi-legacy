@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,8 +11,8 @@ from itertools import product as iterproduct
 
 import pytest
 
-from OPSI.Exceptions import BackendBadValueError
-from OPSI.Object import (
+from opsi_legacy.Exceptions import BackendBadValueError
+from opsi_legacy.Object import (
 	BoolProductProperty,
 	LocalbootProduct,
 	NetbootProduct,
@@ -24,8 +24,8 @@ from OPSI.Object import (
 	ProductPropertyState,
 	UnicodeProductProperty,
 )
-from OPSI.Types import forceHostId
-from OPSI.Util import getfqdn
+from opsi_legacy.Types import forceHostId
+from opsi_legacy.Util import getfqdn
 
 from .test_hosts import getClients, getConfigServer, getDepotServers
 
@@ -596,11 +596,7 @@ def testGetProductsByType(extendedConfigDataBackend, prodFilter, prodClass):
 		assert product in expectedProducts
 
 		for p in expectedProducts:
-			if (
-				(product.id == p.id)
-				and (product.productVersion == p.productVersion)
-				and (product.packageVersion == p.packageVersion)
-			):
+			if (product.id == p.id) and (product.productVersion == p.productVersion) and (product.packageVersion == p.packageVersion):
 				assert product == p
 
 
@@ -610,9 +606,7 @@ def test_verifyProducts(extendedConfigDataBackend):
 	origProds = [netbootProducts] + list(localProducts)
 	extendedConfigDataBackend.product_createObjects(origProds)
 
-	products = extendedConfigDataBackend.product_getObjects(
-		type=localProducts[0].getType()
-	)
+	products = extendedConfigDataBackend.product_getObjects(type=localProducts[0].getType())
 	assert len(products) == len(localProducts)
 
 	productIds = set(product.getId() for product in products)
@@ -621,11 +615,7 @@ def test_verifyProducts(extendedConfigDataBackend):
 
 	for product in products:
 		for p in origProds:
-			if (
-				product.id == p.id
-				and product.productVersion == p.productVersion
-				and product.packageVersion == p.packageVersion
-			):
+			if product.id == p.id and product.productVersion == p.productVersion and product.packageVersion == p.packageVersion:
 				product = product.toHash()
 				p = p.toHash()
 				for attribute, value in p.items():
@@ -650,9 +640,7 @@ def testUpdatingProduct(extendedConfigDataBackend):
 	product2.setPriority(60)
 
 	products = extendedConfigDataBackend.product_updateObject(product2)
-	products = extendedConfigDataBackend.product_getObjects(
-		attributes=["name", "priority"], id=product2.id
-	)
+	products = extendedConfigDataBackend.product_getObjects(attributes=["name", "priority"], id=product2.id)
 	assert len(products) == 1
 	assert products[0].getName() == "Product 2 updated"
 	assert products[0].getPriority() == 60
@@ -662,14 +650,10 @@ def testLongProductName(extendedConfigDataBackend):
 	"""
 	Can the backend handle product names of 128 characters length?
 	"""
-	product = LocalbootProduct(
-		id="new_prod", name="New Product for Tests", productVersion=1, packageVersion=1
-	)
+	product = LocalbootProduct(id="new_prod", name="New Product for Tests", productVersion=1, packageVersion=1)
 
 	newName = (
-		"This is a very long name with 128 characters to test the "
-		"creation of long product names that should work now but "
-		"were limited b4"
+		"This is a very long name with 128 characters to test the creation of long product names that should work now but were limited b4"
 	)
 	assert len(newName) == 128
 
@@ -739,9 +723,7 @@ def testGettingProductProperties(extendedConfigDataBackend):
 	assert len(productProperties) == len(prodPropertiesOrig)
 
 	matching = 0
-	for productProperty, originalProperty in iterproduct(
-		productProperties, prodPropertiesOrig
-	):
+	for productProperty, originalProperty in iterproduct(productProperties, prodPropertiesOrig):
 		if (
 			productProperty.productId == originalProperty.productId
 			and productProperty.propertyId == originalProperty.propertyId
@@ -772,9 +754,7 @@ def testUpdatingProductProperty(extendedConfigDataBackend):
 	productProperty2 = prodPropertiesOrig[1]
 	productProperty2.setDescription("updatedfortest")
 	extendedConfigDataBackend.productProperty_updateObject(productProperty2)
-	productProperties = extendedConfigDataBackend.productProperty_getObjects(
-		attributes=[], description="updatedfortest"
-	)
+	productProperties = extendedConfigDataBackend.productProperty_getObjects(attributes=[], description="updatedfortest")
 
 	assert len(productProperties) == 1
 	assert productProperties[0].getDescription() == "updatedfortest"
@@ -818,9 +798,7 @@ def testGettingErrorMessageWhenAttributeInFilterIsNotAtObject(
 	extendedConfigDataBackend,
 ):
 	try:
-		extendedConfigDataBackend.productPropertyState_getObjects(
-			unknownAttribute="foobar"
-		)
+		extendedConfigDataBackend.productPropertyState_getObjects(unknownAttribute="foobar")
 		assert False, "We should not get here."
 	except BackendBadValueError as bbve:
 		assert "has no attribute" in str(bbve)
@@ -973,38 +951,26 @@ the name of the product equals the name of a product property.
 	}
 
 	extendedConfigDataBackend.product_createObjects([product1, product2])
-	extendedConfigDataBackend.productProperty_createObjects(
-		[productProperty1, productProperty2]
-	)
+	extendedConfigDataBackend.productProperty_createObjects([productProperty1, productProperty2])
 	extendedConfigDataBackend.host_createObjects(depotserver1)
 	extendedConfigDataBackend.productPropertyState_createObjects([pps1])
 
-	product1Properties = extendedConfigDataBackend.productProperty_getObjects(
-		productId=product1["id"]
-	)
+	product1Properties = extendedConfigDataBackend.productProperty_getObjects(productId=product1["id"])
 	assert product1Properties
-	product2Properties = extendedConfigDataBackend.productProperty_getObjects(
-		productId=product2["id"]
-	)
+	product2Properties = extendedConfigDataBackend.productProperty_getObjects(productId=product2["id"])
 	assert product2Properties
 
 	# Only one productPropertyState
-	property1States = extendedConfigDataBackend.productPropertyState_getObjects(
-		productId=product1["id"]
-	)
+	property1States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product1["id"])
 	assert property1States
 
 	# Upping the game by inserting another productPropertyState
 	extendedConfigDataBackend.productPropertyState_createObjects([pps2])
 
-	property1States = extendedConfigDataBackend.productPropertyState_getObjects(
-		productId=product1["id"]
-	)
+	property1States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product1["id"])
 	assert property1States
 	assert len(property1States) == 1
-	property2States = extendedConfigDataBackend.productPropertyState_getObjects(
-		productId=product2["id"]
-	)
+	property2States = extendedConfigDataBackend.productPropertyState_getObjects(productId=product2["id"])
 	assert property2States
 	assert len(property2States) == 1
 	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(
@@ -1017,9 +983,7 @@ the name of the product equals the name of a product property.
 	)
 	assert propertyStatesForServer
 	assert len(property2States) == 1
-	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(
-		objectId=depotserver1["id"]
-	)
+	propertyStatesForServer = extendedConfigDataBackend.productPropertyState_getObjects(objectId=depotserver1["id"])
 	assert propertyStatesForServer
 	assert len(propertyStatesForServer) == 2
 
@@ -1204,17 +1168,13 @@ def testLockingProducts(extendedConfigDataBackend):
 	extendedConfigDataBackend.product_createObjects(prod)
 	extendedConfigDataBackend.productOnDepot_createObjects(pod)
 
-	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(
-		productId=prod.id
-	)[0]
+	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(productId=prod.id)[0]
 	assert not podFromBackend.locked
 
 	podFromBackend.locked = True
 	extendedConfigDataBackend.productOnDepot_updateObjects(podFromBackend)
 
-	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(
-		productId=prod.id
-	)[0]
+	podFromBackend = extendedConfigDataBackend.productOnDepot_getObjects(productId=prod.id)[0]
 	assert podFromBackend.locked
 
 
@@ -1228,9 +1188,7 @@ def testGettingProductOnDepotsFromBackend(extendedConfigDataBackend):
 	extendedConfigDataBackend.product_createObjects(products)
 	extendedConfigDataBackend.productOnDepot_createObjects(productsOnDepotOrig)
 
-	productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(
-		attributes=["productId"]
-	)
+	productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(attributes=["productId"])
 	assert len(productOnDepots) == len(productsOnDepotOrig)
 
 
@@ -1282,9 +1240,7 @@ def testNotManuallyUpdatingModificationTimeOnProductOnClient(extendedConfigDataB
 	modTime = "2010-01-01 05:55:55"
 	productOnClient2.setModificationTime(modTime)
 	backend.productOnClient_updateObject(productOnClient2)
-	productOnClients = backend.productOnClient_getObjects(
-		modificationTime="2010-01-01 05:55:55"
-	)
+	productOnClients = backend.productOnClient_getObjects(modificationTime="2010-01-01 05:55:55")
 	assert not productOnClients
 	productOnClients = backend.productOnClient_getObjects(modificationTime="2010-*")
 	assert not productOnClients
@@ -1316,15 +1272,9 @@ def testGettingProductOnClientWithFilter(extendedConfigDataBackend):
 	extendedConfigDataBackend.productOnClient_createObjects(pocs)
 
 	client1 = clients[0]
-	client1ProductOnClients = [
-		productOnClient
-		for productOnClient in pocs
-		if productOnClient.getClientId() == client1.id
-	]
+	client1ProductOnClients = [productOnClient for productOnClient in pocs if productOnClient.getClientId() == client1.id]
 
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		clientId=client1.getId()
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(clientId=client1.getId())
 	for productOnClient in productOnClients:
 		assert productOnClient.getClientId() == client1.getId()
 
@@ -1343,9 +1293,7 @@ def testGettingProductOnClientByClientAndProduct(extendedConfigDataBackend):
 	client1 = clients[0]
 	product2 = products[1]
 
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		clientId=client1.getId(), productId=product2.getId()
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(clientId=client1.getId(), productId=product2.getId())
 	assert 1 == len(productOnClients)
 	poc = productOnClients[0]
 	assert poc.getProductId() == product2.getId()
@@ -1365,9 +1313,7 @@ def testGettingProductOnClientByClientAndProductType(extendedConfigDataBackend):
 
 	productOnClient2 = pocs[1]
 
-	productOnClients = backend.productOnClient_getObjects(
-		productType=productOnClient2.productType, clientId=productOnClient2.clientId
-	)
+	productOnClients = backend.productOnClient_getObjects(productType=productOnClient2.productType, clientId=productOnClient2.clientId)
 	assert len(productOnClients) >= 1
 	assert productOnClient2 in productOnClients
 
@@ -1384,47 +1330,35 @@ def testUpdatingProductsOnClients(extendedConfigDataBackend):
 	productOnClient2 = pocs[1]
 	productOnClient2.setTargetConfiguration("forbidden")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		targetConfiguration="forbidden"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(targetConfiguration="forbidden")
 	assert productOnClient2 in productOnClients
 
 	productOnClient2.setInstallationStatus("unknown")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		installationStatus="unknown"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(installationStatus="unknown")
 	assert len(productOnClients) == 1
 
 	productOnClient2.setActionRequest("custom")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		actionRequest="custom"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionRequest="custom")
 	assert len(productOnClients) == 1
 	assert productOnClients[0] == productOnClient2
 
 	productOnClient2.setLastAction("once")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		lastAction="once"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(lastAction="once")
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
 	productOnClient2.setActionProgress("aUniqueProgress")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		actionProgress="aUniqueProgress"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionProgress="aUniqueProgress")
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
 	productOnClient2.setActionResult("failed")
 	extendedConfigDataBackend.productOnClient_updateObject(productOnClient2)
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		actionResult="failed"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(actionResult="failed")
 	assert len(productOnClients) == 1
 	assert productOnClients[0].clientId == productOnClient2.clientId
 
@@ -1476,36 +1410,22 @@ def testProductOnClientDependencies(extendedConfigDataBackend):
 		actionRequest="setup",
 	)
 
-	backend.productOnClient_delete(
-		productId="product7", clientId="client1.test.invalid"
-	)
+	backend.productOnClient_delete(productId="product7", clientId="client1.test.invalid")
 
-	backend.productOnClient_delete(
-		productId="product9", clientId="client1.test.invalid"
-	)
+	backend.productOnClient_delete(productId="product9", clientId="client1.test.invalid")
 
-	productOnClients = backend.productOnClient_getObjects(
-		clientId="client1.test.invalid"
-	)
-	setup = [
-		productOnClient.productId
-		for productOnClient in productOnClients
-		if productOnClient.actionRequest == "setup"
-	]
+	productOnClients = backend.productOnClient_getObjects(clientId="client1.test.invalid")
+	setup = [productOnClient.productId for productOnClient in productOnClients if productOnClient.actionRequest == "setup"]
 	assert "product6" in setup
 	assert "product7" not in setup
 	assert "product9" not in setup
 
-	productOnClients = backend.productOnClient_getObjects(
-		clientId="client1.test.invalid", productId=["product6", "product7"]
-	)
+	productOnClients = backend.productOnClient_getObjects(clientId="client1.test.invalid", productId=["product6", "product7"])
 	for productOnClient in productOnClients:
 		print("Got productOnClient: %s" % productOnClient)
 		assert productOnClient.productId in ("product6", "product7")
 
-	productOnClients = backend.productOnClient_getObjects(
-		clientId="client1.test.invalid", productId=["*6*"]
-	)
+	productOnClients = backend.productOnClient_getObjects(clientId="client1.test.invalid", productId=["*6*"])
 	for productOnClient in productOnClients:
 		print("Got productOnClient: %s" % productOnClient)
 		assert productOnClient.productId == "product6"
@@ -1518,22 +1438,12 @@ def testProductOnClientDependencies(extendedConfigDataBackend):
 		actionRequest="setup",
 	)
 
-	backend.productOnClient_delete(
-		productId="product7", clientId="client5.test.invalid"
-	)
+	backend.productOnClient_delete(productId="product7", clientId="client5.test.invalid")
 
-	backend.productOnClient_delete(
-		productId="product9", clientId="client5.test.invalid"
-	)
+	backend.productOnClient_delete(productId="product9", clientId="client5.test.invalid")
 
-	productOnClients = backend.productOnClient_getObjects(
-		clientId="client5.test.invalid"
-	)
-	setup = [
-		productOnClient.productId
-		for productOnClient in productOnClients
-		if productOnClient.actionRequest == "setup"
-	]
+	productOnClients = backend.productOnClient_getObjects(clientId="client5.test.invalid")
+	setup = [productOnClient.productId for productOnClient in productOnClients if productOnClient.actionRequest == "setup"]
 	assert "product7" not in setup
 	assert "product9" not in setup
 
@@ -1551,9 +1461,7 @@ def testGettingPxeConfigTemplate(backendManager):
 
 	backendManager.product_insertObject(product)
 
-	prodFromBackend = backendManager.product_getObjects(
-		attributes=["id", "pxeConfigTemplate"], id=product.id
-	)
+	prodFromBackend = backendManager.product_getObjects(attributes=["id", "pxeConfigTemplate"], id=product.id)
 	assert len(prodFromBackend) == 1
 	prodFromBackend = prodFromBackend[0]
 
@@ -1576,9 +1484,7 @@ def testGettingUserloginScript(backendManager):
 
 	backendManager.product_insertObject(product)
 
-	prodFromBackend = backendManager.product_getObjects(
-		attributes=["id", "userLoginScript"], id=product.id
-	)
+	prodFromBackend = backendManager.product_getObjects(attributes=["id", "userLoginScript"], id=product.id)
 	assert len(prodFromBackend) == 1
 	prodFromBackend = prodFromBackend[0]
 

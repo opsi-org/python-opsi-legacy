@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -8,7 +8,8 @@ Testing hardware audit behaviour.
 """
 
 import pytest
-from OPSI.Object import AuditHardwareOnHost, OpsiClient
+
+from opsi_legacy.Object import AuditHardwareOnHost, OpsiClient
 
 
 def testHardwareAuditAcceptingHugeMemoryClockSpeeds(hardwareAuditBackendWithHistory):
@@ -165,4 +166,5 @@ def testAccepting10GBNetworkInterfaces(hardwareAuditBackendWithHistory):
 	}
 	auditHardware = AuditHardwareOnHost.fromHash(nic)
 
+	backend.auditHardwareOnHost_insertObject(auditHardware)
 	backend.auditHardwareOnHost_insertObject(auditHardware)

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -9,17 +9,11 @@ Backend mixin for testing software / hardware audit functionality.
 
 import pytest
 
-from OPSI.Object import (
-	AuditSoftware,
-	AuditSoftwareOnClient,
-	AuditHardware,
-	AuditHardwareOnHost,
-	AuditSoftwareToLicensePool,
-)
+from opsi_legacy.Object import AuditHardware, AuditHardwareOnHost, AuditSoftware, AuditSoftwareOnClient, AuditSoftwareToLicensePool
 
 from .test_hosts import getClients
-from .test_products import getLocalbootProducts
 from .test_license_management import createLicensePool
+from .test_products import getLocalbootProducts
 
 
 def getAuditHardwares():
@@ -285,9 +279,7 @@ def test_insertAuditHardwareOnHost(hardwareAuditBackendWithHistory):
 	auditHardwareOnHosts = backend.auditHardwareOnHost_getObjects()
 	assert len(auditHardwareOnHosts) == len(ahoh) + historyRelevantActions
 
-	auditHardwareOnHosts = backend.auditHardwareOnHost_getObjects(
-		lastseen="2000-01-01 01:01:01"
-	)
+	auditHardwareOnHosts = backend.auditHardwareOnHost_getObjects(lastseen="2000-01-01 01:01:01")
 	assert 1 == len(auditHardwareOnHosts)
 	assert auditHardwareOnHost4update == auditHardwareOnHosts[0]
 
@@ -373,13 +365,8 @@ def test_updateAuditSoftware(auditDataBackend):
 	)
 
 	auditDataBackend.auditSoftware_updateObject(auditSoftware3update)
-	auditSoftwares = auditDataBackend.auditSoftware_getObjects(
-		windowsDisplayName="updatedDN"
-	)
-	assert 1 == len(auditSoftwares), (
-		"Expected one audit software object, but found %s on backend."
-		% len(auditSoftwares)
-	)
+	auditSoftwares = auditDataBackend.auditSoftware_getObjects(windowsDisplayName="updatedDN")
+	assert 1 == len(auditSoftwares), "Expected one audit software object, but found %s on backend." % len(auditSoftwares)
 	assert auditSoftware3update == auditSoftwares[0]
 
 
@@ -416,9 +403,7 @@ def test_getAuditSoftwareOnClients(auditDataBackend):
 
 
 def test_updateAuditSoftwareOnClient(auditDataBackend):
-	asoc, auditSoftwaresIn, clients = fillBackendWithAuditSoftwareOnClient(
-		auditDataBackend
-	)
+	asoc, auditSoftwaresIn, clients = fillBackendWithAuditSoftwareOnClient(auditDataBackend)
 
 	client1 = clients[0]
 	auditSoftware1 = auditSoftwaresIn[0]
@@ -439,9 +424,7 @@ def test_updateAuditSoftwareOnClient(auditDataBackend):
 	)
 
 	auditDataBackend.auditSoftwareOnClient_updateObject(auditSoftwareOnClient1update)
-	auditSoftwareOnClients = auditDataBackend.auditSoftwareOnClient_getObjects(
-		binaryName="updatedBN"
-	)
+	auditSoftwareOnClients = auditDataBackend.auditSoftwareOnClient_getObjects(binaryName="updatedBN")
 	assert 1 == len(auditSoftwareOnClients)
 	assert auditSoftwareOnClient1update == auditSoftwareOnClients[0]
 
@@ -515,12 +498,8 @@ def testDeletingHostShouldDeleteHardwareAuditData(auditDataBackend):
 	auditDataBackend.host_createObjects(client1)
 	auditDataBackend.auditHardwareOnHost_createObjects(auditHardwareOnHost1)
 
-	assert 1 == len(
-		auditDataBackend.host_getObjects()
-	), "Self-test failed: Too much hosts."
-	assert 1 == len(
-		auditDataBackend.auditHardwareOnHost_getObjects()
-	), "Self-test failed: Too much auditHardwareOnHosts."
+	assert 1 == len(auditDataBackend.host_getObjects()), "Self-test failed: Too much hosts."
+	assert 1 == len(auditDataBackend.auditHardwareOnHost_getObjects()), "Self-test failed: Too much auditHardwareOnHosts."
 
 	auditDataBackend.host_deleteObjects([client1])
 	assert 0 == len(auditDataBackend.host_getObjects())
@@ -538,24 +517,17 @@ def testSelecingAuditHardwareOnHostByLastseen(auditDataBackend):
 	auditHardwareOnHost4update.setLastseen("2000-01-01 01:01:01")
 	auditDataBackend.auditHardwareOnHost_insertObject(auditHardwareOnHost4update)
 
-	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects(
-		lastseen="2000-01-01 01:01:01"
-	)
+	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects(lastseen="2000-01-01 01:01:01")
 	assert len(auditHardwareOnHosts) == 1
 	assert auditHardwareOnHost4update == auditHardwareOnHosts[0]
 
 
-@pytest.mark.parametrize(
-	"searchTerms", [["CHASSIS", "COMPUTER_SYSTEM"], ["CHA*IS", "*UTER_SYS*"]]
-)
+@pytest.mark.parametrize("searchTerms", [["CHASSIS", "COMPUTER_SYSTEM"], ["CHA*IS", "*UTER_SYS*"]])
 def test_selectAuditHardwareClasses(auditDataBackend, searchTerms):
 	auditHardwaresIn = getAuditHardwares()
 	auditDataBackend.auditHardware_createObjects(auditHardwaresIn)
 
-	auditHardwareClasses = [
-		x.getHardwareClass()
-		for x in auditDataBackend.auditHardware_getObjects(hardwareClass=searchTerms)
-	]
+	auditHardwareClasses = [x.getHardwareClass() for x in auditDataBackend.auditHardware_getObjects(hardwareClass=searchTerms)]
 	assert auditHardwareClasses
 
 	for auditHardwareClass in auditHardwareClasses:
@@ -580,10 +552,7 @@ def testDeletingAllAuditHardware(auditDataBackend):
 
 	auditDataBackend.auditHardware_deleteObjects(auditHardwares)
 	auditHardwares = auditDataBackend.auditHardware_getObjects()
-	assert 0 == len(auditHardwares), (
-		"Expected 0 audit hardware objects, but found %s on backend."
-		% len(auditHardwares)
-	)
+	assert 0 == len(auditHardwares), "Expected 0 audit hardware objects, but found %s on backend." % len(auditHardwares)
 
 
 def testCreatingAndGetingAuditHardwareFromBackend(auditDataBackend):
@@ -599,9 +568,7 @@ def testCreatingAuditHardwareAfterDeletion(auditDataBackend):
 	auditHardwares = getAuditHardwares()
 
 	auditDataBackend.auditHardware_createObjects(auditHardwares)
-	auditDataBackend.auditHardware_deleteObjects(
-		auditDataBackend.auditHardware_getObjects()
-	)
+	auditDataBackend.auditHardware_deleteObjects(auditDataBackend.auditHardware_getObjects())
 
 	auditDataBackend.auditHardware_createObjects(auditHardwares)
 	receivedAuditHardwares = auditDataBackend.auditHardware_getObjects()
@@ -614,22 +581,17 @@ def testDeletingAllAuditHardwareOnHost(auditDataBackend):
 
 	assert auditDataBackend.auditHardwareOnHost_getObjects()
 
-	auditDataBackend.auditHardwareOnHost_delete(
-		hostId=[], hardwareClass=[], firstseen=[], lastseen=[], state=[]
-	)
+	auditDataBackend.auditHardwareOnHost_delete(hostId=[], hardwareClass=[], firstseen=[], lastseen=[], state=[])
 	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects()
-	assert 0 == len(auditHardwareOnHosts), (
-		"Expected no audit hardware objects on host, but found %s on backend."
-		% len(auditHardwareOnHosts)
+	assert 0 == len(auditHardwareOnHosts), "Expected no audit hardware objects on host, but found %s on backend." % len(
+		auditHardwareOnHosts
 	)
 
 
 def test_createAuditHardwareOnHost(auditDataBackend):
 	ahoh, _, _ = fillBackendWithAuditHardwareOnHosts(auditDataBackend)
 
-	auditDataBackend.auditHardwareOnHost_delete(
-		hostId=[], hardwareClass=[], firstseen=[], lastseen=[], state=[]
-	)
+	auditDataBackend.auditHardwareOnHost_delete(hostId=[], hardwareClass=[], firstseen=[], lastseen=[], state=[])
 	auditDataBackend.auditHardwareOnHost_createObjects(ahoh)
 	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects()
 	assert len(auditHardwareOnHosts) == len(ahoh)
@@ -664,16 +626,12 @@ def test_deleteAuditHardwareOnHost(auditDataBackend):
 
 
 def testAuditHardwareOnHostSetObsolete(auditDataBackend):
-	auditHardwareOnHostsIn, _, clients = fillBackendWithAuditHardwareOnHosts(
-		auditDataBackend
-	)
+	auditHardwareOnHostsIn, _, clients = fillBackendWithAuditHardwareOnHosts(auditDataBackend)
 
 	client3 = clients[2]
 
 	auditDataBackend.auditHardwareOnHost_setObsolete(client3.id)
-	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects(
-		hostId=client3.id
-	)
+	auditHardwareOnHosts = auditDataBackend.auditHardwareOnHost_getObjects(hostId=client3.id)
 	for auditHardwareOnHost in auditHardwareOnHosts:
 		assert auditHardwareOnHost.getState() == 0
 

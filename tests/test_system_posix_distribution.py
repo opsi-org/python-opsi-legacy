@@ -1,16 +1,15 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
 """
-Testing Distribution functionality from OPSI.System.Posix
+Testing Distribution functionality from opsi_legacy.System.Posix
 """
-
-from OPSI.System.Posix import Distribution
 
 import pytest
 
+from opsi_legacy.System.Posix import Distribution
 
 # The first tuple is retrieved by running platform.linux_distribution()
 # or distro.linux_distribution() on the corresponding version.

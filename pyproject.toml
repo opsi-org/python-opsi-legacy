@@ -1,6 +1,6 @@
 [project]
 name = "python-opsi"
-version = "4.3.10.8"
+version = "4.3.11.0"
 description = "The opsi python library"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -65,4 +65,4 @@ indent-style = "tab"
 ignore = ["F405"]
 
 [tool.setuptools.packages.find]
-include = ["OPSI", "OPSI.*"]
+include = ["opsi_legacy", "opsi_legacy.*"]

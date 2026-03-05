@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -15,7 +15,7 @@ import pytest
 from opsicommon.logging import logger, logging_config, secret_filter
 from opsicommon.logging.constants import LOG_SECRET, LOG_TRACE
 
-from OPSI.Logger import Logger as LegacyLogger
+from opsi_legacy.Logger import Logger as LegacyLogger
 
 MY_FORMAT = "%(log_color)s[%(opsilevel)d] [%(asctime)s.%(msecs)03d]%(reset)s [%(contextstring)s] %(message)s"
 OTHER_FORMAT = "[%(opsilevel)d] [%(asctime)s.%(msecs)03d] [%(contextstring)s] %(message)s   (%(filename)s:%(lineno)d)"
@@ -74,9 +74,7 @@ def test_legacy_logger(utils):
 		assert "SECRETSTRING2" not in log
 		assert "SECRETSTRING3" not in log
 
-		legacy_logger.logException(
-			Exception("LOG_EXCEPTION"), logLevel=logging.CRITICAL
-		)
+		legacy_logger.logException(Exception("LOG_EXCEPTION"), logLevel=logging.CRITICAL)
 		stream.seek(0)
 		log = stream.read()
 		assert "LOG_EXCEPTION" in log
@@ -90,19 +88,13 @@ def test_legacy_logger_calls(utils):
 	legacy_logger.setConfidentialStrings(["topsecret"])
 	legacy_logger.addConfidentialString("evenmoresecret")
 	legacy_logger.setLogFormat("%s some format %s", currentThread=False, object=None)
-	legacy_logger.setConsoleFormat(
-		"%s some format %s", currentThread=False, object=None
-	)
+	legacy_logger.setConsoleFormat("%s some format %s", currentThread=False, object=None)
 	legacy_logger.setComponentName("name", currentThread=False, object=None)
 	legacy_logger.logToStdout(None)
 	legacy_logger.setSyslogFormat("%s some format %s", currentThread=False, object=None)
 	legacy_logger.setFileFormat("%s some format %s", currentThread=False, object=None)
-	legacy_logger.setUniventionFormat(
-		"%s some format %s", currentThread=False, object=None
-	)
-	legacy_logger.setMessageSubjectFormat(
-		"%s some format %s", currentThread=False, object=None
-	)
+	legacy_logger.setUniventionFormat("%s some format %s", currentThread=False, object=None)
+	legacy_logger.setMessageSubjectFormat("%s some format %s", currentThread=False, object=None)
 	legacy_logger.setUniventionLogger(None)
 	legacy_logger.setUniventionClass(None)
 	legacy_logger.getMessageSubject()

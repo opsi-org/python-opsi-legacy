@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -15,7 +15,7 @@ import pytest
 from opsicommon.exceptions import OpsiServiceConnectionError
 from opsicommon.testing.helpers import http_test_server
 
-from OPSI.Backend.JSONRPC import JSONRPCBackend
+from opsi_legacy.Backend.JSONRPC import JSONRPCBackend
 
 
 def test_jsonrpc_backend(tmp_path: Path) -> None:
@@ -63,12 +63,10 @@ def test_jsonrpc_backend(tmp_path: Path) -> None:
 		log_file=log_file,
 		response_headers={"server": "opsiconfd 4.3.0.0 (uvicorn)"},
 	) as server:
-		server.response_body = json.dumps(
-			{"jsonrpc": "2.0", "result": interface}
-		).encode("utf-8")
+		server.response_body = json.dumps({"jsonrpc": "2.0", "result": interface}).encode("utf-8")
 		server.response_headers["Content-Type"] = "application/json"
 		backend = JSONRPCBackend(address=f"https://localhost:{server.port}")
 		backend.test_method("arg1")
 
 		with pytest.raises(OpsiServiceConnectionError):
-			backend = JSONRPCBackend(address=f"https://localhost:{server.port+1}")
+			backend = JSONRPCBackend(address=f"https://localhost:{server.port + 1}")

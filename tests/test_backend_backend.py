@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,10 +11,10 @@ import os.path
 
 import pytest
 
-from OPSI.Backend.Backend import Backend, ExtendedBackend, temporaryBackendOptions
-from OPSI.Exceptions import BackendMissingDataError
-from OPSI.Object import BoolConfig, OpsiClient, UnicodeConfig
-from OPSI.Util import BlowfishError, blowfishDecrypt, generateOpsiHostKey, randomString
+from opsi_legacy.Backend.Backend import Backend, ExtendedBackend, temporaryBackendOptions
+from opsi_legacy.Exceptions import BackendMissingDataError
+from opsi_legacy.Object import BoolConfig, OpsiClient, UnicodeConfig
+from opsi_legacy.Util import BlowfishError, blowfishDecrypt, generateOpsiHostKey, randomString
 
 from .test_hosts import getConfigServer
 
@@ -51,9 +51,7 @@ def testWorkingWithManyCredentials(fakeCredentialsBackend, number):
 	backend = fakeCredentialsBackend
 
 	for _ in range(number):
-		backend.user_setCredentials(
-			username=randomString(12), password=randomString(12)
-		)
+		backend.user_setCredentials(username=randomString(12), password=randomString(12))
 
 	backend.user_setCredentials(username="hans", password="bla")
 
@@ -243,9 +241,7 @@ def testConfigStateCheckWorksWithUpdatedDict(extendedConfigDataBackend):
 
 
 @pytest.mark.parametrize("configValue", ["nofqdn", None, "non.existing.depot"])
-def testConfigStateCheckFailsOnInvalidDepotSettings(
-	extendedConfigDataBackend, configValue
-):
+def testConfigStateCheckFailsOnInvalidDepotSettings(extendedConfigDataBackend, configValue):
 	backend = extendedConfigDataBackend
 	client = OpsiClient(id="client.test.invalid")
 	backend.host_insertObject(client)

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -12,11 +12,11 @@ import os.path
 
 import pytest
 
-from OPSI.Util.Task.UpdateBackend.File import (
+from opsi_legacy.Util.Task.UpdateBackend.File import (
 	FileBackendUpdateError,
+	_readVersionFile,
 	getVersionFilePath,
 	readBackendVersion,
-	_readVersionFile,
 	updateBackendVersion,
 	updateFileBackend,
 )

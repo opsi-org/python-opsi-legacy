@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,9 +11,9 @@ import random
 
 import pytest
 
-from OPSI.Backend.Backend import temporaryBackendOptions
-from OPSI.Exceptions import BackendError, BackendMissingDataError
-from OPSI.Object import (
+from opsi_legacy.Backend.Backend import temporaryBackendOptions
+from opsi_legacy.Exceptions import BackendError, BackendMissingDataError
+from opsi_legacy.Object import (
 	BoolProductProperty,
 	ConfigState,
 	LocalbootProduct,
@@ -25,18 +25,12 @@ from OPSI.Object import (
 	UnicodeConfig,
 	UnicodeProductProperty,
 )
-from OPSI.Util.Task.ConfigureBackend.ConfigurationData import initializeConfigs
+from opsi_legacy.Util.Task.ConfigureBackend.ConfigurationData import initializeConfigs
 
 from .test_backend_replicator import fillBackend
 from .test_configs import getConfigs, getConfigStates
 from .test_hosts import getClients, getConfigServer, getDepotServers
-from .test_products import (
-	getLocalbootProducts,
-	getNetbootProduct,
-	getProductPropertyStates,
-	getProductsOnClients,
-	getProductsOnDepot,
-)
+from .test_products import getLocalbootProducts, getNetbootProduct, getProductPropertyStates, getProductsOnClients, getProductsOnDepot
 
 # TODO: provide tests for these backend options:
 # extendedConfigDataBackend.backend_setOptions({
@@ -68,20 +62,14 @@ def test_configState_getClientToDepotserver(extendedConfigDataBackend):
 	extendedConfigDataBackend.productOnDepot_createObjects(originalProductsOnDepots)
 
 	clients = extendedConfigDataBackend.host_getObjects(type="OpsiClient")
-	with temporaryBackendOptions(
-		extendedConfigDataBackend, addConfigStateDefaults=True
-	):
+	with temporaryBackendOptions(extendedConfigDataBackend, addConfigStateDefaults=True):
 		clientToDepots = extendedConfigDataBackend.configState_getClientToDepotserver()
 
 	assert len(clientToDepots) == len(clients)
 
 	for depotserver in getDepotServers():
-		productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(
-			depotId=depotserver.id
-		)
-		expectedProducts = [
-			x for x in originalProductsOnDepots if x.depotId == depotserver.id
-		]
+		productOnDepots = extendedConfigDataBackend.productOnDepot_getObjects(depotId=depotserver.id)
+		expectedProducts = [x for x in originalProductsOnDepots if x.depotId == depotserver.id]
 		for productOnDepot in productOnDepots:
 			assert productOnDepot in expectedProducts
 
@@ -105,11 +93,7 @@ def test_createProductOnClient(extendedConfigDataBackend):
 	extendedConfigDataBackend.productOnClient_createObjects(originalPoc)
 
 	productOnClients = [
-		poc
-		for poc in extendedConfigDataBackend.productOnClient_getObjects(
-			clientId=client.id
-		)
-		if poc.actionRequest == "setup"
+		poc for poc in extendedConfigDataBackend.productOnClient_getObjects(clientId=client.id) if poc.actionRequest == "setup"
 	]
 
 	assert [originalPoc] == productOnClients
@@ -158,9 +142,7 @@ def test_selectProductOnClientWithDefault(extendedConfigDataBackend):
 		depotId=depot.getId(),
 		locked=False,
 	)
-	extendedConfigDataBackend.productOnDepot_createObjects(
-		[installedProductOnDepot6, installedProductOnDepot7]
-	)
+	extendedConfigDataBackend.productOnDepot_createObjects([installedProductOnDepot6, installedProductOnDepot7])
 
 	clientConfigDepotId = UnicodeConfig(
 		id="clientconfig.depot.id",
@@ -170,14 +152,10 @@ def test_selectProductOnClientWithDefault(extendedConfigDataBackend):
 	)
 	extendedConfigDataBackend.config_createObjects(clientConfigDepotId)
 
-	with temporaryBackendOptions(
-		extendedConfigDataBackend, addProductOnClientDefaults=True
-	):
+	with temporaryBackendOptions(extendedConfigDataBackend, addProductOnClientDefaults=True):
 		productOnClients = [
 			pocc.productId
-			for pocc in extendedConfigDataBackend.productOnClient_getObjects(
-				clientId=client.id, productId=["product6", "product7"]
-			)
+			for pocc in extendedConfigDataBackend.productOnClient_getObjects(clientId=client.id, productId=["product6", "product7"])
 		]
 
 	productOnClients.sort()
@@ -214,9 +192,7 @@ def test_backend_option_addProductOnClientDefaults(extendedConfigDataBackend):
 	assert len(pocsOnClient) < len(products)
 	assert len(podsOnDepot) > len(pocsOnClient)
 
-	productsOnClientNotOnDepot = set(p.productId for p in pocsOnClient) - set(
-		p.productId for p in podsOnDepot
-	)
+	productsOnClientNotOnDepot = set(p.productId for p in pocsOnClient) - set(p.productId for p in podsOnDepot)
 
 	clientConfigDepotId = UnicodeConfig(
 		id="clientconfig.depot.id",
@@ -225,16 +201,11 @@ def test_backend_option_addProductOnClientDefaults(extendedConfigDataBackend):
 	)
 	backend.config_createObjects(clientConfigDepotId)
 
-	clientDepotAssignment = ConfigState(
-		configId=clientConfigDepotId.id, objectId=client.id, values=[depot.id]
-	)
+	clientDepotAssignment = ConfigState(configId=clientConfigDepotId.id, objectId=client.id, values=[depot.id])
 	backend.configState_createObjects(clientDepotAssignment)
 
 	with temporaryBackendOptions(backend, addProductOnClientDefaults=True):
-		productOnClients = [
-			pocc.productId
-			for pocc in backend.productOnClient_getObjects(clientId=client.id)
-		]
+		productOnClients = [pocc.productId for pocc in backend.productOnClient_getObjects(clientId=client.id)]
 
 	assert len(pocsOnClient) < len(productOnClients)
 	assert len(productOnClients) - len(productsOnClientNotOnDepot) == len(podsOnDepot)
@@ -253,9 +224,7 @@ def test_selectProductOnClientsByWildcard(extendedConfigDataBackend):
 	)
 	extendedConfigDataBackend.productOnClient_createObjects(poc)
 
-	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(
-		clientId=client.id, productId="*6*"
-	)
+	productOnClients = extendedConfigDataBackend.productOnClient_getObjects(clientId=client.id, productId="*6*")
 	assert productOnClients == [poc]
 
 
@@ -356,18 +325,12 @@ def testConfigState_getIdents(extendedConfigDataBackend):
 	configs = getConfigs()
 	extendedConfigDataBackend.config_createObjects(configs)
 
-	depotServer = extendedConfigDataBackend.host_getObjects(id="depot100.test.invalid")[
-		0
-	]
+	depotServer = extendedConfigDataBackend.host_getObjects(id="depot100.test.invalid")[0]
 	configStates = getConfigStates(configs, clients, [None, depotServer])
 	extendedConfigDataBackend.configState_createObjects(configStates)
-	expectedIdents = [
-		configState.getIdent(returnType="dict") for configState in configStates
-	]
+	expectedIdents = [configState.getIdent(returnType="dict") for configState in configStates]
 
-	with temporaryBackendOptions(
-		extendedConfigDataBackend, addConfigStateDefaults=False
-	):
+	with temporaryBackendOptions(extendedConfigDataBackend, addConfigStateDefaults=False):
 		ids = extendedConfigDataBackend.configState_getIdents()
 
 	assert len(ids) == len(expectedIdents)
@@ -376,9 +339,7 @@ def testConfigState_getIdents(extendedConfigDataBackend):
 		assert objectIdent in expectedIdents
 
 	expect = len(extendedConfigDataBackend.host_getObjects()) * len(configs)
-	with temporaryBackendOptions(
-		extendedConfigDataBackend, addConfigStateDefaults=True
-	):
+	with temporaryBackendOptions(extendedConfigDataBackend, addConfigStateDefaults=True):
 		ids = extendedConfigDataBackend.configState_getIdents()
 	assert expect == len(ids)
 
@@ -400,9 +361,7 @@ def testConfigState_getIdents(extendedConfigDataBackend):
 		"productPropertyState",
 	),
 )
-def testGettingIdentsDoesNotRaiseAnException(
-	extendedConfigDataBackend, objectType, returnType, klass
-):
+def testGettingIdentsDoesNotRaiseAnException(extendedConfigDataBackend, objectType, returnType, klass):
 	fillBackend(extendedConfigDataBackend)
 
 	methodOptions = {}
@@ -553,16 +512,10 @@ def testBackend_getInterface(extendedConfigDataBackend, methodSignature):
 	"""
 	print("Base backend {0!r}".format(extendedConfigDataBackend))
 	try:
-		print(
-			"Checking with backend {0!r}".format(
-				extendedConfigDataBackend._backend._backend
-			)
-		)
+		print("Checking with backend {0!r}".format(extendedConfigDataBackend._backend._backend))
 	except AttributeError:
 		try:
-			print(
-				"Checking with backend {0!r}".format(extendedConfigDataBackend._backend)
-			)
+			print("Checking with backend {0!r}".format(extendedConfigDataBackend._backend))
 		except AttributeError:
 			pass
 
@@ -577,9 +530,7 @@ def testBackend_getInterface(extendedConfigDataBackend, methodSignature):
 
 
 @pytest.mark.parametrize("addressType", ["fqdn"])
-def testRenamingDepotServer(
-	extendedConfigDataBackend, addressType, newId="hello.world.test"
-):
+def testRenamingDepotServer(extendedConfigDataBackend, addressType, newId="hello.world.test"):
 	backend = extendedConfigDataBackend
 	configServer = getConfigServer()
 
@@ -599,9 +550,7 @@ def testRenamingDepotServer(
 		depotRemoteUrl="smb://{address}/opsi_depot".format(address=address),
 		depotWebdavUrl="webdavs://{address}:4447/depot".format(address=address),
 		repositoryLocalUrl="file:///var/lib/opsi/repository",
-		repositoryRemoteUrl="webdavs://{address}:4447/repository".format(
-			address=address
-		),
+		repositoryRemoteUrl="webdavs://{address}:4447/repository".format(address=address),
 		workbenchLocalUrl="file:///var/lib/opsi/workbench",
 		workbenchRemoteUrl="smb://{address}/opsi_workbench".format(address=address),
 	)
@@ -683,10 +632,7 @@ def testRenamingDepotServer(
 		UnicodeConfig(
 			id="clientconfig.configserver.url",  # get's special treatment
 			description="URL(s) of opsi config service(s) to use",
-			possibleValues=[
-				"https://%s:4447/rpc" % server
-				for server in (configServer.id, oldServer.id)
-			],
+			possibleValues=["https://%s:4447/rpc" % server for server in (configServer.id, oldServer.id)],
 			defaultValues=["https://%s:4447/rpc" % configServer.id],
 			editable=True,
 			multiValue=True,
@@ -705,9 +651,7 @@ def testRenamingDepotServer(
 	configStates.append(testConfigState)
 	backend.configState_createObjects(configStates)
 	oldConfigStates = backend.configState_getObjects()
-	configStatesFromDifferentObjects = [
-		cs for cs in oldConfigStates if not cs.objectId == oldServer.id
-	]
+	configStatesFromDifferentObjects = [cs for cs in oldConfigStates if not cs.objectId == oldServer.id]
 
 	secondaryDepot = OpsiDepotserver(
 		id="sub-{0}".format(oldServer.id),
@@ -747,9 +691,7 @@ def testRenamingDepotServer(
 			assert newId in productProperty.defaultValues
 			specialPropertyChecked = True
 
-	assert specialPropertyChecked, "Missing property {0}".format(
-		specialProperty.propertyId
-	)
+	assert specialPropertyChecked, "Missing property {0}".format(specialProperty.propertyId)
 
 	newProductPropertyStates = backend.productPropertyState_getObjects()
 	assert len(oldProductPropertyStates) == len(newProductPropertyStates)
@@ -778,9 +720,7 @@ def testRenamingDepotServer(
 			if addressType == "fqdn":
 				assert any(newId in value for value in config.possibleValues)
 			else:
-				raise RuntimeError(
-					"Missing check for address type {0!r}".format(addressType)
-				)
+				raise RuntimeError("Missing check for address type {0!r}".format(addressType))
 			configsTested += 1
 		elif config.id == "clientconfig.depot.id":
 			assert newId in config.possibleValues
@@ -793,12 +733,8 @@ def testRenamingDepotServer(
 
 	newConfigStates = backend.configState_getObjects()
 	assert len(oldConfigStates) == len(newConfigStates)
-	newConfigStatesFromDifferentObjects = [
-		cs for cs in newConfigStates if not cs.objectId == newId
-	]
-	assert len(configStatesFromDifferentObjects) == len(
-		newConfigStatesFromDifferentObjects
-	)
+	newConfigStatesFromDifferentObjects = [cs for cs in newConfigStates if not cs.objectId == newId]
+	assert len(configStatesFromDifferentObjects) == len(newConfigStatesFromDifferentObjects)
 
 	configStateTested = False
 	for configState in newConfigStates:
@@ -816,18 +752,12 @@ def testRenamingDepotServer(
 	assert newSecondaryDepot.masterDepotId == newId
 
 
-def testRenamingDepotServerFailsIfOldServerMissing(
-	extendedConfigDataBackend, newId="hello.world.test"
-):
+def testRenamingDepotServerFailsIfOldServerMissing(extendedConfigDataBackend, newId="hello.world.test"):
 	with pytest.raises(BackendMissingDataError):
-		extendedConfigDataBackend.host_renameOpsiDepotserver(
-			"not.here.invalid", "foo.bar.baz"
-		)
+		extendedConfigDataBackend.host_renameOpsiDepotserver("not.here.invalid", "foo.bar.baz")
 
 
-def testRenamingDepotServerFailsIfNewIdAlreadyExisting(
-	extendedConfigDataBackend, newId="hello.world.test"
-):
+def testRenamingDepotServerFailsIfNewIdAlreadyExisting(extendedConfigDataBackend, newId="hello.world.test"):
 	backend = extendedConfigDataBackend
 	depots = getDepotServers()
 	backend.host_createObjects(depots)

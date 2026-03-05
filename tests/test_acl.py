@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,18 +11,14 @@ import os
 
 import pytest
 
-import OPSI.Object
-from OPSI.Exceptions import BackendPermissionDeniedError
-from OPSI.Types import forceHostId
-from OPSI.Util import getfqdn
-from OPSI.Util.File.Opsi import BackendACLFile
-from OPSI.Backend.BackendManager import BackendAccessControl
+import opsi_legacy.Object
+from opsi_legacy.Backend.BackendManager import BackendAccessControl
+from opsi_legacy.Exceptions import BackendPermissionDeniedError
+from opsi_legacy.Types import forceHostId
+from opsi_legacy.Util import getfqdn
+from opsi_legacy.Util.File.Opsi import BackendACLFile
 
-from .test_backend_replicator import (
-	fillBackendWithHosts,
-	fillBackendWithProducts,
-	fillBackendWithProductOnClients,
-)
+from .test_backend_replicator import fillBackendWithHosts, fillBackendWithProductOnClients, fillBackendWithProducts
 from .test_hosts import getClients
 from .test_products import getProducts
 
@@ -195,11 +191,11 @@ def testDenyingAttributes(extendedConfigDataBackend):
 # backendAccessControl.host_updateObject(client1)
 
 # client2.setDescription("Only updating notes is allowed.")
-# with pytest.raises(OPSI.Types.BackendPermissionDeniedError):
+# with pytest.raises(opsi_legacy.Types.BackendPermissionDeniedError):
 # backendAccessControl.host_updateObject(client2)
 
 # assert not backendAccessControl.host_getObjects()
-# newClient3 = OPSI.Object.OpsiClient(
+# newClient3 = opsi_legacy.Object.OpsiClient(
 # id=client3.id,
 # notes="New notes are okay"
 # )
@@ -247,11 +243,9 @@ def testDenyingAccessToOtherObjects(extendedConfigDataBackend):
 			}
 		]
 	)
-	backend.configState_create(
-		"clientconfig.depot.id", client1.getId(), values=[depotserver1["id"]]
-	)
+	backend.configState_create("clientconfig.depot.id", client1.getId(), values=[depotserver1["id"]])
 
-	productOnDepot1 = OPSI.Object.ProductOnDepot(
+	productOnDepot1 = opsi_legacy.Object.ProductOnDepot(
 		productId=product1.getId(),
 		productType=product1.getType(),
 		productVersion=product1.getProductVersion(),
@@ -509,9 +503,9 @@ def testAccessingSelfProductOnClients(extendedConfigDataBackend):
 
 	productOnClients = backend.productOnClient_getObjects()
 	for productOnClient in productOnClients:
-		assert client.id == productOnClient.clientId, (
-			"Expected client id %s in productOnClient, but got client id '%s'"
-			% (client.id, productOnClient.clientId)
+		assert client.id == productOnClient.clientId, "Expected client id %s in productOnClient, but got client id '%s'" % (
+			client.id,
+			productOnClient.clientId,
 		)
 
 	for c in clients:

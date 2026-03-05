@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,8 +11,8 @@ import os
 
 import pytest
 
-from OPSI.Backend.BackendManager import BackendDispatcher
-from OPSI.Exceptions import BackendConfigurationError
+from opsi_legacy.Backend.BackendManager import BackendDispatcher
+from opsi_legacy.Exceptions import BackendConfigurationError
 
 from .Backends.File import getFileBackend
 from .conftest import _backendBase
@@ -33,9 +33,7 @@ def testBackendCreationFailsIfConfigMissing(kwargs):
 		BackendDispatcher(**kwargs)
 
 
-@pytest.mark.parametrize(
-	"create_folder", [True, False], ids=["existing folder", "nonexisting folder"]
-)
+@pytest.mark.parametrize("create_folder", [True, False], ids=["existing folder", "nonexisting folder"])
 def testLoadingDispatchConfigFailsIfBackendConfigWithoutConfigs(create_folder, tempDir):
 	backendDir = os.path.join(tempDir, "backends")
 
@@ -44,9 +42,7 @@ def testLoadingDispatchConfigFailsIfBackendConfigWithoutConfigs(create_folder, t
 		print("Created folder: {0}".format(backendDir))
 
 	with pytest.raises(BackendConfigurationError):
-		BackendDispatcher(
-			dispatchConfig=[[".*", ["file"]]], backendConfigDir=backendDir
-		)
+		BackendDispatcher(dispatchConfig=[[".*", ["file"]]], backendConfigDir=backendDir)
 
 
 def testDispatchingMethodAndReceivingResults(dispatcher):

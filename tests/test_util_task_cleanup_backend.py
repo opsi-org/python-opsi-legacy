@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -7,14 +7,10 @@
 Testing backend cleaning.
 """
 
-from OPSI.Object import LocalbootProduct, ProductOnDepot
-from OPSI.Util.Task.CleanupBackend import cleanupBackend, cleanUpProducts
+from opsi_legacy.Object import LocalbootProduct, ProductOnDepot
+from opsi_legacy.Util.Task.CleanupBackend import cleanupBackend, cleanUpProducts
 
-from .test_backend_replicator import (
-	checkIfBackendIsFilled,
-	fillBackend,
-	fillBackendWithHosts,
-)
+from .test_backend_replicator import checkIfBackendIsFilled, fillBackend, fillBackendWithHosts
 
 
 def testCleanupBackend(cleanableDataBackend):
@@ -57,12 +53,8 @@ def testCleaninUpProducts(cleanableDataBackend):
 		prod13.packageVersion,
 		depot.id,
 	)
-	pod2 = ProductOnDepot(
-		prod2.id, prod2.getType(), prod2.productVersion, prod2.packageVersion, depot.id
-	)
-	pod3 = ProductOnDepot(
-		prod3.id, prod3.getType(), prod3.productVersion, prod3.packageVersion, depot.id
-	)
+	pod2 = ProductOnDepot(prod2.id, prod2.getType(), prod2.productVersion, prod2.packageVersion, depot.id)
+	pod3 = ProductOnDepot(prod3.id, prod3.getType(), prod3.productVersion, prod3.packageVersion, depot.id)
 
 	for pod in [pod1, pod1d, pod2, pod3]:
 		cleanableDataBackend.productOnDepot_insertObject(pod)

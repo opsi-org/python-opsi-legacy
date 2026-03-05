@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,12 +11,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from OPSI.Backend.MySQL import (
-	MySQL,
-	MySQLBackend,
-	MySQLBackendObjectModificationTracker,
-)
-from OPSI.Util.Task.UpdateBackend.MySQL import disableForeignKeyChecks
+from opsi_legacy.Backend.MySQL import MySQL, MySQLBackend, MySQLBackendObjectModificationTracker
+from opsi_legacy.Util.Task.UpdateBackend.MySQL import disableForeignKeyChecks
 
 try:
 	from .config import MySQLconfiguration

@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,9 +11,9 @@ import itertools
 
 import pytest
 
-from OPSI.Exceptions import BackendError, BackendMissingDataError
-from OPSI.Object import HostGroup, ObjectToGroup, OpsiClient, OpsiConfigserver, OpsiDepotserver
-from OPSI.Util import getfqdn, randomString
+from opsi_legacy.Exceptions import BackendError, BackendMissingDataError
+from opsi_legacy.Object import HostGroup, ObjectToGroup, OpsiClient, OpsiConfigserver, OpsiDepotserver
+from opsi_legacy.Util import getfqdn, randomString
 
 
 def getLocalHostFqdn():

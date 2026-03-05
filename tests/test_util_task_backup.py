@@ -1,5 +1,5 @@
-# python-opsi is part of the desktop management solution opsi http://www.opsi.org
-# Copyright (c) 2008-2025 uib GmbH <info@uib.de>
+# python-opsi-legacy is part of the desktop management solution opsi http://www.opsi.org
+# Copyright (c) 2008-2026 uib GmbH <info@uib.de>
 # This code is owned by the uib GmbH, Mainz, Germany (uib.de). All rights reserved.
 # License: AGPL-3.0-only
 
@@ -11,8 +11,8 @@ import os
 import shutil
 import sys
 
-from OPSI.Util.Task.Backup import OpsiBackup
-from OPSI.Util.Task.ConfigureBackend import getBackendConfiguration, updateConfigFile
+from opsi_legacy.Util.Task.Backup import OpsiBackup
+from opsi_legacy.Util.Task.ConfigureBackend import getBackendConfiguration, updateConfigFile
 
 from .helpers import mock, workInTemporaryDirectory
 
@@ -50,9 +50,7 @@ def testGettingArchive(dist_data_path):
 	fakeBackendDir = os.path.join(dist_data_path, "backends")
 	fakeBackendDir = os.path.normpath(fakeBackendDir)
 
-	with mock.patch(
-		"OPSI.Util.Task.Backup.OpsiBackupArchive.BACKEND_CONF_DIR", fakeBackendDir
-	):
+	with mock.patch("opsi_legacy.Util.Task.Backup.OpsiBackupArchive.BACKEND_CONF_DIR", fakeBackendDir):
 		backup = OpsiBackup()
 		archive = backup._getArchive("r")
 
@@ -90,11 +88,11 @@ def testCreatingArchive(dist_data_path):
 				updateConfigFile(configPath, config)
 
 			with mock.patch(
-				"OPSI.Util.Task.Backup.OpsiBackupArchive.CONF_DIR",
+				"opsi_legacy.Util.Task.Backup.OpsiBackupArchive.CONF_DIR",
 				os.path.dirname(__file__),
 			):
 				with mock.patch(
-					"OPSI.Util.Task.Backup.OpsiBackupArchive.BACKEND_CONF_DIR",
+					"opsi_legacy.Util.Task.Backup.OpsiBackupArchive.BACKEND_CONF_DIR",
 					fakeBackendDir,
 				):
 					backup = OpsiBackup()
