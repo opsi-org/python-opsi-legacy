@@ -68,6 +68,7 @@ uibpypi:
   script:
     - export UV_PYTHON="3.13"
     - export UV_PYTHON_PREFERENCE="only-managed"
+    - opsi-dev-cli self upgrade
     - uv self update
     - uv sync --frozen
     - uv run opsi-dev-cli -l info pypi publish --url https://pypi.uib.gmbh --overwrite
