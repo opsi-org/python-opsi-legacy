@@ -1,5 +1,5 @@
 [project]
-name = "python-opsi"
+name = "python-opsi-legacy"
 version = "4.3.11.0"
 description = "The opsi python library"
 readme = "README.md"
