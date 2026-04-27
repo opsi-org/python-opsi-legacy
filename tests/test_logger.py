@@ -12,8 +12,7 @@ import logging
 from contextlib import contextmanager
 
 import pytest
-from opsi.logging import logger, logging_config, secret_filter
-from opsi.logging.constants import LOG_SECRET, LOG_TRACE
+from opsi.logging import LOG_SECRET, LOG_TRACE, logger, logging_config, secret_filter
 
 from opsi_legacy.Logger import Logger as LegacyLogger
 
