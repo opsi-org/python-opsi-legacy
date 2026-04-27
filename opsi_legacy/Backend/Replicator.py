@@ -9,7 +9,7 @@ Backend-Replicator.
 The replicator allows replication from one backend into another.
 """
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base import Backend, ExtendedConfigDataBackend
 

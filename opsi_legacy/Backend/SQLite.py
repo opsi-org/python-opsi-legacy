@@ -14,7 +14,7 @@ from typing import Any, Generator
 
 # Disable sqlalchemy 2.0 deprecation warnings
 import sqlalchemy.util.deprecations
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 sqlalchemy.util.deprecations.SILENCE_UBER_WARNING = True
 
@@ -22,9 +22,11 @@ from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.event import listen  # noqa: E402
 from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
 
-from opsi_legacy.Backend.SQL import SQL  # noqa: E402
-from opsi_legacy.Backend.SQL import SQLBackend  # noqa: E402
-from opsi_legacy.Backend.SQL import SQLBackendObjectModificationTracker  # noqa: E402
+from opsi_legacy.Backend.SQL import (
+	SQL,  # noqa: E402
+	SQLBackend,  # noqa: E402
+	SQLBackendObjectModificationTracker,  # noqa: E402
+)
 from opsi_legacy.Types import forceFilename  # noqa: E402
 
 __all__ = ("SQLite", "SQLiteBackend", "SQLiteObjectBackendModificationTracker")

@@ -10,7 +10,7 @@ Working with Windows Imaging Format (WIM) files.
 import os.path
 from collections import namedtuple
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.System import execute, which
 from opsi_legacy.Types import forceList, forceProductId

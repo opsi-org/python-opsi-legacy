@@ -18,8 +18,8 @@ import os
 import re
 import warnings
 
-from opsicommon.logging import get_logger
-from opsicommon.objects import BaseObject
+from opsi.logging import get_logger
+from opsi.opsi.service.model.object import BaseObject
 
 from opsi_legacy.Backend.Base import Backend, ExtendedBackend, ExtendedConfigDataBackend
 from opsi_legacy.Backend.Depotserver import DepotserverBackend

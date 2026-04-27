@@ -19,7 +19,7 @@ For more specialised cleanup you should use the corresponding methods.
 
 import re
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 import opsi_legacy.Util.Task.ConfigureBackend as backendUtil
 from opsi_legacy.Backend.BackendManager import BackendManager

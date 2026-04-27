@@ -17,7 +17,7 @@ import os.path
 import time
 from contextlib import contextmanager
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Util.Task.ConfigureBackend import getBackendConfiguration
 

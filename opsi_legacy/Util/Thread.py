@@ -12,7 +12,7 @@ import inspect
 import threading
 from queue import Empty, Queue
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 logger = get_logger("opsi.general")
 global_pool = None
@@ -40,9 +40,7 @@ def _async_raise(tid, exctype):
 	if not inspect.isclass(exctype):
 		raise TypeError("Only types can be raised (not instances)")
 
-	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-		ctypes.c_long(tid), ctypes.py_object(exctype)
-	)
+	res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
 	if res == 0:
 		logger.warning("Invalid thread id %s", tid)
 		return

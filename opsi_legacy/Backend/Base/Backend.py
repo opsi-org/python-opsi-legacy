@@ -31,7 +31,7 @@ except (ImportError, OSError):
 	from Cryptodome.Hash import MD5
 	from Cryptodome.Signature import pkcs1_15
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy import __version__ as LIBRARY_VERSION
 from opsi_legacy.Exceptions import BackendError

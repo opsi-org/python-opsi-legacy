@@ -19,7 +19,7 @@ import os
 import platform
 import shutil
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 logger = get_logger("opsi.general")
 

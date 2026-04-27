@@ -15,7 +15,7 @@ from __future__ import absolute_import
 from collections import namedtuple
 from contextlib import contextmanager
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.MySQL import MySQL, MySQLBackend
 from opsi_legacy.Backend.SQL import DATABASE_SCHEMA_VERSION, createSchemaVersionTable

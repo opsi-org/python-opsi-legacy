@@ -13,7 +13,7 @@ from urllib.parse import quote, urlencode
 
 # Disable sqlalchemy 2.0 deprecation warnings
 import sqlalchemy.util.deprecations
-from opsicommon.logging import get_logger, secret_filter
+from opsi.logging import get_logger, secret_filter
 
 sqlalchemy.util.deprecations.SILENCE_UBER_WARNING = True
 from sqlalchemy import create_engine  # noqa: E402
@@ -21,12 +21,17 @@ from sqlalchemy.event import listen  # noqa: E402
 from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
 
 from opsi_legacy.Backend.Base import ConfigDataBackend  # noqa: E402
-from opsi_legacy.Backend.SQL import SQL  # noqa: E402
-from opsi_legacy.Backend.SQL import SQLBackend  # noqa: E402
-from opsi_legacy.Backend.SQL import SQLBackendObjectModificationTracker  # noqa: E402
+from opsi_legacy.Backend.SQL import (
+	SQL,  # noqa: E402
+	SQLBackend,  # noqa: E402
+	SQLBackendObjectModificationTracker,  # noqa: E402
+)
 from opsi_legacy.Object import Product, ProductProperty  # noqa: E402
-from opsi_legacy.Types import forceInt  # noqa: E402
-from opsi_legacy.Types import forceHostIdList, forceUnicode  # noqa: E402
+from opsi_legacy.Types import (  # noqa: E402
+	forceHostIdList,
+	forceInt,  # noqa: E402
+	forceUnicode,
+)
 
 __all__ = ("MySQL", "MySQLBackend", "MySQLBackendObjectModificationTracker")
 

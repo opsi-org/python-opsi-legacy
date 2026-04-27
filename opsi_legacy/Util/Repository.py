@@ -20,8 +20,8 @@ import xml.etree.ElementTree as ET
 from urllib.parse import quote, unquote, urlparse
 
 import requests
-from opsicommon.logging import get_logger, secret_filter
-from opsicommon.utils import prepare_proxy_environment
+from opsi.logging import get_logger, secret_filter
+from opsi.system.network import prepare_proxy_environment
 from requests.adapters import HTTPAdapter
 from requests.packages import urllib3
 

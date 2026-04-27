@@ -14,7 +14,7 @@ import os
 import shutil
 import sys
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Exceptions import BackendConfigurationError, OpsiBackupBackendNotFound, OpsiBackupFileError, OpsiError
 from opsi_legacy.Types import forceHostId, forceList, forceUnicode

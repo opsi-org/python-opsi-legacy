@@ -11,7 +11,7 @@ Working with subjects and progress information.
 
 import time
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Types import forceBool, forceInt, forceIntList, forceList, forceUnicode, forceUnicodeList
 

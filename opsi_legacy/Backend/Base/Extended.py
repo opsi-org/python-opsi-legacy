@@ -18,12 +18,13 @@ import random
 import typing  # This is needed for dynamic loading  # noqa: F401
 import warnings
 from types import MethodType
-from typing import Any  # This is needed for dynamic loading  # noqa: F401
-from typing import Generator  # This is needed for dynamic loading  # noqa: F401
-from typing import List  # This is needed for dynamic loading  # noqa: F401
+from typing import (
+	Any,  # This is needed for dynamic loading  # noqa: F401
+	Generator,  # This is needed for dynamic loading  # noqa: F401
+	List,  # This is needed for dynamic loading  # noqa: F401
+)
 
-import opsicommon  # This is needed for dynamic loading  # noqa: F401
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Exceptions import *  # This is needed for dynamic loading  # noqa: F403
 from opsi_legacy.Object import *  # This is needed for dynamic loading  # noqa: F403

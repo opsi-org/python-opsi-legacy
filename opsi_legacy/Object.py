@@ -8,12 +8,12 @@ General classes used in the library.
 
 As an example this contains classes for hosts, products, configurations.
 
-Deprecated, use opsicommon.objects instead.
+Deprecated, use opsi.opsi.service.model.object instead.
 """
 
 from typing import Any
 
-from opsicommon.objects import *  # noqa: F403
+from opsi.opsi.service.model.object import *  # noqa: F403
 
 mandatoryConstructorArgs = mandatory_constructor_args
 getIdentAttributes = get_ident_attributes

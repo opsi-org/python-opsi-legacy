@@ -41,7 +41,7 @@ import signal as ui_signal
 import time
 from typing import Any, List
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 from snack import Button, CheckboxTree, Entry, Grid, GridForm, Label, Listbox, Scale, SnackScreen, Textbox
 
 from opsi_legacy.Types import forceBool, forceInt, forceList, forceUnicode, forceUnicodeList

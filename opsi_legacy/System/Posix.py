@@ -13,7 +13,9 @@ import codecs
 import copy as pycopy
 import datetime
 import fcntl
+import functools
 import getpass
+import json
 import locale
 import os
 import platform
@@ -28,12 +30,15 @@ import warnings
 from functools import lru_cache
 from itertools import islice
 from signal import SIGKILL
+from typing import Any, Callable
 
 import psutil
-from opsicommon.logging import LOG_NONE, get_logger, logging_config
-from opsicommon.objects import *  # noqa: F403
-from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
-from opsicommon.types import (
+from opsi.logging import LOG_NONE, get_logger, logging_config
+from opsi.opsi.service.model.object import *  # noqa: F403
+from opsi.process import get_subprocess_environment as opsipython_get_subprocess_environment
+
+from opsi_legacy.Exceptions import CommandNotFoundException
+from opsi_legacy.Types import (
 	forceBool,
 	forceDomain,
 	forceFilename,
@@ -48,9 +53,6 @@ from opsicommon.types import (
 	forceUnicode,
 	forceUnicodeLower,
 )
-from opsicommon.utils import frozen_lru_cache
-
-from opsi_legacy.Exceptions import CommandNotFoundException
 from opsi_legacy.Util import getfqdn, objectToBeautifiedText, removeUnit
 
 distro_module = None
@@ -136,6 +138,47 @@ try:
 		x86_64 = True
 except Exception:
 	pass
+
+
+def frozen_lru_cache(*decorator_args: Any) -> Callable:
+	"""
+	This decorator is intended to be used as drop-in replacement for functools.lru_cache.
+	It mitigates the weakness of not being able to handle dictionary type arguments by freezing them.
+	"""
+	if len(decorator_args) == 1 and callable(decorator_args[0]):
+		# No arguments, this is the decorator
+		cache = functools.lru_cache()
+	else:
+		cache = functools.lru_cache(*decorator_args)
+
+	def inner(func: Callable) -> Callable:
+		def deserialise(value: str) -> Any:
+			try:
+				return json.loads(value)
+			except Exception:
+				return value
+
+		def func_with_serialized_params(*args: Any, **kwargs: Any) -> Callable:
+			_args = tuple([deserialise(arg) for arg in args])
+			_kwargs = {k: deserialise(v) for k, v in kwargs.items()}
+			return func(*_args, **_kwargs)
+
+		cached_function = cache(func_with_serialized_params)
+
+		@functools.wraps(func)
+		def lru_decorator(*args: Any, **kwargs: Any) -> Callable:
+			_args = tuple([json.dumps(arg, sort_keys=True) if type(arg) in (list, dict) else arg for arg in args])
+			_kwargs = {k: json.dumps(v, sort_keys=True) if type(v) in (list, dict) else v for k, v in kwargs.items()}
+			return cached_function(*_args, **_kwargs)
+
+		lru_decorator.cache_info = cached_function.cache_info  # type: ignore[attr-defined]
+		lru_decorator.cache_clear = cached_function.cache_clear  # type: ignore[attr-defined]
+		return lru_decorator
+
+	if len(decorator_args) == 1 and callable(decorator_args[0]):
+		# No arguments, this is the decorator
+		return inner(decorator_args[0])
+	return inner
 
 
 class SystemSpecificHook:
@@ -846,7 +889,7 @@ def which(cmd: str, env: dict = None) -> str:
 
 
 def get_subprocess_environment(env: dict = None, add_lc_all_C=False, add_path_sbin=False):
-	sp_env = opsicommon_get_subprocess_environment(env)
+	sp_env = opsipython_get_subprocess_environment(env)
 
 	if add_lc_all_C:
 		sp_env["LC_ALL"] = "C"
@@ -929,7 +972,7 @@ output will be returned.
 		logger.debug("Detected kwarg 'waitForEnding'. Overwriting nowait.")
 		nowait = not forceBool(waitForEnding)
 
-	sp_env = opsicommon_get_subprocess_environment()
+	sp_env = opsipython_get_subprocess_environment()
 	sp_env.update(env)
 
 	exitCode = 0
@@ -4115,7 +4158,7 @@ def getActiveSessionInformation():
 
 
 def grant_session_access(username: str, session_id: str):
-	return opsicommon_get_subprocess_environment()
+	return opsipython_get_subprocess_environment()
 
 
 def runCommandInSession(
@@ -4155,7 +4198,7 @@ until the execution of the process is terminated.
 
 	logger.notice("Executing: '%s'", command)
 
-	sp_env = opsicommon_get_subprocess_environment()
+	sp_env = opsipython_get_subprocess_environment()
 	if sessionId is not None:
 		try:
 			sp_env = grant_session_access(getpass.getuser(), sessionId)

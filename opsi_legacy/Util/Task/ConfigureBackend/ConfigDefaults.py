@@ -12,7 +12,7 @@ CLI Utility to change the config defaults.
 import logging
 from contextlib import contextmanager
 
-from opsicommon.logging import LOG_CONFIDENTIAL, LOG_CRITICAL, OPSI_LEVEL_TO_LEVEL
+from opsi.logging import LOG_CONFIDENTIAL, LOG_CRITICAL, OPSI_LEVEL_TO_LEVEL
 
 from opsi_legacy.Backend.BackendManager import BackendManager
 from opsi_legacy.Exceptions import BackendMissingDataError

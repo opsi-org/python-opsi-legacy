@@ -16,7 +16,7 @@ import re
 import shutil
 from typing import Union
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base import ConfigDataBackend
 from opsi_legacy.Config import FILE_ADMIN_GROUP, OPSICONFD_USER

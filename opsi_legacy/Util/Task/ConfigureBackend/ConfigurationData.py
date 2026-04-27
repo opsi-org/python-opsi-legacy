@@ -15,7 +15,7 @@ import re
 from collections import namedtuple
 from typing import List
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 import opsi_legacy.Backend.BackendManager as bm
 from opsi_legacy.Object import BoolConfig, Config, OpsiConfigserver, UnicodeConfig

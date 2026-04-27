@@ -15,8 +15,8 @@ from threading import Event
 from typing import Any
 from urllib.parse import urlparse
 
-from opsicommon.client.opsiservice import ServiceClient, ServiceConnectionListener
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
+from opsi.opsi.service.client import ServiceClient, ServiceConnectionListener
 
 from opsi_legacy import __version__
 from opsi_legacy.Backend.Base import Backend

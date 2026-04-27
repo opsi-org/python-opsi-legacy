@@ -16,9 +16,9 @@ import time
 from contextlib import closing
 from typing import Any, List
 
-from opsicommon.client.opsiservice import ServiceClient
-from opsicommon.logging import get_logger
-from opsicommon.objects import Host
+from opsi.logging import get_logger
+from opsi.opsi.service.client import ServiceClient
+from opsi.opsi.service.model.object import Host
 
 from opsi_legacy import __version__
 from opsi_legacy.Backend.Base import ExtendedBackend

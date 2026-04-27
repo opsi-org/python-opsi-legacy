@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Dict, Generator, Tuple
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base import Backend, BackendModificationListener, ConfigDataBackend
 from opsi_legacy.Exceptions import (

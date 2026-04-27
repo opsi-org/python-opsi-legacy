@@ -9,7 +9,7 @@ import ctypes.util
 import os
 import tempfile
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Types import forceFilename, forceUnicode
 

@@ -10,7 +10,7 @@ Testing the Host Control backend.
 from ipaddress import IPv4Address, IPv4Network
 
 import pytest
-from opsicommon.objects import OpsiClient
+from opsi.opsi.service.model.object import OpsiClient
 
 from opsi_legacy.Backend.HostControl import HostControlBackend
 from opsi_legacy.Exceptions import BackendMissingDataError

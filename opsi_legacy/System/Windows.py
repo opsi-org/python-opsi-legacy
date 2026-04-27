@@ -46,12 +46,12 @@ import win32service
 import win32ts
 import win32wnet
 from cryptography import x509
-from opsicommon.logging import get_logger, secret_filter
-from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
-from opsicommon.types import forceBool, forceFilename, forceInt, forceUnicode, forceUnicodeList, forceUnicodeLower
+from opsi.logging import get_logger, secret_filter
+from opsi.process import get_subprocess_environment as opsipython_get_subprocess_environment
 
 from opsi_legacy.Exceptions import CommandNotFoundException
 from opsi_legacy.System.util import _get_secure_boot_certificates_from_efivar_payload
+from opsi_legacy.Types import forceBool, forceFilename, forceInt, forceUnicode, forceUnicodeList, forceUnicodeLower
 
 __all__ = (
 	"HKEY_CURRENT_USER",
@@ -1356,7 +1356,7 @@ def execute(
 	timeout = forceInt(timeout)
 	shell = forceBool(shell)
 
-	sp_env = opsicommon_get_subprocess_environment()
+	sp_env = opsipython_get_subprocess_environment()
 	sp_env.update(env)
 
 	exitCode = 0

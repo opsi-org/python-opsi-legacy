@@ -9,7 +9,7 @@ import struct
 from uuid import UUID
 
 from cryptography import x509
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 
 def _get_secure_boot_certificates_from_efivar_payload(data: bytes) -> list[x509.Certificate]:

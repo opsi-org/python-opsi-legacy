@@ -7,7 +7,7 @@
 Backend that tracks modifications.
 """
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from .Extended import ExtendedBackend
 

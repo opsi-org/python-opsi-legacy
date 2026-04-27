@@ -17,7 +17,7 @@ import pwd
 import shutil
 import time
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Config import OPSI_ADMIN_GROUP as ADMIN_GROUP
 from opsi_legacy.Config import OPSICONFD_USER

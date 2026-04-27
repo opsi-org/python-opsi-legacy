@@ -12,7 +12,7 @@ import os
 import warnings
 from typing import Any, Iterable
 
-from opsicommon.logging import (
+from opsi.logging import (
 	DEFAULT_COLORED_FORMAT,
 	DEFAULT_FORMAT,
 	LOG_CRITICAL,
@@ -151,7 +151,7 @@ __all__ = (
 # Replace opsi_legacy Logger
 def opsi_logger_factory(logFile: Any = None) -> logging.Logger:
 	warnings.warn(
-		"opsi_legacy.Logger.Logger is deprecated, use opsicommon.logging.logger instead.",
+		"opsi_legacy.Logger.Logger is deprecated, use opsi.logging.logger instead.",
 		DeprecationWarning,
 	)
 	if logFile is not None:
@@ -206,7 +206,7 @@ def setLogFormat(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setLogFormat is deprecated, use opsicommon.logging.set_format instead.",
+		"opsi_legacy.Logger.setLogFormat is deprecated, use opsi.logging.set_format instead.",
 		DeprecationWarning,
 	)
 
@@ -220,7 +220,7 @@ def setConsoleFormat(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setConsoleFormat is deprecated, use opsicommon.logging.set_format instead.",
+		"opsi_legacy.Logger.setConsoleFormat is deprecated, use opsi.logging.set_format instead.",
 		DeprecationWarning,
 	)
 
@@ -234,7 +234,7 @@ def setComponentName(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setComponentName is deprecated, use opsicommon.logging.context instead.",
+		"opsi_legacy.Logger.setComponentName is deprecated, use opsi.logging.context instead.",
 		DeprecationWarning,
 	)
 
@@ -255,7 +255,7 @@ def setSyslogFormat(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setSyslogFormat is deprecated, use opsicommon.logging.set_format instead.",
+		"opsi_legacy.Logger.setSyslogFormat is deprecated, use opsi.logging.set_format instead.",
 		DeprecationWarning,
 	)
 
@@ -269,7 +269,7 @@ def setFileFormat(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setFileFormat is deprecated, use opsicommon.logging.set_format instead.",
+		"opsi_legacy.Logger.setFileFormat is deprecated, use opsi.logging.set_format instead.",
 		DeprecationWarning,
 	)
 
@@ -283,7 +283,7 @@ def setUniventionFormat(
 	object: Any = None,
 ) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setUniventionFormat is deprecated, use opsicommon.logging.set_format instead.",
+		"opsi_legacy.Logger.setUniventionFormat is deprecated, use opsi.logging.set_format instead.",
 		DeprecationWarning,
 	)
 
@@ -318,7 +318,7 @@ logger.setUniventionClass = setUniventionClass
 
 def getMessageSubject() -> ObservableHandler:
 	warnings.warn(
-		"opsi_legacy.Logger.getMessageSubject is deprecated, use opsicommon.logging.ObservableHandler instead",
+		"opsi_legacy.Logger.getMessageSubject is deprecated, use opsi.logging.ObservableHandler instead",
 		DeprecationWarning,
 	)
 	return observable_handler
@@ -336,7 +336,7 @@ logger.setColor = setColor
 
 def setFileColor(color: Any) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setFileColor is deprecated, use opsicommon.logging.logging_config instead",
+		"opsi_legacy.Logger.setFileColor is deprecated, use opsi.logging.logging_config instead",
 		DeprecationWarning,
 	)
 	logger.setFileColor = setFileColor
@@ -344,7 +344,7 @@ def setFileColor(color: Any) -> None:
 
 def setConsoleColor(color: Any) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setConsoleColor is deprecated, use opsicommon.logging.logging_config instead",
+		"opsi_legacy.Logger.setConsoleColor is deprecated, use opsi.logging.logging_config instead",
 		DeprecationWarning,
 	)
 	logging_config(stderr_format=DEFAULT_COLORED_FORMAT if color else DEFAULT_FORMAT)
@@ -362,7 +362,7 @@ logger.setSyslogLevel = setSyslogLevel
 
 def setMessageSubjectLevel(level: int = LOG_NONE) -> None:
 	warnings.warn(
-		"opsi_legacy.Logger.setMessageSubjectLevel is deprecated, use opsicommon.logging.ObservableHandler instead",
+		"opsi_legacy.Logger.setMessageSubjectLevel is deprecated, use opsi.logging.ObservableHandler instead",
 		DeprecationWarning,
 	)
 	for handler in get_all_handlers(ObservableHandler):

@@ -31,7 +31,7 @@ The files should be encoded as utf-8.
 import codecs
 import os
 
-from opsicommon.logging import get_logger, secret_filter
+from opsi.logging import get_logger, secret_filter
 
 from opsi_legacy.Types import forceUnicode, forceUrl
 

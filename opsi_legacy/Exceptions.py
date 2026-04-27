@@ -5,11 +5,15 @@
 
 """
 OPSI Exceptions.
-Deprecated, use opsicommon.exceptions instead.
+Deprecated, use opsi.exception instead.
 """
 
-from opsicommon.exceptions import *  # noqa: F403
+from opsi.exception import *  # noqa: F403
 
 
 class CommandNotFoundException(RuntimeError):
+	pass
+
+
+class RepositoryError(OpsiError):
 	pass

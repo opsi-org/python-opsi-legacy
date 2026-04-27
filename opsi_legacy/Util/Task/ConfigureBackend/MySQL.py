@@ -17,7 +17,7 @@ try:
 except ImportError:
 	pass
 
-from opsicommon.logging import get_logger  # noqa: E402
+from opsi.logging import get_logger  # noqa: E402
 
 import opsi_legacy.Util.Task.ConfigureBackend as backendUtils  # noqa: E402
 from opsi_legacy.Backend.MySQL import MySQLBackend  # noqa: E402

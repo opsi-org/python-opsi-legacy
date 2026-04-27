@@ -27,7 +27,7 @@ from io import BytesIO, StringIO
 from operator import itemgetter
 
 import tomlkit
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 import opsi_legacy.System
 from opsi_legacy import __version__ as LIBRARY_VERSION

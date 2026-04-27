@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Generator, Union
 
-from opsicommon.logging import get_logger, log_context
+from opsi.logging import get_logger, log_context
 
 from opsi_legacy.Backend.Base import Backend, ExtendedBackend
 from opsi_legacy.Config import FILE_ADMIN_GROUP
@@ -28,9 +28,8 @@ from opsi_legacy.Exceptions import (
 )
 from opsi_legacy.Object import ProductOnDepot, ProductProperty, ProductPropertyState
 from opsi_legacy.System import getDiskSpaceUsage
-from opsi_legacy.Types import forceBool, forceDict, forceFilename, forceHostId
+from opsi_legacy.Types import forceBool, forceDict, forceFilename, forceHostId, forceUnicode, forceUnicodeLower
 from opsi_legacy.Types import forceProductId as forceProductIdFunc
-from opsi_legacy.Types import forceUnicode, forceUnicodeLower
 from opsi_legacy.Util import compareVersions, findFiles, getfqdn, md5sum, removeDirectory
 from opsi_legacy.Util.File import ZsyncFile
 from opsi_legacy.Util.Product import PackageContentFile, ProductPackageFile, ProductPackageSource

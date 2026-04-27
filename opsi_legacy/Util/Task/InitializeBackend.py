@@ -14,7 +14,7 @@ This holds backend-independent migrations.
 
 import os.path
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base.ConfigData import OPSI_PASSWD_FILE
 from opsi_legacy.Object import OpsiConfigserver

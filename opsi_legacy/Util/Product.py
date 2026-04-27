@@ -11,7 +11,7 @@ import os
 import re
 import shutil
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Config import FILE_ADMIN_GROUP as DEFAULT_CLIENT_DATA_GROUP
 from opsi_legacy.Config import OPSICONFD_USER as DEFAULT_CLIENT_DATA_USER

@@ -11,7 +11,7 @@ import codecs
 import os
 import re
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy import System
 from opsi_legacy.Object import AuditHardware, AuditHardwareOnHost

@@ -23,7 +23,7 @@ if os.name == "posix":
 
 from functools import lru_cache
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 import opsi_legacy.Util.File.Opsi
 from opsi_legacy import System

@@ -9,7 +9,7 @@ Updating backend data.
 This holds backend-independent migrations.
 """
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.System.Posix import isOpenSUSE, isSLES
 

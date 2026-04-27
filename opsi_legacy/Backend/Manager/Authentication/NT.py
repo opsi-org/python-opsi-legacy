@@ -12,7 +12,7 @@ from typing import Set
 # pyright: reportMissingImports=false
 import win32net
 import win32security
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Manager.Authentication import AuthenticationModule
 from opsi_legacy.Config import OPSI_ADMIN_GROUP

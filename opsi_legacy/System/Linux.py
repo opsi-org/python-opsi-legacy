@@ -17,8 +17,8 @@ from pathlib import Path
 
 import psutil
 from cryptography import x509
-from opsicommon.logging import get_logger
-from opsicommon.system.subprocess import get_subprocess_environment as opsicommon_get_subprocess_environment
+from opsi.logging import get_logger
+from opsi.process import get_subprocess_environment as opsipython_get_subprocess_environment
 
 from opsi_legacy.System import Posix
 from opsi_legacy.System.Posix import (
@@ -238,7 +238,7 @@ def grant_session_access(username: str, session_id: str):
 
 	sp_env = os.environ.copy()
 	sp_env.update(session_env)
-	sp_env = opsicommon_get_subprocess_environment(sp_env)
+	sp_env = opsipython_get_subprocess_environment(sp_env)
 	logger.debug("Using process env: %s", sp_env)
 
 	# Allow user to connect to X

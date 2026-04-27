@@ -9,7 +9,7 @@ Authentication helper.
 
 from typing import Set
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Config import OPSI_ADMIN_GROUP
 from opsi_legacy.Exceptions import BackendAuthenticationError

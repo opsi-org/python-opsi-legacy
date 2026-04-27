@@ -15,7 +15,7 @@ import re
 import socket
 import sys
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.System.Posix import getLocalFqdn, getNetworkConfiguration
 from opsi_legacy.Util import objectToBeautifiedText

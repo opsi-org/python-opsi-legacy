@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from opsicommon.exceptions import OpsiServiceConnectionError
-from opsicommon.testing.helpers import http_test_server
+from opsi.exception import OpsiServiceConnectionError
+from opsi.testing.helper import http_test_server
 
 from opsi_legacy.Backend.JSONRPC import JSONRPCBackend
 

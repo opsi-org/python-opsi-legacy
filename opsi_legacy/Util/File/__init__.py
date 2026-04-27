@@ -23,7 +23,7 @@ from io import StringIO
 from itertools import islice
 from pathlib import Path
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 from pyzsync import create_zsync_file
 
 from opsi_legacy.Exceptions import BackendBadValueError, BackendMissingDataError

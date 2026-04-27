@@ -17,7 +17,7 @@ from typing import Any, Dict, List
 
 import pexpect
 from cryptography import x509
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.System import Posix
 from opsi_legacy.System.Posix import (

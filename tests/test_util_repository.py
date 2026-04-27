@@ -15,7 +15,7 @@ import time
 from unittest import mock
 
 import pytest
-from opsicommon.testing.helpers import http_test_server
+from opsi.testing.helper import http_test_server
 
 from opsi_legacy.Exceptions import RepositoryError
 from opsi_legacy.Util import findFilesGenerator, md5sum

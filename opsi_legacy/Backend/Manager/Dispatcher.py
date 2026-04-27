@@ -13,11 +13,12 @@ import os
 import re
 import types
 from functools import lru_cache
-from typing import Any  # This is needed for dynamic loading  # noqa: F401
-from typing import Generator  # This is needed for dynamic loading  # noqa: F401
+from typing import (
+	Any,  # This is needed for dynamic loading  # noqa: F401
+	Generator,  # This is needed for dynamic loading  # noqa: F401
+)
 
-import opsicommon  # This is needed for dynamic loading  # noqa: F401
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base import Backend, ConfigDataBackend
 from opsi_legacy.Backend.Base.Extended import ExtendedConfigDataBackend, get_function_signature_and_args

@@ -13,7 +13,7 @@ import pwd
 from typing import Set
 
 import pam
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Manager.Authentication import AuthenticationModule
 from opsi_legacy.Exceptions import BackendAuthenticationError

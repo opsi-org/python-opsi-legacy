@@ -18,15 +18,15 @@ from contextlib import closing, contextmanager
 from shlex import quote
 from typing import Any, Generator
 
-from opsicommon.exceptions import BackendMissingDataError, BackendUnableToConnectError, BackendUnaccomplishableError
-from opsicommon.logging import get_logger, secret_filter
-from opsicommon.objects import ConfigState, OpsiClient, ProductOnClient, ProductPropertyState, serialize
-from opsicommon.system.network import get_fqdn
-from opsicommon.types import forceHostId, forceInt, forceUnicode, forceUnicodeList
+from opsi.exception import BackendMissingDataError, BackendUnableToConnectError, BackendUnaccomplishableError
+from opsi.logging import get_logger, secret_filter
+from opsi.opsi.service.model.object import ConfigState, OpsiClient, ProductOnClient, ProductPropertyState, serialize
+from opsi.system.network import get_fqdn
 
 from opsi_legacy.Backend.Base import ConfigDataBackend
 from opsi_legacy.Backend.Base.Backend import Backend
 from opsi_legacy.Backend.JSONRPC import JSONRPCBackend
+from opsi_legacy.Types import forceHostId, forceInt, forceUnicode, forceUnicodeList
 
 __all__ = ("ServerConnection", "OpsiPXEConfdBackend", "createUnixSocket")
 

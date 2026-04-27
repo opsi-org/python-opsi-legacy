@@ -40,16 +40,19 @@ except (ImportError, OSError):
 	from Cryptodome.PublicKey import RSA
 	from Cryptodome.Util.number import bytes_to_long
 
-from opsicommon.logging import get_logger
-from opsicommon.objects import deserialize as oc_deserialize
-from opsicommon.objects import from_json, serialize, to_json
-from opsicommon.types import _PACKAGE_VERSION_REGEX  # noqa: F401
-from opsicommon.types import _PRODUCT_VERSION_REGEX  # noqa: F401
-from opsicommon.types import forceBool, forceFilename, forceFqdn, forceUnicode
-from opsicommon.utils import monkeypatch_subprocess_for_frozen  # noqa: F401
-from opsicommon.utils import Singleton, compare_versions
-from opsicommon.utils import generate_opsi_host_key as generateOpsiHostKey
-from opsicommon.utils import timestamp as oc_timestamp
+from opsi.logging import get_logger
+from opsi.opsi.service.model.object import deserialize as oc_deserialize
+from opsi.opsi.service.model.object import from_json, serialize, to_json
+from opsi.opsi.service.model.object import generate_opsi_host_key as generateOpsiHostKey
+from opsi.opsi.service.model.object import opsi_timestamp as oc_timestamp
+from opsi.opsi.service.model.type._type import (
+	_PACKAGE_VERSION_REGEX,  # noqa: F401
+	_PRODUCT_VERSION_REGEX,  # noqa: F401
+)
+from opsi.util.pattern import Singleton
+from opsi.util.version import compare_versions
+
+from opsi_legacy.Types import forceBool, forceFilename, forceFqdn, forceUnicode
 
 __all__ = (
 	"BLOWFISH_IV",

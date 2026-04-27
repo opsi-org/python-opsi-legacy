@@ -20,7 +20,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 from typing import Any, Callable, Generator
 
-from opsicommon.logging import get_logger, secret_filter
+from opsi.logging import get_logger, secret_filter
 
 from opsi_legacy import System
 from opsi_legacy.Backend.Base import ConfigDataBackend

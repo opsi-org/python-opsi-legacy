@@ -18,8 +18,8 @@ import shutil
 import time
 from functools import lru_cache
 
-from opsicommon.license import OPSI_MODULE_IDS, OPSI_OBSOLETE_MODULE_IDS, get_default_opsi_license_pool
-from opsicommon.logging import get_logger, secret_filter
+from opsi.logging import get_logger, secret_filter
+from opsi.opsi.licensing import OPSI_MODULE_IDS, OPSI_OBSOLETE_MODULE_IDS, get_default_opsi_license_pool
 
 from opsi_legacy.Config import OPSI_ADMIN_GROUP
 from opsi_legacy.Exceptions import (

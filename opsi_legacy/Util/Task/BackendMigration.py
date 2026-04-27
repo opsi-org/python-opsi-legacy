@@ -10,7 +10,7 @@ Backend migration tasks
 import time
 from datetime import datetime
 
-from opsicommon.logging import logger
+from opsi.logging import logger
 
 from opsi_legacy.Backend.BackendManager import BackendManager
 from opsi_legacy.Backend.Replicator import BackendReplicator

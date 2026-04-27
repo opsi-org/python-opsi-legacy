@@ -17,7 +17,7 @@ import os
 import types
 from functools import lru_cache
 
-from opsicommon.logging import get_logger
+from opsi.logging import get_logger
 
 from opsi_legacy.Backend import (  # This is needed for dynamic extension loading  # noqa
 	deprecated,

@@ -4,7 +4,7 @@ version = "4.3.11.0"
 description = "The opsi python library"
 readme = "README.md"
 license = "AGPL-3.0-only"
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.13,<3.15"
 dependencies = [
 	"colorlog>=6.6",
 	"cryptography>=42.0",
@@ -17,7 +17,7 @@ dependencies = [
 	"psutil>=6.0",
 	"pyasn1>=0.6",
 	"pycryptodome>=3.10",
-	"python-opsi-common>=4.3,<4.4",
+	"python-opsi>=4.3.15.14,<4.4",
 	"python-pam>=2.0",
 	"pywin32>=303; platform_system == 'Windows'",
 	"pyzsync>=1.2",
@@ -48,6 +48,7 @@ dev = [
 	"pytest-cov>=5.0",
 	"pytest>=8.3",
 	"ruff>=0.7",
+	"ty>=0.0.32",
 ]
 
 [tool.uv]
