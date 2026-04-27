@@ -20,6 +20,7 @@ from typing import (
 	List,  # This is needed for dynamic loading  # noqa: F401
 )
 
+import opsi  # This is needed for dynamic loading  # noqa: F401
 from opsi.logging import get_logger
 
 from opsi_legacy.Backend.Base import ConfigDataBackend, ExtendedConfigDataBackend
