@@ -21,7 +21,7 @@ from sqlalchemy.event import listen  # noqa: E402
 from sqlalchemy.orm import scoped_session, sessionmaker  # noqa: E402
 
 from opsi_legacy.Backend.Base import ConfigDataBackend  # noqa: E402
-from opsi_legacy.Backend.SQL import (
+from opsi_legacy.Backend.SQL import (  # noqa: E402
 	SQL,  # noqa: E402
 	SQLBackend,  # noqa: E402
 	SQLBackendObjectModificationTracker,  # noqa: E402
