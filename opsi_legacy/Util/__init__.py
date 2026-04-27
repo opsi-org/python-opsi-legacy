@@ -23,6 +23,7 @@ import shutil
 import socket
 import struct
 import sys
+import time
 from collections import namedtuple
 from functools import lru_cache
 from hashlib import md5
@@ -176,7 +177,11 @@ def randomString(length, characters=_ACCEPTED_CHARACTERS):
 
 def timestamp(secs=0, dateOnly=False):
 	"""Returns a timestamp of the current system time format: YYYY-mm-dd[ HH:MM:SS]"""
-	return oc_timestamp(secs=secs, date_only=dateOnly)
+	if not secs:
+		secs = time.time()
+	if dateOnly:
+		return time.strftime("%Y-%m-%d", time.localtime(secs))
+	return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(secs))
 
 
 def fromJson(obj, objectType=None, preventObjectCreation=False):
