@@ -45,7 +45,6 @@ from opsi.logging import get_logger
 from opsi.opsi.service.model.object import deserialize as oc_deserialize
 from opsi.opsi.service.model.object import from_json, serialize, to_json
 from opsi.opsi.service.model.object import generate_opsi_host_key as generateOpsiHostKey
-from opsi.opsi.service.model.object import opsi_timestamp as oc_timestamp
 from opsi.opsi.service.model.type._type import (
 	_PACKAGE_VERSION_REGEX,  # noqa: F401
 	_PRODUCT_VERSION_REGEX,  # noqa: F401
