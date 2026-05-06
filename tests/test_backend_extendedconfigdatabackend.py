@@ -8,10 +8,12 @@ Testing extended backends features
 """
 
 import random
+from unittest import mock
 
 import pytest
+from opsi.opsi.service.client import ServiceClient
 
-from opsi_legacy.Backend.Backend import temporaryBackendOptions
+from opsi_legacy.Backend.Backend import ExtendedConfigDataBackend, temporaryBackendOptions
 from opsi_legacy.Exceptions import BackendError, BackendMissingDataError
 from opsi_legacy.Object import (
 	BoolProductProperty,
@@ -770,3 +772,53 @@ def testRenamingDepotServerFailsIfNewIdAlreadyExisting(extendedConfigDataBackend
 
 	with pytest.raises(BackendError):
 		backend.host_renameOpsiDepotserver(oldServer.id, newServer.id)
+
+
+def testCreateInterfaceMethodsFromServiceClient():
+	service_client = ServiceClient("https://localhost:4447/rpc")
+	service_client._connected = True
+	service_client._jsonrpc_interface = {
+		"host_getObjects": {
+			"name": "host_getObjects",
+			"params": ["*attributes", "**filter"],
+			"args": ["self", "attributes"],
+			"varargs": None,
+			"keywords": "filter",
+			"defaults": [None],
+			"deprecated": False,
+			"drop_version": None,
+			"alternative_method": None,
+			"doc": "Returns a list of objects that match the specified filter.<br />If a list of attributes is specified, only these are read from the backend.<br />The filter object consists of attribute-value pairs that are ANDed during the search.<br />If the value is a list, the individual entries are ORed during the search.<br />For strings, \\u0022*\\u0022 can be used as a wildcard.<br />",
+			"annotations": {"attributes": "\\u0027list[str] | None\\u0027"},
+		},
+		"host_insertObject": {
+			"name": "host_insertObject",
+			"params": ["host"],
+			"args": ["self", "host"],
+			"varargs": None,
+			"keywords": None,
+			"defaults": None,
+			"deprecated": False,
+			"drop_version": None,
+			"alternative_method": None,
+			"doc": "Creates a new object in the backend.<br />If the object already exists, it will be completely overwritten with the new values.<br />Attributes that are not passed (or passed with the value 'null') will be set to 'null' in the backend.<br />",
+			"annotations": {"host": "\\u0027dict | Host\\u0027"},
+		},
+	}
+	service_client.create_jsonrpc_methods()
+	assert getattr(service_client, "host_getObjects")
+	assert getattr(service_client, "host_insertObject")
+
+	backend = ExtendedConfigDataBackend(service_client)
+	with mock.patch.object(service_client, "jsonrpc") as mock_jsonrpc:
+		assert getattr(backend, "host_getObjects")
+		assert getattr(backend, "host_insertObject")
+		backend.host_getObjects(["id", "description"], type="OpsiClient")  # ty: ignore[unresolved-attribute]
+		backend.host_createObjects([OpsiClient(id="client.opsi.test")])
+		backend.host_insertObject(OpsiClient(id="client.opsi.test2"))  # ty: ignore[unresolved-attribute]
+
+	assert mock_jsonrpc.call_args_list == [
+		mock.call("host_getObjects", [["id", "description"], {"type": "OpsiClient"}]),
+		mock.call("host_insertObject", [OpsiClient(id="client.opsi.test")]),
+		mock.call("host_insertObject", [OpsiClient(id="client.opsi.test2")]),
+	]
