@@ -17,6 +17,7 @@ import stat
 import statistics
 import time
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
 
 import requests
@@ -938,6 +939,19 @@ class FileRepository(Repository):
 			progressSubject.setEnd(size)
 
 		try:
+			if Path(source).is_symlink():
+				source = os.readlink(source)
+				logger.debug("Source is a symlink, reading from '%s'", source)
+
+				if not Path(source).is_absolute():
+					source = os.path.join(os.path.dirname(self._preProcessPath(source)), source)
+					logger.debug("Symlink source is relative, resolved to '%s'", source)
+
+				if not Path(source).exists():
+					raise IOError(f"Symlink target '{source}' not found")
+
+				logger.debug("Reading from symlink target '%s'", source)
+
 			with open(source, "rb") as src:
 				if startByteNumber > -1:
 					src.seek(startByteNumber)
