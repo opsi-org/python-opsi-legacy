@@ -29,6 +29,9 @@ lint-and-test:
     export UV_PYTHON="3.13"
     export UV_PYTHON_PREFERENCE="only-managed"
     uv self update
+    uv python install
+    # PBS release 20260718 added hardening flags to sysconfig CFLAGS which GCC 6 on deb9 does not support
+    find "$(uv python dir)" -name "_sysconfigdata_*.py" -exec sed -i 's/-fstack-clash-protection//g' {} +
     uv sync --frozen
     uv run ruff check opsi_legacy tests
     uv add mysqlclient==2.1.1
@@ -70,6 +73,9 @@ uibpypi:
     - export UV_PYTHON_PREFERENCE="only-managed"
     - opsi-dev-cli self upgrade
     - uv self update
+    - uv python install
+    # PBS release 20260718 added hardening flags to sysconfig CFLAGS which GCC 6 on deb9 does not support
+    - find "$(uv python dir)" -name "_sysconfigdata_*.py" -exec sed -i 's/-fstack-clash-protection//g' {} +
     - uv sync --frozen
     - uv run opsi-dev-cli -l info pypi publish --url https://pypi.uib.gmbh --overwrite
   only:
