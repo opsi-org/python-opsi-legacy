@@ -360,16 +360,16 @@ def hardwarePredefinedInventory(config, opsiValues={}):
 			try:
 				if opsiName == "BIOS":
 					if item["Opsi"] == "UEFIBootActive":
-						value = inUEFIMode()
+						value = 1 if inUEFIMode() else 0
 					elif item["Opsi"] == "SecureBootActive":
-						value = getUEFISecureBootEnabled()
+						value = 1 if getUEFISecureBootEnabled() else 0
 					elif item["Opsi"] == "SecureBootWindowsCA2023":
-						value = False
+						value = 0
 						for cert in getUEFISecureBootCertificates():
 							rfc4514_string = cert.subject.rfc4514_string()
 							logger.debug("Checking UEFI Secure Boot certificate: %s", rfc4514_string)
 							if rfc4514_string.startswith("CN=Windows UEFI CA 2023,"):
-								value = True
+								value = 1
 								break
 
 				if value is None:
