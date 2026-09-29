@@ -505,12 +505,12 @@ name = "hivex"
 version = "1.3.24"
 source = { registry = "https://pypi.uib.gmbh/simple" }
 wheels = [
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp313-cp313-linux_aarch64.whl", hash = "sha256:da96d8493a91908bfb18a07d4939e214618cf6b971ba4d8395cb0dca0f1fe35b" },
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp313-cp313-linux_x86_64.whl", hash = "sha256:c12ddf27021c53093f8ce2d9b2496bfebaa384e50fcf9d490c31f9a759020608" },
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314-linux_aarch64.whl", hash = "sha256:84cb3a23dc4273e743222d5c5b58b031c642a2f5844c1a3273765f490fb05721" },
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314-linux_x86_64.whl", hash = "sha256:b9501450226393cccc134d1ffb145737918be121e44da55dde4efe8613c8d20c" },
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314t-linux_aarch64.whl", hash = "sha256:f416b4811e6b4f78054fae7410bf65777cc1b29f6f06ec500002d8597a44ac40" },
-    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314t-linux_x86_64.whl", hash = "sha256:71c7cfa4bdcd394592afe0d627849729496389b78067ad4a25175a8e7aa8ee2a" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp313-cp313-linux_aarch64.whl", hash = "sha256:46535ebfdb0be14c381e974279e5c37002ef0c5da3ccfb785c9a5e4cf69e4e11" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp313-cp313-linux_x86_64.whl", hash = "sha256:f20884cf883ebd97611be1eb063ba148bdc78237fd4afed16a931d47167da3b5" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314-linux_aarch64.whl", hash = "sha256:efc4503e5b53d97f63611b961775f28b38cbb0885ac4f8f6b2b79dae8f6b67f1" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314-linux_x86_64.whl", hash = "sha256:b5ed727d55d99ca51d441df2c7633c6f9b5b1f6a655d59815e34ccc031ecc203" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314t-linux_aarch64.whl", hash = "sha256:bcadd69a9e537da6033a6b84192c25743da448718a5e1546f2b1615a187f6ca5" },
+    { url = "https://pypi.uib.gmbh/packages/hivex-1.3.24-cp314-cp314t-linux_x86_64.whl", hash = "sha256:2bc0b68eb6ab456703f3052bc1e0aea85e86a532a49d55ae935164bf7e35b40e" },
 ]
 
 [[package]]
@@ -969,7 +969,7 @@ wheels = [
 
 [[package]]
 name = "python-opsi-legacy"
-version = "4.3.12.1"
+version = "4.3.13.3"
 source = { editable = "." }
 dependencies = [
     { name = "colorlog" },
