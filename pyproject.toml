@@ -63,7 +63,7 @@ line-length = 140
 indent-style = "tab"
 
 [tool.ruff.lint]
-ignore = ["F405"]
+ignore = ["F403", "F405"]
 
 [tool.setuptools.packages.find]
 include = ["opsi_legacy", "opsi_legacy.*"]
