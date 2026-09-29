@@ -7,7 +7,6 @@
 Configuration data holding backend.
 """
 
-import codecs
 import collections
 import copy as pycopy
 import glob
@@ -105,7 +104,7 @@ class ConfigDataBackend(Backend):
 
 	option_defaults = {
 		**Backend.option_defaults,
-		**{"additionalReferentialIntegrityChecks": True},
+		"additionalReferentialIntegrityChecks": True,
 	}
 
 	def __init__(self, **kwargs):
@@ -437,9 +436,9 @@ Setting this to `0` disables limiting.
 			log_file = os.path.join(LOG_DIR, logType, "opsiconfd.log")
 
 		try:
-			with codecs.open(log_file, "r", "utf-8", "replace") as log:
+			with open(log_file, "r", encoding="utf-8", errors="replace") as log:
 				data = log.read()
-		except IOError as ioerr:
+		except OSError as ioerr:
 			if ioerr.errno == 2:  # This is "No such file or directory"
 				return ""
 			raise
@@ -1176,7 +1175,7 @@ depot where the method is.
 				)
 				return []
 			try:
-				with codecs.open(self._auditHardwareConfigFile, "r", "utf8") as file:
+				with open(self._auditHardwareConfigFile, "r", encoding="utf-8") as file:
 					return json.loads(file.read())
 			except Exception as err:
 				logger.error(

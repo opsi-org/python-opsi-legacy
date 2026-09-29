@@ -28,7 +28,6 @@ to reference a file with the secret as follows::
 The files should be encoded as utf-8.
 """
 
-import codecs
 import os
 
 from opsi.logging import get_logger, secret_filter
@@ -74,7 +73,7 @@ def getOpsircPath():
 
 def _parseConfig(filename):
 	config = {}
-	with codecs.open(filename, mode="r", encoding="utf-8") as opsircfile:
+	with open(filename, mode="r", encoding="utf-8") as opsircfile:
 		for line in opsircfile:
 			line = line.strip()
 			if line.startswith(("#", ";")) or not line:
@@ -122,7 +121,7 @@ def _parseConfig(filename):
 
 
 def _readPasswordFile(filename):
-	with codecs.open(filename, mode="r", encoding="utf-8") as pwfile:
+	with open(filename, mode="r", encoding="utf-8") as pwfile:
 		password = pwfile.read()
 
 	return password.strip()

@@ -9,17 +9,13 @@ Basic backend.
 This holds the basic backend classes.
 """
 
-from __future__ import absolute_import
-
 import base64
-import codecs
 import inspect
 import os
 import re
 import time
 from hashlib import md5
 from textwrap import dedent
-from typing import Union
 
 # pyright: reportMissingImports=false
 try:
@@ -35,11 +31,11 @@ from opsi.logging import get_logger
 
 from opsi_legacy import __version__ as LIBRARY_VERSION
 from opsi_legacy.Exceptions import BackendError
-from opsi_legacy.Object import *  # this is needed for dynamic loading # noqa: F401,F403
+from opsi_legacy.Object import *  # this is needed for dynamic loading
 from opsi_legacy.Types import forceDict, forceFilename, forceList, forceUnicode, forceUnicodeList
 from opsi_legacy.Util import compareVersions, getPublicKey
 
-__all__ = ("describeInterface", "Backend")
+__all__ = ("Backend", "describeInterface")
 
 OPSI_MODULES_FILE = "/etc/opsi/modules"
 OPSI_LICENSE_PATH = "/etc/opsi/licenses"
@@ -119,7 +115,7 @@ class BackendOptions:
 	A class used to combine option defaults and changed options
 	"""
 
-	def __init__(self, option_defaults: dict, option_store: Union[dict, callable] = None):
+	def __init__(self, option_defaults: dict, option_store: dict | callable = None):
 		"""
 		:param option_defaults: The default option items as dict
 		:param options_store: A dict or a callable to retrieve a dict to store changed options
@@ -359,7 +355,7 @@ This defaults to ``self``.
 
 		if os.path.exists(self._opsiModulesFile):
 			try:
-				with codecs.open(self._opsiModulesFile, "r", "utf-8") as modulesFile:
+				with open(self._opsiModulesFile, "r", encoding="utf-8") as modulesFile:
 					for line in modulesFile:
 						line = line.strip()
 						if "=" not in line:

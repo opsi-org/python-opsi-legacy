@@ -7,7 +7,6 @@
 Testing functionality of opsi_legacy.Util.
 """
 
-import codecs
 import os
 import os.path
 import random
@@ -102,9 +101,8 @@ def testLibrsyncPatchFileDoesNotAlterIfUnneeded(librsyncTestfile, tempDir):
 	librsyncPatchFile(oldfile, deltaFile, newfile)
 	assert os.path.exists(newfile)
 
-	with open(newfile, "rb") as newF:
-		with open(baseFile, "rb") as baseF:
-			assert baseF.readlines() == newF.readlines()
+	with open(newfile, "rb") as newF, open(baseFile, "rb") as baseF:
+		assert baseF.readlines() == newF.readlines()
 
 
 @pytest.mark.skipif(importFailed, reason="Import failed.")
@@ -117,8 +115,8 @@ def testLibrsyncPatchFileCreatesNewFileBasedOnDelta(librsyncTestfile, tempDir):
 
 	additionalText = "Und diese Zeile hier macht den Unterschied."
 
-	with codecs.open(newFile, "a", "utf-8") as nf:
-		nf.write("\n\n{0}\n".format(additionalText))
+	with open(newFile, "a", encoding="utf-8") as nf:
+		nf.write(f"\n\n{additionalText}\n")
 
 	deltaFileForNewFile = os.path.join(tempDir, "newDelta.delta")
 	librsyncDeltaFile(newFile, signature, deltaFileForNewFile)
@@ -153,11 +151,10 @@ def testLibrsyncPatchFileCreatesNewFileBasedOnDelta(librsyncTestfile, tempDir):
 
 	fileBasedOnDelta = os.path.join(tempDir, "newnew.txt")
 	librsyncPatchFile(baseFile, deltaFileForNewFile, fileBasedOnDelta)
-	with open(newFile, "r") as newF:
-		with open(fileBasedOnDelta, "r") as newF2:
-			assert newF.readlines() == newF2.readlines()
+	with open(newFile, "r") as newF, open(fileBasedOnDelta, "r") as newF2:
+		assert newF.readlines() == newF2.readlines()
 
-	with codecs.open(fileBasedOnDelta, "r", "utf-8") as newF2:
+	with open(fileBasedOnDelta, "r", encoding="utf-8") as newF2:
 		assert any(additionalText in line for line in newF2)
 
 

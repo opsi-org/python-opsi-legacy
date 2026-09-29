@@ -9,11 +9,9 @@ Configuration data for the backend.
 .. versionadded:: 4.0.6.1
 """
 
-import codecs
 import os
 import re
 from collections import namedtuple
-from typing import List
 
 from opsi.logging import get_logger
 
@@ -342,7 +340,7 @@ def readWindowsDomainFromSambaConfig(pathToConfig: str = None) -> str:
 	winDomain = ""
 	if pathToConfig and os.path.exists(pathToConfig):
 		pattern = re.compile(r"^\s*workgroup\s*=\s*(\S+)\s*$")
-		with codecs.open(pathToConfig, "r", "utf-8") as sambaConfig:
+		with open(pathToConfig, "r", encoding="utf-8") as sambaConfig:
 			for line in sambaConfig:
 				match = pattern.search(line)
 				if match:
@@ -403,7 +401,7 @@ def createWANconfigs(backend: bm.BackendManager) -> None:
 	_createBooleanConfigsIfMissing(backend, configs)
 
 
-def _createBooleanConfigsIfMissing(backend: bm.BackendManager, configs: List[Config]) -> None:
+def _createBooleanConfigsIfMissing(backend: bm.BackendManager, configs: list[Config]) -> None:
 	availableConfigs = set(backend.config_getIdents())
 	for config in configs:
 		if config.id not in availableConfigs:

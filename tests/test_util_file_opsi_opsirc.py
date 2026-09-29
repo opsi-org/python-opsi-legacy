@@ -7,7 +7,6 @@
 Testing .opsirc handling.
 """
 
-import codecs
 import os
 
 import pytest
@@ -66,13 +65,13 @@ def testReadingPasswordFromCredentialsfile(filename):
 	password = randomString(32)
 
 	pwdfile = filename + ".secret"
-	with codecs.open(pwdfile, "w", "utf-8") as f:
+	with open(pwdfile, "w", encoding="utf-8") as f:
 		f.write(password + "\n")
 
 	with open(filename, "w") as f:
 		f.write("address = https://lullaby.machine.dream:12345/c3\n")
 		f.write("username = hanz\n")
-		f.write("password file = {}\n".format(pwdfile))
+		f.write(f"password file = {pwdfile}\n")
 
 	config = readOpsirc(filename)
 

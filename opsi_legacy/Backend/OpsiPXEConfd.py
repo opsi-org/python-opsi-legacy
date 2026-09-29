@@ -7,16 +7,16 @@
 OpsiPXEConfd-Backend
 """
 
-import codecs
 import json
 import os
 import socket
 import tempfile
 import threading
 import time
+from collections.abc import Generator
 from contextlib import closing, contextmanager
 from shlex import quote
-from typing import Any, Generator
+from typing import Any
 
 from opsi.exception import BackendMissingDataError, BackendUnableToConnectError, BackendUnaccomplishableError
 from opsi.logging import get_logger, secret_filter
@@ -28,7 +28,7 @@ from opsi_legacy.Backend.Base.Backend import Backend
 from opsi_legacy.Backend.JSONRPC import JSONRPCBackend
 from opsi_legacy.Types import forceHostId, forceInt, forceUnicode, forceUnicodeList
 
-__all__ = ("ServerConnection", "OpsiPXEConfdBackend", "createUnixSocket")
+__all__ = ("OpsiPXEConfdBackend", "ServerConnection", "createUnixSocket")
 
 ERROR_MARKER = "(ERROR)"
 
@@ -59,7 +59,7 @@ class ServerConnection:
 
 
 @contextmanager
-def createUnixSocket(port: int, timeout: float = 5.0) -> Generator[socket.socket, None, None]:
+def createUnixSocket(port: int, timeout: float = 5.0) -> Generator[socket.socket]:
 	logger.notice("Creating unix socket %s", port)
 	_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 	_socket.settimeout(timeout)
@@ -416,11 +416,11 @@ class OpsiPXEConfdBackend(ConfigDataBackend):
 		destinationFile = getClientCacheFilePath(clientId)
 		logger.trace("Writing data to %s: %s", destinationFile, data)
 		try:
-			with codecs.open(destinationFile, "w", "utf-8") as outfile:
+			with open(destinationFile, "w", encoding="utf-8") as outfile:
 				json.dump(serialize(data), outfile)
 			os.chmod(destinationFile, 0o640)
 			return destinationFile
-		except (OSError, IOError) as dataFileError:
+		except OSError as dataFileError:
 			logger.debug(dataFileError, exc_info=True)
 			logger.debug("Writing cache file %s failed: %s", destinationFile, dataFileError)
 		return None

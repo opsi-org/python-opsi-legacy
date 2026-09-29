@@ -8,7 +8,6 @@ Utilites to handle files specific to opsi.
 """
 
 import bz2
-import codecs
 import collections
 import datetime
 import gzip
@@ -609,9 +608,7 @@ class PackageControlFile(TextFile):
 
 			if sectionType == "package":
 				option = key
-				if key == "version":
-					value = forceUnicodeLower(value)
-				elif key == "depends":
+				if key == "version" or key == "depends":
 					value = forceUnicodeLower(value)
 				else:  # Unsupported key
 					continue
@@ -622,11 +619,7 @@ class PackageControlFile(TextFile):
 					value = forceProductId(value)
 				elif key == "type":
 					value = forceProductType(value)
-				elif key == "name":
-					value = forceUnicode(value)
-				elif key == "description":
-					value = forceUnicode(value)
-				elif key == "advice":
+				elif key == "name" or key == "description" or key == "advice":
 					value = forceUnicode(value)
 				elif key == "version":
 					value = forceProductVersion(value)
@@ -638,21 +631,16 @@ class PackageControlFile(TextFile):
 					value = forceBool(value)
 				elif key == "productclasses":
 					value = forceUnicodeLower(value)
-				elif key == "pxeconfigtemplate":
-					value = forceFilename(value)
-				elif key == "setupscript":
-					value = forceFilename(value)
-				elif key == "uninstallscript":
-					value = forceFilename(value)
-				elif key == "updatescript":
-					value = forceFilename(value)
-				elif key == "alwaysscript":
-					value = forceFilename(value)
-				elif key == "oncescript":
-					value = forceFilename(value)
-				elif key == "customscript":
-					value = forceFilename(value)
-				elif key == "userloginscript":
+				elif (
+					key == "pxeconfigtemplate"
+					or key == "setupscript"
+					or key == "uninstallscript"
+					or key == "updatescript"
+					or key == "alwaysscript"
+					or key == "oncescript"
+					or key == "customscript"
+					or key == "userloginscript"
+				):
 					value = forceFilename(value)
 
 			elif sectionType == "windows" and key in ("softwareids",):
@@ -684,15 +672,9 @@ class PackageControlFile(TextFile):
 					value = forceProductPropertyType(value)
 				elif key == "name":
 					value = forceUnicodeLower(value)
-				elif key == "default":
+				elif key == "default" or key == "values" or key == "description":
 					value = forceUnicode(value)
-				elif key == "values":
-					value = forceUnicode(value)
-				elif key == "description":
-					value = forceUnicode(value)
-				elif key == "editable":
-					value = forceBool(value)
-				elif key == "multivalue":
+				elif key == "editable" or key == "multivalue":
 					value = forceBool(value)
 
 			else:
@@ -860,7 +842,7 @@ class PackageControlFile(TextFile):
 		if changelog is None:
 			path = os.path.join(os.path.dirname(self._filename), "changelog.txt")
 			if os.path.exists(path):
-				with codecs.open(path, "r", encoding="utf-8") as file:
+				with open(path, "r", encoding="utf-8") as file:
 					changelog = file.read()
 			else:
 				changelog = ""
@@ -1241,7 +1223,7 @@ class PackageControlFile(TextFile):
 		changelog = self._product.getChangelog().strip()
 		if changelog is not None:
 			path = os.path.dirname(self._filename)
-			with codecs.open(os.path.join(path, "changelog.txt"), "w", encoding="utf-8") as file:
+			with open(os.path.join(path, "changelog.txt"), "w", encoding="utf-8") as file:
 				file.write(changelog)
 
 		old_path = self._filename
@@ -1303,9 +1285,7 @@ class OpsiConfFile(IniFile):
 				value = match.group(2).strip()
 
 			if sectionType == "groups":
-				if key == "admingroup":
-					value = forceUnicodeLower(value)
-				elif key == "fileadmingroup":
+				if key == "admingroup" or key == "fileadmingroup":
 					value = forceUnicodeLower(value)
 				elif value:
 					value = forceUnicodeList([part.strip().lower() for part in value.split(",")])
@@ -1995,5 +1975,5 @@ def createMySQLDefaultsFile(program, username, password):
 
 	# password enclosed in double quotes (not allowed in MySQL passwords) to avoid special character interpretation
 	with tempfile.NamedTemporaryFile(mode="wt", delete=False) as cFile:
-		cFile.write((f'[{program}]\nuser = "{username}"\npassword = "{password}"\n'))
+		cFile.write(f'[{program}]\nuser = "{username}"\npassword = "{password}"\n')
 		return cFile.name

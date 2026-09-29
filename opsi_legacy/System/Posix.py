@@ -9,7 +9,6 @@ opsi python library - Posix
 Functions and classes for the use with a POSIX operating system.
 """
 
-import codecs
 import copy as pycopy
 import datetime
 import fcntl
@@ -27,14 +26,15 @@ import sys
 import threading
 import time
 import warnings
+from collections.abc import Callable
 from functools import lru_cache
 from itertools import islice
 from signal import SIGKILL
-from typing import Any, Callable
+from typing import Any
 
 import psutil
 from opsi.logging import LOG_NONE, get_logger, logging_config
-from opsi.opsi.service.model.object import *  # noqa: F403
+from opsi.opsi.service.model.object import *
 from opsi.process import get_subprocess_environment as opsipython_get_subprocess_environment
 
 from opsi_legacy.Exceptions import CommandNotFoundException
@@ -72,12 +72,10 @@ __all__ = (
 	"configureInterface",
 	"daemonize",
 	"execute",
-	"get_subprocess_environment",
 	"getActiveConsoleSessionId",
 	"getActiveSessionId",
 	"getActiveSessionIds",
 	"getActiveSessionInformation",
-	"getSessionInformation",
 	"getBlockDeviceBusType",
 	"getBlockDeviceContollerInfo",
 	"getDHCPDRestartCommand",
@@ -94,7 +92,9 @@ __all__ = (
 	"getNetworkInterfaces",
 	"getSambaServiceName",
 	"getServiceNames",
+	"getSessionInformation",
 	"getSystemProxySetting",
+	"get_subprocess_environment",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
@@ -424,12 +424,12 @@ def getKernelParams():
 	cmdline = ""
 	try:
 		logger.debug("Reading /proc/cmdline")
-		with codecs.open("/proc/cmdline", "r", "utf-8") as file:
+		with open("/proc/cmdline", "r", encoding="utf-8") as file:
 			cmdline = file.readline()
 
 		cmdline = cmdline.strip()
-	except IOError as err:
-		raise IOError(f"Error reading '/proc/cmdline': {err}") from err
+	except OSError as err:
+		raise OSError(f"Error reading '/proc/cmdline': {err}") from err
 
 	params = {}
 	for option in cmdline.split():
@@ -1041,7 +1041,7 @@ output will be returned.
 					chunk = proc.stdout.read()
 					if chunk:
 						data += chunk
-				except IOError as err:
+				except OSError as err:
 					if err.errno != 11:
 						raise
 
@@ -1052,7 +1052,7 @@ output will be returned.
 							if exitOnStderr:
 								raise RuntimeError(f"Command '{cmd}' failed: {chunk}")
 							data += chunk
-					except IOError as err:
+					except OSError as err:
 						if err.errno != 11:
 							raise
 
@@ -1070,15 +1070,18 @@ output will be returned.
 				logger.debug(">>> %s", line)
 				result.append(line)
 
-	except (os.error, IOError) as err:
+	except OSError as err:
 		# Some error occurred during execution
 		raise RuntimeError(f"Command '{cmd}' failed:\n{err}") from err
 
 	logger.debug("Exit code: %s", exitCode)
 	if exitCode:
-		if isinstance(ignoreExitCode, bool) and ignoreExitCode:
-			pass
-		elif isinstance(ignoreExitCode, (list, tuple, set)) and exitCode in ignoreExitCode:
+		if (
+			isinstance(ignoreExitCode, bool)
+			and ignoreExitCode
+			or isinstance(ignoreExitCode, (list, tuple, set))
+			and exitCode in ignoreExitCode
+		):
 			pass
 		else:
 			result = "\n".join(result)
@@ -1190,8 +1193,8 @@ def getDiskSpaceUsage(path):
 
 def is_mounted(devOrMountpoint):
 	if platform.system() == "Linux":
-		with codecs.open("/proc/mounts", "r", "utf-8") as file:
-			for line in file.readlines():
+		with open("/proc/mounts", "r", encoding="utf-8") as file:
+			for line in file:
 				(dev, mountpoint) = line.split(" ", 2)[:2]
 				if devOrMountpoint in (dev, mountpoint):
 					return True
@@ -1443,7 +1446,7 @@ class Harddisk:
 					logger.info("Special device (cciss) detected")
 					devicename = "!".join(deviceparts[1:])
 					if not os.path.exists(f"/sys/block/{devicename}/queue/rotational"):
-						raise IOError(f"rotational file '/sys/block/{devicename}/queue/rotational' not found!")
+						raise OSError(f"rotational file '/sys/block/{devicename}/queue/rotational' not found!")
 				else:
 					logger.error("Unknown device, fallback to default: rotational")
 					return
@@ -2190,7 +2193,7 @@ class Harddisk:
 			)
 
 			dat = [0, 0, 0, 0]
-			dat[0] = int((sector & 0x000000FF))
+			dat[0] = int(sector & 0x000000FF)
 			dat[1] = int((sector & 0x0000FF00) >> 8)
 			dat[2] = int((sector & 0x00FF0000) >> 16)
 			dat[3] = int((sector & 0xFFFFFFFF) >> 24)
@@ -2321,17 +2324,17 @@ class Harddisk:
 				match = re.search(r"^(\d+)\D", start)
 				start = int(match.group(1))
 				if not self.blockAlignment:
-					start = int(round(((float(start) * self.bytesPerSector) / self.bytesPerCylinder)))
+					start = int(round((float(start) * self.bytesPerSector) / self.bytesPerCylinder))
 			elif start.lower().endswith("c"):
 				# Cylinder!
 				start = int(start)
 				if self.blockAlignment:
-					start = int(round(((float(start) * self.bytesPerCylinder) / self.bytesPerSector)))
+					start = int(round((float(start) * self.bytesPerCylinder) / self.bytesPerSector))
 			else:
 				# Cylinder!
 				start = int(start)
 				if self.blockAlignment:
-					start = int(round(((float(start) * self.bytesPerCylinder) / self.bytesPerSector)))
+					start = int(round((float(start) * self.bytesPerCylinder) / self.bytesPerSector))
 
 			if end.endswith(("m", "mb")):
 				match = re.search(r"^(\d+)\D", end)
@@ -2355,17 +2358,17 @@ class Harddisk:
 				match = re.search(r"^(\d+)\D", end)
 				end = int(match.group(1))
 				if not self.blockAlignment:
-					end = int(round(((float(end) * self.bytesPerSector) / self.bytesPerCylinder)))
+					end = int(round((float(end) * self.bytesPerSector) / self.bytesPerCylinder))
 			elif end.lower().endswith("c"):
 				# Cylinder!
 				end = int(end)
 				if self.blockAlignment:
-					end = int(round(((float(end) * self.bytesPerCylinder) / self.bytesPerSector)))
+					end = int(round((float(end) * self.bytesPerCylinder) / self.bytesPerSector))
 			else:
 				# Cylinder!
 				end = int(end)
 				if self.blockAlignment:
-					end = int(round(((float(end) * self.bytesPerCylinder) / self.bytesPerSector)))
+					end = int(round((float(end) * self.bytesPerCylinder) / self.bytesPerSector))
 
 			if unit == "cyl":
 				# Lowest possible cylinder is 0
@@ -3642,8 +3645,7 @@ def hardwareInventory(config, progressSubject=None):
 									if busInfo.startswith("pci@"):
 										logger.debug("Getting pci bus info for '%s'", busInfo)
 										pciBusId = busInfo.split("@")[1]
-										if pciBusId.startswith("0000:"):
-											pciBusId = pciBusId[5:]
+										pciBusId = pciBusId.removeprefix("0000:")
 										pciInfo = lspci.get(pciBusId, {})
 										for key, value in pciInfo.items():
 											elem = dom.createElement(key)
@@ -3712,9 +3714,11 @@ def hardwareInventory(config, progressSubject=None):
 								for element in elements:
 									for child in element.childNodes:
 										try:
-											if child.nodeName == part:
-												nextElements.append(child)
-											elif child.hasAttributes() and child.getAttribute("id").split(":")[0] == part:
+											if (
+												child.nodeName == part
+												or child.hasAttributes()
+												and child.getAttribute("id").split(":")[0] == part
+											):
 												nextElements.append(child)
 										except Exception:
 											pass
@@ -4246,7 +4250,7 @@ until the execution of the process is terminated.
 			data = process.stdout.read()
 			if data:
 				out += data
-		except IOError:
+		except OSError:
 			pass
 	out = out.decode("utf-8", "replace")
 	log = logger.notice

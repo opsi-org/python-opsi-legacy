@@ -7,7 +7,6 @@
 Linux specific system functions
 """
 
-import codecs
 import os
 import re
 import socket
@@ -92,12 +91,10 @@ __all__ = (
 	"configureInterface",
 	"daemonize",
 	"execute",
-	"get_subprocess_environment",
 	"getActiveConsoleSessionId",
 	"getActiveSessionId",
 	"getActiveSessionIds",
 	"getActiveSessionInformation",
-	"getSessionInformation",
 	"getBlockDeviceBusType",
 	"getBlockDeviceContollerInfo",
 	"getDHCPDRestartCommand",
@@ -114,9 +111,11 @@ __all__ = (
 	"getNetworkInterfaces",
 	"getSambaServiceName",
 	"getServiceNames",
+	"getSessionInformation",
 	"getSystemProxySetting",
 	"getUEFISecureBootCertificates",
 	"getUEFISecureBootEnabled",
+	"get_subprocess_environment",
 	"halt",
 	"hardwareExtendedInventory",
 	"hardwareInventory",
@@ -260,8 +259,8 @@ Posix.grant_session_access = grant_session_access
 
 
 def is_mounted(devOrMountpoint):
-	with codecs.open("/proc/mounts", "r", "utf-8") as file:
-		for line in file.readlines():
+	with open("/proc/mounts", "r", encoding="utf-8") as file:
+		for line in file:
 			(dev, mountpoint) = line.split(" ", 2)[:2]
 			if devOrMountpoint in (dev, mountpoint):
 				return True
@@ -274,7 +273,7 @@ Posix.is_mounted = is_mounted
 def rclone_mount(dev: str, mountpoint: str, options: dict[str, str]) -> None:
 	password = execute(
 		f"{which('opsi-rclone')} obscure -",
-		stdin_data=options["password"].encode("utf-8") + "\n".encode("utf-8"),
+		stdin_data=options["password"].encode("utf-8") + b"\n",
 		shell=True,
 	)
 	with tempfile.TemporaryDirectory() as config_dir:
@@ -380,12 +379,12 @@ def mount(dev, mountpoint, **options):
 						tmp_files.append(tmp_cert_file.name)
 						os.chmod(tmp_cert_file.name, 0o644)
 						conf_file.write(f"trust_ca_cert {tmp_cert_file.name}\n")
-						for line in infile.readlines():
+						for line in infile:
 							tmp_cert_file.write(line)
 
 		# Username, Password, Accept certificate for this session? [y,N]
 		accept_cert = "n" if options.get("verify_server_cert") else "y"
-		stdin_data = f"{options['username']}\n{options['password']}\n{accept_cert}\n".encode("utf-8")
+		stdin_data = f"{options['username']}\n{options['password']}\n{accept_cert}\n".encode()
 
 		del options["username"]
 		del options["password"]

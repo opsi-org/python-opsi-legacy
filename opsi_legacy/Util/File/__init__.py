@@ -11,7 +11,6 @@ parsing files for information.
 """
 
 import builtins
-import codecs
 import functools
 import locale
 import os
@@ -205,7 +204,7 @@ class LockableFile(File):
 				mode = "rb+"
 				truncate = True
 		if encoding:
-			self._fileHandle = codecs.open(self._filename, mode, encoding, errors)
+			self._fileHandle = open(self._filename, mode, encoding=encoding, errors=errors)
 		else:
 			self._fileHandle = builtins.open(self._filename, mode)
 		self._lockFile(mode)
@@ -244,7 +243,7 @@ class LockableFile(File):
 						flags = win32con.LOCKFILE_FAIL_IMMEDIATELY
 					hfile = win32file._get_osfhandle(self._fileHandle.fileno())
 					win32file.LockFileEx(hfile, flags, 0, 0x7FFF0000, pywintypes.OVERLAPPED())
-			except (IOError, pywintypeserror):
+			except (OSError, pywintypeserror):
 				# increase timeout counter, sleep 100 millis
 				timeout += 100
 				time.sleep(0.1)
@@ -255,7 +254,7 @@ class LockableFile(File):
 
 		File.close(self)
 		# File lock failed => raise IOError
-		raise IOError(f"Failed to lock file '{self._filename}' after {self._lockFailTimeout} millis")
+		raise OSError(f"Failed to lock file '{self._filename}' after {self._lockFailTimeout} millis")
 
 	def _unlockFile(self):
 		if not self._fileHandle:
@@ -278,7 +277,7 @@ class TextFile(LockableFile):
 
 	def write(self, str):
 		if not self._fileHandle:
-			raise IOError("File not opened")
+			raise OSError("File not opened")
 		str = forceUnicode(str)
 		self._fileHandle.write(str)
 
@@ -306,7 +305,7 @@ class TextFile(LockableFile):
 
 	def writelines(self, sequence=[]):
 		if not self._fileHandle:
-			raise IOError("File not opened")
+			raise OSError("File not opened")
 		if sequence:
 			self._lines = forceUnicodeList(sequence)
 		for index, current in enumerate(self._lines):
@@ -1308,11 +1307,9 @@ class TxtSetupOemFile(ConfigFile):
 				if desc.startswith('"') and desc.endswith('"'):
 					desc = desc[1:-1]
 				tf = tf.strip()
-				if tf.startswith("\\"):
-					tf = tf[1:]
+				tf = tf.removeprefix("\\")
 				dd = dd.strip()
-				if dd.startswith("\\"):
-					dd = dd[1:]
+				dd = dd.removeprefix("\\")
 
 				self._driverDisks.append(
 					{
@@ -1457,7 +1454,7 @@ class TxtSetupOemFile(ConfigFile):
 				lines.append(f"value = {conf['keyName']}, {conf['valueName']}, {conf['valueType']}, {conf['value']}\r\n")
 
 		self._lines = lines
-		self._fileHandle = codecs.open(self._filename, "w", "cp1250")
+		self._fileHandle = open(self._filename, "w", encoding="cp1250")
 		self.writelines()
 		self.close()
 
@@ -1496,7 +1493,7 @@ class ZsyncFile(LockableFile):
 					continue
 				headerData = f"{key}: {value}\n"
 				file.write(headerData.encode())
-			file.write("\n".encode())
+			file.write(b"\n")
 			file.write(self._data)
 
 

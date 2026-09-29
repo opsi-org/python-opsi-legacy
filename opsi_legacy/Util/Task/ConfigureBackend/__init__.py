@@ -9,7 +9,6 @@ Functionality to automatically configure an OPSI backend.
 .. versionadded:: 4.0.4.6
 """
 
-import codecs
 import os
 import re
 import socket
@@ -76,13 +75,13 @@ on to. Defaults to logger.notice
 	notificationFunction(f"Updating backend config '{backendConfigFile}'")
 
 	lines = []
-	with codecs.open(backendConfigFile, "r", "utf-8") as backendFile:
-		for line in backendFile.readlines():
+	with open(backendConfigFile, "r", encoding="utf-8") as backendFile:
+		for line in backendFile:
 			if re.search(r"^\s*config\s*\=", line):
 				break
 			lines.append(line)
 
-	with codecs.open(backendConfigFile, "w", "utf-8") as backendFile:
+	with open(backendConfigFile, "w", encoding="utf-8") as backendFile:
 		backendFile.writelines(lines)
 		backendConfigData = correctBooleans(objectToBeautifiedText(newConfig))
 		backendFile.write(f"config = {backendConfigData}\n")

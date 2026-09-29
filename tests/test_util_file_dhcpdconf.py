@@ -7,7 +7,6 @@
 Testing the work with the DHCPD configuration files.
 """
 
-import codecs
 import os
 
 import pytest
@@ -68,7 +67,7 @@ host out-of-subnet {
 
 	dhcpdConfFile = os.path.join(tempDir, "dhcpd.conf")
 
-	with codecs.open(dhcpdConfFile, "w", "utf-8") as f:
+	with open(dhcpdConfFile, "w", encoding="utf-8") as f:
 		f.write(testData)
 
 	yield DHCPDConfFile(dhcpdConfFile)

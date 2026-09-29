@@ -13,7 +13,6 @@ or to JSON, working with librsync and more.
 
 import base64
 import binascii
-import codecs
 import ipaddress
 import json
 import os
@@ -58,9 +57,10 @@ __all__ = (
 	"BLOWFISH_IV",
 	"RANDOM_DEVICE",
 	"UNIT_REGEX",
-	"CryptoError",
 	"BlowfishError",
+	"CryptoError",
 	"PickleString",
+	"Singleton",
 	"blowfishDecrypt",
 	"blowfishEncrypt",
 	"chunk",
@@ -71,6 +71,7 @@ __all__ = (
 	"formatFileSize",
 	"fromJson",
 	"generateOpsiHostKey",
+	"getPublicKey",
 	"getfqdn",
 	"ipAddressInNetwork",
 	"isRegularExpressionPattern",
@@ -85,8 +86,6 @@ __all__ = (
 	"serialize",
 	"timestamp",
 	"toJson",
-	"getPublicKey",
-	"Singleton",
 )
 
 BLOWFISH_IV = b"OPSI1234"
@@ -441,7 +440,7 @@ def _prepareBlowfishKey(key: str) -> bytes:
 	"Transform the key into hex."
 	try:
 		key = forceUnicode(key).encode()
-		return codecs.decode(key, "hex")
+		return bytes.fromhex(key)
 	except (binascii.Error, Exception) as err:
 		raise BlowfishError(f"Unable to prepare key: {err}") from err
 

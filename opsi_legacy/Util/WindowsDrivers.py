@@ -7,7 +7,6 @@
 Functions to work with Windows drivers.
 """
 
-import codecs
 import os
 import re
 
@@ -165,8 +164,7 @@ def integrateWindowsDrivers(
 		if not os.path.isdir(dirname):
 			continue
 		if re.search(r"^\d+$", filename):
-			if forceInt(filename) >= driverNumber:
-				driverNumber = forceInt(filename)
+			driverNumber = max(forceInt(filename), driverNumber)
 
 	integratedDrivers = {}
 	infFiles = list(
@@ -426,8 +424,8 @@ def integrateWindowsTextmodeDrivers(driverDirectory, destination, devices, sifFi
 			massStorageDriverLines = []
 			oemBootFileLines = []
 			section = ""
-			with codecs.open(sifFile, "r", "cp1250") as sif:
-				for line in sif.readlines():
+			with open(sifFile, "r", encoding="cp1250") as sif:
+				for line in sif:
 					if line.strip():
 						logger.trace("Current sif file content: %s", line.rstrip())
 					if line.strip().startswith("["):
@@ -460,7 +458,7 @@ def integrateWindowsTextmodeDrivers(driverDirectory, destination, devices, sifFi
 			logger.debug(oemBootFileLines)
 			lines.extend(oemBootFileLines)
 
-			with codecs.open(sifFile, "w", "cp1250") as sif:
+			with open(sifFile, "w", encoding="cp1250") as sif:
 				sif.writelines(lines)
 
 
