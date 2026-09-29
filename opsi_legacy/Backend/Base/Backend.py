@@ -14,6 +14,7 @@ import inspect
 import os
 import re
 import time
+from collections.abc import Callable
 from hashlib import md5
 from textwrap import dedent
 
@@ -115,7 +116,7 @@ class BackendOptions:
 	A class used to combine option defaults and changed options
 	"""
 
-	def __init__(self, option_defaults: dict, option_store: dict | callable = None):
+	def __init__(self, option_defaults: dict, option_store: dict | Callable | None = None):
 		"""
 		:param option_defaults: The default option items as dict
 		:param options_store: A dict or a callable to retrieve a dict to store changed options
