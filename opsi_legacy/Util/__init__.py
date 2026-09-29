@@ -439,8 +439,7 @@ def blowfishDecrypt(key, crypt):
 def _prepareBlowfishKey(key: str) -> bytes:
 	"Transform the key into hex."
 	try:
-		key = forceUnicode(key).encode()
-		return bytes.fromhex(key)
+		return bytes.fromhex(forceUnicode(key))
 	except (binascii.Error, Exception) as err:
 		raise BlowfishError(f"Unable to prepare key: {err}") from err
 
